@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en" class="bg-[#0a0a0a] text-white">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="impact-site-verification" value="87dcb7aa-3d1f-4a4e-84f8-e70ce2632160" />
+    <title>GOYE Store Global - eSIM $4, Travel Guides &amp; AI Business Packs | 190+ Countries Instant Delivery</title>
+    <!-- Flutterwave Inline Checkout SDK v3 -->
+    <script src="https://checkout.flutterwave.com/v3.js"></script>
+    <script>
+      window.payWithFlutterwave = function(productName, usdPrice){
+        const customerEmail = prompt("Enter your email for instant delivery:");
+        if(!customerEmail || !customerEmail.includes("@")){
+          alert("Please enter valid email");
+          return;
+        }
+
+        if (typeof FlutterwaveCheckout !== 'function') {
+          alert("Flutterwave SDK is loading... Please wait a moment and click again.");
+          return;
+        }
+
+        FlutterwaveCheckout({
+          public_key: "FLWPUBK-cbb518a9b8f74421e887f4a1ec911ea7-X",
+          tx_ref: "GOYE-FLW-"+Date.now(),
+          amount: usdPrice,
+          currency: "USD",
+          payment_options: "card, banktransfer, ussd, account",
+          customer: {
+            email: customerEmail,
+            name: "GOYE Customer",
+          },
+          customizations: {
+            title: "GOYE Store Global",
+            description: productName + " - Instant Delivery",
+          },
+          callback: function(data){
+            console.log(data);
+            if(data.status === "successful" || data.status === "completed" || data.transaction_id){
+              const txId = data.transaction_id || data.tx_ref || ("GOYE-TX-" + Date.now());
+              const txRef = data.tx_ref || ("GOYE-FLW-" + Date.now());
+              alert("✅ Payment Successful! Transaction: " + txId);
+              localStorage.setItem("goye_order_"+txRef, JSON.stringify({email:customerEmail, product:productName, tx:txId, ref:txRef, status:"paid", date: new Date().toISOString()}));
+              try {
+                const stored = JSON.parse(localStorage.getItem('goye_unlocked_products') || '[]');
+                if (!stored.includes(productName)) {
+                  stored.push(productName);
+                  localStorage.setItem('goye_unlocked_products', JSON.stringify(stored));
+                }
+              } catch(e) {}
+              window.location.href = "success.html?email="+encodeURIComponent(customerEmail)+"&product="+encodeURIComponent(productName)+"&ref="+txRef+"&tx="+txId+"&gateway=Flutterwave";
+            } else {
+              alert("Payment not completed");
+            }
+          },
+          onclose: function(){
+            console.log("Flutterwave closed");
+          }
+        });
+      };
+    </script>
+    <!-- Paystack Inline Checkout SDK -->
+    <script src="https://js.paystack.co/v1/inline.js"></script>
+    <!-- Pi Network SDK v2 -->
+    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+    <!-- Google Pay API SDK -->
+    <script src="https://pay.google.com/gp/p/js/pay.js" async></script>
+    <style>
+      body {
+        margin: 0;
+        background-color: #0a0a0a;
+        color: #ffffff;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      }
+      .app-loader {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background-color: #0a0a0a;
+        color: #FFC800;
+        font-family: system-ui, sans-serif;
+        text-align: center;
+      }
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid rgba(255, 200, 0, 0.1);
+        border-top: 4px solid #FFC800;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin-bottom: 16px;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
+  
+    <!-- Replace G-XXXX with your Google Analytics ID from analytics.google.com - Free! -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-XXXX');
+    </script>
+
+    <link rel="manifest" href="/manifest.json" />
+  </head>
+  <body>
+    <div id="root">
+      <div class="app-loader">
+        <div class="spinner"></div>
+        <div style="font-weight: 800; font-size: 18px; letter-spacing: 1px; color: #ffffff;">GOYE STORE GLOBAL</div>
+        <div style="font-size: 11px; color: #FFC800; margin-top: 4px; font-weight: 600;">190+ Countries Instant Delivery · RC: BN3583773</div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

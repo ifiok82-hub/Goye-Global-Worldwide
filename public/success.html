@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en" class="bg-[#0a0a10] text-white">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Order Successful - GOYE Store Global | www.gasv.store</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 32px 16px;
+        background-color: #0a0a10;
+        color: #e2e8f0;
+        font-family: system-ui, -apple-system, sans-serif;
+        line-height: 1.6;
+      }
+      .container {
+        max-width: 650px;
+        margin: 0 auto;
+        background: #101017;
+        border: 2px solid #7C3AED;
+        border-radius: 24px;
+        padding: 32px;
+        box-shadow: 0 20px 50px rgba(124, 58, 237, 0.3);
+      }
+      .badge {
+        display: inline-block;
+        background: #10B981;
+        color: #000;
+        font-size: 11px;
+        font-weight: bold;
+        padding: 6px 16px;
+        border-radius: 9999px;
+        margin-bottom: 16px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+      h1 { color: #FFD700; margin-top: 0; font-size: 26px; }
+      .product-box {
+        background: #181528;
+        border: 1px solid rgba(255, 215, 0, 0.3);
+        border-radius: 16px;
+        padding: 20px;
+        margin: 20px 0;
+      }
+      .unlocked-btn {
+        display: inline-block;
+        width: 100%;
+        box-sizing: border-box;
+        text-align: center;
+        background: #7C3AED;
+        color: #ffffff;
+        font-weight: 900;
+        font-size: 14px;
+        text-transform: uppercase;
+        padding: 16px;
+        border-radius: 14px;
+        text-decoration: none;
+        margin-top: 12px;
+        box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4);
+      }
+      .unlocked-btn:hover {
+        background: #6D28D9;
+      }
+      .esim-qr {
+        text-align: center;
+        margin-top: 16px;
+        padding: 16px;
+        background: #ffffff;
+        border-radius: 16px;
+        display: inline-block;
+      }
+      footer {
+        margin-top: 32px;
+        padding-top: 20px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        text-align: center;
+        font-size: 12px;
+        color: #94a3b8;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <span class="badge">✅ Payment Confirmed &amp; Unlocked</span>
+      <h1>Thank You For Your Order!</h1>
+      <p>Your digital product fulfillment credentials and activation details have been generated below and sent to your email.</p>
+
+      <div class="product-box">
+        <div style="font-size: 11px; color: #94a3b8; font-weight: bold; text-transform: uppercase;">Product Name</div>
+        <div id="productName" style="font-size: 20px; color: #ffffff; font-weight: bold; margin-bottom: 12px;">GOYE Digital Fulfillment</div>
+
+        <div style="font-size: 11px; color: #94a3b8; font-weight: bold; text-transform: uppercase;">Delivery Email</div>
+        <div id="deliveryEmail" style="font-size: 14px; color: #00F0FF; font-weight: bold; margin-bottom: 12px;">-</div>
+
+        <div style="font-size: 11px; color: #94a3b8; font-weight: bold; text-transform: uppercase;">Transaction ID</div>
+        <div id="txId" style="font-size: 12px; color: #FFD700; font-family: monospace; font-weight: bold;">-</div>
+
+        <div id="downloadSection" style="margin-top: 20px;">
+          <a id="downloadBtn" href="/" class="unlocked-btn">⚡ Instant Download / Access Digital Product 🔑</a>
+        </div>
+
+        <div id="esimSection" style="text-align: center; display: none; margin-top: 20px;">
+          <div style="font-size: 12px; color: #FFD700; font-weight: bold;">Your eSIM Activation QR Code (Airalo Network)</div>
+          <div class="esim-qr">
+            <img id="esimQrImg" src="" alt="eSIM QR Code" style="width: 150px; height: 150px;" />
+          </div>
+          <p style="font-size: 11px; color: #94a3b8; margin-top: 8px;">Scan with your device camera in Mobile Settings &gt; Add eSIM Profile</p>
+        </div>
+      </div>
+
+      <a href="/" style="display: block; text-align: center; color: #94a3b8; font-size: 13px; text-decoration: underline;">Return to GOYE Store Global</a>
+
+      <footer>
+        Privacy | Terms | Contact goye@gasv.store | www.gasv.store | BN3583773 | Real Pi Community
+      </footer>
+    </div>
+
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const email = params.get('email') || 'customer@gasv.store';
+      const product = params.get('product') || 'GOYE Digital Product';
+      const tx_id = params.get('tx_id') || params.get('transaction_id') || ('GOYE-TX-' + Date.now());
+
+      document.getElementById('productName').innerText = product;
+      document.getElementById('deliveryEmail').innerText = email;
+      document.getElementById('txId').innerText = tx_id;
+
+      // Unlock product in localStorage so returning to main store keeps it unlocked
+      try {
+        const stored = JSON.parse(localStorage.getItem('goye_unlocked_products') || '[]');
+        if (!stored.includes(product)) {
+          stored.push(product);
+          localStorage.setItem('goye_unlocked_products', JSON.stringify(stored));
+        }
+      } catch(e) {}
+
+      // If eSIM product
+      if (product.toLowerCase().includes('esim') || product.toLowerCase().includes('data')) {
+        document.getElementById('esimSection').style.display = 'block';
+        const esimData = "LPA:1$rsp.airalo.com$GOYE-" + Math.random().toString(36).substring(2, 10).toUpperCase();
+        document.getElementById('esimQrImg').src = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + encodeURIComponent(esimData);
+      }
+    </script>
+  </body>
+</html>
