@@ -3,6 +3,7 @@ import QRScannerModal from './components/QRScannerModal';
 import { Globe, Download, ShieldCheck, ChevronRight, Lock, BookOpen, Settings, List, Save, Mail, CreditCard, DollarSign, Wallet, Phone, Landmark, Home, ShoppingBag, GraduationCap, MessageCircle, Search, Edit, Trash2, Plus, FileText, Video, Eye, EyeOff, CheckCircle, Users, Activity } from 'lucide-react';
 import { ESIM_PRODUCTS, ACADEMY_COURSES } from './data';
 import UnifiedCheckoutModal from './components/UnifiedCheckoutModal';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 
 const HeroSection = ({ onLogoTap }: { onLogoTap?: () => void }) => (
@@ -1603,6 +1604,7 @@ export default function App() {
           <p style={{color:'#333', fontSize:'10px', margin:0}}>Built with ❤️ for 190+ Countries • Instant Digital Delivery • No Physical Shipping</p>
         </div>
       </footer>
+      <SpeedInsights />
     </div>
   );
 }
