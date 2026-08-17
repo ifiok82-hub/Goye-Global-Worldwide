@@ -40,7 +40,7 @@
               const txId = data.transaction_id || data.tx_ref || ("GOYE-TX-" + Date.now());
               const txRef = data.tx_ref || ("GOYE-FLW-" + Date.now());
               alert("✅ Payment Successful! Transaction: " + txId);
-              localStorage.setItem("goye_order_"+txRef, JSON.stringify({email:customerEmail, product:productName, tx:txId, ref:txRef, status:"paid", date: new Date().toISOString()}));
+              localStorage.setItem("goye_order_"+txRef, JSON.stringify({email:customerEmail, product:productName, price:usdPrice, tx:txId, ref:txRef, status:"completed", date: new Date().toISOString()}));
               try {
                 const stored = JSON.parse(localStorage.getItem('goye_unlocked_products') || '[]');
                 if (!stored.includes(productName)) {

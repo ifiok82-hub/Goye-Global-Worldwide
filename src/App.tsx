@@ -231,6 +231,62 @@ export default function App() {
   const [adminPassword, setAdminPassword] = useState('');
   const [pendingOrders, setPendingOrders] = useState<any[]>([]);
   const [purchasedItems, setPurchasedItems] = useState<any[]>([]);
+  const [totalOrders, setTotalOrders] = useState(0);
+  const [totalRevenue, setTotalRevenue] = useState(0);
+  const [activeUsers, setActiveUsers] = useState(0);
+  const [allCompletedOrdersList, setAllCompletedOrdersList] = useState<any[]>([]);
+
+  useEffect(() => {
+    // Refresh pending orders and purchased items just in case
+    const pOrders = JSON.parse(localStorage.getItem('goye_pending_orders') || '[]');
+    setPendingOrders(pOrders);
+    
+    const purchased = JSON.parse(localStorage.getItem('goye_purchased_digital_products') || '[]');
+    setPurchasedItems(purchased);
+
+    if (isAdmin) {
+      let revenue = 0;
+      let orderCount = 0;
+      const uniqueEmails = new Set();
+      const completedList: any[] = [];
+      
+      purchased.forEach((o: any) => {
+        revenue += Number(o.price) || 0;
+        orderCount++;
+        if (o.email) uniqueEmails.add(o.email);
+        completedList.push({ ...o, status: 'completed' });
+      });
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('goye_order_')) {
+          try {
+            const orderData = JSON.parse(localStorage.getItem(key) || '{}');
+            if (orderData.status === 'completed' || orderData.status === 'paid') {
+              revenue += Number(orderData.price) || 0;
+              orderCount++;
+              if (orderData.email) uniqueEmails.add(orderData.email);
+              completedList.push({ ...orderData, status: 'completed' });
+            }
+          } catch(e) {}
+        }
+      }
+
+      const analyticsRaw = localStorage.getItem('goye_analytics');
+      let views = 0;
+      if (analyticsRaw) {
+        try {
+          const parsedAnalytics = JSON.parse(analyticsRaw);
+          views = parsedAnalytics.totalViews || 0;
+        } catch(e) {}
+      }
+
+      setTotalOrders(orderCount);
+      setTotalRevenue(revenue);
+      setActiveUsers(views || uniqueEmails.size + 1); // Fallback to unique emails + admin if no views
+      setAllCompletedOrdersList(completedList.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+    }
+  }, [isAdmin, tab]);
   
   
   const handleInstall = async () => {
@@ -1376,17 +1432,17 @@ export default function App() {
                   <div className="bg-[#111] border border-[#333] p-5 rounded-xl flex flex-col justify-center relative overflow-hidden group hover:border-[#FFD700]/50 transition-colors">
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity"><List size={40} className="text-white"/></div>
                     <p className="text-gray-500 text-[10px] font-bold uppercase mb-1 z-10">Total Orders</p>
-                    <p className="text-white text-3xl font-black z-10">{pendingOrders.length + 152}</p>
+                    <p className="text-white text-3xl font-black z-10">{totalOrders}</p>
                   </div>
                   <div className="bg-[#111] border border-[#333] p-5 rounded-xl flex flex-col justify-center relative overflow-hidden group hover:border-[#FFD700]/50 transition-colors">
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity"><DollarSign size={40} className="text-[#FFD700]"/></div>
                     <p className="text-gray-500 text-[10px] font-bold uppercase mb-1 z-10">Total Revenue</p>
-                    <p className="text-[#FFD700] text-3xl font-black z-10">$4,520</p>
+                    <p className="text-[#FFD700] text-3xl font-black z-10">${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                   </div>
                   <div className="bg-[#111] border border-[#333] p-5 rounded-xl flex flex-col justify-center relative overflow-hidden group hover:border-[#FFD700]/50 transition-colors">
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity"><Users size={40} className="text-white"/></div>
                     <p className="text-gray-500 text-[10px] font-bold uppercase mb-1 z-10">Active Users</p>
-                    <p className="text-white text-3xl font-black z-10">1,240</p>
+                    <p className="text-white text-3xl font-black z-10">{activeUsers}</p>
                   </div>
                   <div className="bg-[#111] border border-[#333] p-5 rounded-xl flex flex-col justify-center relative overflow-hidden group hover:border-[#10B981]/50 transition-colors">
                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity"><Activity size={40} className="text-[#10B981]"/></div>
@@ -1397,8 +1453,8 @@ export default function App() {
 
                 {tab === 'admin' && (
                   <div className="bg-[#111] rounded-2xl border border-white/10 overflow-hidden">
-                    <div className="p-6 border-b border-white/10">
-                      <h3 className="text-lg font-bold text-white">Pending Orders (Manual Verify)</h3>
+                    <div className="p-6 border-b border-white/10 flex justify-between items-center">
+                      <h3 className="text-lg font-bold text-white">All Orders</h3>
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full text-left text-sm">
@@ -1407,29 +1463,36 @@ export default function App() {
                             <th className="p-4">Ref</th>
                             <th className="p-4">Customer</th>
                             <th className="p-4">Product</th>
-                            <th className="p-4">Method</th>
+                            <th className="p-4">Method & Status</th>
                             <th className="p-4">Date</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
-                          {pendingOrders.map((order, i) => (
+                          {[...pendingOrders.map(o => ({...o, status: 'pending'})), ...allCompletedOrdersList]
+                            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                            .map((order, i) => (
                             <tr key={i} className="hover:bg-white/[0.02]">
                               <td className="p-4 font-mono text-[#FFD700] text-xs">{order.ref}</td>
                               <td className="p-4">
-                                <div className="font-bold text-white">{order.fullName}</div>
+                                <div className="font-bold text-white">{order.fullName || order.name || 'Customer'}</div>
                                 <div className="text-xs text-gray-400">{order.email}</div>
                               </td>
                               <td className="p-4">
-                                <div className="text-white">{order.productName}</div>
-                                <div className="font-bold text-green-400">${order.price}</div>
+                                <div className="text-white text-xs">{order.productName || order.product}</div>
+                                <div className="text-[#10B981] font-bold text-xs">${order.price}</div>
                               </td>
-                              <td className="p-4"><span className="uppercase text-[10px] px-2 py-1 bg-white/10 rounded">{order.method}</span></td>
+                              <td className="p-4 flex items-center gap-2">
+                                <span className="uppercase text-[10px] px-2 py-1 bg-white/10 rounded">{order.method || order.gateway || 'Unknown'}</span>
+                                <span className={`uppercase text-[10px] px-2 py-1 rounded font-bold ${order.status === 'completed' || order.status === 'paid' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
+                                  {order.status}
+                                </span>
+                              </td>
                               <td className="p-4 text-xs text-gray-500">{new Date(order.date).toLocaleString()}</td>
                             </tr>
                           ))}
-                          {pendingOrders.length === 0 && (
+                          {(pendingOrders.length === 0 && allCompletedOrdersList.length === 0) && (
                             <tr>
-                              <td colSpan={5} className="p-8 text-center text-gray-500">No pending orders.</td>
+                              <td colSpan={5} className="p-8 text-center text-gray-500">No orders yet.</td>
                             </tr>
                           )}
                         </tbody>
