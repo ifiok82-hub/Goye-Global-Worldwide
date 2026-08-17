@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import QRScannerModal from './components/QRScannerModal';
-import { Globe, Download, ShieldCheck, ChevronRight, Lock, BookOpen, Settings, List, Save, Mail, CreditCard, DollarSign, Wallet, Phone, Landmark, Home, ShoppingBag, GraduationCap, MessageCircle, Search, Edit, Trash2, Plus, FileText, Video, Eye, EyeOff, CheckCircle, Users, Activity } from 'lucide-react';
+import { Globe, Download, ShieldCheck, ChevronRight, Lock, BookOpen, Settings, List, Save, Mail, CreditCard, DollarSign, Wallet, Phone, Landmark, Home, ShoppingBag, GraduationCap, MessageCircle, Search, Edit, Trash2, Plus, FileText, Video, Eye, EyeOff, CheckCircle, Users, Activity, UserCircle } from 'lucide-react';
 import { ESIM_PRODUCTS, ACADEMY_COURSES } from './data';
 import UnifiedCheckoutModal from './components/UnifiedCheckoutModal';
+import { auth, googleAuthProvider } from './lib/firebase';
+import { signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
 
 
 const HeroSection = ({ onLogoTap }: { onLogoTap?: () => void }) => (
@@ -111,6 +113,7 @@ export default function App() {
   const [isInstallable, setIsInstallable] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [generatingContract, setGeneratingContract] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   
   // Admin state
   const [isAdminAuth, setIsAdminAuth] = useState(false);
@@ -153,7 +156,21 @@ export default function App() {
       alert('✅ GOYE App installed! Find it on home screen!');
     });
     
-    return () => window.removeEventListener('beforeinstallprompt', handler);
+    const unsubscribe = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+      if (u?.email === 'goye@gasv.store') {
+        setIsAdmin(true);
+        localStorage.setItem('goye_admin_auth', 'true');
+      } else if (u) {
+        setIsAdmin(false);
+        localStorage.removeItem('goye_admin_auth');
+      }
+    });
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handler);
+      unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -410,6 +427,21 @@ export default function App() {
     setTimeout(() => setSavedSettings(false), 3000);
   };
 
+  const handleGoogleLogin = async () => {
+    try {
+      await signInWithPopup(auth, googleAuthProvider);
+    } catch (error) {
+      console.error("Login failed:", error);
+    }
+  };
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    setIsAdmin(false);
+    localStorage.removeItem('goye_admin_auth');
+    if (tab.startsWith('admin')) setTab('home');
+  };
+
   const hasPurchased = (id: string) => {
     if (id === 'ai-mastery') return true; // Module 1 is free
     return purchasedItems.some(item => item.id === id || item.productId === id);
@@ -429,6 +461,21 @@ export default function App() {
             </div>
           </div>
           <div style={{display:'flex', alignItems:'center', gap:'8px', position:'relative', zIndex:100, pointerEvents:'auto'}}>
+            {user ? (
+              <div className="flex items-center gap-3">
+                <div className="text-right hidden sm:block">
+                  <div className="text-[#FFD700] text-xs font-bold">{user.email}</div>
+                  <div className="text-[#888] text-[10px] cursor-pointer hover:text-white" onClick={() => setTab('downloads')}>My Orders</div>
+                </div>
+                <button onClick={handleLogout} className="bg-[#222] text-gray-300 hover:text-white hover:bg-red-900/50 px-3 py-2 rounded-xl text-xs font-bold border border-[#333] transition">
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <button onClick={handleGoogleLogin} className="bg-white hover:bg-gray-100 text-black px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition">
+                <UserCircle size={14} /> Login
+              </button>
+            )}
             <button 
               onClick={(e)=>{ e.stopPropagation(); console.log('QR clicked'); setShowQRModal(true); }} 
               style={{background:'#111', border:'2px solid #FFD700', color:'#FFD700', padding:'8px 14px', borderRadius:'20px', fontSize:'13px', fontWeight:'bold', cursor:'pointer', zIndex:101, pointerEvents:'auto', position:'relative'}}
@@ -455,23 +502,27 @@ export default function App() {
             </button>
           </div>
         </div>
-                <div className="flex gap-2 justify-start sm:justify-center mt-3 overflow-x-auto pb-2 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-          <button onClick={() => setTab('home')} className={`whitespace-nowrap px-4 py-2 rounded-xl text-xs font-bold transition border-none ${tab === 'home' ? 'bg-[#222] text-white' : 'bg-[#222] text-[#888]'}`}>Home</button>
-          <button onClick={() => setTab('shop')} className={`whitespace-nowrap px-4 py-2 rounded-xl text-xs font-bold transition border-none ${tab === 'shop' ? 'bg-[#222] text-white' : 'bg-[#222] text-[#888]'}`}>Digital Shop</button>
-          <button onClick={() => setTab('esim')} className={`whitespace-nowrap px-4 py-2 rounded-xl text-xs font-bold transition border-none ${tab === 'esim' ? 'bg-[#222] text-white' : 'bg-[#222] text-[#888]'}`}>eSIM</button>
-          <button onClick={() => setTab('academy')} className={`whitespace-nowrap px-4 py-2 rounded-xl text-xs font-bold transition border-none ${tab === 'academy' ? 'bg-[#222] text-white' : 'bg-[#222] text-[#888]'}`}>AI Academy</button>
-          <button onClick={() => setTab('contracts')} className={`whitespace-nowrap px-4 py-2 rounded-xl text-xs font-bold transition border-none ${tab === 'contracts' ? 'bg-[#222] text-white' : 'bg-[#222] text-[#888]'}`}>Contracts</button>
-          <button onClick={() => setTab('prompts')} className={`whitespace-nowrap px-4 py-2 rounded-xl text-xs font-bold transition border-none ${tab === 'prompts' ? 'bg-[#222] text-white' : 'bg-[#222] text-[#888]'}`}>Prompts</button>
-          <button onClick={() => setTab('trackers')} className={`whitespace-nowrap px-4 py-2 rounded-xl text-xs font-bold transition border-none ${tab === 'trackers' ? 'bg-[#222] text-white' : 'bg-[#222] text-[#888]'}`}>Trackers</button>
-          <button onClick={() => setTab('referrals')} className={`whitespace-nowrap px-4 py-2 rounded-xl text-xs font-bold transition border-none ${tab === 'referrals' ? 'bg-[#222] text-white' : 'bg-[#222] text-[#888]'}`}>Referrals</button>
-          <button onClick={() => { trackClick('nav', 'My Downloads'); setTab('downloads'); }} className={`whitespace-nowrap px-4 py-2 rounded-xl text-xs font-bold transition border-none flex items-center gap-1 ${tab === 'downloads' ? 'bg-[#222] text-white' : 'bg-[#222] text-[#888]'}`}>
-            ⬇ Downloads
-          </button>
-          {isAdmin && (
-            <button onClick={() => setTab('admin')} className={`whitespace-nowrap px-4 py-2 rounded-xl text-xs font-bold transition border-none flex items-center gap-1 ${tab.startsWith('admin') ? 'bg-[#FFD700] text-black' : 'bg-[#222] text-[#FFD700]'}`}>
-              ⚙️ Admin
+                <div className="flex justify-start sm:justify-center mt-4 overflow-x-auto pb-3 px-1 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <div className="flex bg-[#111] p-1.5 rounded-2xl border border-[#333] shadow-inner shrink-0">
+            <button onClick={() => setTab('home')} className={`whitespace-nowrap px-4 py-2 rounded-xl text-[11px] uppercase tracking-wider font-bold transition flex items-center gap-1.5 ${tab === 'home' ? 'bg-[#2a2a2a] text-white shadow-md border border-[#444]' : 'text-[#888] hover:text-white border border-transparent'}`}><Home size={14}/> Home</button>
+            <button onClick={() => setTab('shop')} className={`whitespace-nowrap px-4 py-2 rounded-xl text-[11px] uppercase tracking-wider font-bold transition flex items-center gap-1.5 ${tab === 'shop' ? 'bg-[#2a2a2a] text-white shadow-md border border-[#444]' : 'text-[#888] hover:text-white border border-transparent'}`}><ShoppingBag size={14}/> Shop</button>
+            <button onClick={() => setTab('esim')} className={`whitespace-nowrap px-4 py-2 rounded-xl text-[11px] uppercase tracking-wider font-bold transition flex items-center gap-1.5 ${tab === 'esim' ? 'bg-[#2a2a2a] text-white shadow-md border border-[#444]' : 'text-[#888] hover:text-white border border-transparent'}`}><Globe size={14}/> eSIM</button>
+            <button onClick={() => setTab('academy')} className={`whitespace-nowrap px-4 py-2 rounded-xl text-[11px] uppercase tracking-wider font-bold transition flex items-center gap-1.5 ${tab === 'academy' ? 'bg-[#2a2a2a] text-white shadow-md border border-[#444]' : 'text-[#888] hover:text-white border border-transparent'}`}><GraduationCap size={14}/> Academy</button>
+            <button onClick={() => setTab('contracts')} className={`whitespace-nowrap px-4 py-2 rounded-xl text-[11px] uppercase tracking-wider font-bold transition flex items-center gap-1.5 ${tab === 'contracts' ? 'bg-[#2a2a2a] text-white shadow-md border border-[#444]' : 'text-[#888] hover:text-white border border-transparent'}`}><FileText size={14}/> Contracts</button>
+            <button onClick={() => setTab('prompts')} className={`whitespace-nowrap px-4 py-2 rounded-xl text-[11px] uppercase tracking-wider font-bold transition flex items-center gap-1.5 ${tab === 'prompts' ? 'bg-[#2a2a2a] text-white shadow-md border border-[#444]' : 'text-[#888] hover:text-white border border-transparent'}`}><MessageCircle size={14}/> Prompts</button>
+            <button onClick={() => setTab('trackers')} className={`whitespace-nowrap px-4 py-2 rounded-xl text-[11px] uppercase tracking-wider font-bold transition flex items-center gap-1.5 ${tab === 'trackers' ? 'bg-[#2a2a2a] text-white shadow-md border border-[#444]' : 'text-[#888] hover:text-white border border-transparent'}`}><Activity size={14}/> Trackers</button>
+            <button onClick={() => setTab('referrals')} className={`whitespace-nowrap px-4 py-2 rounded-xl text-[11px] uppercase tracking-wider font-bold transition flex items-center gap-1.5 ${tab === 'referrals' ? 'bg-[#2a2a2a] text-white shadow-md border border-[#444]' : 'text-[#888] hover:text-white border border-transparent'}`}><Users size={14}/> Referrals</button>
+          </div>
+          <div className="flex bg-[#111] p-1.5 rounded-2xl border border-[#333] shadow-inner shrink-0 ml-3">
+            <button onClick={() => { trackClick('nav', 'My Downloads'); setTab('downloads'); }} className={`whitespace-nowrap px-4 py-2 rounded-xl text-[11px] uppercase tracking-wider font-bold transition flex items-center gap-1.5 ${tab === 'downloads' ? 'bg-[#FFD700] text-black shadow-md border border-[#e5c100]' : 'text-[#FFD700] hover:text-yellow-400 border border-transparent'}`}>
+              <Download size={14}/> My Orders
             </button>
-          )}
+            {isAdmin && (
+              <button onClick={() => setTab('admin')} className={`whitespace-nowrap px-4 py-2 rounded-xl text-[11px] uppercase tracking-wider font-bold transition flex items-center gap-1.5 ml-1 ${tab.startsWith('admin') ? 'bg-[#2a2a2a] text-[#FFD700] shadow-md border border-[#444]' : 'text-[#888] hover:text-[#FFD700] border border-transparent'}`}>
+                <Settings size={14}/> Admin
+              </button>
+            )}
+          </div>
         </div>
       </header>
 

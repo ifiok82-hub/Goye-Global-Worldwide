@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GOYE Global Worldwide - Order Receipt</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #000000; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #ffffff;">
+  
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #000000; padding: 20px;">
+    <tr>
+      <td align="center">
+        <!-- Main Email Container -->
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #111111; border: 1px solid #333333; border-radius: 12px; overflow: hidden; max-width: 100%;">
+          
+          <!-- Header -->
+          <tr>
+            <td align="center" style="padding: 30px 20px; background-color: #050505; border-bottom: 2px solid #FFD700;">
+              <h1 style="color: #FFD700; margin: 0; font-size: 24px; font-weight: 900; letter-spacing: 1px;">GOYE GLOBAL WORLDWIDE</h1>
+              <p style="color: #888888; font-size: 11px; margin: 8px 0 0 0; font-weight: bold; letter-spacing: 0.5px;">RC BN3583773 • SIRWISE AI WEB3 ACADEMY</p>
+            </td>
+          </tr>
+
+          <!-- Body Content -->
+          <tr>
+            <td style="padding: 40px 30px;">
+              <h2 style="color: #ffffff; margin: 0 0 20px 0; font-size: 20px;">Order Confirmation &amp; Access Link</h2>
+              
+              <p style="color: #cccccc; font-size: 15px; line-height: 1.6; margin: 0 0 25px 0;">
+                Hello <strong id="val-customer">{{Customer Name}}</strong>,<br><br>
+                Thank you for your purchase from GOYE Global Worldwide! Your payment has been verified successfully. Below are your order details and your digital access link.
+              </p>
+              
+              <!-- Order Details Card -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #000000; border: 1px solid #222222; border-radius: 10px; margin-bottom: 30px;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <p style="color: #888888; font-size: 13px; margin: 0 0 8px 0;">Order Reference: <strong style="color: #ffffff;" id="val-order">{{Order ID}}</strong></p>
+                    <p style="color: #888888; font-size: 13px; margin: 0 0 8px 0;">Date: <strong style="color: #ffffff;" id="val-date">{{Order Date}}</strong></p>
+                    <p style="color: #888888; font-size: 13px; margin: 0 0 8px 0;">Product: <strong style="color: #FFD700;" id="val-product">{{Product Name}}</strong></p>
+                    <p style="color: #888888; font-size: 13px; margin: 0;">Amount Paid: <strong style="color: #10B981;" id="val-price">{{Price}}</strong></p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Call to Action Button -->
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center">
+                    <!-- Replace the href with your dynamic access link variable -->
+                    <a href="{{Access Link}}" id="val-link" style="display: inline-block; background-color: #FFD700; color: #000000; padding: 16px 32px; border-radius: 10px; text-decoration: none; font-weight: 900; font-size: 16px; letter-spacing: 0.5px;">ACCESS MY PRODUCT</a>
+                  </td>
+                </tr>
+              </table>
+              
+              <!-- Instructions -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 30px;">
+                <tr>
+                  <td style="background-color: #1a1a1a; padding: 15px; border-radius: 8px; border-left: 4px solid #10B981;">
+                    <p style="color: #aaaaaa; font-size: 12px; line-height: 1.5; margin: 0;">
+                      <strong style="color: #ffffff;">For eSIMs:</strong> Scan the QR code provided in the access link to install.<br><br>
+                      <strong style="color: #ffffff;">For Digital Guides &amp; Academy:</strong> You can download the PDF or access the modules directly from the link above.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td align="center" style="padding: 25px 20px; background-color: #050505; border-top: 1px solid #222222;">
+              <p style="color: #888888; font-size: 12px; margin: 0 0 12px 0;">
+                Need help? <a href="https://wa.me/2348033584736" style="color: #25D366; text-decoration: none; font-weight: bold;">WhatsApp Support</a> or email <a href="mailto:goye@gasv.store" style="color: #FFD700; text-decoration: none; font-weight: bold;">goye@gasv.store</a>
+              </p>
+              <p style="color: #555555; font-size: 11px; margin: 0 0 6px 0;">
+                &copy; 2026 Goyedagosmess Enterprise. All rights reserved.
+              </p>
+              <p style="color: #555555; font-size: 11px; margin: 0;">
+                <a href="https://www.gasv.store" style="color: #555555; text-decoration: underline;">www.gasv.store</a>
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+  <script>
+    // Automatically populate receipt data if loaded dynamically via browser URL
+    const params = new URLSearchParams(window.location.search);
+    if(params.has('product')) {
+      document.getElementById('val-customer').innerText = params.get('email') || 'Valued Customer';
+      document.getElementById('val-order').innerText = params.get('tx') || 'GOYE-ORD-' + Date.now();
+      document.getElementById('val-date').innerText = new Date().toLocaleDateString();
+      document.getElementById('val-product').innerText = params.get('product');
+      document.getElementById('val-price').innerText = 'PAID (Verified)';
+      document.getElementById('val-link').href = '/?access=' + (params.get('tx') || 'success');
+      // Add a print button for users viewing in browser
+      const printBtn = document.createElement('button');
+      printBtn.innerText = '🖨️ Print / Save PDF Receipt';
+      printBtn.style.cssText = 'position:fixed; bottom:20px; right:20px; background:#10B981; color:#000; border:none; padding:15px 20px; border-radius:50px; font-weight:bold; cursor:pointer; box-shadow:0 10px 20px rgba(16,185,129,0.3); z-index:9999;';
+      printBtn.onclick = () => window.print();
+      document.body.appendChild(printBtn);
+    }
+  </script>
+
+</body>
+</html>

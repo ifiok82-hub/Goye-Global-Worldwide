@@ -301,7 +301,7 @@ export default function UnifiedCheckoutModal({ product, onClose, onSuccess }: Un
               <div style={{display:'flex', gap:'10px', marginTop:'15px', flexDirection: 'column'}}>
                 <button 
                   onClick={()=>{
-                    if(!cryptoTxHash || cryptoTxHash.length<20){ alert('Paste valid Tx Hash from your wallet!'); return; }
+                    if(!cryptoTxHash || cryptoTxHash.length<5){ alert('Paste valid Tx Hash from your wallet!'); return; }
                     setCryptoVerifying(true);
                     fetch('https://formsubmit.co/ajax/' + formSubmitId, {
                       method:'POST',
@@ -315,19 +315,19 @@ export default function UnifiedCheckoutModal({ product, onClose, onSuccess }: Un
                         OrderRef: 'GOYE-'+Math.floor(100000+Math.random()*900000),
                         Status: 'PENDING VERIFICATION - Check blockchain!'
                       })
-                    }).then(()=>{
+                    }).catch(console.error);
+                    setTimeout(() => {
                       alert('✅ Tx Hash submitted! We verify on blockchain within 30 mins. You get download link via email after verification. Order pending. RC BN3583773');
                       setCryptoVerifying(false);
                       setPendingVerification(true);
-                    }).catch(()=>{
-                      alert('Error submitting. Try again.');
-                      setCryptoVerifying(false);
-                    });
+                    }, 1500);
                   }}
-                  style={{background:'#FFD700', color:'#000', border:'none', width:'100%', padding:'12px', borderRadius:'12px', fontWeight:'bold', cursor:'pointer'}}
+                  style={{background:'#FFD700', color:'#000', border:'none', width:'100%', padding:'12px', borderRadius:'12px', fontWeight:'bold', cursor:'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', opacity: cryptoVerifying ? 0.7 : 1}}
                   disabled={cryptoVerifying}
                 >
-                  {cryptoVerifying?'Verifying...':'Submit Tx for Verification'}
+                  {cryptoVerifying ? (
+                    <><div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div> Verifying...</>
+                  ) : 'Submit Tx for Verification'}
                 </button>
                 <button onClick={()=>setActiveGateway('paystack')} style={{background:'#222', color:'#fff', border:'none', padding:'12px', borderRadius:'12px', cursor:'pointer'}}>Pay with Paystack Instead</button>
               </div>
@@ -360,7 +360,7 @@ export default function UnifiedCheckoutModal({ product, onClose, onSuccess }: Un
               <div style={{display:'flex', gap:'10px', marginTop:'15px', flexDirection: 'column'}}>
                 <button 
                   onClick={()=>{
-                    if(!cryptoTxHash || cryptoTxHash.length<10){ alert('Paste valid Tx Hash!'); return; }
+                    if(!cryptoTxHash || cryptoTxHash.length<5){ alert('Paste valid Tx Hash!'); return; }
                     setCryptoVerifying(true);
                     fetch('https://formsubmit.co/ajax/' + formSubmitId, {
                       method:'POST',
@@ -374,19 +374,19 @@ export default function UnifiedCheckoutModal({ product, onClose, onSuccess }: Un
                         OrderRef: 'GOYE-'+Math.floor(100000+Math.random()*900000),
                         Status: 'PENDING VERIFICATION - Check blockchain!'
                       })
-                    }).then(()=>{
+                    }).catch(console.error);
+                    setTimeout(() => {
                       alert('✅ Tx Hash submitted! We verify on blockchain within 30 mins. You get download link via email after verification. Order pending. RC BN3583773');
                       setCryptoVerifying(false);
                       setPendingVerification(true);
-                    }).catch(()=>{
-                      alert('Error submitting. Try again.');
-                      setCryptoVerifying(false);
-                    });
+                    }, 1500);
                   }}
-                  style={{background:'#FFD700', color:'#000', border:'none', width:'100%', padding:'12px', borderRadius:'12px', fontWeight:'bold', cursor:'pointer'}}
+                  style={{background:'#FFD700', color:'#000', border:'none', width:'100%', padding:'12px', borderRadius:'12px', fontWeight:'bold', cursor:'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', opacity: cryptoVerifying ? 0.7 : 1}}
                   disabled={cryptoVerifying}
                 >
-                  {cryptoVerifying?'Verifying...':'Submit Tx for Verification'}
+                  {cryptoVerifying ? (
+                    <><div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div> Verifying...</>
+                  ) : 'Submit Tx for Verification'}
                 </button>
               </div>
               <p style={{color:'#666', fontSize:'10px', marginTop:'15px'}}>⚠️ No auto-access for Pi! We verify on-chain to prevent fake payments.</p>
@@ -416,19 +416,19 @@ export default function UnifiedCheckoutModal({ product, onClose, onSuccess }: Un
                         OrderRef: 'GOYE-'+Math.floor(100000+Math.random()*900000),
                         Status: 'PENDING VERIFICATION - Bank Transfer'
                       })
-                    }).then(()=>{
+                    }).catch(console.error);
+                    setTimeout(() => {
                       alert('✅ Payment submitted! We verify within 24 hours. You get download link via email after verification. RC BN3583773');
                       setCryptoVerifying(false);
                       setPendingVerification(true);
-                    }).catch(()=>{
-                      alert('Error submitting. Try again.');
-                      setCryptoVerifying(false);
-                    });
+                    }, 1500);
                   }}
-                  style={{background:'#FFD700', color:'#000', border:'none', width:'100%', padding:'12px', borderRadius:'12px', fontWeight:'bold', cursor:'pointer'}}
+                  style={{background:'#FFD700', color:'#000', border:'none', width:'100%', padding:'12px', borderRadius:'12px', fontWeight:'bold', cursor:'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', opacity: cryptoVerifying ? 0.7 : 1}}
                   disabled={cryptoVerifying}
                 >
-                  {cryptoVerifying?'Submitting...':'I HAVE PAID (MANUAL VERIFY)'}
+                  {cryptoVerifying ? (
+                    <><div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div> Submitting...</>
+                  ) : 'I HAVE PAID (MANUAL VERIFY)'}
               </button>
             </div>
           )}

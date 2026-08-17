@@ -97,6 +97,7 @@
 
         <div id="downloadSection" style="margin-top: 20px;">
           <a id="downloadBtn" href="/" class="unlocked-btn">⚡ Instant Download / Access Digital Product 🔑</a>
+          <a id="receiptBtn" href="/receipt-template.html" target="_blank" class="unlocked-btn" style="background:#111; color:#FFD700; border:1px solid #FFD700; margin-top:10px;">📩 View / Download Receipt</a>
         </div>
 
         <div id="esimSection" style="text-align: center; display: none; margin-top: 20px;">
@@ -124,6 +125,11 @@
       document.getElementById('productName').innerText = product;
       document.getElementById('deliveryEmail').innerText = email;
       document.getElementById('txId').innerText = tx_id;
+      
+      const receiptBtn = document.getElementById('receiptBtn');
+      if(receiptBtn) {
+        receiptBtn.href = `/receipt-template.html?email=${encodeURIComponent(email)}&product=${encodeURIComponent(product)}&tx=${encodeURIComponent(tx_id)}`;
+      }
 
       // Unlock product in localStorage so returning to main store keeps it unlocked
       try {
