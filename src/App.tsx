@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import QRScannerModal from './components/QRScannerModal';
+import { GoyeLogo } from './components/GoyeLogo';
 import { Globe, Download, ShieldCheck, ChevronRight, Lock, BookOpen, Settings, List, Save, Mail, CreditCard, DollarSign, Wallet, Phone, Landmark, Home, ShoppingBag, GraduationCap, MessageCircle, Search, Edit, Trash2, Plus, FileText, Video, Eye, EyeOff, CheckCircle, Users, Activity, UserCircle } from 'lucide-react';
 import { ESIM_PRODUCTS, ACADEMY_COURSES } from './data';
 import UnifiedCheckoutModal from './components/UnifiedCheckoutModal';
@@ -99,6 +100,7 @@ const ContractGeneratorModal = ({ contract, onClose, onCheckout }) => {
 };
 
 export default function App() {
+  const [showSplash, setShowSplash] = useState(true);
   const [showQRModal, setShowQRModal] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
   const [showAccessModal, setShowAccessModal] = useState(false);
@@ -140,6 +142,11 @@ export default function App() {
       setRefHistory(JSON.parse(localStorage.getItem('referral_sales_list') || '[]'));
     }
   }, [tab]);
+
+  useEffect(() => {
+    const splashTimer = setTimeout(() => setShowSplash(false), 2000);
+    return () => clearTimeout(splashTimer);
+  }, []);
 
   useEffect(() => {
     const handler = (e: any) => {
@@ -505,15 +512,35 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#000000] text-gray-200 font-sans pb-24">
+      {showSplash && (
+        <div className="fixed inset-0 bg-[#000] z-[10000] flex flex-col items-center justify-center transition-opacity duration-500">
+          <GoyeLogo size={180} className="mb-6 shadow-[0_0_50px_rgba(255,215,0,0.5)] rounded-full animate-pulse" />
+          <h1 className="text-[#FFD700] text-2xl font-black tracking-widest text-center px-4">GOYE STORE GLOBAL</h1>
+          <p className="text-white text-xs font-bold uppercase tracking-[0.2em] mt-2">Sirwise AI Web3 Academy</p>
+        </div>
+      )}
+
       <header className="bg-[#000000] p-3 sticky top-0 z-[50] border-b border-[#222]" style={{position:'relative', pointerEvents:'auto'}}>
         <div className="flex justify-between items-center max-w-7xl mx-auto mb-3">
-          <div className="text-left flex-1">
-            <div className="flex items-center gap-2">
-              <Globe className="text-[#FFD700] w-6 h-6" />
-              <span className="text-white font-bold text-lg sm:text-xl leading-tight">GOYE Global Worldwide</span>
+          <div className="text-left flex-1 flex items-start gap-3">
+            <div
+              className="relative z-[9999] pointer-events-auto cursor-pointer flex-shrink-0"
+              title="Hold for Admin"
+              onMouseDown={() => { const t = setTimeout(()=>setShowAdminLogin(true), 3000); adminPressTimer.current = t; }}
+              onMouseUp={() => clearTimeout(adminPressTimer.current)}
+              onMouseLeave={() => clearTimeout(adminPressTimer.current)}
+              onTouchStart={() => { const t = setTimeout(()=>setShowAdminLogin(true), 3000); adminPressTimer.current = t; }}
+              onTouchEnd={() => clearTimeout(adminPressTimer.current)}
+            >
+              <GoyeLogo size={48} />
             </div>
-            <div className="text-[#888] text-[10px] sm:text-[11px] mt-1">
-              RC: BN3583773 • <span className="text-[#FFD700]">www.gasv.store</span><br className="sm:hidden" /> • goye@gasv.store / goyedagosmess@gmail.com
+            <div>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-white font-bold text-lg sm:text-xl leading-tight">GOYE Global Worldwide</span>
+              </div>
+              <div className="text-[#888] text-[10px] sm:text-[11px] mt-1">
+                RC: BN3583773 • <span className="text-[#FFD700]">www.gasv.store</span><br className="sm:hidden" /> • goye@gasv.store / goyedagosmess@gmail.com
+              </div>
             </div>
           </div>
           <div style={{display:'flex', alignItems:'center', gap:'8px', position:'relative', zIndex:100, pointerEvents:'auto'}}>
@@ -599,7 +626,13 @@ export default function App() {
               </div>
               
               {tab === 'academy' && (
-              <div className="bg-gradient-to-br from-[#111] to-[#222] border border-[#FFD700] rounded-[20px] p-5 mb-8 shadow-lg shadow-yellow-900/10 max-w-3xl mx-auto">
+              <>
+                <div className="flex flex-col items-center justify-center text-center mb-8 mt-4 animate-in zoom-in duration-500">
+                  <GoyeLogo size={120} className="mb-4 shadow-[0_0_30px_rgba(255,215,0,0.3)] rounded-full" />
+                  <h2 className="text-[#FFD700] text-2xl md:text-3xl font-black max-w-lg">Goye Global & Sirwise AI Web3 Academy</h2>
+                  <p className="text-white mt-2 font-bold uppercase tracking-widest text-sm">Trusted Worldwide</p>
+                </div>
+                <div className="bg-gradient-to-br from-[#111] to-[#222] border border-[#FFD700] rounded-[20px] p-5 mb-8 shadow-lg shadow-yellow-900/10 max-w-3xl mx-auto">
                 <div className="flex items-center gap-4">
                   <div className="w-[60px] h-[60px] min-w-[60px] bg-[#FFD700] rounded-full flex items-center justify-center text-3xl shadow-inner">🤖</div>
                   <div className="flex-1">
@@ -625,6 +658,7 @@ export default function App() {
                   <MessageCircle size={16}/> Ask AI Instructor
                 </button>
               </div>
+              </>
               )}
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {academyCourses.map(course => {
@@ -1676,9 +1710,13 @@ export default function App() {
             </div>
 
             {/* Brand Column */}
-            <div style={{textAlign:'center'}}>
+            <div style={{textAlign:'center'}} className="flex flex-col items-center justify-center">
+              <GoyeLogo size={40} className="mb-3" />
               <div style={{background:'linear-gradient(135deg,#FFD700,#FFA500)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', fontWeight:'bold', fontSize:'22px', marginBottom:'8px'}}>GOYE GLOBAL</div>
-              <p style={{color:'#888', fontSize:'11px', letterSpacing:'2px', marginBottom:'15px'}}>WORLDWIDE • RC BN3583773</p>
+              <div style={{display:'flex', alignItems:'center', justifyContent:'center', gap:'8px', marginBottom:'15px'}}>
+                <p style={{color:'#888', fontSize:'11px', letterSpacing:'2px'}}>WORLDWIDE • RC BN3583773</p>
+                <GoyeLogo size={24} />
+              </div>
               <p style={{color:'#ccc', fontSize:'13px', lineHeight:'1.6'}}>Digital academy & eSIM provider<br/>connecting 190+ countries instantly.<br/>26 Courses From $9.99 • UK Visa $89.99<br/>Sirwise AI Web3 Academy 24/7</p>
               <div style={{marginTop:'20px', display:'flex', flexWrap:'wrap', justifyContent:'center', gap:'7px'}}>
                 <span style={{background:'linear-gradient(135deg,#111,#222)', color:'#FFD700', padding:'6px 12px', borderRadius:'20px', fontSize:'11px', border:'1px solid #333', fontWeight:'bold'}}>💳 Paystack</span>
