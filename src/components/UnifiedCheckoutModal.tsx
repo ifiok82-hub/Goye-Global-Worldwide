@@ -47,6 +47,9 @@ export default function UnifiedCheckoutModal({ product, onClose, onSuccess }: Un
     };
 
     const trackDbPurchase = async () => {
+      if (localStorage.getItem('goye_is_owner') === 'true' || localStorage.getItem('goye_admin_session') === 'true') {
+        return; // Do not track DB purchase for owner
+      }
       try {
         const q = query(collection(db, 'users'), where('email', '==', email));
         const querySnapshot = await getDocs(q);
@@ -99,7 +102,7 @@ export default function UnifiedCheckoutModal({ product, onClose, onSuccess }: Un
 
     // --- Referral Logic Start ---
     const activeRef = localStorage.getItem('active_referral');
-    if (activeRef) {
+    if (activeRef && localStorage.getItem('goye_is_owner') !== 'true' && localStorage.getItem('goye_admin_session') !== 'true') {
       const refSales = JSON.parse(localStorage.getItem('referral_sales_list') || '[]');
       const commUsd = product.price * 0.20;
       refSales.unshift({

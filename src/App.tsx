@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import QRScannerModal from './components/QRScannerModal';
 import { GoyeLogo } from './components/GoyeLogo';
 import { Globe, Download, ShieldCheck, ChevronRight, Lock, BookOpen, Settings, List, Save, Mail, CreditCard, DollarSign, Wallet, Phone, Landmark, Home, ShoppingBag, GraduationCap, MessageCircle, Search, Edit, Trash2, Plus, FileText, Video, Eye, EyeOff, CheckCircle, Users, Activity, UserCircle } from 'lucide-react';
@@ -130,6 +130,11 @@ export default function App() {
   // Referral state
   const [refClicks, setRefClicks] = useState(0);
 
+  // Tracking state
+  const [trackingRefInput, setTrackingRefInput] = useState('');
+  const [trackingStatus, setTrackingStatus] = useState<'idle' | 'loading' | 'found' | 'not_found'>('idle');
+  const [trackingResult, setTrackingResult] = useState<any>(null);
+
   useEffect(() => {
     const fetchUsers = async () => {
       if (isAdmin && (tab === 'admin' || tab === 'admin-users')) {
@@ -248,10 +253,14 @@ export default function App() {
     // Check referral
     const refCode = params.get('ref');
     if (refCode && !sessionStorage.getItem('ref_counted')) {
-      localStorage.setItem('active_referral', refCode);
-      document.cookie = `active_referral=${refCode}; path=/; max-age=2592000`;
-      const currentClicks = parseInt(localStorage.getItem('referral_clicks') || '0', 10);
-      localStorage.setItem('referral_clicks', (currentClicks + 1).toString());
+      if (localStorage.getItem('goye_is_owner') === 'true' && refCode === 'GOYE') {
+        alert("Owner mode: Your click NOT counted as customer - Use https://www.gasv.store without ref for browsing");
+      } else if (localStorage.getItem('goye_is_owner') !== 'true') {
+        localStorage.setItem('active_referral', refCode);
+        document.cookie = `active_referral=${refCode}; path=/; max-age=2592000`;
+        const currentClicks = parseInt(localStorage.getItem('referral_clicks') || '0', 10);
+        localStorage.setItem('referral_clicks', (currentClicks + 1).toString());
+      }
       sessionStorage.setItem('ref_counted', 'true');
     }
 
@@ -359,6 +368,50 @@ export default function App() {
   }, [isAdmin, tab]);
   
   
+  const combinedOrders = useMemo(() => {
+    return [...pendingOrders.map(o => ({...o, status: 'pending'})), ...allCompletedOrdersList]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [pendingOrders, allCompletedOrdersList]);
+
+  const handleTrackOrder = () => {
+    if (!trackingRefInput.trim()) return;
+    setTrackingStatus('loading');
+    setTrackingResult(null);
+    
+    setTimeout(() => {
+      let found = null;
+      try {
+        const pOrders = JSON.parse(localStorage.getItem('goye_pending_orders') || '[]');
+        const purchased = JSON.parse(localStorage.getItem('goye_purchased_digital_products') || '[]');
+        found = pOrders.find((o: any) => o.ref === trackingRefInput) || purchased.find((o: any) => o.ref === trackingRefInput);
+        
+        if (!found) {
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('goye_order_')) {
+              try {
+                const orderData = JSON.parse(localStorage.getItem(key) || '{}');
+                if (orderData.ref === trackingRefInput) {
+                   found = orderData;
+                   break;
+                }
+              } catch(e) {}
+            }
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+
+      if (found) {
+        setTrackingResult(found);
+        setTrackingStatus('found');
+      } else {
+        setTrackingStatus('not_found');
+      }
+    }, 1200);
+  };
+
   const handleInstall = async () => {
     if (deferredPrompt) {
       deferredPrompt.prompt();
@@ -397,6 +450,17 @@ export default function App() {
 
   
   const trackClick = (type: string, name: string, price: number = 0) => {
+    if (localStorage.getItem('goye_is_owner') === 'true' || localStorage.getItem('goye_admin_session') === 'true' || window.location.search.includes('admin') || document.body.classList.contains('admin-mode')) {
+      // Track as test click
+      try {
+        let testAnalytics = JSON.parse(localStorage.getItem('goye_test_analytics') || '{"totalClicks":0,"clicks":[]}');
+        testAnalytics.totalClicks += 1;
+        testAnalytics.clicks.push({type, name, price, time:new Date().toLocaleString()});
+        localStorage.setItem('goye_test_analytics', JSON.stringify(testAnalytics));
+      } catch(e) {}
+      return; 
+    }
+
     try {
       let analytics = JSON.parse(localStorage.getItem('goye_analytics') || '{"totalViews":0,"totalClicks":0,"dailyViews":{},"clicks":[],"links":{}}');
       const today = new Date().toISOString().split('T')[0];
@@ -419,12 +483,16 @@ export default function App() {
   const openAnalytics = () => {
     try {
       const data = JSON.parse(localStorage.getItem('goye_analytics') || '{"totalViews":0,"totalClicks":0,"dailyViews":{},"clicks":[],"links":{}}');
-      setAnalyticsData(data);
+      const testData = JSON.parse(localStorage.getItem('goye_test_analytics') || '{"totalClicks":0,"clicks":[]}');
+      setAnalyticsData({...data, testData});
       setShowAnalyticsModal(true);
     } catch(e) {}
   };
 
   useEffect(() => {
+    if (localStorage.getItem('goye_is_owner') === 'true' || localStorage.getItem('goye_admin_session') === 'true' || window.location.search.includes('admin')) {
+      return; // Do not count owner views
+    }
     try {
       let analytics = JSON.parse(localStorage.getItem('goye_analytics') || '{"totalViews":0,"totalClicks":0,"dailyViews":{},"clicks":[],"links":{}}');
       analytics.totalViews = (analytics.totalViews || 0) + 1;
@@ -1015,15 +1083,73 @@ export default function App() {
             <h2 className="text-2xl font-black text-white mb-6 flex items-center gap-2">
                📦 Order Trackers
             </h2>
-            <div className="bg-[#111] border border-white/10 p-6 rounded-2xl text-center">
-              <p className="text-gray-400 mb-4">Enter your order reference (e.g. REF-...) to track the status of your digital delivery or eSIM provisioning.</p>
-              <div className="flex gap-2 max-w-md mx-auto">
-                <input type="text" placeholder="Enter Order Ref" className="flex-1 bg-black border border-[#333] p-3 rounded-xl text-white focus:border-[#FFD700] focus:outline-none" id="track-ref-input" />
-                <button onClick={() => {
-                  const val = (document.getElementById('track-ref-input') as HTMLInputElement).value;
-                  if (val) alert('Tracking status for ' + val + ':\nStatus: Completed\nSent to your email address.');
-                }} className="bg-[#FFD700] text-black px-6 py-3 rounded-xl font-bold">Track</button>
+            <div className="bg-[#111] border border-white/10 p-6 rounded-2xl text-center transition-all">
+              <p className="text-gray-400 mb-4 text-sm">Enter your order reference (e.g. REF-...) to track the status of your digital delivery or eSIM provisioning.</p>
+              <div className="flex gap-2 max-w-md mx-auto mb-6">
+                <input 
+                  type="text" 
+                  value={trackingRefInput}
+                  onChange={(e) => setTrackingRefInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleTrackOrder()}
+                  placeholder="Enter Order Ref" 
+                  className="flex-1 bg-black border border-[#333] p-3 rounded-xl text-white focus:border-[#FFD700] focus:outline-none transition-colors" 
+                />
+                <button 
+                  onClick={handleTrackOrder}
+                  disabled={trackingStatus === 'loading' || !trackingRefInput.trim()}
+                  className={`bg-[#FFD700] text-black px-6 py-3 rounded-xl font-bold transition-all ${trackingStatus === 'loading' ? 'opacity-70 cursor-not-allowed' : 'hover:bg-yellow-500'}`}
+                >
+                  {trackingStatus === 'loading' ? 'Searching...' : 'Track'}
+                </button>
               </div>
+
+              {trackingStatus === 'loading' && (
+                <div className="animate-in fade-in slide-in-from-top-4 flex flex-col items-center justify-center py-8">
+                  <div className="w-10 h-10 border-4 border-[#333] border-t-[#FFD700] rounded-full animate-spin mb-4"></div>
+                  <p className="text-[#FFD700] font-bold text-sm">Locating your order...</p>
+                </div>
+              )}
+
+              {trackingStatus === 'not_found' && (
+                <div className="animate-in fade-in slide-in-from-top-4 bg-red-900/20 border border-red-500/50 p-4 rounded-xl max-w-md mx-auto">
+                  <p className="text-red-400 font-bold mb-1">Order Not Found</p>
+                  <p className="text-gray-400 text-xs">We couldn't find an order with that reference. Please check and try again.</p>
+                </div>
+              )}
+
+              {trackingStatus === 'found' && trackingResult && (
+                <div className="animate-in fade-in slide-in-from-top-4 bg-black border border-[#333] rounded-xl p-5 max-w-md mx-auto text-left shadow-lg relative overflow-hidden">
+                  <div className="absolute top-0 right-0 p-4 opacity-5"><Activity size={80} className="text-[#10B981]"/></div>
+                  
+                  <div className="flex justify-between items-start mb-4 relative z-10">
+                    <div>
+                      <p className="text-gray-500 text-[10px] font-bold uppercase mb-1">Status</p>
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2 py-1 rounded text-xs font-bold ${trackingResult.status === 'completed' || trackingResult.status === 'paid' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
+                          {trackingResult.status ? trackingResult.status.toUpperCase() : 'COMPLETED'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-gray-500 text-[10px] font-bold uppercase mb-1">Order Date</p>
+                      <p className="text-white text-xs">{new Date(trackingResult.date).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-[#222] pt-4 mb-4 relative z-10">
+                    <p className="text-gray-500 text-[10px] font-bold uppercase mb-1">Product Details</p>
+                    <p className="text-[#FFD700] font-bold text-lg mb-1">{trackingResult.productName || trackingResult.product}</p>
+                    <p className="text-white text-sm font-mono">{trackingResult.ref}</p>
+                  </div>
+
+                  <div className="bg-[#111] p-3 rounded-lg border border-[#222] relative z-10">
+                    <p className="text-gray-400 text-xs flex items-center gap-2">
+                      <CheckCircle size={14} className="text-[#10B981]" />
+                      Delivery Sent to: <span className="text-white font-medium">{trackingResult.email}</span>
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -1253,20 +1379,24 @@ export default function App() {
               <button onClick={() => setShowAnalyticsModal(false)} className="absolute top-4 right-4 text-gray-500 hover:text-white">✕</button>
               <h2 className="text-[#FFD700] text-xl font-bold mb-4">📊 GOYE Analytics - RC BN3583773</h2>
               
+              <div className="mb-4 bg-[#FFD700]/10 border border-[#FFD700]/30 p-3 rounded-lg text-xs text-[#FFD700]">
+                <strong>OWNER TIP:</strong> You are in Owner Mode - Your clicks are NOT counted. Browse your store via <code>https://www.gasv.store</code> (without ?ref) to avoid confusion. Share <code>https://www.gasv.store/?ref=GOYE</code> only with customers.
+              </div>
+                
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="bg-[#111] rounded-[15px] p-4 border border-[#333]">
-                  <p className="text-[#888] text-xs font-bold mb-1">TOTAL PAGE VIEWS</p>
+                  <p className="text-[#888] text-xs font-bold mb-1">REAL CUSTOMER VIEWS</p>
                   <h2 className="text-[#FFD700] text-3xl font-black">{analyticsData?.totalViews || 0}</h2>
                   <p className="text-[#10B981] text-xs mt-1">Today: {analyticsData?.dailyViews?.[new Date().toISOString().split('T')[0]] || 0}</p>
                 </div>
                 <div className="bg-[#111] rounded-[15px] p-4 border border-[#333]">
-                  <p className="text-[#888] text-xs font-bold mb-1">TOTAL LINK CLICKS</p>
+                  <p className="text-[#888] text-xs font-bold mb-1">REAL CUSTOMER CLICKS</p>
                   <h2 className="text-[#10B981] text-3xl font-black">{analyticsData?.totalClicks || 0}</h2>
                   <p className="text-[#888] text-xs mt-1">Conversion: {((analyticsData?.totalClicks / (analyticsData?.totalViews || 1)) * 100 || 0).toFixed(1)}%</p>
                 </div>
               </div>
 
-              <h3 className="text-white font-bold mb-3">🔥 Top Clicked Links (What people want most):</h3>
+              <h3 className="text-white font-bold mb-3">🔥 Top Clicked Links (What REAL people want most):</h3>
               <div className="bg-[#111] rounded-[15px] p-3 border border-[#333] mb-6">
                 {Object.entries(analyticsData?.links || {}).sort((a: any, b: any) => b[1].count - a[1].count).map(([name, data]: any) => (
                   <div key={name} className="flex justify-between items-center border-b border-[#222] last:border-0 py-2">
@@ -1279,7 +1409,7 @@ export default function App() {
                 ))}
               </div>
 
-              <h3 className="text-white font-bold mb-3">🕒 Recent Clicks:</h3>
+              <h3 className="text-white font-bold mb-3">🕒 Recent Real Customer Clicks:</h3>
               <div className="bg-[#111] rounded-[15px] p-3 border border-[#333] max-h-[200px] overflow-y-auto mb-6">
                 {analyticsData?.clicks?.slice(-20).reverse().map((c: any, i: number) => (
                   <div key={i} className="text-[#ccc] text-xs py-1.5 border-b border-[#222] last:border-0 flex justify-between">
@@ -1287,6 +1417,21 @@ export default function App() {
                     <span className="text-[#888] text-[10px] text-right">{c.time}</span>
                   </div>
                 ))}
+                {!analyticsData?.clicks?.length && <div className="text-gray-500 text-xs py-2 text-center">No real customer clicks yet.</div>}
+              </div>
+
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-gray-500 font-bold">🧪 My Test Clicks (Owner Excluded Data):</h3>
+                <span className="text-gray-600 text-xs">Total: {analyticsData?.testData?.totalClicks || 0}</span>
+              </div>
+              <div className="bg-[#111] rounded-[15px] p-3 border border-[#333] max-h-[150px] overflow-y-auto mb-6 opacity-60">
+                {analyticsData?.testData?.clicks?.slice(-10).reverse().map((c: any, i: number) => (
+                  <div key={i} className="text-gray-500 text-xs py-1.5 border-b border-[#222] last:border-0 flex justify-between">
+                    <span>{c.name}</span>
+                    <span className="text-[10px] text-right">{c.time}</span>
+                  </div>
+                ))}
+                {!analyticsData?.testData?.clicks?.length && <div className="text-gray-600 text-xs py-2 text-center">No test clicks.</div>}
               </div>
 
               <div className="flex gap-2">
@@ -1298,14 +1443,25 @@ export default function App() {
                 </button>
                 <button 
                   onClick={() => { 
-                    if(window.confirm('Clear all analytics?')){ 
+                    if(window.confirm('Clear all REAL analytics? (Cannot be undone)')){ 
                       localStorage.removeItem('goye_analytics'); 
-                      setAnalyticsData({});
+                      setAnalyticsData({...analyticsData, totalViews:0, totalClicks:0, dailyViews:{}, clicks:[], links:{}});
                     }
                   }}
                   className="bg-[#222] hover:bg-[#333] text-white px-4 py-2 rounded-xl font-bold text-xs border border-[#333] transition"
                 >
-                  🗑️ Clear
+                  🗑️ Clear Real
+                </button>
+                <button 
+                  onClick={() => { 
+                    if(window.confirm('Clear your test clicks?')){ 
+                      localStorage.removeItem('goye_test_analytics'); 
+                      setAnalyticsData({...analyticsData, testData: {totalClicks:0, clicks:[]}});
+                    }
+                  }}
+                  className="bg-red-900/30 hover:bg-red-900/50 text-red-400 px-4 py-2 rounded-xl font-bold text-xs border border-red-900/50 transition"
+                >
+                  Clear My Tests
                 </button>
               </div>
               <p className="text-[#888] text-[10px] mt-4 text-center">💡 Pro Tip: Use Bitly or tinyurl for external YouTube links to track YouTube clicks too! RC BN3583773</p>
@@ -1488,6 +1644,11 @@ export default function App() {
                   if(v==='GoyeBN3583773'){ 
                     setIsAdmin(true); 
                     localStorage.setItem('goye_admin_auth', 'true'); 
+                    localStorage.setItem('goye_is_owner', 'true');
+                    localStorage.setItem('goye_admin_session', 'true');
+                    if (!localStorage.getItem('goye_owner_device_id')) {
+                      localStorage.setItem('goye_owner_device_id', 'owner_' + Date.now());
+                    }
                     setShowAdminLogin(false);
                     if(!tab.startsWith('admin')) setTab('admin'); 
                   } else { 
@@ -1509,6 +1670,11 @@ export default function App() {
                 if(v==='GoyeBN3583773'){ 
                   setIsAdmin(true); 
                   localStorage.setItem('goye_admin_auth', 'true'); 
+                  localStorage.setItem('goye_is_owner', 'true');
+                  localStorage.setItem('goye_admin_session', 'true');
+                  if (!localStorage.getItem('goye_owner_device_id')) {
+                    localStorage.setItem('goye_owner_device_id', 'owner_' + Date.now());
+                  }
                   setShowAdminLogin(false);
                   if(!tab.startsWith('admin')) setTab('admin'); 
                 } else {
@@ -1536,7 +1702,7 @@ export default function App() {
           <div style={{maxWidth:'800px', margin:'0 auto'}}>
             <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'20px'}}>
               <h2 style={{color:'#FFD700'}}>🔒 Admin Panel - RC BN3583773</h2>
-              <button onClick={()=>{ setIsAdmin(false); setShowAdminLogin(false); localStorage.removeItem('goye_admin_auth'); setTab('home'); }} style={{background:'#f00', color:'#fff', border:'none', padding:'8px 16px', borderRadius:'10px', cursor:'pointer'}}>✕ Close Admin</button>
+              <button onClick={()=>{ setIsAdmin(false); setShowAdminLogin(false); localStorage.removeItem('goye_admin_auth'); localStorage.setItem('goye_admin_session', 'false'); setTab('home'); }} style={{background:'#f00', color:'#fff', border:'none', padding:'8px 16px', borderRadius:'10px', cursor:'pointer'}}>✕ Close Admin</button>
             </div>
                           <div>
                 <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 border-b border-white/10 pb-6">
@@ -1557,6 +1723,14 @@ export default function App() {
                     <button onClick={() => setTab('admin-settings')} className={`px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1 ${tab === 'admin-settings' ? 'bg-[#FFD700] text-black' : 'bg-[#111] text-gray-400 hover:text-white'}`}>
                       <Settings size={14}/> Settings
                     </button>
+                  </div>
+                </div>
+
+                <div className="mb-8 bg-[#FFD700]/10 border border-[#FFD700]/30 p-4 rounded-xl text-xs text-[#FFD700] flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
+                  <div className="text-2xl">🚨</div>
+                  <div>
+                    <strong className="block text-sm mb-1">OWNER TIP: You are in Owner Mode</strong>
+                    Your clicks are NOT counted. Browse your store via <code>https://www.gasv.store</code> (without ?ref) to avoid confusion. Share <code>https://www.gasv.store/?ref=GOYE</code> only with customers.
                   </div>
                 </div>
 
@@ -1598,12 +1772,11 @@ export default function App() {
                             <th className="p-4">Product</th>
                             <th className="p-4">Method & Status</th>
                             <th className="p-4">Date</th>
+                            <th className="p-4">Actions</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
-                          {[...pendingOrders.map(o => ({...o, status: 'pending'})), ...allCompletedOrdersList]
-                            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                            .map((order, i) => (
+                          {combinedOrders.map((order, i) => (
                             <tr key={i} className="hover:bg-white/[0.02]">
                               <td className="p-4 font-mono text-[#FFD700] text-xs">{order.ref}</td>
                               <td className="p-4">
@@ -1614,18 +1787,47 @@ export default function App() {
                                 <div className="text-white text-xs">{order.productName || order.product}</div>
                                 <div className="text-[#10B981] font-bold text-xs">${order.price}</div>
                               </td>
-                              <td className="p-4 flex items-center gap-2">
+                              <td className="p-4 flex flex-col gap-1 items-start">
                                 <span className="uppercase text-[10px] px-2 py-1 bg-white/10 rounded">{order.method || order.gateway || 'Unknown'}</span>
                                 <span className={`uppercase text-[10px] px-2 py-1 rounded font-bold ${order.status === 'completed' || order.status === 'paid' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
                                   {order.status}
                                 </span>
                               </td>
                               <td className="p-4 text-xs text-gray-500">{new Date(order.date).toLocaleString()}</td>
+                              <td className="p-4">
+                                <button 
+                                  onClick={() => {
+                                    const template = `Subject: Your Digital Delivery from GOYE Global (Order ${order.ref})
+
+Dear ${order.fullName || order.name || 'Customer'},
+
+Thank you for your order with GOYE Global Worldwide!
+Product: ${order.productName || order.product}
+Order Ref: ${order.ref}
+Status: ${order.status?.toUpperCase() || 'COMPLETED'}
+
+To access your digital product, please click the secure link below:
+https://www.gasv.store/access/${order.ref}
+
+If you require any support, please reply to this email or contact us via our WhatsApp.
+
+Best regards,
+GOYE Global Admin Team
+RC BN3583773
+www.gasv.store`;
+                                    navigator.clipboard.writeText(template);
+                                    alert('Professional Email Template Copied to Clipboard!');
+                                  }}
+                                  className="bg-white/10 hover:bg-white/20 text-white text-xs px-3 py-1.5 rounded transition"
+                                >
+                                  📧 Email
+                                </button>
+                              </td>
                             </tr>
                           ))}
-                          {(pendingOrders.length === 0 && allCompletedOrdersList.length === 0) && (
+                          {combinedOrders.length === 0 && (
                             <tr>
-                              <td colSpan={5} className="p-8 text-center text-gray-500">No orders yet.</td>
+                              <td colSpan={6} className="p-8 text-center text-gray-500">No orders yet.</td>
                             </tr>
                           )}
                         </tbody>
