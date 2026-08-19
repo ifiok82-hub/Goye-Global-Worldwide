@@ -4,8 +4,9 @@ import { GoyeLogo } from './components/GoyeLogo';
 import { Globe, Download, ShieldCheck, ChevronRight, Lock, BookOpen, Settings, List, Save, Mail, CreditCard, DollarSign, Wallet, Phone, Landmark, Home, ShoppingBag, GraduationCap, MessageCircle, Search, Edit, Trash2, Plus, FileText, Video, Eye, EyeOff, CheckCircle, Users, Activity, UserCircle } from 'lucide-react';
 import { ESIM_PRODUCTS, ACADEMY_COURSES } from './data';
 import UnifiedCheckoutModal from './components/UnifiedCheckoutModal';
-import { auth, googleAuthProvider } from './lib/firebase';
+import { auth, googleAuthProvider, db } from './lib/firebase';
 import { signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
+import { doc, setDoc, getDoc, collection, getDocs, query, where, orderBy } from 'firebase/firestore';
 
 
 const HeroSection = ({ onLogoTap }: { onLogoTap?: () => void }) => (
@@ -107,7 +108,7 @@ export default function App() {
 
   const REAL_QR = "https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=https://www.gasv.store&bgcolor=FFFFFF&color=000000&qzone=1&margin=10&ecc=H&format=png";
 
-  const [tab, setTab] = useState<'home' | 'shop' | 'esim' | 'academy' | 'contracts' | 'prompts' | 'downloads' | 'admin' | 'admin-settings' | 'admin-academy' | 'admin-products' | 'trackers' | 'referrals'>('home');
+  const [tab, setTab] = useState<'home' | 'shop' | 'esim' | 'academy' | 'contracts' | 'prompts' | 'downloads' | 'admin' | 'admin-users' | 'admin-settings' | 'admin-academy' | 'admin-products' | 'trackers' | 'referrals'>('home');
   const [showRecorder, setShowRecorder] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordedAudio, setRecordedAudio] = useState<string | null>(null);
@@ -124,13 +125,30 @@ export default function App() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminError, setAdminError] = useState('');
   const adminPressTimer = React.useRef<any>(null);
+  const [dbUsers, setDbUsers] = useState<any[]>([]);
 
   // Referral state
   const [refClicks, setRefClicks] = useState(0);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      if (isAdmin && (tab === 'admin' || tab === 'admin-users')) {
+        try {
+          const usersSnap = await getDocs(collection(db, 'users'));
+          const usersList = usersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as any[];
+          setDbUsers(usersList.sort((a, b) => new Date(b.joinedAt || 0).getTime() - new Date(a.joinedAt || 0).getTime()));
+        } catch (error) {
+          console.error("Error fetching users:", error);
+        }
+      }
+    };
+    fetchUsers();
+  }, [isAdmin, tab]);
   const [refSignups, setRefSignups] = useState(0);
   const [refSales, setRefSales] = useState(0);
   const [refBalance, setRefBalance] = useState(0);
   const [refHistory, setRefHistory] = useState<any[]>([]);
+  const [myReferrals, setMyReferrals] = useState<any[]>([]);
 
   useEffect(() => {
     // Initial fetch of referral data when tab changes or initially
@@ -140,8 +158,30 @@ export default function App() {
       setRefSales(parseInt(localStorage.getItem('referral_sales') || '0', 10));
       setRefBalance(parseFloat(localStorage.getItem('referral_balance') || '0'));
       setRefHistory(JSON.parse(localStorage.getItem('referral_sales_list') || '[]'));
+      
+      if (user) {
+        const fetchMyReferrals = async () => {
+          try {
+            const myUserDoc = await getDoc(doc(db, 'users', user.uid));
+            if (myUserDoc.exists()) {
+               const myData = myUserDoc.data();
+               if (myData.refBalance !== undefined) setRefBalance(myData.refBalance);
+               if (myData.refSales !== undefined) setRefSales(myData.refSales);
+            }
+          
+            const refQ = query(collection(db, 'users'), where('referred_by', '==', user.uid));
+            const snap = await getDocs(refQ);
+            const myRefs = snap.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
+            setMyReferrals(myRefs.sort((a,b) => new Date(b.joinedAt || 0).getTime() - new Date(a.joinedAt || 0).getTime()));
+            setRefSignups(myRefs.length);
+          } catch(e) {
+            console.error("Error fetching my referrals:", e);
+          }
+        };
+        fetchMyReferrals();
+      }
     }
-  }, [tab]);
+  }, [tab, user]);
 
   useEffect(() => {
     const splashTimer = setTimeout(() => setShowSplash(false), 2000);
@@ -163,7 +203,7 @@ export default function App() {
       alert('✅ GOYE App installed! Find it on home screen!');
     });
     
-    const unsubscribe = onAuthStateChanged(auth, (u) => {
+    const unsubscribe = onAuthStateChanged(auth, async (u) => {
       setUser(u);
       if (u?.email === 'goye@gasv.store') {
         setIsAdmin(true);
@@ -171,6 +211,28 @@ export default function App() {
       } else if (u) {
         setIsAdmin(false);
         localStorage.removeItem('goye_admin_auth');
+      }
+
+      if (u) {
+        try {
+          const userRef = doc(db, 'users', u.uid);
+          const userSnap = await getDoc(userRef);
+          if (!userSnap.exists()) {
+            const getCookieValue = (name: string) => document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)')?.pop() || '';
+            const refCode = localStorage.getItem('active_referral') || getCookieValue('active_referral') || '';
+            
+            await setDoc(userRef, {
+              name: u.displayName || u.email,
+              email: u.email,
+              uid: u.uid,
+              referred_by: refCode,
+              joinedAt: new Date().toISOString(),
+              totalSpent: 0
+            });
+          }
+        } catch (error) {
+          console.error("Error saving user profile:", error);
+        }
       }
     });
 
@@ -187,6 +249,7 @@ export default function App() {
     const refCode = params.get('ref');
     if (refCode && !sessionStorage.getItem('ref_counted')) {
       localStorage.setItem('active_referral', refCode);
+      document.cookie = `active_referral=${refCode}; path=/; max-age=2592000`;
       const currentClicks = parseInt(localStorage.getItem('referral_clicks') || '0', 10);
       localStorage.setItem('referral_clicks', (currentClicks + 1).toString());
       sessionStorage.setItem('ref_counted', 'true');
@@ -1000,8 +1063,8 @@ export default function App() {
                 <p className="text-gray-400 text-xs mb-4 flex-1">Share your unique link. When someone buys an eSIM or course, you earn cash directly to your wallet.</p>
                 
                 <div className="bg-black border border-[#333] p-3 rounded-xl flex items-center justify-between gap-2 z-[100] relative">
-                  <span className="text-white font-mono text-[10px] truncate">https://www.gasv.store/?ref=GOYE</span>
-                  <button onClick={() => handleCopyLink('https://www.gasv.store/?ref=GOYE')} className="bg-[#FFD700] hover:bg-yellow-400 text-black px-3 py-2 rounded-lg text-[10px] font-bold whitespace-nowrap cursor-pointer pointer-events-auto transition">Copy Link</button>
+                  <span className="text-white font-mono text-[10px] truncate">https://www.gasv.store/?ref={user ? user.uid : 'GOYE'}</span>
+                  <button onClick={() => handleCopyLink(`https://www.gasv.store/?ref=${user ? user.uid : 'GOYE'}`)} className="bg-[#FFD700] hover:bg-yellow-400 text-black px-3 py-2 rounded-lg text-[10px] font-bold whitespace-nowrap cursor-pointer pointer-events-auto transition">Copy Link</button>
                 </div>
                 
                 <button onClick={() => {
@@ -1041,6 +1104,39 @@ export default function App() {
                 </div>
               </div>
             </div>
+            {/* My Referred Users */}
+            <div className="mt-6 bg-[#111] border border-[#333] p-5 rounded-2xl">
+              <h3 className="text-white text-sm font-bold mb-4">My Referred Users</h3>
+              <div className="space-y-3 z-[100] relative">
+                {myReferrals.length === 0 ? (
+                  <div className="text-center py-6 text-gray-500 text-xs border border-dashed border-[#333] rounded-xl">
+                    No users have signed up under your link yet.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-white/5 text-gray-400 uppercase font-bold">
+                        <tr>
+                          <th className="p-3">User</th>
+                          <th className="p-3">Joined Date</th>
+                          <th className="p-3">Total Spent</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5">
+                        {myReferrals.map((r, i) => (
+                          <tr key={i} className="hover:bg-white/[0.02]">
+                            <td className="p-3 font-medium text-white">{r.name || r.email?.split("@")[0]}</td>
+                            <td className="p-3 text-gray-400">{new Date(r.joinedAt).toLocaleDateString()}</td>
+                            <td className="p-3 text-[#10B981] font-bold">${(r.totalSpent || 0).toFixed(2)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+
             
             {/* Promo materials */}
             <div className="mt-6 bg-[#0a0a0a] border border-[#222] p-5 rounded-2xl">
@@ -1048,11 +1144,11 @@ export default function App() {
                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 z-[100] relative">
                  <div className="bg-black p-3 rounded-xl border border-[#333]">
                    <p className="text-gray-400 text-[10px] italic mb-2">"Traveling soon? Get 5GB global data instantly without roaming fees. Use my link..."</p>
-                   <button onClick={() => handleCopyLink('Traveling soon? Get 5GB global data instantly without roaming fees. Use my link: https://www.gasv.store/?ref=GOYE')} className="text-[#FFD700] text-[10px] font-bold cursor-pointer pointer-events-auto hover:text-yellow-400">Copy Script</button>
+                   <button onClick={() => handleCopyLink(`Traveling soon? Get 5GB global data instantly without roaming fees. Use my link: https://www.gasv.store/?ref=${user ? user.uid : 'GOYE'}`)} className="text-[#FFD700] text-[10px] font-bold cursor-pointer pointer-events-auto hover:text-yellow-400">Copy Script</button>
                  </div>
                  <div className="bg-black p-3 rounded-xl border border-[#333]">
                    <p className="text-gray-400 text-[10px] italic mb-2">"Master AI & Web3 development today at SIRWISE Academy. Join here..."</p>
-                   <button onClick={() => handleCopyLink('Master AI & Web3 development today at SIRWISE Academy. Join here: https://www.gasv.store/?ref=GOYE')} className="text-[#FFD700] text-[10px] font-bold cursor-pointer pointer-events-auto hover:text-yellow-400">Copy Script</button>
+                   <button onClick={() => handleCopyLink(`Master AI & Web3 development today at SIRWISE Academy. Join here: https://www.gasv.store/?ref=${user ? user.uid : 'GOYE'}`)} className="text-[#FFD700] text-[10px] font-bold cursor-pointer pointer-events-auto hover:text-yellow-400">Copy Script</button>
                  </div>
                </div>
             </div>
@@ -1455,6 +1551,9 @@ export default function App() {
                     <button onClick={() => setTab('admin')} className={`px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1 ${tab === 'admin' ? 'bg-[#FFD700] text-black' : 'bg-[#111] text-gray-400 hover:text-white'}`}>
                       <List size={14}/> Orders
                     </button>
+                    <button onClick={() => setTab('admin-users')} className={`px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1 ${tab === 'admin-users' ? 'bg-[#FFD700] text-black' : 'bg-[#111] text-gray-400 hover:text-white'}`}>
+                      <Users size={14}/> Users
+                    </button>
                     <button onClick={() => setTab('admin-settings')} className={`px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1 ${tab === 'admin-settings' ? 'bg-[#FFD700] text-black' : 'bg-[#111] text-gray-400 hover:text-white'}`}>
                       <Settings size={14}/> Settings
                     </button>
@@ -1527,6 +1626,49 @@ export default function App() {
                           {(pendingOrders.length === 0 && allCompletedOrdersList.length === 0) && (
                             <tr>
                               <td colSpan={5} className="p-8 text-center text-gray-500">No orders yet.</td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {tab === 'admin-users' && (
+                  <div className="bg-[#111] rounded-2xl border border-white/10 overflow-hidden">
+                    <div className="p-6 border-b border-white/10 flex justify-between items-center">
+                      <h3 className="text-lg font-bold text-white">Referred Users Analytics</h3>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-sm">
+                        <thead className="bg-white/5 text-gray-400 text-xs uppercase font-bold">
+                          <tr>
+                            <th className="p-4">User Name</th>
+                            <th className="p-4">Email</th>
+                            <th className="p-4">Referred By Code</th>
+                            <th className="p-4">Joined Date</th>
+                            <th className="p-4">Total Spent</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/5">
+                          {dbUsers.map((u, i) => (
+                            <tr key={i} className="hover:bg-white/[0.02]">
+                              <td className="p-4 font-medium text-white">{u.name || 'Unknown'}</td>
+                              <td className="p-4 text-gray-400">{u.email}</td>
+                              <td className="p-4">
+                                {u.referred_by ? (
+                                  <span className="bg-[#FFD700]/10 text-[#FFD700] px-2 py-1 rounded text-xs font-mono">{u.referred_by}</span>
+                                ) : (
+                                  <span className="text-gray-600">-</span>
+                                )}
+                              </td>
+                              <td className="p-4 text-gray-400">{new Date(u.joinedAt).toLocaleDateString()}</td>
+                              <td className="p-4 text-[#10B981] font-bold">${(u.totalSpent || 0).toFixed(2)}</td>
+                            </tr>
+                          ))}
+                          {dbUsers.length === 0 && (
+                            <tr>
+                              <td colSpan={5} className="p-8 text-center text-gray-500">No users found in database.</td>
                             </tr>
                           )}
                         </tbody>

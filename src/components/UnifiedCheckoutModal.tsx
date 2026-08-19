@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { CheckCircle, ExternalLink, Globe, X, Copy, QrCode, ChevronRight, Lock } from 'lucide-react';
+import { db } from '../lib/firebase';
+import { collection, query, where, getDocs, updateDoc, doc, increment } from 'firebase/firestore';
 
 interface UnifiedCheckoutModalProps {
   product: any;
@@ -43,7 +45,36 @@ export default function UnifiedCheckoutModal({ product, onClose, onSuccess }: Un
       method: gateway,
       date: new Date().toISOString()
     };
-    
+
+    const trackDbPurchase = async () => {
+      try {
+        const q = query(collection(db, 'users'), where('email', '==', email));
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+          const userDoc = querySnapshot.docs[0];
+          await updateDoc(doc(db, 'users', userDoc.id), {
+            totalSpent: increment(product.price)
+          });
+          
+          const userData = userDoc.data();
+          if (userData.referred_by) {
+            const referrerQ = query(collection(db, 'users'), where('uid', '==', userData.referred_by));
+            const referrerSnap = await getDocs(referrerQ);
+            if (!referrerSnap.empty) {
+              const referrerDoc = referrerSnap.docs[0];
+              await updateDoc(doc(db, 'users', referrerDoc.id), {
+                refBalance: increment(product.price * 0.20),
+                refSales: increment(1)
+              });
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Error updating user total spent", e);
+      }
+    };
+    trackDbPurchase();
+
     if (isManual) {
       const pending = JSON.parse(localStorage.getItem('goye_pending_orders') || '[]');
       localStorage.setItem('goye_pending_orders', JSON.stringify([order, ...pending]));
