@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, ExternalLink, Globe, X, Copy, QrCode, ChevronRight, Lock } from 'lucide-react';
+import { CheckCircle, ShieldCheck, ExternalLink, Globe, X, Copy, QrCode, ChevronRight, Lock } from 'lucide-react';
 import { db } from '../lib/firebase';
 import { collection, query, where, getDocs, updateDoc, doc, increment } from 'firebase/firestore';
 
@@ -309,6 +309,15 @@ export default function UnifiedCheckoutModal({ product, onClose, onSuccess }: Un
                   Manual Bank Transfer (Payoneer)
                 </button>
               )}
+
+              <div className="flex justify-center items-center gap-4 mt-6">
+                <div className="flex items-center gap-1 text-[10px] text-green-400 font-bold bg-green-400/10 px-3 py-1.5 rounded-full border border-green-400/20">
+                  <ShieldCheck size={14} /> 100% Secure Checkout
+                </div>
+                <div className="flex items-center gap-1 text-[10px] text-gray-400 font-bold bg-white/5 px-3 py-1.5 rounded-full border border-white/10">
+                  <Lock size={14} /> SSL Encrypted
+                </div>
+              </div>
             </div>
           )}
 

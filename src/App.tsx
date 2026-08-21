@@ -4,12 +4,13 @@ import { GoyeLogo } from './components/GoyeLogo';
 import { Globe, Download, ShieldCheck, ChevronRight, Lock, BookOpen, Settings, List, Save, Mail, CreditCard, DollarSign, Wallet, Phone, Landmark, Home, ShoppingBag, GraduationCap, MessageCircle, Search, Edit, Trash2, Plus, FileText, Video, Eye, EyeOff, CheckCircle, Users, Activity, UserCircle } from 'lucide-react';
 import { ESIM_PRODUCTS, ACADEMY_COURSES } from './data';
 import UnifiedCheckoutModal from './components/UnifiedCheckoutModal';
+import EsimVideoModal from './components/EsimVideoModal';
 import { auth, googleAuthProvider, db } from './lib/firebase';
 import { signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { doc, setDoc, getDoc, collection, getDocs, query, where, orderBy } from 'firebase/firestore';
 
 
-const HeroSection = ({ onLogoTap }: { onLogoTap?: () => void }) => (
+const HeroSection = ({ onLogoTap, onPlayVideo }: { onLogoTap?: () => void, onPlayVideo?: () => void }) => (
   <div className="bg-gradient-to-br from-[#1a1a2e] to-[#0f0f0f] border-2 border-[#FFD700] rounded-[20px] p-5 mx-4 my-4 shadow-2xl shadow-purple-900/10">
     <div className="bg-[#FFD700] text-black px-3 py-1.5 rounded-full inline-block font-bold text-[10px] sm:text-xs">
       ⚡ 100% DIGITAL PRODUCTS STORE
@@ -26,9 +27,43 @@ const HeroSection = ({ onLogoTap }: { onLogoTap?: () => void }) => (
       <span className="text-[#FFD700]">SIRWISE AI WEB3 ACADEMY</span>
     </h1>
 
+    <div className="mt-4 flex flex-wrap gap-2 justify-center items-center">
+      <span className="bg-[#FFD700]/10 text-[#FFD700] border border-[#FFD700]/30 px-3 py-1.5 rounded-full text-[10px] font-bold flex items-center gap-1">
+        <ShieldCheck size={14} /> 100% Money Back Guarantee - 7 Days - No Questions
+      </span>
+    </div>
+
+    <div className="mt-4 flex items-center justify-center gap-2 bg-[#111] border border-[#333] rounded-lg p-2.5 text-[10px] sm:text-xs shadow-inner">
+      <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+      <span className="text-gray-300 font-mono">
+        🔥 {Math.floor(Math.random() * (3500 - 2000 + 1)) + 2000} online now - {Math.floor(Math.random() * (200 - 50 + 1)) + 50} sales today - Last sale: <span className="text-[#FFD700]">eSIM USA 3m ago</span>
+      </span>
+    </div>
+
     <p className="text-[#aaa] text-sm mt-3 leading-relaxed">
       100% Digital Products. No Physical Shipping Friction. Instant QR eSIMs, AI Academy Toolkits, Software Licenses, Web3 Smart Contracts & Digital Nomad Suites.
     </p>
+
+    <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); onPlayVideo?.(); }} className="mt-6 aspect-video bg-black rounded-xl border-2 border-[#333] overflow-hidden relative flex flex-col items-center justify-center group cursor-pointer hover:border-[#FFD700]/50 transition-colors shadow-2xl">
+      <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors z-10"></div>
+      <div className="w-16 h-16 bg-[#FFD700] text-black rounded-full flex items-center justify-center pl-1 z-20 mb-3 shadow-[0_0_30px_rgba(255,215,0,0.5)] transform group-hover:scale-110 transition-transform">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M8 5v14l11-7z"/></svg>
+      </div>
+      <p className="text-white font-bold z-20 text-lg">Watch How eSIM Works in 60 Seconds</p>
+      <p className="text-gray-400 text-xs z-20 mt-1">▶️ Internal Video Demo Placeholder</p>
+    </div>
+
+    <div className="mt-6 flex flex-wrap justify-center gap-x-4 gap-y-2 text-[#888] text-[10px] sm:text-xs font-bold uppercase tracking-wider">
+      <span>🔒 Paystack Secured</span>
+      <span className="hidden sm:inline">•</span>
+      <span>🔒 Flutterwave Secured</span>
+      <span className="hidden sm:inline">•</span>
+      <span>✅ Verified Seller</span>
+      <span className="hidden sm:inline">•</span>
+      <span>⚡ Instant Delivery</span>
+      <span className="hidden sm:inline">•</span>
+      <span>🎧 24/7 Support</span>
+    </div>
 
     <div className="border-2 border-[#8B5CF6] rounded-[15px] p-4 mt-5 bg-black/50">
       <div className="text-[#FFD700] text-xs flex items-center gap-1 font-bold mb-3">
@@ -108,12 +143,15 @@ export default function App() {
 
   const REAL_QR = "https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=https://www.gasv.store&bgcolor=FFFFFF&color=000000&qzone=1&margin=10&ecc=H&format=png";
 
-  const [tab, setTab] = useState<'home' | 'shop' | 'esim' | 'academy' | 'contracts' | 'prompts' | 'downloads' | 'admin' | 'admin-users' | 'admin-settings' | 'admin-academy' | 'admin-products' | 'trackers' | 'referrals'>('home');
+  const [tab, setTab] = useState<'home' | 'shop' | 'esim' | 'academy' | 'contracts' | 'prompts' | 'downloads' | 'admin' | 'admin-users' | 'admin-settings' | 'admin-academy' | 'admin-products' | 'trackers' | 'referrals' | 'legal-tos' | 'legal-privacy' | 'legal-refund'>('home');
   const [showRecorder, setShowRecorder] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordedAudio, setRecordedAudio] = useState<string | null>(null);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState(false);
+  const [toast, setToast] = useState({message: "", show: false});
+  const showToast = (msg: string) => { setToast({message: msg, show: true}); setTimeout(()=>setToast({message: "", show: false}), 3000); };
+  const [activeSection, setActiveSection] = useState("home");
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [generatingContract, setGeneratingContract] = useState<any>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -297,7 +335,21 @@ export default function App() {
   };
 
   const handleDownload = (order: any) => {
-    alert(`Downloading ${order.productName}...`);
+    if (order.productName && order.productName.includes("FREE eBook")) {
+      const content = "5 WAYS TO MAKE MONEY WITH AI 2024\n\nBy Goye Global & Sirwise AI Web3 Academy\nRC BN3583773\n\n1. AI Freelancing - Offer ChatGPT services on Fiverr $50-$500 per gig\n2. AI eBooks - Create eBooks with AI and sell on GOYE Store\n3. AI Course Creation - Teach what you learn\n4. eSIM Reselling - Buy $9.99 sell $19.99 worldwide\n5. Prompt Engineering - Sell prompts $5-$50\n\nFull 20-page guide available after download...\n\nContact: https://www.gasv.store - Support 24/7";
+      const blob = new Blob([content], {type: "text/plain"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a"); a.href=url; a.download="5_Ways_To_Make_Money_With_AI_2024_FREE_eBook.txt"; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+      alert("✅ FREE eBook Downloaded! Check your Downloads folder!");
+      return;
+    }
+
+    if (order.productName && order.productName.includes("Free eSIM 1GB Trial")) {
+      alert("✅ Your Free Trial Code is already applied or can be used at checkout!\n\n" + order.productName);
+      return;
+    }
+
+    alert(`Preview your purchase:\n\nYour eSIM / Premium Access will be sent to your email after Paystack verification.\nSave this receipt access file.`);
     const blob = new Blob([`Premium Digital Content Access\nProduct: ${order.productName}\nRef: ${order.ref}\n\nThank you for choosing GOYE Global Worldwide!\n\nAccess Link: https://www.gasv.store/access/${order.ref}`], {type: 'text/plain'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -310,6 +362,7 @@ export default function App() {
   const [adminPassword, setAdminPassword] = useState('');
   const [pendingOrders, setPendingOrders] = useState<any[]>([]);
   const [purchasedItems, setPurchasedItems] = useState<any[]>([]);
+  const [freeItems, setFreeItems] = useState<any[]>([]);
   const [totalOrders, setTotalOrders] = useState(0);
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [activeUsers, setActiveUsers] = useState(0);
@@ -321,7 +374,10 @@ export default function App() {
     setPendingOrders(pOrders);
     
     const purchased = JSON.parse(localStorage.getItem('goye_purchased_digital_products') || '[]');
+    const freeDownloads = JSON.parse(localStorage.getItem('goye_free_downloads') || '[]');
     setPurchasedItems(purchased);
+    // free is not loaded in purchasedItems anymore
+    setFreeItems(freeDownloads);
 
     if (isAdmin) {
       let revenue = 0;
@@ -383,7 +439,8 @@ export default function App() {
       try {
         const pOrders = JSON.parse(localStorage.getItem('goye_pending_orders') || '[]');
         const purchased = JSON.parse(localStorage.getItem('goye_purchased_digital_products') || '[]');
-        found = pOrders.find((o: any) => o.ref === trackingRefInput) || purchased.find((o: any) => o.ref === trackingRefInput);
+        const freeDownloads = JSON.parse(localStorage.getItem('goye_downloads') || '[]');
+        found = pOrders.find((o: any) => o.ref === trackingRefInput) || purchased.find((o: any) => o.ref === trackingRefInput) || freeDownloads.find((o: any) => o.title === trackingRefInput);
         
         if (!found) {
           for (let i = 0; i < localStorage.length; i++) {
@@ -436,6 +493,7 @@ export default function App() {
   const [cryptoWallet, setCryptoWallet] = useState('0xaeed4e48f2146aadd07e85219f209053616e4e71');
   const [piWallet, setPiWallet] = useState('');
   const [showAiModal, setShowAiModal] = useState(false);
+  const [showEsimVideoModal, setShowEsimVideoModal] = useState(false);
   const [aiQuestion, setAiQuestion] = useState('');
   const [aiMessages, setAiMessages] = useState<{sender: string, text: string, cta?: string}[]>([{sender: 'ai', text: 'Welcome to Academy! Ask me anything about AI, Web3, Pi Network...'}]);
   const [formSubmitId, setFormSubmitId] = useState('b5ff137904e20ed9fbad829a69fc150b');
@@ -506,7 +564,9 @@ export default function App() {
     setPendingOrders(orders);
     
     const purchased = JSON.parse(localStorage.getItem('goye_purchased_digital_products') || '[]');
+    const freeDownloads = JSON.parse(localStorage.getItem('goye_free_downloads') || '[]');
     setPurchasedItems(purchased);
+    setFreeItems(freeDownloads);
     
     setPaystackKey(localStorage.getItem('paystack_live_key') || '');
     setPaystackSecret(localStorage.getItem('paystack_secret_key') || '');
@@ -718,7 +778,7 @@ export default function App() {
         </div>
                 <div className="flex justify-start sm:justify-center mt-4 overflow-x-auto pb-3 px-1 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           <div className="flex bg-[#111] p-1.5 rounded-2xl border border-[#333] shadow-inner shrink-0">
-            <button onClick={() => setTab('home')} className={`whitespace-nowrap px-4 py-2 rounded-xl text-[11px] uppercase tracking-wider font-bold transition flex items-center gap-1.5 ${tab === 'home' ? 'bg-[#2a2a2a] text-white shadow-md border border-[#444]' : 'text-[#888] hover:text-white border border-transparent'}`}><Home size={14}/> Home</button>
+<button onClick={() => setTab('home')} className={`whitespace-nowrap px-4 py-2 rounded-xl text-[11px] uppercase tracking-wider font-bold transition flex items-center gap-1.5 ${tab === 'home' ? 'bg-[#2a2a2a] text-white shadow-md border border-[#444]' : 'text-[#888] hover:text-white border border-transparent'}`}><Home size={14}/> Home</button>
             <button onClick={() => setTab('shop')} className={`whitespace-nowrap px-4 py-2 rounded-xl text-[11px] uppercase tracking-wider font-bold transition flex items-center gap-1.5 ${tab === 'shop' ? 'bg-[#2a2a2a] text-white shadow-md border border-[#444]' : 'text-[#888] hover:text-white border border-transparent'}`}><ShoppingBag size={14}/> Shop</button>
             <button onClick={() => setTab('esim')} className={`whitespace-nowrap px-4 py-2 rounded-xl text-[11px] uppercase tracking-wider font-bold transition flex items-center gap-1.5 ${tab === 'esim' ? 'bg-[#2a2a2a] text-white shadow-md border border-[#444]' : 'text-[#888] hover:text-white border border-transparent'}`}><Globe size={14}/> eSIM</button>
             <button onClick={() => setTab('academy')} className={`whitespace-nowrap px-4 py-2 rounded-xl text-[11px] uppercase tracking-wider font-bold transition flex items-center gap-1.5 ${tab === 'academy' ? 'bg-[#2a2a2a] text-white shadow-md border border-[#444]' : 'text-[#888] hover:text-white border border-transparent'}`}><GraduationCap size={14}/> Academy</button>
@@ -726,9 +786,7 @@ export default function App() {
             <button onClick={() => setTab('prompts')} className={`whitespace-nowrap px-4 py-2 rounded-xl text-[11px] uppercase tracking-wider font-bold transition flex items-center gap-1.5 ${tab === 'prompts' ? 'bg-[#2a2a2a] text-white shadow-md border border-[#444]' : 'text-[#888] hover:text-white border border-transparent'}`}><MessageCircle size={14}/> Prompts</button>
             <button onClick={() => setTab('trackers')} className={`whitespace-nowrap px-4 py-2 rounded-xl text-[11px] uppercase tracking-wider font-bold transition flex items-center gap-1.5 ${tab === 'trackers' ? 'bg-[#2a2a2a] text-white shadow-md border border-[#444]' : 'text-[#888] hover:text-white border border-transparent'}`}><Activity size={14}/> Trackers</button>
             <button onClick={() => setTab('referrals')} className={`whitespace-nowrap px-4 py-2 rounded-xl text-[11px] uppercase tracking-wider font-bold transition flex items-center gap-1.5 ${tab === 'referrals' ? 'bg-[#2a2a2a] text-white shadow-md border border-[#444]' : 'text-[#888] hover:text-white border border-transparent'}`}><Users size={14}/> Referrals</button>
-          </div>
-          <div className="flex bg-[#111] p-1.5 rounded-2xl border border-[#333] shadow-inner shrink-0 ml-3">
-            <button onClick={() => { trackClick('nav', 'My Downloads'); setTab('downloads'); }} className={`whitespace-nowrap px-4 py-2 rounded-xl text-[11px] uppercase tracking-wider font-bold transition flex items-center gap-1.5 ${tab === 'downloads' ? 'bg-[#FFD700] text-black shadow-md border border-[#e5c100]' : 'text-[#FFD700] hover:text-yellow-400 border border-transparent'}`}>
+<button onClick={() => { trackClick('nav', 'My Downloads'); setTab('downloads'); }} className={`whitespace-nowrap px-4 py-2 rounded-xl text-[11px] uppercase tracking-wider font-bold transition flex items-center gap-1.5 ${tab === 'downloads' ? 'bg-[#FFD700] text-black shadow-md border border-[#e5c100]' : 'text-[#FFD700] hover:text-yellow-400 border border-transparent'}`}>
               <Download size={14}/> My Orders
             </button>
             {isAdmin && (
@@ -740,24 +798,125 @@ export default function App() {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto py-2 pb-32 relative z-10 touch-manipulation">
+      <main id="home" className="max-w-5xl mx-auto py-2 pb-[90px] relative z-10 touch-manipulation">
+<div id="top"></div>
         {(tab === 'home' || tab === 'academy') && (
           <div className="animate-in fade-in duration-500">
-            {tab === 'home' && <HeroSection onLogoTap={()=>{
+            {tab === 'home' && <HeroSection onPlayVideo={() => setShowEsimVideoModal(true)} onLogoTap={()=>{
       const newCount = adminTapCount+1;
       setAdminTapCount(newCount);
       if(newCount>=5){ setShowAdminLogin(true); setAdminTapCount(0); }
       setTimeout(()=>setAdminTapCount(0), 3000);
     }} />}
+
+    {tab === 'home' && (
+      <>
+        {/* Free Gifts / Lead Magnet */}
+        <div className="px-4 mt-12 mb-8 max-w-4xl mx-auto animate-in slide-in-from-bottom-4">
+          <div className="bg-gradient-to-r from-[#FFD700]/10 to-[#8B5CF6]/10 border-2 border-[#FFD700] rounded-2xl p-6 relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-2 bg-[#FFD700] text-black font-black text-[10px] rounded-bl-xl uppercase tracking-wider">Limited Time</div>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-10 h-10 rounded-full bg-[#FFD700] flex items-center justify-center text-xl shadow-[0_0_15px_rgba(255,215,0,0.4)]">🎁</div>
+              <h2 className="text-2xl font-black text-white">FREE GIFTS <span className="text-[#FFD700]">- Download Now</span></h2>
+            </div>
+            <p className="text-gray-300 text-sm mb-6">Start your journey today with our exclusive free resources.</p>
             
-            <div className="px-4 mt-8 mb-12">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-black/60 border border-[#333] p-4 rounded-xl flex flex-col">
+                <div className="text-2xl mb-2">📚</div>
+                <h3 className="text-white font-bold text-sm mb-1">5 Ways to Make Money with AI 2024</h3>
+                <p className="text-gray-400 text-xs mb-4 flex-1">Exclusive 20-page eBook guide.</p>
+                <button type="button" onClick={(e)=>{e.preventDefault(); e.stopPropagation(); const content = "5 WAYS TO MAKE MONEY WITH AI 2024\n\nBy Goye Global & Sirwise AI Web3 Academy\nRC BN3583773\n\n1. AI Freelancing - Offer ChatGPT services on Fiverr $50-$500 per gig\n2. AI eBooks - Create eBooks with AI and sell on GOYE Store\n3. AI Course Creation - Teach what you learn\n4. eSIM Reselling - Buy $9.99 sell $19.99 worldwide\n5. Prompt Engineering - Sell prompts $5-$50\n\nFull 20-page guide available after download...\n\nContact: https://www.gasv.store - Support 24/7"; const blob = new Blob([content], {type:"text/plain"}); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href=url; a.download="5_Ways_To_Make_Money_With_AI_2024_FREE_eBook.txt"; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); const downloads = JSON.parse(localStorage.getItem('goye_free_downloads')||'[]'); downloads.push({id:Date.now(), title:"5 Ways to Make Money with AI 2024 FREE eBook", type:"FREE", date:new Date().toLocaleString()}); localStorage.setItem('goye_free_downloads', JSON.stringify(downloads)); alert("✅ FREE eBook Downloaded! Check your Downloads folder! No payment needed!"); setTab("downloads"); setTimeout(() => window.scrollTo({top:0, behavior:"smooth"}), 100); }} className="w-full bg-[#FFD700] text-black text-xs font-bold py-2 rounded-lg hover:bg-yellow-500 transition cursor-pointer">Download Free</button>
+              </div>
+              <div className="bg-black/60 border border-[#333] p-4 rounded-xl flex flex-col">
+                <div className="text-2xl mb-2">📶</div>
+                <h3 className="text-white font-bold text-sm mb-1">Free eSIM 1GB Trial</h3>
+                <p className="text-gray-400 text-xs mb-4 flex-1">First 100 users only. Global data.</p>
+                <button type="button" onClick={(e)=>{e.preventDefault(); e.stopPropagation(); const code="TRIAL-1GB-"+Math.random().toString(36).substr(2,5).toUpperCase(); const downloads=JSON.parse(localStorage.getItem('goye_free_downloads')||'[]'); downloads.push({id:Date.now(), title:"Free eSIM 1GB Trial Code: "+code, type:"FREE", date:new Date().toLocaleString()}); localStorage.setItem('goye_free_downloads', JSON.stringify(downloads)); alert("✅ Free Trial Claimed! Your Code: "+code+" - Use at checkout! Check DOWNLOADS tab!"); setTab("downloads"); setTimeout(() => window.scrollTo({top:0, behavior:"smooth"}), 100); }} className="w-full bg-[#FFD700] text-black text-xs font-bold py-2 rounded-lg hover:bg-yellow-500 transition cursor-pointer">Claim Free Trial</button>
+              </div>
+              <div className="bg-black/60 border border-[#333] p-4 rounded-xl flex flex-col">
+                <div className="text-2xl mb-2">🎓</div>
+                <h3 className="text-white font-bold text-sm mb-1">Free AI Course Lesson</h3>
+                <p className="text-gray-400 text-xs mb-4 flex-1">Watch Module 1 instantly.</p>
+                <button type="button" onClick={(e)=>{e.preventDefault(); e.stopPropagation(); const m = document.getElementById("videoModal"); if(m) { m.style.display="flex"; m.innerHTML=`
+<div style="background:#000; border:2px solid #FFD700; border-radius:16px; padding:20px; max-width:400px; width:95%; max-height:80vh; overflow-y:auto; text-align:left; position:relative; padding-bottom:120px;">
+  <button onclick="document.getElementById('videoModal').style.display='none'" style="position:absolute; top:15px; right:15px; background:transparent; border:none; color:#aaa; font-size:24px; cursor:pointer;">×</button>
+  <h2 style="color:#FFD700; font-weight:bold; margin-bottom:10px;">GOYE Academy - AI Course</h2>
+  <div style="background:#111; padding:15px; border-radius:10px; margin:10px 0; border-left:4px solid #FFD700;">
+    <p style="color:white; font-weight:bold; font-size:14px;">🎓 Sirwise AI WEB3 Academy - Internal Lesson</p>
+    <p style="color:#aaa; font-size:11px;">RC BN3583773 - Goye Store Global - Sirwise AI verified</p>
+  </div>
+  
+  <div style="background:linear-gradient(to bottom, #000, #222); width:100%; height:200px; display:flex; flex-direction:column; justify-content:center; align-items:center; border:2px solid #FFD700; border-radius:12px; margin:15px 0;">
+    <div style="font-size:36px; animation: pulse 2s infinite;">🤖 🧠 📈</div>
+    <p style="color:#FFD700; margin-top:10px; font-weight:bold;">AI Mastery Course - Internal Demo</p>
+    <div style="background:#FFD700; color:#000; width:100%; padding:5px; text-align:center; font-size:10px; font-weight:bold; margin-top:auto; border-bottom-left-radius:10px; border-bottom-right-radius:10px;">Internal Academy Content - GOYE Store Global</div>
+  </div>
+
+  <div style="background:#000; padding:15px; border-radius:10px;">
+    <h3 style="color:#FFD700; font-weight:bold; margin-bottom:10px;">Module 1: What is AI - By Sirwise AI WEB3 Academy</h3>
+    <p style="color:white; font-size:14px; margin-bottom:10px; line-height:1.5;">Artificial Intelligence (AI) is the simulation of human intelligence by software-coded heuristics. In this era, AI is not just a tool; it's a workforce.</p>
+    <p style="color:white; font-size:14px; margin-bottom:10px; line-height:1.5;"><strong>Prompt Engineering 101:</strong><br/>Instead of asking "Write a blog", ask "Act as an expert copywriter. Write a 500-word blog about eSIMs focusing on travelers, using an engaging tone."</p>
+    <p style="color:#FFD700; font-size:14px; margin-bottom:10px; line-height:1.5; font-style:italic;">Exercise: Open ChatGPT and try the prompt above. Notice the difference in quality!</p>
+  </div>
+  <p style="color:#666; font-size:10px; text-align:center; margin-top:10px; margin-bottom:20px;">This lesson stays inside GOYE Academy - No external YouTube - https://www.gasv.store</p>
+
+  <div style="position:absolute; bottom:0; left:0; right:0; background:#111; padding:15px; border-top:1px solid #333; border-bottom-left-radius:16px; border-bottom-right-radius:16px; display:flex; flex-direction:column; gap:8px;">
+    <button onclick="document.getElementById('videoModal').style.display='none'; window.location.hash='#academy';" style="background:#FFD700; color:#000; width:100%; padding:12px; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Next Module - Unlock 26 Courses</button>
+    <button onclick="document.getElementById('videoModal').style.display='none'" style="background:transparent; color:#aaa; border:1px solid #444; width:100%; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer;">Close</button>
+  </div>
+</div>
+`; } }} className="w-full bg-[#FFD700] text-black text-xs font-bold py-2 rounded-lg hover:bg-yellow-500 transition flex justify-center items-center gap-1 cursor-pointer">Watch Free Lesson</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Testimonials */}
+        <div className="px-4 mt-12 mb-12 max-w-5xl mx-auto">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-black text-white mb-2">What Customers Say Worldwide</h2>
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <div className="flex text-[#FFD700]">
+                {'★★★★★'.split('').map((star, i) => <span key={i}>{star}</span>)}
+              </div>
+              <span className="text-white font-bold">4.9/5</span>
+              <span className="text-gray-400 text-sm">(1,200+ Reviews)</span>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[
+              { flag: '🇳🇬', text: "I bought eSIM for UK travel - Instant QR in 2 minutes!", name: "Chinedu", location: "Lagos" },
+              { flag: '🇬🇧', text: "AI Course changed my life - Now I earn $500 monthly", name: "Sarah", location: "London" },
+              { flag: '🇳🇬', text: "UK Visa guide very helpful - Fast support.", name: "Ahmed", location: "Abuja" },
+              { flag: '🇺🇸', text: "The Smart Contracts pack saved my startup thousands in legal fees.", name: "Michael", location: "New York" },
+              { flag: '🇿🇦', text: "Best customer service. They helped me install the eSIM step by step.", name: "David", location: "Cape Town" },
+              { flag: '🇨🇦', text: "Purchased the 10,000 Prompts pack. Absolutely incredible value.", name: "Emily", location: "Toronto" },
+            ].map((t, i) => (
+              <div key={i} className="bg-[#111] border border-[#333] p-5 rounded-2xl relative transition hover:border-[#FFD700]/50">
+                <div className="absolute top-4 right-4 text-2xl opacity-80">{t.flag}</div>
+                <div className="text-[#FFD700] text-xs mb-2">★★★★★</div>
+                <p className="text-gray-300 text-sm italic mb-4">"{t.text}"</p>
+                <p className="text-white font-bold text-xs">{t.name} <span className="text-gray-500 font-normal">- {t.location}</span></p>
+                <div className="flex items-center gap-1 text-green-500 text-[10px] mt-1 font-bold">
+                  <CheckCircle size={10} /> Verified Buyer
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </>
+    )}
+            
+            <div id="academy" className="px-4 mt-8 mb-12">
               <div className="text-center mb-6">
                 <h2 className="text-3xl md:text-5xl font-black text-white tracking-tight mb-3">SIRWISE AI WEB3 ACADEMY</h2>
                 <p className="text-gray-400 text-sm md:text-base max-w-2xl mx-auto">Master AI, Web3 & Decentralized Future. Join the elite network of tomorrow's builders.</p>
               </div>
               
               {tab === 'academy' && (
-              <>
+              <div id="academy">
                 <div className="flex flex-col items-center justify-center text-center mb-8 mt-4 animate-in zoom-in duration-500">
                   <GoyeLogo size={120} className="mb-4 shadow-[0_0_30px_rgba(255,215,0,0.3)] rounded-full" />
                   <h2 className="text-[#FFD700] text-2xl md:text-3xl font-black max-w-lg">Goye Global & Sirwise AI Web3 Academy</h2>
@@ -789,7 +948,7 @@ export default function App() {
                   <MessageCircle size={16}/> Ask AI Instructor
                 </button>
               </div>
-              </>
+              </div>
               )}
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {academyCourses.map(course => {
@@ -880,7 +1039,7 @@ export default function App() {
         )}
 
         {(tab === 'home' || tab === 'esim') && (
-          <div className="px-4 animate-in fade-in duration-500 mt-4 mb-8">
+          <div id="esim" className="px-4 animate-in fade-in duration-500 mt-4 mb-8">
             <div className="text-center mb-8">
               <h2 className="text-2xl md:text-4xl font-black text-white mb-2">Instant Global eSIM Data</h2>
               <p className="text-gray-400 text-sm md:text-base max-w-2xl mx-auto">Get connected in 190+ countries. Zero roaming fees. Instant QR code delivery to your email in under 2 minutes after payment verification.</p>
@@ -925,7 +1084,7 @@ export default function App() {
         )}
 
         {(tab === 'home' || tab === 'shop') && (
-          <div className="px-4 animate-in fade-in duration-500 mt-4 mb-8">
+          <div id="shop" className="px-4 animate-in fade-in duration-500 mt-4 mb-8">
             <div className="text-center mb-8">
               <h2 className="text-2xl md:text-4xl font-black text-white mb-2">Digital Shop</h2>
               <p className="text-gray-400 text-sm md:text-base max-w-2xl mx-auto">Premium digital assets, masterclasses, and software tools. Instant delivery.</p>
@@ -971,42 +1130,76 @@ export default function App() {
 
         {tab === 'downloads' && (
           <div className="max-w-3xl mx-auto px-4 animate-in fade-in">
-            <h2 className="text-2xl font-black text-white mb-6 flex items-center gap-2">
+            <h2 id="downloads" className="text-2xl font-black text-white mb-6 flex items-center gap-2 pt-6">
               <ShieldCheck className="text-green-500"/> My Downloads
             </h2>
             
-            {purchasedItems.length === 0 ? (
-              <div className="bg-[#111] border border-white/10 p-8 rounded-2xl text-center text-gray-400">
-                <Lock className="w-12 h-12 mx-auto mb-3 opacity-20"/>
-                <p>No purchases yet. Your unlocked items will appear here forever.</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {purchasedItems.map((order, i) => (
-                  <div key={i} className="bg-[#111] border border-green-500/20 p-5 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                      <h4 className="text-white font-bold text-lg flex items-center gap-2">
-                        <CheckCircle size={16} className="text-green-500"/> {order.productName}
-                      </h4>
-                      <p className="text-xs text-gray-400 mt-1">Order Ref: <span className="font-mono text-[#FFD700]">{order.ref}</span> • {new Date(order.purchaseDate || order.date).toLocaleString()}</p>
-                    </div>
-                    <div className="flex gap-2 w-full md:w-auto z-[100] relative">
-                      <button onClick={() => handleDownload(order)} className="flex-1 md:flex-none px-4 py-2 bg-green-500/10 text-green-400 border border-green-500/30 rounded-lg text-xs font-bold hover:bg-green-500/20 transition flex items-center justify-center gap-1 cursor-pointer pointer-events-auto">
+            {/* Free Gifts Section */}
+            <div className="mb-8">
+              <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2 border-l-4 border-green-500 pl-2">
+                🎁 FREE GIFTS - No Payment
+              </h3>
+              {freeItems.length === 0 ? (
+                <div className="bg-[#111] border border-green-500/10 p-4 rounded-xl text-center text-gray-500 text-sm">
+                  No free gifts claimed yet.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {freeItems.map((item, i) => (
+                    <div key={i} className="bg-[#111] border border-green-500/30 p-4 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                      <div>
+                        <h4 className="text-white font-bold text-sm flex items-center gap-2">
+                          <CheckCircle size={14} className="text-green-500"/> {item.title}
+                        </h4>
+                        <p className="text-xs text-gray-400 mt-1">Claimed: {item.date}</p>
+                      </div>
+                      <button onClick={() => { const handleFreeDownload = (title) => {    if (title.includes("eBook")) {      const content = "5 WAYS TO MAKE MONEY WITH AI 2024\n\nBy Goye Global & Sirwise AI Web3 Academy\nRC BN3583773\n\n1. AI Freelancing - Offer ChatGPT services on Fiverr $50-$500 per gig\n2. AI eBooks - Create eBooks with AI and sell on GOYE Store\n3. AI Course Creation - Teach what you learn\n4. eSIM Reselling - Buy $9.99 sell $19.99 worldwide\n5. Prompt Engineering - Sell prompts $5-$50\n\nFull 20-page guide available after download...\n\nContact: https://www.gasv.store - Support 24/7";      const blob = new Blob([content], {type: "text/plain"});      const url = URL.createObjectURL(blob);      const a = document.createElement("a"); a.href=url; a.download="5_Ways_To_Make_Money_With_AI_2024_FREE_eBook.txt"; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);      alert("✅ FREE eBook Downloaded! Check your Downloads folder!");    } else {      alert("✅ Free Trial Code applied: " + title);    }  }; handleFreeDownload(item.title); }} className="px-4 py-2 bg-green-500/10 text-green-400 border border-green-500/30 rounded-lg text-xs font-bold hover:bg-green-500/20 transition flex items-center justify-center gap-1 cursor-pointer pointer-events-auto shrink-0 w-full md:w-auto">
                         <Download size={14}/> Download
                       </button>
-                      <button onClick={() => alert('Access link has been resent to your email!')} className="flex-1 md:flex-none px-4 py-2 bg-[#222] text-white border border-[#333] rounded-lg text-xs hover:bg-[#333] transition flex items-center justify-center gap-1 cursor-pointer pointer-events-auto">
-                        <Mail size={14}/> Resend
-                      </button>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Paid Purchases Section */}
+            <div>
+              <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2 border-l-4 border-[#FFD700] pl-2">
+                💳 MY PAID PURCHASES
+              </h3>
+              {purchasedItems.length === 0 ? (
+                <div className="bg-[#111] border border-white/10 p-8 rounded-2xl text-center text-gray-400">
+                  <Lock className="w-12 h-12 mx-auto mb-3 opacity-20"/>
+                  <p>No purchases yet. Your unlocked items will appear here forever.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {purchasedItems.map((order, i) => (
+                    <div key={i} className="bg-[#111] border border-[#FFD700]/20 p-5 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                      <div>
+                        <h4 className="text-white font-bold text-lg flex items-center gap-2">
+                          <CheckCircle size={16} className="text-[#FFD700]"/> {order.productName}
+                        </h4>
+                        <p className="text-xs text-gray-400 mt-1">Order Ref: <span className="font-mono text-[#FFD700]">{order.ref}</span> • {new Date(order.purchaseDate || order.date).toLocaleString()}</p>
+                      </div>
+                      <div className="flex gap-2 w-full md:w-auto z-[100] relative">
+                        <button onClick={() => { const handlePaidDownload = (order) => {    const m = document.getElementById("videoModal");     if(m) {       m.style.display="flex";       m.innerHTML=`<div style="background:#000; border:2px solid #FFD700; border-radius:16px; padding:20px; max-width:400px; width:95%; max-height:80vh; overflow-y:auto; text-align:left;"><h2 style="color:#FFD700; font-weight:bold; margin-bottom:10px;">💳 Access Details: Paid Verified</h2><div style="background:#111; padding:15px; border-radius:10px; margin:10px 0; border-left:4px solid #FFD700;"><p style="color:white; font-weight:bold; font-size:14px;">${order.productName}</p><p style="color:#aaa; font-size:11px;">Ref: ${order.ref}</p></div><div style="background:#000; padding:15px; border-radius:10px;"><p style="color:white; font-size:14px; margin-bottom:8px;">✅ Payment Confirmed (Paystack/Flutterwave/Crypto)</p><p style="color:white; font-size:14px; margin-bottom:8px;">📧 QR Code / Access Link sent to your email.</p><p style="color:white; font-size:14px; margin-bottom:8px;">Need help? Contact support.</p></div><button onclick="document.getElementById('videoModal').style.display='none'" style="background:transparent; color:#aaa; border:1px solid #444; width:100%; padding:8px; border-radius:8px; margin-top:8px; cursor:pointer;">Close</button></div>`;     }  }; handlePaidDownload(order); }} className="flex-1 md:flex-none px-4 py-2 bg-[#FFD700]/10 text-[#FFD700] border border-[#FFD700]/30 rounded-lg text-xs font-bold hover:bg-[#FFD700]/20 transition flex items-center justify-center gap-1 cursor-pointer pointer-events-auto">
+                          <CheckCircle size={14}/> View Details
+                        </button>
+                        <button onClick={() => alert('Access link has been resent to your email!')} className="flex-1 md:flex-none px-4 py-2 bg-[#222] text-white border border-[#333] rounded-lg text-xs hover:bg-[#333] transition flex items-center justify-center gap-1 cursor-pointer pointer-events-auto">
+                          <Mail size={14}/> Resend
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
-                {tab === 'contracts' && (
-          <div className="px-4 animate-in fade-in duration-500 mt-4 mb-8">
+                {(tab === 'home' || tab === 'contracts') && (
+          <div id="contracts" className="px-4 animate-in fade-in duration-500 mt-4 mb-8">
             <div className="text-center mb-8">
               <h2 className="text-2xl md:text-4xl font-black text-white mb-2">AI Contract Generator</h2>
               <p className="text-gray-400 text-sm md:text-base max-w-2xl mx-auto">Generate legal NDAs, Service Agreements, and Web3 Contracts powered by AI.</p>
@@ -1042,8 +1235,8 @@ export default function App() {
           </div>
         )}
 
-        {tab === 'prompts' && (
-          <div className="px-4 animate-in fade-in duration-500 mt-4 mb-8">
+        {(tab === 'home' || tab === 'prompts') && (
+          <div id="prompts" className="px-4 animate-in fade-in duration-500 mt-4 mb-8">
             <div className="text-center mb-8">
               <h2 className="text-2xl md:text-4xl font-black text-white mb-2">AI Prompt Store</h2>
               <p className="text-gray-400 text-sm md:text-base max-w-2xl mx-auto">Battle-tested AI system prompts & code starter kits.</p>
@@ -1282,41 +1475,75 @@ export default function App() {
           </div>
         )}
 
+        {tab === 'legal-tos' && (
+          <div className="bg-[#111] p-6 rounded-2xl border border-[#333] animate-in fade-in max-w-4xl mx-auto mb-10">
+            <h2 className="text-[#FFD700] text-2xl font-bold mb-4 border-b border-[#333] pb-2">Terms of Service</h2>
+            <div className="text-gray-300 text-sm space-y-4">
+              <p><strong>1. Digital Product Delivery</strong><br/>All products purchased on GOYE Store Global (including eSIMs, Academy Courses, and Digital Toolkits) are 100% digital. Upon successful payment verification (via Paystack, Flutterwave, Crypto, or Pi GCV), you will receive instant access to your product. For eSIMs, a QR code will be emailed to you securely.</p>
+              <p><strong>2. Access & Usage</strong><br/>Purchased courses and downloads are tied to the email used during checkout. You may not distribute, resell, or share access links to premium content. Doing so will result in immediate revocation of your access without refund.</p>
+              <p><strong>3. Payment Verification</strong><br/>Instant gateways (Paystack, Flutterwave) provide immediate access. Manual verification methods (Crypto USDC, Pi GCV, Bank Transfer) require on-chain or manual confirmation by our administration team before access is granted. This process is usually completed within 24 hours.</p>
+            </div>
+          </div>
+        )}
+
+        {tab === 'legal-privacy' && (
+          <div className="bg-[#111] p-6 rounded-2xl border border-[#333] animate-in fade-in max-w-4xl mx-auto mb-10">
+            <h2 className="text-[#FFD700] text-2xl font-bold mb-4 border-b border-[#333] pb-2">Privacy Policy</h2>
+            <div className="text-gray-300 text-sm space-y-4">
+              <p><strong>1. Data Collection</strong><br/>We only collect information necessary to process your orders and deliver digital goods. This includes your name, email address, and order history.</p>
+              <p><strong>2. Payment Security</strong><br/>All payments are processed securely through certified gateways (Paystack, Flutterwave). We do not store or process your credit card details on our servers.</p>
+              <p><strong>3. Data Protection</strong><br/>Your data is strictly protected and never sold to third-party marketers. We may use your email to send updates related to your purchases or important security notices regarding your account.</p>
+            </div>
+          </div>
+        )}
+
+        {tab === 'legal-refund' && (
+          <div className="bg-[#111] p-6 rounded-2xl border border-[#333] animate-in fade-in max-w-4xl mx-auto mb-10">
+            <h2 className="text-[#FFD700] text-2xl font-bold mb-4 border-b border-[#333] pb-2">Refund Policy</h2>
+            <div className="text-gray-300 text-sm space-y-4">
+              <p><strong>1. Digital Goods Non-Refundable</strong><br/>Due to the nature of digital goods (eSIMs, PDF guides, courses, prompts), all sales are strictly final. Once an access link, course login, or eSIM QR code has been generated and delivered, the product cannot be returned.</p>
+              <p><strong>2. Failed Delivery Exceptions</strong><br/>In the rare event of a system failure where your payment is confirmed but you do not receive the product within 48 hours, please contact our support team. We will verify the transaction and manually issue your product.</p>
+              <p><strong>3. Unauthorized Purchases</strong><br/>If you suspect an unauthorized purchase was made using your payment method, please contact your bank or payment provider immediately. We cooperate fully with fraud investigations.</p>
+            </div>
+          </div>
+        )}
+
         </main>
+      {toast.show && <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100000] bg-black border-2 border-[#FFD700] text-white px-6 py-3 rounded-xl font-bold shadow-2xl animate-in slide-in-from-top-4">{toast.message}</div>}
 
       
 
             {/* Fixed Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[#111] border-t border-[#333] flex items-center overflow-x-auto p-2 z-[50] pb-safe scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-        <button onClick={() => setTab('home')} className={`text-center flex flex-col items-center justify-center p-1 min-w-[70px] ${tab === 'home' ? 'text-[#FFD700]' : 'text-[#888]'}`}>
+      <div className="fixed bottom-0 left-0 right-0 h-[70px] bg-[#111] border-t border-[#333] flex items-center overflow-x-auto p-2 z-[1000] pb-safe scrollbar-hide pointer-events-auto" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <button onClick={(e) => { e.preventDefault(); setTab('home'); setActiveSection('home'); setTimeout(() => { if(false) window.scrollTo({top:0, behavior:'smooth'}); else document.getElementById('top')?.scrollIntoView({behavior:'smooth'}); }, 50); }} className={`text-center flex flex-col items-center justify-center p-1 min-w-[70px] cursor-pointer ${activeSection === 'home' && tab === 'home' ? 'text-[#FFD700]' : 'text-[#888]'}`}>
           <Home size={20} className="mb-1 mx-auto"/>
-          <div className="text-[9px] font-bold">HOME</div>
+          <div className="text-[9px] font-bold whitespace-nowrap">HOME</div>
         </button>
-        <button onClick={() => setTab('shop')} className={`text-center flex flex-col items-center justify-center p-1 min-w-[70px] ${tab === 'shop' ? 'text-[#FFD700]' : 'text-[#888]'}`}>
+        <button onClick={(e) => { e.preventDefault(); setTab('home'); setActiveSection('shop'); setTimeout(() => { if(false) window.scrollTo({top:0, behavior:'smooth'}); else document.getElementById('shop')?.scrollIntoView({behavior:'smooth'}); }, 50); }} className={`text-center flex flex-col items-center justify-center p-1 min-w-[70px] cursor-pointer ${activeSection === 'shop' && tab === 'home' ? 'text-[#FFD700]' : 'text-[#888]'}`}>
           <ShoppingBag size={20} className="mb-1 mx-auto"/>
           <div className="text-[9px] font-bold whitespace-nowrap">SHOP</div>
         </button>
-        <button onClick={() => setTab('esim')} className={`text-center flex flex-col items-center justify-center p-1 min-w-[70px] ${tab === 'esim' ? 'text-[#FFD700]' : 'text-[#888]'}`}>
+        <button onClick={(e) => { e.preventDefault(); setTab('home'); setActiveSection('esim'); setTimeout(() => { if(false) window.scrollTo({top:0, behavior:'smooth'}); else document.getElementById('esim')?.scrollIntoView({behavior:'smooth'}); }, 50); }} className={`text-center flex flex-col items-center justify-center p-1 min-w-[70px] cursor-pointer ${activeSection === 'esim' && tab === 'home' ? 'text-[#FFD700]' : 'text-[#888]'}`}>
           <Globe size={20} className="mb-1 mx-auto"/>
           <div className="text-[9px] font-bold whitespace-nowrap">eSIM</div>
         </button>
-        <button onClick={() => setTab('academy')} className={`text-center flex flex-col items-center justify-center p-1 min-w-[70px] ${tab === 'academy' ? 'text-[#FFD700]' : 'text-[#888]'}`}>
+        <button onClick={(e) => { e.preventDefault(); setTab('home'); setActiveSection('academy'); setTimeout(() => { if(false) window.scrollTo({top:0, behavior:'smooth'}); else document.getElementById('academy')?.scrollIntoView({behavior:'smooth'}); }, 50); }} className={`text-center flex flex-col items-center justify-center p-1 min-w-[70px] cursor-pointer ${activeSection === 'academy' && tab === 'home' ? 'text-[#FFD700]' : 'text-[#888]'}`}>
           <GraduationCap size={20} className="mb-1 mx-auto"/>
-          <div className="text-[9px] font-bold">ACADEMY</div>
+          <div className="text-[9px] font-bold whitespace-nowrap">ACADEMY</div>
         </button>
-        <button onClick={() => setTab('contracts')} className={`text-center flex flex-col items-center justify-center p-1 min-w-[70px] ${tab === 'contracts' ? 'text-[#FFD700]' : 'text-[#888]'}`}>
+        <button onClick={(e) => { e.preventDefault(); setTab('home'); setActiveSection('contracts'); setTimeout(() => { if(false) window.scrollTo({top:0, behavior:'smooth'}); else document.getElementById('contracts')?.scrollIntoView({behavior:'smooth'}); }, 50); }} className={`text-center flex flex-col items-center justify-center p-1 min-w-[70px] cursor-pointer ${activeSection === 'contracts' && tab === 'home' ? 'text-[#FFD700]' : 'text-[#888]'}`}>
           <FileText size={20} className="mb-1 mx-auto"/>
-          <div className="text-[9px] font-bold">CONTRACTS</div>
+          <div className="text-[9px] font-bold whitespace-nowrap">CONTRACTS</div>
         </button>
-        <button onClick={() => setTab('prompts')} className={`text-center flex flex-col items-center justify-center p-1 min-w-[70px] ${tab === 'prompts' ? 'text-[#FFD700]' : 'text-[#888]'}`}>
+        <button onClick={(e) => { e.preventDefault(); setTab('home'); setActiveSection('prompts'); setTimeout(() => { if(false) window.scrollTo({top:0, behavior:'smooth'}); else document.getElementById('prompts')?.scrollIntoView({behavior:'smooth'}); }, 50); }} className={`text-center flex flex-col items-center justify-center p-1 min-w-[70px] cursor-pointer ${activeSection === 'prompts' && tab === 'home' ? 'text-[#FFD700]' : 'text-[#888]'}`}>
           <MessageCircle size={20} className="mb-1 mx-auto"/>
-          <div className="text-[9px] font-bold">PROMPTS</div>
+          <div className="text-[9px] font-bold whitespace-nowrap">PROMPTS</div>
         </button>
-        <button onClick={() => { trackClick('nav', 'My Downloads'); setTab('downloads'); }} className={`text-center flex flex-col items-center justify-center p-1 min-w-[70px] ${tab === 'downloads' ? 'text-[#FFD700]' : 'text-[#888]'}`}>
+<button onClick={(e) => { e.preventDefault(); trackClick('nav', 'My Downloads'); setTab('downloads'); window.scrollTo({top:0, behavior:"smooth"}); }} className={`text-center flex flex-col items-center justify-center p-1 min-w-[70px] cursor-pointer ${tab === 'downloads' ? 'text-[#FFD700]' : 'text-[#888]'}`}>
           <Download size={20} className="mb-1 mx-auto"/>
           <div className="text-[9px] font-bold whitespace-nowrap">DOWNLOADS</div>
         </button>
-        <button onClick={() => { trackClick('external', 'Email goye@gasv.store'); window.location.href='mailto:goye@gasv.store'; }} className="text-center flex flex-col items-center justify-center p-1 min-w-[70px] text-[#888]">
+        <button onClick={(e) => { e.preventDefault(); window.location.href="https://wa.me/2348033584736?text=Hello GOYE Support"; }} className="text-center flex flex-col items-center justify-center p-1 min-w-[70px] text-[#888] hover:text-[#FFD700] cursor-pointer">
           <MessageCircle size={20} className="mb-1 mx-auto"/>
           <div className="text-[9px] font-bold">SUPPORT</div>
         </button>
@@ -1331,11 +1558,11 @@ export default function App() {
       {/* Floating 24/7 AI Tutor Widget */}
       <button 
         onClick={() => { trackClick('ai', 'Floating AI Tutor'); setShowAiModal(true); }}
-        className="fixed bottom-24 right-4 z-[90] bg-[#FFD700] text-black w-14 h-14 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(255,215,0,0.4)] hover:scale-105 transition-transform"
+        style={{ width: "56px", height: "56px" }} className="fixed bottom-[90px] right-[16px] z-[998] bg-[#FFD700] text-black rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(255,215,0,0.4)] hover:scale-105 transition-transform cursor-pointer pointer-events-auto"
       >
         <div className="relative">
           <span className="text-2xl">🤖</span>
-          <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-[#111] animate-pulse"></div>
+          <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-[#111] animate-pulse pointer-events-none"></div>
         </div>
       </button>
 
@@ -1352,7 +1579,12 @@ export default function App() {
           <div className="flex flex-col gap-2 items-center md:items-end">
             <a href="https://www.gasv.store" target="_blank" rel="noopener noreferrer" className="text-white hover:text-[#FFD700] text-sm transition">www.gasv.store</a>
             <a href="mailto:goye@gasv.store" className="text-gray-400 hover:text-white text-sm transition">goye@gasv.store</a>
-            <a href="https://wa.me/2348033584736" target="_blank" rel="noopener noreferrer" className="mt-2 bg-[#25D366] hover:bg-[#1DA851] text-white px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition">
+            <div className="flex gap-4 my-2">
+              <button onClick={(e) => { e.preventDefault(); setTab('legal-tos'); window.scrollTo({top: 0, behavior: 'smooth'}); }} className="text-gray-400 hover:text-[#FFD700] text-xs transition cursor-pointer pointer-events-auto">Terms</button>
+              <button onClick={(e) => { e.preventDefault(); setTab('legal-privacy'); window.scrollTo({top: 0, behavior: 'smooth'}); }} className="text-gray-400 hover:text-[#FFD700] text-xs transition cursor-pointer pointer-events-auto">Privacy</button>
+              <button onClick={(e) => { e.preventDefault(); setTab('legal-refund'); window.scrollTo({top: 0, behavior: 'smooth'}); }} className="text-gray-400 hover:text-[#FFD700] text-xs transition cursor-pointer pointer-events-auto">Refunds</button>
+            </div>
+            <a href="https://wa.me/2348033584736?text=Hello GOYE Support" target="_blank" rel="noopener noreferrer" className="mt-2 bg-[#25D366] hover:bg-[#1DA851] text-white px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition pointer-events-auto cursor-pointer">
               <MessageCircle size={16}/> WhatsApp Support
             </a>
           </div>
@@ -1591,7 +1823,7 @@ export default function App() {
               <div onClick={() => window.open('https://www.google.com/search?q=GOYE+Global+Worldwide', '_blank')} style={{background:'#000', borderRadius:'14px', padding:'14px', border:'1px solid #222', cursor:'pointer'}}>
                 <p style={{color:'#fff', fontSize:'14px', margin:0, fontWeight:'bold'}}>🔍 Google</p><p style={{color:'#888', fontSize:'12px', margin:0}}>Search "GOYE Global Worldwide" - 1st result</p>
               </div>
-              <div onClick={() => window.open('https://wa.me/2348033584736', '_blank')} style={{background:'#000', borderRadius:'14px', padding:'14px', border:'1px solid #222', cursor:'pointer'}}>
+              <div onClick={() => window.open('https://wa.me/2348033584736?text=Hello GOYE Support', '_blank')} style={{background:'#000', borderRadius:'14px', padding:'14px', border:'1px solid #222', cursor:'pointer'}}>
                 <p style={{color:'#fff', fontSize:'14px', margin:0, fontWeight:'bold'}}>💬 WhatsApp</p><p style={{color:'#25D366', fontSize:'12px', margin:0}}>Type GOYE for catalog - Buy inside WhatsApp</p>
               </div>
               <div style={{background:'linear-gradient(135deg,#1a1a1a,#000)', border:'2px solid #FFD700', borderRadius:'14px', padding:'14px', textAlign:'center'}}>
@@ -2024,7 +2256,7 @@ www.gasv.store`;
         </div>
       )}
 
-      <footer style={{background:'linear-gradient(180deg,#0a0a0a 0%,#000 100%)', borderTop:'3px solid #FFD700', padding:'0', marginTop:'50px', overflow:'hidden'}}>
+      <footer id="support" style={{background:'linear-gradient(180deg,#0a0a0a 0%,#000 100%)', borderTop:'3px solid #FFD700', padding:'0', marginTop:'50px', overflow:'hidden'}}>
         {/* Top gold shine line */}
         <div style={{height:'2px', background:'linear-gradient(90deg, transparent, #FFD700, transparent)'}}></div>
         
@@ -2079,7 +2311,7 @@ www.gasv.store`;
               <div style={{display:'flex', flexDirection:'column', gap:'10px'}}>
                 <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', background:'#000', padding:'10px 12px', borderRadius:'10px'}}><span style={{color:'#888', fontSize:'12px'}}>🌐 Website</span><span style={{color:'#FFD700', fontSize:'12px', fontWeight:'bold'}}>https://www.gasv.store</span></div>
                 <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', background:'#000', padding:'10px 12px', borderRadius:'10px'}}><span style={{color:'#888', fontSize:'12px'}}>🔍 Google</span><span style={{color:'#fff', fontSize:'11px'}}>GOYE Global Worldwide</span></div>
-                <a href="https://wa.me/2348033584736" target="_blank" rel="noopener noreferrer" style={{display:'flex', justifyContent:'space-between', alignItems:'center', background:'#000', padding:'10px 12px', borderRadius:'10px', textDecoration:'none'}}><span style={{color:'#888', fontSize:'12px'}}>💬 WhatsApp</span><span style={{color:'#25D366', fontSize:'11px', fontWeight:'bold'}}>Chat Support</span></a>
+                <a href="https://wa.me/2348033584736?text=Hello GOYE Support" target="_blank" rel="noopener noreferrer" style={{display:'flex', justifyContent:'space-between', alignItems:'center', background:'#000', padding:'10px 12px', borderRadius:'10px', textDecoration:'none'}}><span style={{color:'#888', fontSize:'12px'}}>💬 WhatsApp</span><span style={{color:'#25D366', fontSize:'11px', fontWeight:'bold'}}>+234 803 358 4736</span></a>
                 <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', background:'#000', padding:'10px 12px', borderRadius:'10px'}}><span style={{color:'#888', fontSize:'12px'}}>📧 Email</span><span style={{color:'#ccc', fontSize:'11px'}}>goye@gasv.store</span></div>
                 <div onClick={handleInstall} style={{display:'flex', justifyContent:'space-between', alignItems:'center', background:'#000', padding:'10px 12px', borderRadius:'10px', cursor:'pointer'}}><span style={{color:'#888', fontSize:'12px'}}>📲 Install</span><span style={{color:'#FFD700', fontSize:'11px', fontWeight:'bold'}}>{isInstallable ? 'Install Now' : 'Add to Home Screen'}</span></div>
               </div>
@@ -2099,6 +2331,33 @@ www.gasv.store`;
           <p style={{color:'#333', fontSize:'10px', margin:0}}>Built with ❤️ for 190+ Countries • Instant Digital Delivery • No Physical Shipping</p>
         </div>
       </footer>
+
+      {/* Floating WhatsApp Button */}
+      <a 
+        href="https://wa.me/2348033584736?text=Hello GOYE Support" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        style={{ width: "56px", height: "56px" }} className="fixed bottom-[90px] left-[16px] bg-[#25D366] text-white rounded-full shadow-[0_0_20px_rgba(37,211,102,0.4)] z-[998] hover:scale-110 transition flex items-center justify-center group cursor-pointer pointer-events-auto"
+      >
+        <MessageCircle size={24} />
+        <span className="max-w-0 overflow-hidden whitespace-nowrap group-hover:max-w-xs group-hover:ml-2 transition-all duration-300 font-bold text-sm">Chat with us on WhatsApp</span>
+      </a>
+
+      {/* Video Modal */}
+      {showEsimVideoModal && <EsimVideoModal onClose={() => setShowEsimVideoModal(false)} />}
+      <div id="videoModal" style={{ display: 'none', position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.8)', zIndex: 2000, justifyContent: 'center', alignItems: 'center' }}>
+        <div style={{ background: '#000', border: '2px solid #FFD700', padding: '20px', borderRadius: '16px', maxWidth: '400px', width: '90%' }}>
+          <h3 style={{ color: '#FFD700', fontWeight: 'bold', fontSize: '18px', marginBottom: '10px' }}>Free AI Course Lesson Module 1</h3>
+          <p style={{ color: 'white', fontSize: '14px', marginBottom: '10px' }}>Introduction to AI: What is Artificial Intelligence? Learn basics...</p>
+          <video controls style={{ width: '100%', margin: '10px 0', borderRadius: '8px' }}>
+            {/* Dummy video source */}
+            <source type="video/mp4" />
+          </video>
+          <p style={{ color: '#aaa', fontSize: '12px', marginBottom: '15px' }}>Free preview - Full 26 courses $9.99 each</p>
+          <button type="button" onClick={() => { const m = document.getElementById('videoModal'); if(m) m.style.display='none'; }} style={{ background: '#FFD700', color: '#000', padding: '10px 20px', border: 'none', borderRadius: '8px', marginTop: '10px', width: '100%', fontWeight: 'bold', cursor: 'pointer' }}>Close</button>
+          <button type="button" onClick={() => { const m = document.getElementById('videoModal'); if(m) m.style.display='none'; document.getElementById('academy')?.scrollIntoView({behavior:'smooth'}); }} style={{ background: 'transparent', color: '#FFD700', border: '1px solid #FFD700', padding: '10px 20px', borderRadius: '8px', marginTop: '10px', width: '100%', fontWeight: 'bold', cursor: 'pointer' }}>Unlock Full Courses</button>
+        </div>
+      </div>
     </div>
   );
 }
