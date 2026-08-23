@@ -1,22 +1,10 @@
 const fs = require('fs');
 let code = fs.readFileSync('src/App.tsx', 'utf8');
 
-// Update HeroSection definition
-code = code.replace(
-  "const HeroSection = ({ onLogoTap }: { onLogoTap?: () => void }) => (",
-  "const HeroSection = ({ onLogoTap, onPlayVideo }: { onLogoTap?: () => void, onPlayVideo?: () => void }) => ("
+const oldHero = code.substring(
+  code.indexOf('const HeroSection = '),
+  code.indexOf('const UnifiedCheckoutModal') // Not exactly, wait, UnifiedCheckoutModal is imported
 );
 
-// Update setShowEsimVideoModal(true) in HeroSection to onPlayVideo?.()
-code = code.replace(
-  /onClick=\{\(e\) => \{ e\.preventDefault\(\); e\.stopPropagation\(\); setShowEsimVideoModal\(true\); \}\}/,
-  "onClick={(e) => { e.preventDefault(); e.stopPropagation(); onPlayVideo?.(); }}"
-);
-
-// Update HeroSection usage
-code = code.replace(
-  "<HeroSection onLogoTap={()=>{",
-  "<HeroSection onPlayVideo={() => setShowEsimVideoModal(true)} onLogoTap={()=>{"
-);
-
-fs.writeFileSync('src/App.tsx', code);
+const oldHeroEnd = code.indexOf('const', code.indexOf('const HeroSection = ') + 10);
+// Wait, I can just replace the HeroSection completely using regex or string manipulation.

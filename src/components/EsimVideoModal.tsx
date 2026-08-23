@@ -66,12 +66,6 @@ export default function EsimVideoModal({ onClose }: { onClose: () => void }) {
           <p style={{ color: 'white', fontSize: '14px', marginBottom: '8px' }}>⚙️ Step 3: Phone Settings &gt; Cellular &gt; Add eSIM &gt; Scan QR - No external app needed</p>
           <p style={{ color: 'white', fontSize: '14px', marginBottom: '8px' }}>🌍 Step 4: Instant internet 190+ countries - Powered by Goye Global</p>
           
-          <div style={{ textAlign: 'center', margin: '15px 0' }}>
-            <div style={{ background: '#fff', padding: '10px', display: 'inline-block', borderRadius: '8px' }}>
-              <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=GOYE-eSIM-BN3583773-Gasv.Store-Internal" alt="QR Demo" style={{ display: 'block' }}/>
-            </div>
-            <p style={{ color: '#FFD700', fontSize: '12px', marginTop: '5px', fontWeight: 'bold' }}>GOYE eSIM Demo QR</p>
-          </div>
 
           <p style={{ color: '#FFD700', fontSize: '12px', fontWeight: 'bold', textAlign: 'center' }}>✅ Works on iPhone XS+, Samsung S20+, Google Pixel - Sirwise AI verified</p>
         </div>

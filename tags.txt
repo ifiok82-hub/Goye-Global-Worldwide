@@ -1,0 +1,139 @@
+Found: {showSplash && ( at 35824 
+ g-[#000000] text-gray-200 font-sans pb-24">
+      {showSplash && (
+        <div className="fixed inset-0 bg-[#000] z-[10000] flex flex-col items-cente 
+---
+Found: {isAdmin && ( at 44207 
+ 14}/> My Orders
+            </button>
+            {isAdmin && (
+              <button onClick={() => setTab('admin')} className={`whitespace-nowrap px 
+---
+Found: {tab === 'home' && ( at 45256 
+ t(()=>setAdminTapCount(0), 3000);
+    }} />}
+
+    {tab === 'home' && (
+      <>
+        {/* Free Gifts / Lead Magnet */}
+        <div className="px-4  
+---
+Found: {tab === 'academy' && ( at 56374 
+               </div>
+              
+              {tab === 'academy' && (
+              <div id="academy">
+                <div className="flex flex-c 
+---
+Found: {tab === 'downloads' && ( at 72538 
+       </div>
+          </div>
+        )}
+
+        {tab === 'downloads' && (
+          <div className="max-w-3xl mx-auto px-4 animate-in fade-in">
+     
+---
+Found: {tab === 'trackers' && ( at 83907 
+       </div>
+          </div>
+        )}
+
+        {tab === 'trackers' && (
+          <div className="max-w-3xl mx-auto px-4 animate-in fade-in mt-4 mb 
+---
+Found: {trackingStatus === 'loading' && ( at 85465 
+     </button>
+              </div>
+
+              {trackingStatus === 'loading' && (
+                <div className="animate-in fade-in slide-in-from- 
+---
+Found: {trackingStatus === 'not_found' && ( at 85893 
+            </div>
+              )}
+
+              {trackingStatus === 'not_found' && (
+                <div className="animate-in fade-in slide-in-fro 
+---
+Found: {trackingStatus === 'found' && trackingResult && ( at 86344 
+            </div>
+              )}
+
+              {trackingStatus === 'found' && trackingResult && (
+                <div className="animate-in fade-i 
+---
+Found: {tab === 'referrals' && ( at 88682 
+       </div>
+          </div>
+        )}
+
+        {tab === 'referrals' && (
+          <div className="max-w-3xl mx-auto px-4 animate-in fade-in mt-4 m 
+---
+Found: {isAdmin && ( at 105631 
+ ont-bold">SUPPORT</div>
+        </button>
+        {isAdmin && (
+          <button onClick={() => setTab('admin')} className={`text-center flex flex-co 
+---
+Found: {showAnalyticsModal && ( at 109898 
+ ut={(c: any) => setSelectedProduct(c)} />}
+
+      {showAnalyticsModal && (
+          <div className="fixed inset-0 bg-black/80 z-[200] flex items-cent 
+---
+Found: {showAiModal && ( at 116388 
+  </div>
+        )}
+        
+        
+      
+      {showAiModal && (
+        <div className="fixed inset-0 bg-black/80 z-[150] flex items-center justif 
+---
+Found: {msg.cta && ( at 117580 
+ >}
+                  {msg.text}
+                  {msg.cta && (
+                    <button 
+                      onClick={() => openCheckoutFor(msg. 
+---
+Found: {showScanner && ( at 119899 
+       )}
+      
+    
+      {/* QR Modal */}
+      {showScanner && (
+        <QRScannerModal 
+          onClose={() => setShowScanner(false)} 
+         
+---
+Found: {tab === 'admin' && ( at 120550 
+           }}
+        />
+      )}
+
+                {tab === 'admin' && (
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6"> 
+---
+Found: {tab === 'admin' && ( at 123106 
+       </div>
+                )}
+
+
+                {tab === 'admin' && (
+                  <div className="bg-[#111] rounded-2xl border border-white/10 
+---
+Found: {combinedOrders.length === 0 && ( at 127082 
+                     ))}
+                          {combinedOrders.length === 0 && (
+                            <tr>
+                              <td 
+---
+Found: {dbUsers.length === 0 && ( at 129576 
+                     ))}
+                          {dbUsers.length === 0 && (
+                            <tr>
+                              <td colSpa 
+---

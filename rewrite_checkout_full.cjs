@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
-import { X, ShieldCheck, Lock, Upload, Copy, CheckCircle, RefreshCw, ChevronRight, Zap } from 'lucide-react';
+const fs = require('fs');
 
-export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, onToast }: any) {
+const checkoutCode = `import React, { useState } from 'react';
+import RealQRCode from './RealQRCode';
+import { X, ShieldCheck, Lock, Upload, Copy, CheckCircle, RefreshCw, ChevronRight } from 'lucide-react';
+
+export default function UnifiedCheckoutModal({ product, onClose }: any) {
   const [activeGateway, setActiveGateway] = useState<string | null>(null);
   const [email, setEmail] = useState('');
   const [cryptoTxHash, setCryptoTxHash] = useState('');
@@ -12,13 +15,6 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
   const priceNGN = priceUSD * 1600; // Paystack *1600 NGN exchange rate
   
   const formSubmitId = 'b5ff137904e20ed9fbad829a69fc150b';
-  
-  const sanitizeInput = (input: string) => input.replace(/<[^>]*>?/gm, '').trim();
-  const validateEmail = (e: string) => {
-    const sanitized = sanitizeInput(e);
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(sanitized) ? sanitized : null;
-  };
   
   const handleSuccess = (ref: string, method: string, isPending: boolean = false) => {
     const order = {
@@ -32,40 +28,26 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
       date: new Date().toLocaleString()
     };
     
+    const downloads = JSON.parse(localStorage.getItem('goye_digital_products_orders') || '[]');
+    downloads.push(order);
+    localStorage.setItem('goye_digital_products_orders', JSON.stringify(downloads));
+    
     if (isPending) {
-      const downloads = JSON.parse(localStorage.getItem('goye_digital_products_orders') || '[]');
-      downloads.push(order);
-      localStorage.setItem('goye_digital_products_orders', JSON.stringify(downloads));
-      
-      alert('Transaction Submitted! Pending secure webhook verification. Check "My Downloads" tab later.');
+      alert('Transaction Submitted! Pending on-chain verification. Check "My Downloads" tab later.');
       onClose();
     } else {
-      if (onToast) onToast("Initiating Secure Webhook Verification...");
-      
-      // Simulate backend webhook verification delay
-      setTimeout(() => {
-        const downloads = JSON.parse(localStorage.getItem('goye_digital_products_orders') || '[]');
-        downloads.push(order);
-        localStorage.setItem('goye_digital_products_orders', JSON.stringify(downloads));
-        
-        if (onToast) onToast("✅ Webhook Verified. Securing Download Access.");
-        setSuccess(true);
-      }, 2500);
+      setSuccess(true);
     }
   };
 
   const payWithPaystack = () => {
-    if (!email) return onToast ? onToast("Enter email first") : alert("Enter email first");
-    const pk = paymentConfig?.paystack || localStorage.getItem('paystack_public_key');
-    if (!pk) return onToast ? onToast("Paystack not configured by admin yet") : alert("Paystack not configured by admin yet");
-    
-    if (!(window as any).PaystackPop) return onToast ? onToast('Payment gateway is loading. Please wait a moment and try again.') : alert('Payment gateway is loading. Please wait a moment and try again.');
+    if (!email) return alert("Enter email first");
     const handler = (window as any).PaystackPop.setup({
-      key: pk,
+      key: localStorage.getItem('paystack_public_key') || 'pk_test_dummy',
       email: email,
       amount: Math.round(priceNGN * 100),
       currency: 'NGN',
-      ref: `GOYE-PS-${Date.now()}`,
+      ref: \`GOYE-PS-\${Date.now()}\`,
       callback: (res: any) => handleSuccess(res.reference, 'Paystack'),
       onClose: () => alert('Payment cancelled')
     });
@@ -73,18 +55,14 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
   };
 
   const payWithFlutterwave = () => {
-    if (!email) return onToast ? onToast("Enter email first") : alert("Enter email first");
-    const pk = paymentConfig?.flutterwave || localStorage.getItem('flutterwave_public_key');
-    if (!pk) return onToast ? onToast("Flutterwave not configured by admin yet") : alert("Flutterwave not configured by admin yet");
-
-    if (!(window as any).FlutterwaveCheckout) return onToast ? onToast('Payment gateway is loading. Please wait a moment and try again.') : alert('Payment gateway is loading. Please wait a moment and try again.');
+    if (!email) return alert("Enter email first");
     const handler = (window as any).FlutterwaveCheckout({
-      public_key: pk,
-      tx_ref: `GOYE-FW-${Date.now()}`,
+      public_key: localStorage.getItem('flutterwave_public_key') || 'FLWPUBK_TEST_dummy',
+      tx_ref: \`GOYE-FW-\${Date.now()}\`,
       amount: priceUSD,
       currency: 'USD',
       payment_options: 'card, banktransfer, ussd',
-      customer: { email: email, name: email.split('@')[0] },
+      customer: { email, name: email.split('@')[0] },
       customizations: { title: 'GOYE Store', description: product.name },
       callback: (res: any) => handleSuccess(res.transaction_id, 'Flutterwave'),
       onclose: () => alert('Payment cancelled')
@@ -102,11 +80,11 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
         email,
         product: product.name,
         amount: priceUSD,
-        txHash: sanitizedHash
+        txHash: cryptoTxHash
       })
     }).then(() => {
       setCryptoVerifying(false);
-      handleSuccess(sanitizedHash, 'Crypto', true); // Pending verification!
+      handleSuccess(cryptoTxHash, 'Crypto', true); // Pending verification!
     });
   };
 
@@ -130,7 +108,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
           <div>
             <div className="text-[#FFD700] text-xs font-bold tracking-widest uppercase mb-4 flex items-center gap-2"><ShieldCheck size={16}/> SECURE CHECKOUT</div>
             <h2 className="text-white text-2xl font-black mb-2">{product.name}</h2>
-            <div className="text-[#10B981] text-3xl font-black mb-6">${priceUSD}</div>
+            <div className="text-[#10B981] text-3xl font-black mb-6">\${priceUSD}</div>
             
             <input 
               type="email" 
@@ -154,7 +132,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
               <p className="text-xs text-gray-400 text-center mb-6 uppercase tracking-widest font-bold">Choose Payment Method</p>
               <div className="space-y-3">
                 <button onClick={payWithPaystack} className="w-full p-4 bg-black border border-[#333] rounded-xl hover:border-[#FFD700] hover:bg-white/5 transition flex items-center justify-between group">
-                  <span className="font-bold text-white">Paystack (NGN ${priceNGN})</span>
+                  <span className="font-bold text-white">Paystack (NGN \${priceNGN})</span>
                   <ChevronRight className="text-gray-500 group-hover:text-[#FFD700]" size={16}/>
                 </button>
                 <button onClick={payWithFlutterwave} className="w-full p-4 bg-black border border-[#333] rounded-xl hover:border-[#FFD700] hover:bg-white/5 transition flex items-center justify-between group">
@@ -178,10 +156,10 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
           ) : activeGateway === 'crypto' ? (
             <div className="animate-in fade-in slide-in-from-right-4">
               <h3 className="text-[#10B981] font-bold mb-4">Pay with Crypto (USDC)</h3>
-              <p className="text-gray-400 text-xs mb-4">Send exactly <strong>${priceUSD} USDC</strong> to this address:</p>
+              <p className="text-gray-400 text-xs mb-4">Send exactly <strong>\${priceUSD} USDC</strong> to this address:</p>
               <div className="bg-black p-3 rounded-xl border border-[#333] flex justify-between items-center mb-4">
-                <span className="text-white text-sm font-mono truncate">{paymentConfig?.crypto || localStorage.getItem('crypto_wallet') || '0xaeed4e48f2146aadd07e85219f209053616e4'}</span>
-                <button onClick={() => { navigator.clipboard.writeText(paymentConfig?.crypto || localStorage.getItem('crypto_wallet') || '0xaeed4e48f2146aadd07e85219f209053616e4'); if(onToast) onToast('Wallet address copied!'); else alert('Wallet address copied!');; }} className="text-gray-400 hover:text-white"><Copy size={16}/></button>
+                <span className="text-white text-sm font-mono truncate">0x123...CryptoAddress</span>
+                <button className="text-gray-400 hover:text-white"><Copy size={16}/></button>
               </div>
               <input 
                 placeholder="Paste Tx Hash here" 
@@ -200,8 +178,8 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
               <h3 className="text-[#8b5cf6] font-bold mb-4">Pay with Pi GCV</h3>
               <p className="text-gray-400 text-xs mb-4">Send exactly Pi to this wallet:</p>
               <div className="bg-black p-3 rounded-xl border border-[#333] flex justify-between items-center mb-4">
-                <span className="text-white text-sm font-mono truncate">{paymentConfig?.pi || localStorage.getItem('pi_wallet') || 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ'}</span>
-                <button onClick={() => { navigator.clipboard.writeText(paymentConfig?.pi || localStorage.getItem('pi_wallet') || 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ'); if(onToast) onToast('Wallet address copied!'); else alert('Wallet address copied!');; }} className="text-gray-400 hover:text-white"><Copy size={16}/></button>
+                <span className="text-white text-sm font-mono truncate">GCVWalletAddress...</span>
+                <button className="text-gray-400 hover:text-white"><Copy size={16}/></button>
               </div>
               <input 
                 placeholder="Paste Tx Hash here" 
@@ -216,23 +194,13 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
             </div>
           )}
           
-
-            <div className="mt-8 pt-6 border-t border-[#333] flex flex-col gap-3">
-              <div className="flex items-center gap-2 text-xs text-[#10B981] font-bold">
-                <Lock size={14} /> 256-Bit SSL Encrypted & PCI-DSS Compliant
-              </div>
-              <div className="flex items-center gap-2 text-[10px] text-gray-400">
-                <ShieldCheck size={12} /> Verified Business: RC BN3583773
-              </div>
-              <div className="flex items-center gap-2 text-[10px] text-gray-400">
-                <Zap size={12} /> Instant Automated Delivery
-              </div>
-              <div className="flex items-center gap-2 text-[10px] text-gray-400">
-                <ShieldCheck size={12} /> Scam-Proof Direct Gateway Integration
-              </div>
-            </div>
+          <div className="mt-8 border-t border-[#333] pt-4 text-center">
+            <RealQRCode className="transform scale-75 origin-top mt-2" />
           </div>
+        </div>
       </div>
     </div>
   );
 }
+`;
+fs.writeFileSync('src/components/UnifiedCheckoutModal.tsx', checkoutCode);

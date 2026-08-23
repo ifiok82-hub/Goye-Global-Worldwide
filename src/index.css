@@ -79,3 +79,10 @@ html, body, #root {
     display: none !important;
   }
 }
+body {
+  background: #000000 !important;
+  color: #ffffff;
+  margin: 0;
+  font-family: sans-serif;
+  overflow-x: hidden;
+}
