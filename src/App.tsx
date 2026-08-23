@@ -4,6 +4,7 @@ import { ALL_PRODUCTS } from './data';
 import UnifiedCheckoutModal from './components/UnifiedCheckoutModal';
 import EsimVideoModal from './components/EsimVideoModal';
 import { GoyeLogo } from './components/GoyeLogo';
+import SirwiseAITeacher from './components/SirwiseAITeacher';
 import { db } from './lib/firebase';
 import { collection, onSnapshot, setDoc, doc } from 'firebase/firestore';
 
@@ -79,6 +80,8 @@ export default function App() {
   const [purchasedItems, setPurchasedItems] = useState<any[]>([]);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState(false);
+  const [isAiTeacherOpen, setIsAiTeacherOpen] = useState(false);
+  const userAccessStatus = purchasedItems.length > 0 ? 'paid' : 'free';
 
   useEffect(() => {
     // 1. Firebase Real-time listeners (onSnapshot)
@@ -554,12 +557,23 @@ export default function App() {
           <div className="absolute top-0 right-0 bg-red-500 w-3 h-3 rounded-full border-2 border-[#111]"></div>
         </a>
       </div>
-      <div className="fixed bottom-20 right-4 z-[90]">
-        <button className="bg-[#FFD700] text-black w-14 h-14 rounded-full flex items-center justify-center shadow-lg relative transition hover:scale-105">
+      <div className="fixed bottom-[80px] right-[16px] z-[9999] cursor-pointer pointer-events-auto">
+        <button onClick={() => setIsAiTeacherOpen(true)} className="bg-[#FFD700] text-black w-14 h-14 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(255,215,0,0.4)] relative transition hover:scale-105 active:scale-95">
           <Bot size={28}/>
-          <div className="absolute top-0 right-0 bg-green-500 w-3 h-3 rounded-full border-2 border-[#111]"></div>
+          <div className="absolute top-0 right-0 bg-green-500 w-3 h-3 rounded-full border-2 border-[#111] animate-pulse"></div>
         </button>
       </div>
+
+      <SirwiseAITeacher 
+        isOpen={isAiTeacherOpen} 
+        onClose={() => setIsAiTeacherOpen(false)} 
+        userAccessStatus={userAccessStatus} 
+        onUnlockClick={() => {
+          setIsAiTeacherOpen(false);
+          setTab('academy');
+          window.location.hash = 'academy';
+        }} 
+      />
 
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-[#000] border-t border-[#333] z-[100]">
