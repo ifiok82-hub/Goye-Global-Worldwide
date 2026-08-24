@@ -9,6 +9,7 @@ import ScanModal from './components/ScanModal';
 import ReferralDashboardModal from './components/ReferralDashboardModal';
 import VoiceModal from './components/VoiceModal';
 import LanguageModal from './components/LanguageModal';
+import AdminDashboard from './components/AdminDashboard';
 import CurrencyModal, { CURRENCIES } from './components/CurrencyModal';
 import { Bell } from 'lucide-react';
 import { GoyeLogo } from './components/GoyeLogo';
@@ -82,7 +83,10 @@ export default function App() {
     return () => unsub();
   }, []);
 
-  const [products, setProducts] = useState(ALL_PRODUCTS);
+  const [products, setProducts] = useState(() => {
+    const custom = JSON.parse(localStorage.getItem('CUSTOM_PRODUCTS') || '[]');
+    return [...ALL_PRODUCTS, ...custom];
+  });
   
   
   const [purchasedItems, setPurchasedItems] = useState<any[]>([]);
@@ -433,84 +437,7 @@ export default function App() {
         )}
 
         {isAdminAuth && tab === 'admin' && (
-          <div className="max-w-6xl mx-auto px-4 mt-8 animate-in fade-in duration-500">
-            
-            <h2 className="text-white text-2xl font-black mb-6">Admin Dashboard</h2>
-            
-            <div className="bg-[#111] border border-[#333] rounded-2xl p-6 mb-8">
-              <h3 className="text-[#FFD700] font-bold mb-4">Payment Configuration</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-xs text-gray-400 block mb-1">Paystack Public Key (pk_live_...)</label>
-                  <input id="paystack_key" type="text" className="w-full bg-black border border-[#333] rounded p-2 text-white" defaultValue={localStorage.getItem('PAYMENT_CONFIG') ? JSON.parse(localStorage.getItem('PAYMENT_CONFIG')).paystack : localStorage.getItem('paystack_public_key')} />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-400 block mb-1">Flutterwave Public Key (FLWPUBK-...)</label>
-                  <input id="flutterwave_key" type="text" className="w-full bg-black border border-[#333] rounded p-2 text-white" defaultValue={localStorage.getItem('PAYMENT_CONFIG') ? JSON.parse(localStorage.getItem('PAYMENT_CONFIG')).flutterwave : localStorage.getItem('flutterwave_public_key')} />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-400 block mb-1">Crypto USDC Wallet Address</label>
-                  <input id="crypto_wallet" type="text" className="w-full bg-black border border-[#333] rounded p-2 text-white" defaultValue={localStorage.getItem('PAYMENT_CONFIG') ? JSON.parse(localStorage.getItem('PAYMENT_CONFIG')).crypto : localStorage.getItem('crypto_wallet')} />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-400 block mb-1">Pi Network GCV Wallet Address</label>
-                  <input id="pi_wallet" type="text" className="w-full bg-black border border-[#333] rounded p-2 text-white" defaultValue={localStorage.getItem('PAYMENT_CONFIG') ? JSON.parse(localStorage.getItem('PAYMENT_CONFIG')).pi : localStorage.getItem('pi_wallet')} />
-                </div>
-                <button onClick={() => {
-                  const paystack = (document.getElementById('paystack_key') as HTMLInputElement).value.trim();
-                  const flutterwave = (document.getElementById('flutterwave_key') as HTMLInputElement).value.trim();
-                  const crypto = (document.getElementById('crypto_wallet') as HTMLInputElement).value.trim();
-                  const pi = (document.getElementById('pi_wallet') as HTMLInputElement).value.trim();
-                  
-                  const config = { paystack, flutterwave, crypto, pi };
-                  localStorage.setItem('PAYMENT_CONFIG', JSON.stringify(config));
-                  
-                  localStorage.setItem('paystack_public_key', paystack);
-                  localStorage.setItem('flutterwave_public_key', flutterwave);
-                  localStorage.setItem('crypto_wallet', crypto);
-                  localStorage.setItem('pi_wallet', pi);
-                  
-                  // Save to Firebase
-                  setDoc(doc(db, 'settings', 'payments'), config)
-                    .then(() => showToast('Saved to Firestore & Local Storage!'))
-                    .catch(e => showToast('Saved locally. Firestore error: ' + e.message));
-                }} className="bg-[#10B981] text-white font-bold px-6 py-2 rounded">
-                  SAVE ALL CONFIG
-                </button>
-              </div>
-            </div>
-
-            <div className="bg-[#111] border border-[#333] rounded-2xl p-6">
-              <h3 className="text-[#FFD700] font-bold mb-4">Recent Orders</h3>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-white/5 text-gray-400 text-xs uppercase font-bold">
-                    <tr>
-                      <th className="p-4">Ref</th>
-                      <th className="p-4">Product</th>
-                      <th className="p-4">Amount</th>
-                      <th className="p-4">Method & Status</th>
-                      <th className="p-4">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/5">
-                    {purchasedItems.map((order, i) => (
-                      <tr key={i} className="hover:bg-white/[0.02]">
-                        <td className="p-4 font-mono text-[#FFD700] text-xs">{order.ref}</td>
-                        <td className="p-4 font-bold text-white">{order.productName}</td>
-                        <td className="p-4 text-[#10B981] font-bold">${order.amount}</td>
-                        <td className="p-4">
-                          <span className="text-xs font-bold uppercase mr-2">{order.method}</span>
-                          <span className={`px-2 py-1 rounded text-[10px] font-bold ${order.status==='completed' ? 'bg-[#10B981]/20 text-[#10B981]' : 'bg-yellow-500/20 text-yellow-500'}`}>{order.status}</span>
-                        </td>
-                        <td className="p-4 text-gray-500 text-xs">{order.date}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
+          <AdminDashboard showToast={showToast} />
         )}
       </main>
 
@@ -622,7 +549,7 @@ export default function App() {
       <footer id="support" style={{background:'#000', borderTop:'3px solid #FFD700', padding:'40px 15px', marginTop:'50px', textAlign:'center'}}>
         <h4 style={{color:'#fff', fontSize:'18px', fontWeight:'bold', marginBottom:'20px'}}>Scan to Share</h4>
         <div style={{background:'white', padding:'12px', border:'3px solid #FFD700', borderRadius:'24px', maxWidth:'320px', margin:'0 auto', position:'relative'}}>
-          <img src="https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=https://www.gasv.store" alt="GOYE QR" style={{width:'100%', height:'auto', display:'block', borderRadius:'12px'}} />
+          <img loading="lazy" src="https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=https://www.gasv.store" alt="GOYE QR" style={{width:'100%', height:'auto', display:'block', borderRadius:'12px'}} />
           <div style={{position:'absolute', top:'50%', left:'50%', transform:'translate(-50%, -50%)', background:'white', borderRadius:'50%', width:'60px', height:'60px', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 2px 10px rgba(0,0,0,0.2)'}}>
             <span style={{fontSize:'36px'}}>🌐</span>
           </div>

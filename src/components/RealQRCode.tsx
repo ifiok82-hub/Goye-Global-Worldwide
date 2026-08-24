@@ -35,7 +35,7 @@ export default function RealQRCode({ className = "", customTrigger }: { classNam
           style={{ boxShadow: '0 0 20px rgba(255, 215, 0, 0.3)' }}
         >
           <div className="relative inline-block w-full max-w-[280px] min-w-[150px]">
-            <img 
+            <img loading="lazy" 
               src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://www.gasv.store" 
               alt="GOYE Global QR - RC BN3583773" 
               className="w-full h-auto block rounded-lg"
@@ -59,7 +59,7 @@ export default function RealQRCode({ className = "", customTrigger }: { classNam
             
             <div className="bg-white p-3 rounded-[16px] border-[3px] border-[#FFD700] inline-block w-full max-w-[280px] mt-4">
               <div className="relative inline-block w-full">
-                <img 
+                <img loading="lazy" 
                   src="https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=https://www.gasv.store" 
                   alt="GOYE Global QR - RC BN3583773" 
                   className="w-full h-auto block rounded-lg"
