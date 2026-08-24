@@ -3,10 +3,18 @@ import { Globe, Download, ShieldCheck, ChevronRight, Lock, BookOpen, Settings, L
 import { ALL_PRODUCTS } from './data';
 import UnifiedCheckoutModal from './components/UnifiedCheckoutModal';
 import EsimVideoModal from './components/EsimVideoModal';
+
+import QRModal from './components/QRModal';
+import ScanModal from './components/ScanModal';
+import ReferralDashboardModal from './components/ReferralDashboardModal';
+import VoiceModal from './components/VoiceModal';
+import LanguageModal from './components/LanguageModal';
+import CurrencyModal, { CURRENCIES } from './components/CurrencyModal';
+import { Bell } from 'lucide-react';
 import { GoyeLogo } from './components/GoyeLogo';
 import SirwiseAITeacher from './components/SirwiseAITeacher';
 import { db } from './lib/firebase';
-import { collection, onSnapshot, setDoc, doc } from 'firebase/firestore';
+import { collection, onSnapshot, setDoc, doc, getDoc, updateDoc, increment } from 'firebase/firestore';
 
 
 // Dummy components for things that were in App.tsx
@@ -80,6 +88,48 @@ export default function App() {
   const [purchasedItems, setPurchasedItems] = useState<any[]>([]);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState(false);
+  const [showQRModal, setShowQRModal] = useState(false);
+  const [showScanModal, setShowScanModal] = useState(false);
+  const [showReferralModal, setShowReferralModal] = useState(false);
+  const [showVoiceModal, setShowVoiceModal] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const [showCurrencyModal, setShowCurrencyModal] = useState(false);
+  const [currentCurrency, setCurrentCurrency] = useState('USD');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    const trackReferral = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const ref = params.get('ref');
+      if (ref) {
+        // Set cookie for 30 days
+        const d = new Date();
+        d.setTime(d.getTime() + (30*24*60*60*1000));
+        document.cookie = "referred_by=" + ref + ";expires=" + d.toUTCString() + ";path=/";
+        localStorage.setItem('referred_by', ref);
+        
+        // Check if we already counted this IP/session click
+        if (!sessionStorage.getItem('ref_clicked_' + ref)) {
+          sessionStorage.setItem('ref_clicked_' + ref, 'true');
+          try {
+            
+            const refDoc = doc(db, 'referrals', ref);
+            const snap = await getDoc(refDoc);
+            if (snap.exists()) {
+              await updateDoc(refDoc, { clicks: increment(1) });
+            } else {
+              await setDoc(refDoc, { clicks: 1, signups: 0, usd: 0, ngn: 0, pi: 0, payouts: [] });
+            }
+          } catch (e) {
+            console.error("Failed to track referral click", e);
+          }
+        }
+      }
+    };
+    trackReferral();
+  }, []);
+
   const [isAiTeacherOpen, setIsAiTeacherOpen] = useState(false);
   const userAccessStatus = purchasedItems.length > 0 ? 'paid' : 'free';
 
@@ -106,6 +156,34 @@ export default function App() {
       setIsInstallable(true);
     });
   }, []);
+
+  
+  const handlePushNotification = () => {
+    if (!('Notification' in window)) {
+      showToast('Push notifications are not supported in this browser.');
+      return;
+    }
+    Notification.requestPermission().then((permission) => {
+      if (permission === 'granted') {
+        new Notification('GOYE Store', {
+          body: 'You are now subscribed to notifications!',
+          icon: '/logo.png'
+        });
+        showToast('Push notifications enabled!');
+      } else {
+        showToast('Notification permission denied.');
+      }
+    });
+    setShowMoreMenu(false);
+  };
+
+  
+  const formatPrice = (usdPrice: number) => {
+    const curr = CURRENCIES.find(c => c.code === currentCurrency) || CURRENCIES[0];
+    const converted = usdPrice * curr.rate;
+    if (curr.code === 'PI') return `${converted.toFixed(6)} ${curr.symbol}`;
+    return `${curr.symbol}${converted.toFixed(2)}`;
+  };
 
   const handleInstallClick = () => {
     if (deferredPrompt) {
@@ -200,38 +278,52 @@ export default function App() {
             </div>
           </div>
           
-          <div className="flex items-center gap-2 flex-wrap justify-end max-w-[140px] pt-1">
-            <button className="flex flex-col items-center justify-center bg-[#111] border border-[#FFD700] rounded-xl w-[42px] h-[42px]">
+          
+          <div className="flex items-center gap-2 flex-wrap justify-end max-w-[140px] pt-1 relative">
+            <button onClick={() => setShowQRModal(true)} className="flex flex-col items-center justify-center bg-[#111] border border-[#FFD700] rounded-xl w-[42px] h-[42px] hover:bg-[#222]">
               <Camera size={14} className="text-[#9ca3af]" />
               <span className="text-[#FFD700] text-[8px] font-bold mt-1">QR</span>
             </button>
-            <button className="flex flex-col items-center justify-center bg-[#111] border border-[#10B981] rounded-xl w-[42px] h-[42px]">
+            <button onClick={() => setShowScanModal(true)} className="flex flex-col items-center justify-center bg-[#111] border border-[#10B981] rounded-xl w-[42px] h-[42px] hover:bg-[#222]">
               <Search size={14} className="text-[#3b82f6]" />
               <span className="text-[#10B981] text-[8px] font-bold mt-1">Scan</span>
             </button>
-            <button className="flex flex-col items-center justify-center bg-[#111] border border-[#333] rounded-xl w-[42px] h-[42px]">
+            <button onClick={() => setShowVoiceModal(true)} className="flex flex-col items-center justify-center bg-[#111] border border-[#333] rounded-xl w-[42px] h-[42px] hover:bg-[#222]">
               <Mic size={14} className="text-[#3b82f6]" />
               <span className="text-white text-[8px] font-bold mt-1">Record</span>
             </button>
-            <button className="flex flex-col items-center justify-center bg-[#111] border border-[#333] rounded-xl w-[42px] h-[42px]">
+            <button onClick={() => setShowMoreMenu(!showMoreMenu)} className="flex flex-col items-center justify-center bg-[#111] border border-[#333] rounded-xl w-[42px] h-[42px] hover:bg-[#222]">
               <MoreHorizontal size={14} className="text-white" />
               <span className="text-white text-[8px] font-bold mt-1">More</span>
             </button>
+            
+            {showMoreMenu && (
+              <div className="absolute top-[50px] right-0 bg-[#111] border border-[#333] rounded-xl shadow-2xl z-[5000] w-[200px] overflow-hidden">
+                <button onClick={() => { setShowReferralModal(true); setShowMoreMenu(false); }} className="w-full text-left px-4 py-3 border-b border-[#222] text-sm text-white hover:bg-[#222] flex items-center gap-2"><Users size={16} className="text-[#FFD700]"/> 🤝 Referral & Earn</button>
+                <button onClick={() => { setShowLanguageModal(true); setShowMoreMenu(false); }} className="w-full text-left px-4 py-3 border-b border-[#222] text-sm text-white hover:bg-[#222] flex items-center gap-2"><Globe size={16} className="text-[#3b82f6]"/> 🌐 Language</button>
+                <button onClick={() => { setShowCurrencyModal(true); setShowMoreMenu(false); }} className="w-full text-left px-4 py-3 border-b border-[#222] text-sm text-white hover:bg-[#222] flex items-center gap-2"><DollarSign size={16} className="text-[#10B981]"/> 💱 Currency ({currentCurrency})</button>
+                <button onClick={handlePushNotification} className="w-full text-left px-4 py-3 border-b border-[#222] text-sm text-white hover:bg-[#222] flex items-center gap-2"><Bell size={16} className="text-[#FF8C00]"/> 🔔 Enable Notifications</button>
+                <button onClick={() => { showToast('Terms & Privacy opened.'); setShowMoreMenu(false); }} className="w-full text-left px-4 py-3 border-b border-[#222] text-sm text-white hover:bg-[#222] flex items-center gap-2"><FileText size={16} className="text-[#10B981]"/> 📄 Terms & Privacy</button>
+                <button onClick={handleInstallClick} className="w-full text-left px-4 py-3 text-sm text-white hover:bg-[#222] flex items-center gap-2"><Smartphone size={16} className="text-[#8b5cf6]"/> 📲 Install App</button>
+              </div>
+            )}
           </div>
+
         </div>
         
         <div className="overflow-x-auto scrollbar-hide bg-[#111] p-2">
           <div className="flex flex-nowrap w-max overflow-visible">
-            {['HOME', 'SHOP', 'eSIM', 'ACADEMY', 'CONTRACTS', 'PROMPTS', 'DOWNLOADS', 'SUPPORT'].map((t) => (
+            {['HOME', 'SHOP', 'eSIM', 'ACADEMY', 'REFERRALS', 'CONTRACTS', 'PROMPTS', 'DOWNLOADS', 'SUPPORT'].map((t) => (
               <button 
                 key={t}
-                onClick={() => { setTab(t.toLowerCase()); window.location.hash = t.toLowerCase(); }}
+                onClick={() => { if(t === 'REFERRALS') { setShowReferralModal(true); return; } setTab(t.toLowerCase()); window.location.hash = t.toLowerCase(); }}
                 className={`mr-2 px-4 py-2 rounded-xl text-[11px] font-bold whitespace-nowrap transition transform active:scale-95 flex items-center gap-2 ${tab.toUpperCase() === t || (tab==='home' && t==='HOME') ? 'bg-transparent text-white border border-white' : 'text-gray-400 hover:text-white bg-transparent'}`}
               >
                 {t === 'HOME' && <Home size={14}/>}
                 {t === 'SHOP' && <ShoppingBag size={14}/>}
                 {t === 'eSIM' && <Globe size={14}/>}
                 {t === 'ACADEMY' && <GraduationCap size={14}/>}
+                {t === 'REFERRALS' && <Users size={14} className="text-[#FFD700]"/>}
                 {t === 'CONTRACTS' && <FileText size={14}/>}
                 {t === 'PROMPTS' && <MessageCircle size={14}/>}
                 {t === 'DOWNLOADS' && <Download size={14}/>}
@@ -306,7 +398,7 @@ export default function App() {
 
         {tab === 'downloads' && (
           <div className="max-w-4xl mx-auto px-4 mt-8 animate-in fade-in duration-500">
-            <h2 className="text-[#FFD700] text-2xl font-black mb-6 border-b border-[#333] pb-2 inline-block">My Downloads & Orders</h2>
+            <h2 className="text-[#FFD700] text-2xl font-black mb-6 border-b border-[#333] pb-2 inline-block">Track Orders & Downloads</h2>
             {purchasedItems.length === 0 ? (
               <div className="bg-[#111] border border-[#333] rounded-2xl p-12 text-center">
                 <Download size={48} className="text-gray-600 mx-auto mb-4"/>
@@ -564,6 +656,13 @@ export default function App() {
         </button>
       </div>
 
+      {showQRModal && <QRModal onClose={() => setShowQRModal(false)} />}
+      {showScanModal && <ScanModal onClose={() => setShowScanModal(false)} onScanResult={(res: string) => { showToast('Scanned: ' + res); }} />}
+      {showReferralModal && <ReferralDashboardModal onClose={() => setShowReferralModal(false)} onToast={showToast} />}
+      {showVoiceModal && <VoiceModal onClose={() => setShowVoiceModal(false)} onResult={(res: string) => { setSearchQuery(res); showToast('Voice: ' + res); }} />}
+      {showLanguageModal && <LanguageModal onClose={() => setShowLanguageModal(false)} />}
+      {showCurrencyModal && <CurrencyModal onClose={() => setShowCurrencyModal(false)} currentCurrency={currentCurrency} onSelectCurrency={setCurrentCurrency} />}
+      
       <SirwiseAITeacher 
         isOpen={isAiTeacherOpen} 
         onClose={() => setIsAiTeacherOpen(false)} 

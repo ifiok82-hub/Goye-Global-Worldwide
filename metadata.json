@@ -1,6 +1,6 @@
 {
   "name": "GOYE Global Worldwide",
   "description": "GOYE Store Global delivers instant digital products, eSIM from $4, Travel & Relocation Guides, AI Business Packs, Gadgets & Fashion with automated instant delivery in 190+ countries.",
-  "requestFramePermissions": ["geolocation"],
+  "requestFramePermissions": ["geolocation", "camera", "microphone"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

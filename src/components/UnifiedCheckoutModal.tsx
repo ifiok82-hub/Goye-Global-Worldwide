@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { db } from '../lib/firebase';
+import { doc, getDoc, updateDoc, increment, collection, addDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { X, ShieldCheck, Lock, Upload, Copy, CheckCircle, RefreshCw, ChevronRight, Zap } from 'lucide-react';
 
 export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, onToast }: any) {
@@ -20,8 +22,50 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
     return emailRegex.test(sanitized) ? sanitized : null;
   };
   
-  const handleSuccess = (ref: string, method: string, isPending: boolean = false) => {
+  
+  const handleSuccess = async (ref: string, method: string, isPending: boolean = false) => {
+    const referredBy = localStorage.getItem('referred_by');
+    if (referredBy && !isPending) {
+      try {
+        const refDoc = doc(db, 'referrals', referredBy);
+        const snap = await getDoc(refDoc);
+        
+        let piAmt = 0;
+        if(method.toLowerCase().includes('pi')) piAmt = 0.0001; // Mock 20% of Pi GCV
+        
+        if (snap.exists()) {
+          await updateDoc(refDoc, {
+            usd: increment(priceUSD * 0.2),
+            ngn: increment(priceNGN * 0.2),
+            pi: increment(piAmt),
+            signups: increment(1)
+          });
+        } else {
+          await setDoc(refDoc, {
+            clicks: 1,
+            signups: 1,
+            usd: priceUSD * 0.2,
+            ngn: priceNGN * 0.2,
+            pi: piAmt,
+            payouts: []
+          });
+        }
+        
+        await addDoc(collection(db, 'referrals', referredBy, 'referral_payouts'), {
+          amountUSD: priceUSD * 0.2,
+          amountNGN: priceNGN * 0.2,
+          amountPi: piAmt,
+          method: method,
+          productName: product.name,
+          timestamp: serverTimestamp()
+        });
+      } catch(e) {
+        console.error('Error tracking referral commission', e);
+      }
+    }
+    
     const order = {
+
       id: Date.now(),
       ref: ref,
       productId: product.id,
@@ -102,11 +146,11 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
         email,
         product: product.name,
         amount: priceUSD,
-        txHash: sanitizedHash
+        txHash: cryptoTxHash
       })
     }).then(() => {
       setCryptoVerifying(false);
-      handleSuccess(sanitizedHash, 'Crypto', true); // Pending verification!
+      handleSuccess(cryptoTxHash, 'Crypto', true); // Pending verification!
     });
   };
 
