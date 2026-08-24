@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+const fs = require('fs');
+
+const code = `import React, { useState, useEffect } from 'react';
 import { CreditCard, Users, ShoppingCart, Package, DollarSign, Settings, Download, Edit, Trash2, CheckCircle, XCircle, Activity, Globe, Eye, UserPlus } from 'lucide-react';
 import { db } from '../lib/firebase';
 import { collection, onSnapshot, doc, setDoc, updateDoc, query, orderBy, limit } from 'firebase/firestore';
@@ -90,9 +92,9 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
   };
 
   const exportOrders = () => {
-    let csv = 'ID,Ref,Product,Amount,Method,Status,Date\n';
+    let csv = 'ID,Ref,Product,Amount,Method,Status,Date\\n';
     orders.forEach(o => {
-      csv += `${o.id},${o.ref},${o.productName},${o.amount},${o.method},${o.status},${o.date}\n`;
+      csv += \`\${o.id},\${o.ref},\${o.productName},\${o.amount},\${o.method},\${o.status},\${o.date}\\n\`;
     });
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -124,7 +126,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
           <button
             key={t.id}
             onClick={() => setActiveTab(t.id)}
-            className={`flex items-center gap-2 text-sm transition-colors ${activeTab === t.id ? 'bg-[#FFD700] text-black shadow-lg' : 'text-gray-400 hover:text-white bg-white/5'}`}
+            className={\`flex items-center gap-2 text-sm transition-colors \${activeTab === t.id ? 'bg-[#FFD700] text-black shadow-lg' : 'text-gray-400 hover:text-white bg-white/5'}\`}
             style={{ flexShrink: 0, minWidth: 'auto', padding: '10px 18px', borderRadius: '8px', fontWeight: 600 }}
           >
             <t.icon size={18} /> {t.label}
@@ -171,10 +173,10 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
                 <span className="text-[10px] uppercase font-bold">Gross Revenue</span>
               </div>
               <div className="text-xl font-black text-white">
-                ${(orders.filter(o => o.status === 'completed').reduce((acc, curr) => acc + (curr.amount || 0), 0)).toLocaleString(undefined, {minimumFractionDigits: 2})}
+                $\{(orders.filter(o => o.status === 'completed').reduce((acc, curr) => acc + (curr.amount || 0), 0)).toLocaleString(undefined, {minimumFractionDigits: 2})}
               </div>
               <div className="text-[10px] text-gray-500 font-bold mt-1">
-                ₦{((orders.filter(o => o.status === 'completed').reduce((acc, curr) => acc + (curr.amount || 0), 0)) * 1600).toLocaleString(undefined, {minimumFractionDigits: 2})}
+                ₦\{((orders.filter(o => o.status === 'completed').reduce((acc, curr) => acc + (curr.amount || 0), 0)) * 1600).toLocaleString(undefined, {minimumFractionDigits: 2})}
               </div>
             </div>
           </div>
@@ -201,7 +203,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
                         <td className="p-3"><span className="text-lg mr-2">🌐</span> {pv.country} (IP: {pv.ip})</td>
                         <td className="p-3 text-white">{pv.path}</td>
                         <td className="p-3">
-                          <span className={`px-2 py-1 rounded text-[10px] font-bold ${pv.path.includes('checkout') ? 'bg-yellow-500/20 text-yellow-500' : 'bg-blue-500/20 text-blue-400'}`}>
+                          <span className={\`px-2 py-1 rounded text-[10px] font-bold \${pv.path.includes('checkout') ? 'bg-yellow-500/20 text-yellow-500' : 'bg-blue-500/20 text-blue-400'}\`}>
                             {pv.path.includes('checkout') ? 'Added to Cart' : 'Browsing'}
                           </span>
                         </td>
@@ -230,7 +232,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
                   />
                   <path
                     className="text-[#FFD700]"
-                    strokeDasharray={`${pageViews.length > 0 ? ((orders.filter(o => o.status === 'completed').length / pageViews.length) * 100).toFixed(1) : 0}, 100`}
+                    strokeDasharray={\`\${pageViews.length > 0 ? ((orders.filter(o => o.status === 'completed').length / pageViews.length) * 100).toFixed(1) : 0}, 100\`}
                     d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                     fill="none"
                     strokeWidth="3"
@@ -338,10 +340,10 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
                   <tr key={i} className="hover:bg-white/[0.02]">
                     <td className="p-4 font-mono text-[#FFD700] text-xs">{order.ref}</td>
                     <td className="p-4 font-bold text-white">{order.productName}</td>
-                    <td className="p-4 text-[#10B981] font-bold">${order.amount}</td>
+                    <td className="p-4 text-[#10B981] font-bold">\${order.amount}</td>
                     <td className="p-4">
                       <span className="text-xs font-bold uppercase mr-2">{order.method}</span>
-                      <span className={`px-2 py-1 rounded text-[10px] font-bold ${order.status==='completed' ? 'bg-[#10B981]/20 text-[#10B981]' : 'bg-yellow-500/20 text-yellow-500'}`}>{order.status}</span>
+                      <span className={\`px-2 py-1 rounded text-[10px] font-bold \${order.status==='completed' ? 'bg-[#10B981]/20 text-[#10B981]' : 'bg-yellow-500/20 text-yellow-500'}\`}>{order.status}</span>
                     </td>
                     <td className="p-4 text-gray-500 text-xs">{new Date(order.date).toLocaleString()}</td>
                   </tr>
@@ -377,7 +379,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
                     <td className="p-4 text-2xl">{p.icon}</td>
                     <td className="p-4 text-white font-bold">{p.name}</td>
                     <td className="p-4 text-gray-400 uppercase text-xs">{p.category}</td>
-                    <td className="p-4 text-[#10B981] font-bold">${p.price}</td>
+                    <td className="p-4 text-[#10B981] font-bold">\${p.price}</td>
                     <td className="p-4 flex gap-2">
                       <button onClick={() => setEditingProduct(p)} className="text-blue-400 hover:text-blue-300 p-2"><Edit size={16}/></button>
                       <button onClick={() => {
@@ -417,13 +419,13 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
                 {payouts.map(p => (
                   <tr key={p.id} className="hover:bg-white/[0.02]">
                     <td className="p-4 text-white">{p.userId || p.id}</td>
-                    <td className="p-4 text-[#10B981] font-bold">${p.amountUSD}</td>
+                    <td className="p-4 text-[#10B981] font-bold">\${p.amountUSD}</td>
                     <td className="p-4 text-gray-400">
                       <div className="font-bold uppercase text-white">{p.method}</div>
                       <div className="text-xs">{p.details}</div>
                     </td>
                     <td className="p-4">
-                      <span className={`px-2 py-1 rounded text-[10px] font-bold ${p.status==='paid' ? 'bg-[#10B981]/20 text-[#10B981]' : p.status==='rejected' ? 'bg-red-500/20 text-red-500' : 'bg-yellow-500/20 text-yellow-500'}`}>
+                      <span className={\`px-2 py-1 rounded text-[10px] font-bold \${p.status==='paid' ? 'bg-[#10B981]/20 text-[#10B981]' : p.status==='rejected' ? 'bg-red-500/20 text-red-500' : 'bg-yellow-500/20 text-yellow-500'}\`}>
                         {p.status || 'pending'}
                       </span>
                     </td>
@@ -494,3 +496,6 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
     </div>
   );
 }
+`;
+
+fs.writeFileSync('src/components/AdminDashboard.tsx', code);

@@ -15,7 +15,7 @@ import { Bell } from 'lucide-react';
 import { GoyeLogo } from './components/GoyeLogo';
 import SirwiseAITeacher from './components/SirwiseAITeacher';
 import { db } from './lib/firebase';
-import { collection, onSnapshot, setDoc, doc, getDoc, updateDoc, increment } from 'firebase/firestore';
+import { collection, onSnapshot, setDoc, doc, getDoc, updateDoc, increment, addDoc } from 'firebase/firestore';
 
 
 // Dummy components for things that were in App.tsx
@@ -137,7 +137,37 @@ export default function App() {
   const [isAiTeacherOpen, setIsAiTeacherOpen] = useState(false);
   const userAccessStatus = purchasedItems.length > 0 ? 'paid' : 'free';
 
+  
   useEffect(() => {
+    // Analytics Page View Tracker
+    const trackPageView = async () => {
+      try {
+        if (!sessionStorage.getItem('session_tracked')) {
+          sessionStorage.setItem('session_tracked', 'true');
+          
+          let country = 'Unknown';
+          let ip = 'Unknown';
+          try {
+            const res = await fetch('https://ipapi.co/json/');
+            const data = await res.json();
+            country = data.country_code || data.country_name || 'Unknown';
+            ip = data.ip || 'Unknown';
+          } catch(e) {}
+          
+          const pageView = {
+            ip,
+            country,
+            path: window.location.hash || window.location.pathname || '/',
+            timestamp: new Date().toISOString()
+          };
+          await addDoc(collection(db, 'page_views'), pageView);
+        }
+      } catch (e) {
+        console.error('Page view tracking error', e);
+      }
+    };
+    trackPageView();
+
     // 1. Firebase Real-time listeners (onSnapshot)
     const productsRef = collection(db, 'all_products');
     const unsubProducts = onSnapshot(productsRef, (snapshot) => {

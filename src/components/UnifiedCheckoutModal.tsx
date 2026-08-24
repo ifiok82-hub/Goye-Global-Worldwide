@@ -65,21 +65,31 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
     }
     
     const order = {
-
-      id: Date.now(),
+      id: Date.now().toString(),
       ref: ref,
       productId: product.id,
       productName: product.name,
       amount: priceUSD,
       method: method,
       status: isPending ? 'pending' : 'completed',
-      date: new Date().toLocaleString()
+      date: new Date().toISOString(),
+      customerEmail: email
+    };
+    
+    const saveToDb = async () => {
+      try {
+        await addDoc(collection(db, 'orders'), order);
+      } catch (e) {
+        console.error('Error saving order to db', e);
+      }
     };
     
     if (isPending) {
       const downloads = JSON.parse(localStorage.getItem('goye_digital_products_orders') || '[]');
       downloads.push(order);
       localStorage.setItem('goye_digital_products_orders', JSON.stringify(downloads));
+      
+      saveToDb();
       
       alert('Transaction Submitted! Pending secure webhook verification. Check "My Downloads" tab later.');
       onClose();
@@ -91,6 +101,8 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
         const downloads = JSON.parse(localStorage.getItem('goye_digital_products_orders') || '[]');
         downloads.push(order);
         localStorage.setItem('goye_digital_products_orders', JSON.stringify(downloads));
+        
+        saveToDb();
         
         if (onToast) onToast("✅ Webhook Verified. Securing Download Access.");
         setSuccess(true);
