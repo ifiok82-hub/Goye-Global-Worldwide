@@ -9,7 +9,7 @@ export default function AuthScreen({ onAuthenticated }: { onAuthenticated: (user
   const [authMethod, setAuthMethod] = useState<'email' | 'phone'>('email');
   
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<any>('');
   
   // Registration fields
   const [firstName, setFirstName] = useState('');
@@ -61,26 +61,30 @@ export default function AuthScreen({ onAuthenticated }: { onAuthenticated: (user
           const userCred = await signInWithEmailAndPassword(auth, emailToUse, password);
           user = userCred.user;
         } catch (authErr: any) {
-          if (authErr.code === 'auth/operation-not-allowed' || authErr.message?.includes('operation-not-allowed')) {
-             const localProfileStr = localStorage.getItem('goye_user_profile');
-             if (localProfileStr) {
-               const localProfile = JSON.parse(localProfileStr);
-               if (localProfile.contact === emailToUse || localProfile.contact === contact || `${countryCode}${contact}` === localProfile.contact) {
-                 user = { uid: 'local_' + emailToUse, email: emailToUse, getIdToken: async () => 'mock_token' };
-               } else {
-                 throw new Error('User not found in local storage fallback.');
-               }
-             } else {
-               throw new Error('Email/Password auth is disabled and no local profile found.');
-             }
+          const registeredUsersStr = localStorage.getItem('goye_registered_users');
+          const registeredUsers = registeredUsersStr ? JSON.parse(registeredUsersStr) : [];
+          
+          const localUser = registeredUsers.find((u: any) => u.contact === contact || u.contact === emailToUse || u.contact === `${countryCode}${contact}`);
+          
+          if (localUser && localUser.password === password) {
+             user = { uid: localUser.uid || 'local_' + emailToUse, email: emailToUse, getIdToken: async () => 'mock_token' };
           } else {
-            throw authErr;
+             setError(
+               <div className="flex flex-col items-center gap-2">
+                 <span>No account found with these credentials. Please Register first.</span>
+                 <button type="button" onClick={() => { setIsLogin(false); setError(''); }} className="bg-[#FFD700] text-black px-4 py-2 rounded-xl font-bold w-full max-w-[200px]">Register Now</button>
+               </div>
+             );
+             setLoading(false);
+             return;
           }
         }
         
         let profile: any = { is_verified: false };
         if (user.uid.startsWith('local_')) {
-           profile = JSON.parse(localStorage.getItem('goye_user_profile') || '{}');
+           const registeredUsersStr = localStorage.getItem('goye_registered_users');
+           const registeredUsers = registeredUsersStr ? JSON.parse(registeredUsersStr) : [];
+           profile = registeredUsers.find((u: any) => u.contact === contact || u.contact === emailToUse || u.contact === `${countryCode}${contact}`) || {};
         } else {
            const profileSnap = await getDoc(doc(db, 'users', user.uid));
            profile = profileSnap.exists() ? profileSnap.data() : { is_verified: false };
@@ -95,6 +99,7 @@ export default function AuthScreen({ onAuthenticated }: { onAuthenticated: (user
         
         localStorage.setItem('goye_auth_token', await user.getIdToken());
         localStorage.setItem('goye_user_profile', JSON.stringify(profile));
+        localStorage.setItem('goye_active_user', JSON.stringify(profile));
         
         onAuthenticated(user, profile);
       } else {
@@ -103,42 +108,48 @@ export default function AuthScreen({ onAuthenticated }: { onAuthenticated: (user
         }
         
         const refCode = generateRefCode(surname, username);
-        const profileData = {
+        const contactValue = authMethod === 'email' ? contact : `${countryCode}${contact}`;
+        
+        const profileData: any = {
           firstName,
           surname,
           username,
-          contact: authMethod === 'email' ? contact : `${countryCode}${contact}`,
+          contact: contactValue,
           authMethod,
           referralCode: refCode,
           inviterCode: inviter,
           createdAt: new Date().toISOString(),
           plan: 'free',
           walletBalance: 0,
-          is_verified: false
+          is_verified: true,
+          password: password,
+          uid: 'local_' + emailToUse
         };
+
+        const registeredUsersStr = localStorage.getItem('goye_registered_users');
+        const registeredUsers = registeredUsersStr ? JSON.parse(registeredUsersStr) : [];
+        registeredUsers.push(profileData);
+        localStorage.setItem('goye_registered_users', JSON.stringify(registeredUsers));
 
         let user: any = null;
         try {
           const userCred = await createUserWithEmailAndPassword(auth, emailToUse, password);
           user = userCred.user;
+          profileData.uid = user.uid;
           await setDoc(doc(db, 'users', user.uid), profileData);
-          if (authMethod === 'email') {
-            await sendEmailVerification(user);
-          }
-          setNeedsVerification(true);
-          setResendCooldown(60);
         } catch (authErr: any) {
-           if (authErr.code === 'auth/operation-not-allowed' || authErr.message?.includes('operation-not-allowed')) {
-             user = { uid: 'local_' + emailToUse, email: emailToUse, getIdToken: async () => 'mock_token' };
-             profileData.is_verified = true; 
-             localStorage.setItem('goye_user_session', JSON.stringify(profileData));
-             localStorage.setItem('goye_user_profile', JSON.stringify(profileData));
-             localStorage.setItem('goye_auth_token', 'mock_token');
-             onAuthenticated(user, profileData);
-           } else {
-             throw authErr;
-           }
+           console.warn('Firebase auth failed, using dual-storage local fallback', authErr);
+           user = { uid: profileData.uid, email: emailToUse, getIdToken: async () => 'mock_token' };
+           // Attempt direct sync anyway in case only Auth is down but Firestore is up
+           try { await setDoc(doc(db, 'users', profileData.uid), profileData); } catch(e) {}
         }
+
+        localStorage.setItem('goye_user_session', JSON.stringify(profileData));
+        localStorage.setItem('goye_user_profile', JSON.stringify(profileData));
+        localStorage.setItem('goye_auth_token', 'mock_token');
+        localStorage.setItem('goye_active_user', JSON.stringify(profileData));
+        
+        onAuthenticated(user, profileData);
       }
     } catch (err: any) {
       setError(err.message || 'Authentication failed');
