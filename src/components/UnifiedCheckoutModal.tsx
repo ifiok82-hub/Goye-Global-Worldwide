@@ -80,8 +80,10 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
       try {
         await addDoc(collection(db, 'orders'), order);
         // Sync to user's Cloud account under purchased_items
-        if (auth.currentUser) {
-          const userRef = doc(db, 'users', auth.currentUser.uid);
+        const activeUserStr = localStorage.getItem('goye_active_user');
+        if (activeUserStr) {
+          const activeUser = JSON.parse(activeUserStr);
+          const userRef = doc(db, 'users', activeUser.uid);
           await updateDoc(userRef, {
             purchased_items: arrayUnion(order)
           }).catch(() => {

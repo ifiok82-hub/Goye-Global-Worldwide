@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-import { initializeFirestore, memoryLocalCache } from 'firebase/firestore';
+import { initializeFirestore, memoryLocalCache, setLogLevel } from 'firebase/firestore';
+setLogLevel('error');
 
 const firebaseConfig = {
   projectId: "elevated-haiku-wdw77",

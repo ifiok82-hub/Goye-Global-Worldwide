@@ -50,7 +50,6 @@ export default function App() {
   const [userProfile, setUserProfile] = useState<any>(null);
   useEffect(() => {
     // 3. PERSISTENT LOCAL SESSION check
-    let hasLocalSession = false;
     const activeUserStr = localStorage.getItem("goye_active_user");
     if (activeUserStr) {
        try {
@@ -59,30 +58,16 @@ export default function App() {
             setIsAuthenticated(true);
             setCurrentUser({ uid: activeUser.uid || 'local_' + activeUser.contact, email: activeUser.contact });
             setUserProfile(activeUser);
-            setAuthLoading(false);
-            hasLocalSession = true;
-         }
-       } catch(e) {}
-    }
-
-    const unsub = onAuthStateChanged(auth, async (user) => {
-      if (!hasLocalSession) {
-        if (user) {
-          if (user.emailVerified || user.email?.includes("@gasv.store.phone")) {
-            setIsAuthenticated(true);
-            setCurrentUser(user);
-            const prof = localStorage.getItem("goye_user_profile");
-            if (prof) setUserProfile(JSON.parse(prof));
-          } else {
+         } else {
             setIsAuthenticated(false);
-          }
-        } else {
-          setIsAuthenticated(false);
-        }
-        setAuthLoading(false);
-      }
-    });
-    return unsub;
+         }
+       } catch(e) {
+         setIsAuthenticated(false);
+       }
+    } else {
+       setIsAuthenticated(false);
+    }
+    setAuthLoading(false);
   }, []);
 
   const [toastMsg, setToastMsg] = useState<string | null>(null);
