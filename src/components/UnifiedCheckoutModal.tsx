@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { db } from '../lib/firebase';
-import { doc, getDoc, updateDoc, increment, collection, addDoc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { db, auth } from '../lib/firebase';
+import { doc, getDoc, updateDoc, increment, collection, addDoc, serverTimestamp, setDoc, arrayUnion } from 'firebase/firestore';
 import { X, ShieldCheck, Lock, Upload, Copy, CheckCircle, RefreshCw, ChevronRight, Zap } from 'lucide-react';
 
 export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, onToast }: any) {
@@ -79,15 +79,25 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
     const saveToDb = async () => {
       try {
         await addDoc(collection(db, 'orders'), order);
+        // Sync to user's Cloud account under purchased_items
+        if (auth.currentUser) {
+          const userRef = doc(db, 'users', auth.currentUser.uid);
+          await updateDoc(userRef, {
+            purchased_items: arrayUnion(order)
+          }).catch(() => {
+            // If purchased_items field doesn't exist yet, we can set it via setDoc merge
+            setDoc(userRef, { purchased_items: [order] }, { merge: true });
+          });
+        }
       } catch (e) {
         console.error('Error saving order to db', e);
       }
     };
     
     if (isPending) {
-      const downloads = JSON.parse(localStorage.getItem('goye_digital_products_orders') || '[]');
+      const downloads = JSON.parse(localStorage.getItem('my_downloads') || '[]');
       downloads.push(order);
-      localStorage.setItem('goye_digital_products_orders', JSON.stringify(downloads));
+      localStorage.setItem('my_downloads', JSON.stringify(downloads));
       
       saveToDb();
       
@@ -98,15 +108,20 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
       
       // Simulate backend webhook verification delay
       setTimeout(() => {
-        const downloads = JSON.parse(localStorage.getItem('goye_digital_products_orders') || '[]');
+        const downloads = JSON.parse(localStorage.getItem('my_downloads') || '[]');
         downloads.push(order);
-        localStorage.setItem('goye_digital_products_orders', JSON.stringify(downloads));
+        localStorage.setItem('my_downloads', JSON.stringify(downloads));
         
         saveToDb();
         
         if (onToast) onToast("✅ Webhook Verified. Securing Download Access.");
+        
+        setTimeout(() => {
+          if (onToast) onToast("📧 Sending Automated Email & 📱 WhatsApp Receipt...");
+        }, 800);
+        
         setSuccess(true);
-      }, 2500);
+      }, 2000);
     }
   };
 

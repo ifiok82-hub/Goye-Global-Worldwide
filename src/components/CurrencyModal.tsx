@@ -9,7 +9,8 @@ export const CURRENCIES = [
   { code: 'PI', symbol: 'π', rate: 0.00318, name: 'Pi Network' } // Example rate
 ];
 
-export default function CurrencyModal({ onClose, currentCurrency, onSelectCurrency }: any) {
+export default function CurrencyModal({ onClose, currentCurrency, onSelectCurrency, rates }: any) {
+  const displayRates = rates || CURRENCIES;
   return (
     <div className="fixed inset-0 bg-black/90 z-[10000] flex items-center justify-center p-4">
       <div className="bg-[#111] border border-[#FFD700] rounded-2xl w-full max-w-sm relative overflow-hidden shadow-[0_0_40px_rgba(255,215,0,0.1)]">
@@ -21,7 +22,7 @@ export default function CurrencyModal({ onClose, currentCurrency, onSelectCurren
         </div>
         <div className="p-4">
           <div className="space-y-2">
-            {CURRENCIES.map(curr => (
+            {displayRates.map((curr: any) => (
               <button
                 key={curr.code}
                 onClick={() => {

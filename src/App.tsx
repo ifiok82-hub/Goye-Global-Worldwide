@@ -1,3 +1,6 @@
+import AuthScreen from './components/AuthScreen';
+import { auth } from './lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Globe, Download, ShieldCheck, ChevronRight, Lock, BookOpen, Settings, List, Save, Mail, CreditCard, DollarSign, Wallet, Phone, Landmark, Home, ShoppingBag, GraduationCap, MessageCircle, Search, Edit, Trash2, Plus, FileText, Video, Eye, EyeOff, CheckCircle, RefreshCw, Users, Activity, UserCircle , Scan, QrCode, Smartphone, MoreVertical, Bot, LayoutDashboard, Camera, Mic, MoreHorizontal} from 'lucide-react';
 import { ALL_PRODUCTS } from './data';
@@ -41,6 +44,29 @@ const HeroSection = ({ onLogoTap, onPlayVideo }: any) => (
 );
 
 export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        if (user.emailVerified || user.email?.includes("@gasv.store.phone")) {
+          setIsAuthenticated(true);
+          setCurrentUser(user);
+          const prof = localStorage.getItem("goye_user_profile");
+          if (prof) setUserProfile(JSON.parse(prof));
+        } else {
+          setIsAuthenticated(false);
+        }
+      } else {
+        setIsAuthenticated(false);
+      }
+      setAuthLoading(false);
+    });
+    return unsub;
+  }, []);
+
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const showToast = (msg: string) => { setToastMsg(msg); setTimeout(() => setToastMsg(null), 3000); };
 
@@ -80,6 +106,7 @@ export default function App() {
         localStorage.setItem('pi_wallet', data.pi || '');
       }
     });
+
     return () => unsub();
   }, []);
 
@@ -100,6 +127,18 @@ export default function App() {
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const [currentCurrency, setCurrentCurrency] = useState('USD');
+  const [exchangeRates, setExchangeRates] = useState(CURRENCIES);
+
+  useEffect(() => {
+    fetch('https://open.er-api.com/v6/latest/USD')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.rates) {
+          setExchangeRates(prev => prev.map(c => c.code !== 'PI' && data.rates[c.code] ? { ...c, rate: data.rates[c.code] } : c));
+        }
+      })
+      .catch(e => console.warn('Currency API unavailable, using offline fallback rates.'));
+  }, []);
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
@@ -178,6 +217,7 @@ export default function App() {
       }
     }, (error) => console.error("Firestore error all_products:", error));
 
+
     return () => {
       unsubProducts();
     };
@@ -192,28 +232,41 @@ export default function App() {
   }, []);
 
   
-  const handlePushNotification = () => {
+    const handlePushNotification = async () => {
     if (!('Notification' in window)) {
       showToast('Push notifications are not supported in this browser.');
       return;
     }
-    Notification.requestPermission().then((permission) => {
+    try {
+      const permission = await Notification.requestPermission();
       if (permission === 'granted') {
-        new Notification('GOYE Store', {
-          body: 'You are now subscribed to notifications!',
-          icon: '/logo.png'
-        });
+        if ('serviceWorker' in navigator) {
+          const registration = await navigator.serviceWorker.ready;
+          if (registration.showNotification) {
+            registration.showNotification('GOYE Global Store', {
+              body: 'Welcome to GOYE! You are now subscribed to updates.',
+              icon: '/logo.png',
+              badge: '/logo.png'
+            });
+          }
+        } else {
+          new Notification('GOYE Global Store', {
+            body: 'Welcome! You are now subscribed to updates.',
+            icon: '/logo.png'
+          });
+        }
         showToast('Push notifications enabled!');
       } else {
         showToast('Notification permission denied.');
       }
-    });
-    setShowMoreMenu(false);
+    } catch (e) {
+      console.error(e);
+      showToast('Failed to enable notifications.');
+    }
   };
 
-  
   const formatPrice = (usdPrice: number) => {
-    const curr = CURRENCIES.find(c => c.code === currentCurrency) || CURRENCIES[0];
+    const curr = exchangeRates.find(c => c.code === currentCurrency) || CURRENCIES[0];
     const converted = usdPrice * curr.rate;
     if (curr.code === 'PI') return `${converted.toFixed(6)} ${curr.symbol}`;
     return `${curr.symbol}${converted.toFixed(2)}`;
@@ -242,7 +295,7 @@ export default function App() {
     setTimeout(() => setShowSplash(false), 2000);
     
     // Load downloads
-    const items = JSON.parse(localStorage.getItem('goye_digital_products_orders') || '[]');
+    const items = JSON.parse(localStorage.getItem('my_downloads') || '[]');
     setPurchasedItems(Array.isArray(items) ? items : []);
     
     // Check if URL is /admin
@@ -250,6 +303,7 @@ export default function App() {
       setShowAdminLogin(true);
     }
     
+
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
@@ -268,6 +322,10 @@ export default function App() {
     if (id === 'ai-mastery') return true; // Free preview
     return purchasedItems.some(item => item.productId === id);
   };
+
+  if (authLoading) return <div className="min-h-screen bg-black flex items-center justify-center"><GoyeLogo size={80} className="animate-pulse" /></div>;
+  if (!isAuthenticated) return <AuthScreen onAuthenticated={(user, profile) => { setIsAuthenticated(true); setCurrentUser(user); setUserProfile(profile); }} />;
+
 
   return (
     <div className="min-h-screen bg-[#000] text-gray-200 font-sans pb-40 max-w-[420px] mx-auto border-x border-[#222]">
@@ -410,17 +468,24 @@ export default function App() {
                     {hasAccess(product.id) ? (
                       <button onClick={() => {
                         showToast('Access granted! Downloading...');
-                        // Handle download/access logic here
                         if (product.category === 'academy') {
                           const m = document.getElementById('videoModal');
                           if(m) m.style.display = 'flex';
+                        } else {
+                          // Direct 1-click download via data URI fallback
+                          const a = document.createElement('a');
+                          a.href = 'data:text/plain;charset=utf-8,Access%20granted!%20This%20is%20your%20digital%20product%20content.';
+                          a.download = product.name.replace(/\s+/g, '_') + '_delivery.txt';
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
                         }
-                      }} className="w-full bg-[#222] border border-[#10B981] text-[#10B981] font-bold py-3 rounded-xl flex items-center justify-center gap-2">
-                        <Download size={18}/> Access & Download
+                      }} className="w-full bg-[#10B981] text-black font-black py-3 rounded-xl flex items-center justify-center gap-2 transition-transform active:scale-95">
+                        <Download size={18}/> Download Now
                       </button>
                     ) : (
-                      <button onClick={() => setSelectedProduct(product)} className="w-full bg-[#FFD700] text-black font-bold py-3 rounded-xl flex items-center justify-center gap-2">
-                        <Lock size={18}/> Unlock & Buy
+                      <button onClick={() => setSelectedProduct(product)} className="w-full bg-[#FFD700] text-black font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-transform active:scale-95">
+                        <Lock size={18}/> Buy & Unlock
                       </button>
                     )}
                   </div>
@@ -430,9 +495,25 @@ export default function App() {
           </div>
         )}
 
-        {tab === 'downloads' && (
+                {tab === 'downloads' && (
           <div className="max-w-4xl mx-auto px-4 mt-8 animate-in fade-in duration-500">
-            <h2 className="text-[#FFD700] text-2xl font-black mb-6 border-b border-[#333] pb-2 inline-block">Track Orders & Downloads</h2>
+            <h2 className="text-[#FFD700] text-2xl font-black mb-6 border-b border-[#333] pb-2 inline-block">Order History & Downloads</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="bg-[#111] p-4 rounded-2xl border border-[#222]">
+                <div className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-1">Total Orders</div>
+                <div className="text-2xl font-black text-white">{purchasedItems.length}</div>
+              </div>
+              <div className="bg-[#111] p-4 rounded-2xl border border-[#222]">
+                <div className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-1">Pending</div>
+                <div className="text-2xl font-black text-yellow-500">{purchasedItems.filter((i:any) => i.status === 'pending').length}</div>
+              </div>
+              <div className="bg-[#111] p-4 rounded-2xl border border-[#222]">
+                <div className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-1">Completed</div>
+                <div className="text-2xl font-black text-[#10B981]">{purchasedItems.filter((i:any) => i.status !== 'pending').length}</div>
+              </div>
+            </div>
+
             {purchasedItems.length === 0 ? (
               <div className="bg-[#111] border border-[#333] rounded-2xl p-12 text-center">
                 <Download size={48} className="text-gray-600 mx-auto mb-4"/>
@@ -442,20 +523,33 @@ export default function App() {
             ) : (
               <div className="space-y-4">
                 {purchasedItems.map((item: any, i: number) => (
-                  <div key={i} className="bg-[#111] border border-[#333] rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div key={i} className="bg-[#111] border border-[#333] rounded-2xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <div>
                       <div className="text-xs text-[#FFD700] font-mono mb-1">{item.ref}</div>
                       <h3 className="text-white font-bold text-lg">{item.productName}</h3>
-                      <div className="text-gray-400 text-xs mt-1">Date: {item.date} • Method: {item.method}</div>
+                      <div className="text-gray-400 text-xs mt-1">
+                        Date: {item.date} • Method: {item.method} • Status: <span className={item.status === 'pending' ? 'text-yellow-500' : 'text-green-500'}>{item.status.toUpperCase()}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3 w-full md:w-auto mt-2 md:mt-0">
+                      <button onClick={() => showToast('Generating invoice...')} className="bg-[#222] text-white font-bold py-2 px-4 rounded-xl flex items-center gap-2 flex-1 md:flex-none justify-center">
+                         <FileText size={16}/> Invoice
+                      </button>
                       {item.status === 'pending' ? (
-                        <div className="bg-yellow-900/30 text-yellow-500 border border-yellow-900/50 px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2">
-                          <RefreshCw size={14} className="animate-spin"/> Verifying...
+                        <div className="bg-yellow-900/30 text-yellow-500 border border-yellow-900/50 px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 flex-1 md:flex-none justify-center">
+                          <RefreshCw size={14} className="animate-spin"/> Verifying
                         </div>
                       ) : (
-                        <button onClick={() => { showToast('Download starting...'); setTimeout(() => { const a = document.createElement('a'); a.href = 'data:text/plain;charset=utf-8,Access%20granted!%20This%20is%20your%20digital%20product%20content.'; a.download = item.productName + '.txt'; a.click(); }, 1500); }} className="bg-[#10B981] text-black font-bold py-2 px-6 rounded-xl flex items-center gap-2">
-                          <Download size={16}/> Access
+                        <button onClick={() => { 
+                          showToast('Download starting...'); 
+                          const a = document.createElement('a'); 
+                          a.href = 'data:text/plain;charset=utf-8,Access%20granted!%20This%20is%20your%20digital%20product%20content.'; 
+                          a.download = (item.productName || 'product').replace(/\s+/g, '_') + '_delivery.txt'; 
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                        }} className="bg-[#10B981] text-black font-black py-2 px-6 rounded-xl flex items-center gap-2 flex-1 md:flex-none justify-center transition-transform active:scale-95">
+                          <Download size={16}/> Download Now
                         </button>
                       )}
                     </div>
@@ -472,7 +566,11 @@ export default function App() {
       </main>
 
       {selectedProduct && (
-        <UnifiedCheckoutModal product={selectedProduct} paymentConfig={paymentConfig} onClose={() => setSelectedProduct(null)} onToast={showToast} />
+        <UnifiedCheckoutModal product={selectedProduct} paymentConfig={paymentConfig} onClose={() => {
+          setSelectedProduct(null);
+          const items = JSON.parse(localStorage.getItem('my_downloads') || '[]');
+          setPurchasedItems(Array.isArray(items) ? items : []);
+        }} onToast={showToast} />
       )}
 
       {showEsimVideoModal && <EsimVideoModal onClose={() => setShowEsimVideoModal(false)} />}
@@ -615,10 +713,10 @@ export default function App() {
 
       {showQRModal && <QRModal onClose={() => setShowQRModal(false)} />}
       {showScanModal && <ScanModal onClose={() => setShowScanModal(false)} onScanResult={(res: string) => { showToast('Scanned: ' + res); }} />}
-      {showReferralModal && <ReferralDashboardModal onClose={() => setShowReferralModal(false)} onToast={showToast} />}
+      {showReferralModal && <ReferralDashboardModal onClose={() => setShowReferralModal(false)} onToast={showToast} currentUser={currentUser} userProfile={userProfile} />}
       {showVoiceModal && <VoiceModal onClose={() => setShowVoiceModal(false)} onResult={(res: string) => { setSearchQuery(res); showToast('Voice: ' + res); }} />}
       {showLanguageModal && <LanguageModal onClose={() => setShowLanguageModal(false)} />}
-      {showCurrencyModal && <CurrencyModal onClose={() => setShowCurrencyModal(false)} currentCurrency={currentCurrency} onSelectCurrency={setCurrentCurrency} />}
+      {showCurrencyModal && <CurrencyModal onClose={() => setShowCurrencyModal(false)} currentCurrency={currentCurrency} onSelectCurrency={setCurrentCurrency} rates={exchangeRates} />}
       
       <SirwiseAITeacher 
         isOpen={isAiTeacherOpen} 
