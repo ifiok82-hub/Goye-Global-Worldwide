@@ -1,40 +1,36 @@
 const fs = require('fs');
-const file = 'src/components/UnifiedCheckoutModal.tsx';
-let code = fs.readFileSync(file, 'utf8');
+let code = fs.readFileSync('src/components/UnifiedCheckoutModal.tsx', 'utf8');
 
-const oldDelay = `// Simulate backend webhook verification delay
-      setTimeout(() => {
-        const downloads = JSON.parse(localStorage.getItem('goye_digital_products_orders') || '[]');
-        downloads.push(order);
-        localStorage.setItem('goye_digital_products_orders', JSON.stringify(downloads));
+const regexSuccess = /const handleSuccess = async \(ref: string, method: string, isPending: boolean = false\) => \{[\s\S]*?if \(referredBy && !isPending\) \{/g;
+const replacementSuccess = `const handleSuccess = async (ref: string, method: string, isPending: boolean = false) => {
+    
+    // Save to localStorage CRM
+    try {
+        let orders = JSON.parse(localStorage.getItem('orders_list') || '[]');
+        const countryJSON = localStorage.getItem('goye_selected_country');
+        const country = countryJSON ? JSON.parse(countryJSON) : { flag: '🌍', name: 'Unknown' };
+        const currency = localStorage.getItem('goye_currency') || 'USD';
+        const displaySymbol = currency === 'USD' ? '' : currency + ' ';
         
-        saveToDb();
-        
-        if (onToast) onToast("✅ Webhook Verified. Securing Download Access.");
-        setSuccess(true);
-      }, 2500);`;
+        orders.unshift({
+            id: 'ORD-' + Date.now(),
+            ref: ref,
+            customerName: email.split('@')[0],
+            customerEmail: email,
+            country: country,
+            productName: product.name,
+            amount: displaySymbol + localPrice,
+            amountUSD: priceUSD,
+            currency: currency,
+            method: method,
+            status: isPending ? 'pending' : 'paid',
+            date: new Date().toISOString()
+        });
+        localStorage.setItem('orders_list', JSON.stringify(orders.slice(0, 500)));
+    } catch(e) {}
+    
+    const referredBy = localStorage.getItem('referred_by');
+    if (referredBy && !isPending) {`;
 
-const newDelay = `// Simulate backend webhook verification delay
-      setTimeout(() => {
-        const downloads = JSON.parse(localStorage.getItem('goye_digital_products_orders') || '[]');
-        downloads.push(order);
-        localStorage.setItem('goye_digital_products_orders', JSON.stringify(downloads));
-        
-        saveToDb();
-        
-        if (onToast) onToast("✅ Webhook Verified. Securing Download Access.");
-        
-        setTimeout(() => {
-          if (onToast) onToast("📧 Sending Automated Email & 📱 WhatsApp Receipt...");
-        }, 800);
-        
-        setSuccess(true);
-      }, 2000);`;
-
-if(code.includes(oldDelay)) {
-  code = code.replace(oldDelay, newDelay);
-  fs.writeFileSync(file, code);
-  console.log("Patched UnifiedCheckoutModal delay");
-} else {
-  console.log("Could not find old delay code");
-}
+code = code.replace(regexSuccess, replacementSuccess);
+fs.writeFileSync('src/components/UnifiedCheckoutModal.tsx', code);

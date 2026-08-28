@@ -13,7 +13,7 @@ export default function ReferralDashboardModal({ onClose, onToast, currentUser, 
   const [withdrawDetails, setWithdrawDetails] = useState('');
   const [submitting, setSubmitting] = useState(false);
   
-  const referralCode = userProfile?.referralCode || currentUser?.uid?.substring(0,8).toUpperCase() || 'UNKNOWN';
+  const referralCode = userProfile?.surname || userProfile?.username || 'PUPIL';
   const referralLink = `https://gasv.store/?ref=\${referralCode}`;
 
   useEffect(() => {
@@ -65,7 +65,7 @@ export default function ReferralDashboardModal({ onClose, onToast, currentUser, 
     }
     
     let shareUrl = '';
-    if (platform === 'whatsapp') shareUrl = `https://wa.me/?text=${encodeURIComponent(text + url)}`;
+    if (platform === 'whatsapp') shareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text + url)}`;
     if (platform === 'twitter') shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
     if (platform === 'facebook') shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
     if (platform === 'telegram') shareUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;

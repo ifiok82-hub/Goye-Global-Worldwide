@@ -35,6 +35,22 @@ function checkBannedBrand(text: string): string | null {
 }
 
 const app = express();
+
+  // CORS and Compliance Headers
+  app.use((req, res, next) => {
+    const allowedOrigins = ['https://www.gasv.store', 'https://gasv.store', 'https://gas.store'];
+    const origin = req.headers.origin;
+    if (allowedOrigins.includes(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+    } else {
+      res.setHeader('Access-Control-Allow-Origin', '*'); // Fallback for dev/preview
+    }
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type,Authorization');
+    // Secure Cookie headers implicitly if setting cookies
+    next();
+  });
+
 const PORT = 3000;
 
 import { db as pgDb } from './src/db/index.ts';
@@ -2939,6 +2955,18 @@ Never mention internal file structures, system APIs, or directories.`
   }
 });
 
+
+
+// 11. API: WhatsApp Support Redirection
+app.get('/api/support-chat', (req, res) => {
+  const phone = process.env.WHATSAPP_PHONE_NUMBER;
+  if (!phone) {
+    return res.status(500).send('Support offline.');
+  }
+  const text = req.query.text || 'Hello GOYE Support, I need assistance.';
+  const encodedMessage = encodeURIComponent(text.toString());
+  res.redirect(302, `https://wa.me/${phone}?text=${encodedMessage}`);
+});
 
 // Legal & Compliance Static Routes for Pi Core Team Approval
 app.get('/privacy.html', (req, res) => {

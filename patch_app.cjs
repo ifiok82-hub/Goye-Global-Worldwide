@@ -1,18 +1,40 @@
 const fs = require('fs');
-const file = 'src/App.tsx';
-let code = fs.readFileSync(file, 'utf8');
+let code = fs.readFileSync('src/App.tsx', 'utf8');
 
-if (!code.includes('const [exchangeRates')) {
-  code = code.replace(
-    "const [currentCurrency, setCurrentCurrency] = useState('USD');",
-    `const [currentCurrency, setCurrentCurrency] = useState('USD');\n  const [exchangeRates, setExchangeRates] = useState(CURRENCIES);\n\n  useEffect(() => {\n    fetch('https://api.exchangerate-api.com/v4/latest/USD')\n      .then(res => res.json())\n      .then(data => {\n        if (data && data.rates) {\n          setExchangeRates(prev => prev.map(c => c.code !== 'PI' && data.rates[c.code] ? { ...c, rate: data.rates[c.code] } : c));\n        }\n      })\n      .catch(e => console.error('Exchange rate error:', e));\n  }, []);`
-  );
-  
-  code = code.replace(
-    `<CurrencyModal onClose={() => setShowCurrencyModal(false)} currentCurrency={currentCurrency} onSelectCurrency={setCurrentCurrency} />`,
-    `<CurrencyModal onClose={() => setShowCurrencyModal(false)} currentCurrency={currentCurrency} onSelectCurrency={setCurrentCurrency} rates={exchangeRates} />`
-  );
-  
-  fs.writeFileSync(file, code);
-  console.log("Patched App.tsx for currency");
-}
+// Replace Firebase pageView with localStorage
+const trackCode = `
+          const pageView = {
+            ip,
+            country,
+            path: window.location.hash || window.location.pathname || '/',
+            timestamp: new Date().toISOString()
+          };
+          await addDoc(collection(db, 'page_views'), pageView);
+`;
+const newTrackCode = `
+          const pageView = {
+            id: Date.now().toString(),
+            ip: ip !== 'Unknown' ? ip.replace(/\\.\\d+\\.\\d+$/, '.***.***').replace(/:[0-9a-fA-F:]+$/, ':****') : ip,
+            country,
+            city: data.city || 'Unknown',
+            flag: data.country_code ? String.fromCodePoint(...[...data.country_code.toUpperCase()].map(c => c.charCodeAt(0) + 127397)) : '🌍',
+            path: window.location.hash || window.location.pathname || '/',
+            timestamp: new Date().toISOString(),
+            device: /Mobi|Android/i.test(navigator.userAgent) ? 'Phone' : 'Desktop'
+          };
+          
+          const isAdmin = localStorage.getItem('is_admin') === 'true';
+          const excludeMyClicks = localStorage.getItem('exclude_my_clicks') !== 'false'; // default true
+          
+          if (!(isAdmin && excludeMyClicks)) {
+              let logs = JSON.parse(localStorage.getItem('traffic_log') || '[]');
+              logs.unshift(pageView);
+              localStorage.setItem('traffic_log', JSON.stringify(logs.slice(0, 500)));
+              
+              let total = parseInt(localStorage.getItem('total_clicks') || '0');
+              localStorage.setItem('total_clicks', (total + 1).toString());
+          }
+`;
+code = code.replace(trackCode, newTrackCode);
+
+fs.writeFileSync('src/App.tsx', code);

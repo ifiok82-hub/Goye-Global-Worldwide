@@ -13,6 +13,12 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
   const priceUSD = product.price || 49.99;
   const priceNGN = priceUSD * 1600; // Paystack *1600 NGN exchange rate
   
+  const userCurrency = localStorage.getItem('goye_currency') || 'USD';
+  const rates:any = { NGN: 1500, GBP: 0.79, EUR: 0.92, INR: 83, CAD: 1.35, AUD: 1.52, ZAR: 18, GHS: 13, KES: 130, AED: 3.67, BRL: 5.0, MXN: 17.0 };
+  const rate = rates[userCurrency] || 1;
+  const localPrice = (priceUSD * rate).toFixed(2);
+
+  
   const formSubmitId = 'b5ff137904e20ed9fbad829a69fc150b';
   
   const sanitizeInput = (input: string) => input.replace(/<[^>]*>?/gm, '').trim();
@@ -24,6 +30,32 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
   
   
   const handleSuccess = async (ref: string, method: string, isPending: boolean = false) => {
+    
+    // Save to localStorage CRM
+    try {
+        let orders = JSON.parse(localStorage.getItem('orders_list') || '[]');
+        const countryJSON = localStorage.getItem('goye_selected_country');
+        const country = countryJSON ? JSON.parse(countryJSON) : { flag: '🌍', name: 'Unknown' };
+        const currency = localStorage.getItem('goye_currency') || 'USD';
+        const displaySymbol = currency === 'USD' ? '' : currency + ' ';
+        
+        orders.unshift({
+            id: 'ORD-' + Date.now(),
+            ref: ref,
+            customerName: email.split('@')[0],
+            customerEmail: email,
+            country: country,
+            productName: product.name,
+            amount: displaySymbol + localPrice,
+            amountUSD: priceUSD,
+            currency: currency,
+            method: method,
+            status: isPending ? 'pending' : 'paid',
+            date: new Date().toISOString()
+        });
+        localStorage.setItem('orders_list', JSON.stringify(orders.slice(0, 500)));
+    } catch(e) {}
+    
     const referredBy = localStorage.getItem('referred_by');
     if (referredBy && !isPending) {
       try {
@@ -117,11 +149,15 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
         saveToDb();
         
         if (onToast) onToast("✅ Webhook Verified. Securing Download Access.");
-        
+
         setTimeout(() => {
           if (onToast) onToast("📧 Sending Automated Email & 📱 WhatsApp Receipt...");
         }, 800);
         
+        if (product.category === 'academy' && (window as any).unlockAcademy) {
+           (window as any).unlockAcademy();
+        }
+
         setSuccess(true);
       }, 2000);
     }
@@ -195,15 +231,16 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
   );
 
   return (
-    <div className="fixed inset-0 bg-black/90 z-[5000] flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-[#111] border border-[#333] rounded-[24px] max-w-4xl w-full flex flex-col md:flex-row overflow-hidden relative my-8">
+    <div className="fixed inset-0 bg-black/90 z-[5000] flex items-center justify-center p-4 overflow-y-auto" onClick={onClose}>
+      <div className="bg-[#111] border border-[#333] rounded-[24px] max-w-4xl w-full flex flex-col md:flex-row overflow-hidden relative my-8" onClick={e => e.stopPropagation()}>
         <button onClick={onClose} className="absolute top-4 right-4 text-gray-500 hover:text-white z-10"><X size={24}/></button>
         
         <div className="md:w-1/2 p-8 bg-[#0a0a0a] flex flex-col justify-between border-r border-[#222]">
           <div>
             <div className="text-[#FFD700] text-xs font-bold tracking-widest uppercase mb-4 flex items-center gap-2"><ShieldCheck size={16}/> SECURE CHECKOUT</div>
             <h2 className="text-white text-2xl font-black mb-2">{product.name}</h2>
-            <div className="text-[#10B981] text-3xl font-black mb-6">${priceUSD}</div>
+            <div className="text-[#10B981] text-3xl font-black mb-2">${priceUSD}</div>
+            {userCurrency !== 'USD' && <div className="text-gray-400 text-sm font-bold mb-6">(~ ${displaySymbol}${localPrice})</div>}
             
             <input 
               type="email" 
@@ -225,26 +262,21 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
           {!activeGateway ? (
             <div>
               <p className="text-xs text-gray-400 text-center mb-6 uppercase tracking-widest font-bold">Choose Payment Method</p>
-              <div className="space-y-3">
-                <button onClick={payWithPaystack} className="w-full p-4 bg-black border border-[#333] rounded-xl hover:border-[#FFD700] hover:bg-white/5 transition flex items-center justify-between group">
-                  <span className="font-bold text-white">Paystack (NGN ${priceNGN})</span>
-                  <ChevronRight className="text-gray-500 group-hover:text-[#FFD700]" size={16}/>
+              <div className="space-y-2">
+                <button onClick={payWithPaystack} className="w-full h-[50px] bg-[#FFD700] text-black font-bold rounded-xl hover:scale-105 transition flex items-center justify-center pointer-events-auto cursor-pointer">
+                  Pay with Paystack (Global Cards)
                 </button>
-                <button onClick={payWithFlutterwave} className="w-full p-4 bg-black border border-[#333] rounded-xl hover:border-[#FFD700] hover:bg-white/5 transition flex items-center justify-between group">
-                  <span className="font-bold text-white">Flutterwave (USD)</span>
-                  <ChevronRight className="text-gray-500 group-hover:text-[#FFD700]" size={16}/>
+                <button onClick={payWithFlutterwave} className="w-full h-[50px] bg-[#FFD700] text-black font-bold rounded-xl hover:scale-105 transition flex items-center justify-center pointer-events-auto cursor-pointer">
+                  Flutterwave (Africa)
                 </button>
-                <button onClick={() => alert('PayPal integration pending')} className="w-full p-4 bg-black border border-[#333] rounded-xl hover:border-[#FFD700] hover:bg-white/5 transition flex items-center justify-between group">
-                  <span className="font-bold text-white">PayPal</span>
-                  <ChevronRight className="text-gray-500 group-hover:text-[#FFD700]" size={16}/>
+                <button onClick={() => setActiveGateway('crypto')} className="w-full h-[50px] bg-[#FFD700] text-black font-bold rounded-xl hover:scale-105 transition flex items-center justify-center pointer-events-auto cursor-pointer">
+                  USDC Crypto
                 </button>
-                <button onClick={() => setActiveGateway('crypto')} className="w-full p-4 bg-black border border-[#333] rounded-xl hover:border-[#10B981] hover:bg-[#10B981]/5 transition flex items-center justify-between group">
-                  <span className="font-bold text-[#10B981]">Crypto USDC</span>
-                  <ChevronRight className="text-gray-500 group-hover:text-[#10B981]" size={16}/>
+                <button onClick={() => setActiveGateway('pi')} className="w-full h-[50px] bg-[#FFD700] text-black font-bold rounded-xl hover:scale-105 transition flex items-center justify-center pointer-events-auto cursor-pointer">
+                  Pi GCV $314k
                 </button>
-                <button onClick={() => setActiveGateway('pi')} className="w-full p-4 bg-[#8b5cf6]/10 border border-[#8b5cf6]/30 rounded-xl hover:border-[#8b5cf6] transition flex items-center justify-between group">
-                  <span className="font-bold text-[#8b5cf6]">Pi GCV $314k</span>
-                  <ChevronRight className="text-[#8b5cf6]" size={16}/>
+                <button onClick={() => setActiveGateway('bank')} className="w-full h-[50px] bg-[#FFD700] text-black font-bold rounded-xl hover:scale-105 transition flex items-center justify-center pointer-events-auto cursor-pointer">
+                  Manual Bank Transfer
                 </button>
               </div>
             </div>
@@ -266,6 +298,26 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                 {cryptoVerifying ? 'Verifying...' : 'Submit Tx for Verification'}
               </button>
               <p className="text-gray-500 text-[10px] text-center">⚠️ No auto-access for crypto! We verify on-chain to prevent fake payments.</p>
+              <button onClick={() => setActiveGateway(null)} className="mt-4 text-gray-400 text-xs underline block mx-auto">Back to Methods</button>
+            </div>
+          ) : activeGateway === 'bank' ? (
+            <div className="animate-in fade-in slide-in-from-right-4">
+              <h3 className="text-[#FFD700] font-bold mb-4">Manual Bank Transfer</h3>
+              <p className="text-gray-400 text-xs mb-4">Please transfer the amount to:</p>
+              <div className="bg-black p-3 rounded-xl border border-[#333] mb-4">
+                <div className="text-white text-sm font-bold">Bank Name: Zenith Bank</div>
+                <div className="text-white text-sm font-bold">Account Name: Goyedagosmess Enterprise</div>
+                <div className="text-white text-sm font-bold">Account Number: 1010101010</div>
+              </div>
+              <input 
+                placeholder="Upload Receipt or Ref Number" 
+                className="w-full bg-black border border-[#333] p-3 rounded-xl text-white mb-4 focus:border-[#FFD700] outline-none"
+                value={cryptoTxHash}
+                onChange={e => setCryptoTxHash(e.target.value)}
+              />
+              <button onClick={submitCrypto} disabled={cryptoVerifying} className="w-full bg-[#FFD700] text-black font-bold py-3 rounded-xl mb-4 disabled:opacity-50">
+                {cryptoVerifying ? 'Verifying...' : 'Submit Receipt'}
+              </button>
               <button onClick={() => setActiveGateway(null)} className="mt-4 text-gray-400 text-xs underline block mx-auto">Back to Methods</button>
             </div>
           ) : (

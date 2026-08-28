@@ -1,6 +1,29 @@
 <!doctype html>
 <html lang="en" class="bg-[#0a0a0a] text-white">
   <head>
+    <script>
+      const methods = ['log', 'warn', 'error'];
+      methods.forEach(method => {
+        const orig = console[method];
+        console[method] = function(...args) {
+          const str = args.map(a => String(a?.message || a)).join(' ');
+          if (str.includes('[vite]')) return;
+          orig.apply(console, args);
+        };
+      });
+      window.addEventListener('error', e => {
+        if (e.message && e.message.includes('[vite]')) e.preventDefault();
+      });
+    </script>
+
+    <script>
+      const originalError = console.error;
+      console.error = function(...args) {
+        if (typeof args[0] === 'string' && args[0].includes('[vite]')) return;
+        originalError.apply(console, args);
+      };
+    </script>
+
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="impact-site-verification" value="87dcb7aa-3d1f-4a4e-84f8-e70ce2632160" />
