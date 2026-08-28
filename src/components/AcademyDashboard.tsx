@@ -26,7 +26,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
 
   useEffect(() => {
     let enrolled = false;
-    if (localStorage.getItem('sirwise_paid') === 'true' || userProfile?.is_academy_enrolled) {
+    if (localStorage.getItem('sirwise_paid') === 'true' && localStorage.getItem('payment_verified') === 'true') {
       enrolled = true;
       setIsEnrolled(true);
       const localKey = `goye_academy_progress_${currentUser?.uid || 'guest'}`;
@@ -40,6 +40,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
 
   const handleEnrollSuccess = () => {
     localStorage.setItem('sirwise_paid', 'true');
+    localStorage.setItem('payment_verified', 'true');
     setIsEnrolled(true);
     setShowPaymentModal(false);
     onToast && onToast('Payment Successful! Welcome to Sirwise AI Web3 Academy.');
@@ -87,21 +88,8 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
 
   if (loading) return <div className="text-center text-gray-500 py-12">Loading academy profile...</div>;
 
-  if (!isEnrolled) {
-    return (
-      <div className="bg-[#0a0a0a] rounded-3xl p-6 border border-[#222] min-h-[60vh] flex flex-col items-center justify-center text-center">
-        {paymentGate}
-        <div className="bg-[#111] p-6 rounded-full border border-[#333] mb-6">
-          <Lock size={48} className="text-[#FFD700]" />
-        </div>
-        <h2 className="text-[#FFD700] text-2xl font-black mb-3">🔒 Locked</h2>
-        <p className="text-gray-400 text-sm mb-8">Access is restricted. Please purchase to unlock Academy progress, modules, Sirwise AI Tutor, Live Class (Google Meet) and Certificates.</p>
-        <button onClick={() => setShowPaymentModal(true)} className="bg-[#FFD700] text-black font-bold py-3 px-8 rounded-xl w-full max-w-[300px] cursor-pointer pointer-events-auto z-10 touch-manipulation">
-          Start Learning
-        </button>
-      </div>
-    );
-  }
+          
+
 
   const percentComplete = Math.round((progress.length / MODULES.length) * 100);
 
@@ -147,20 +135,20 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
           {MODULES.map((mod) => {
             const isCompleted = isEnrolled && progress.includes(mod.id);
             return (
-              <div key={mod.id} className="bg-[#111] rounded-[16px] p-[20px] transition-all" style={{ border: "2px solid #FFD700" }}>
+              <div key={mod.id} className="bg-[#111] rounded-[16px] p-[20px] transition-all" style={{ border: isEnrolled ? "2px solid #FFD700" : "2px solid #333" }}>
                 <div className="flex justify-between items-start mb-4">
-                  <div className={`text-xs font-bold px-2 py-1 rounded-lg ${isCompleted ? 'bg-[#10B981]/20 text-[#10B981]' : 'bg-[#222] text-gray-400'}`}>
+                  <div className={`text-xs font-bold px-2 py-1 rounded-lg ${!isEnrolled ? 'bg-[#222] text-gray-500' : isCompleted ? 'bg-[#10B981]/20 text-[#10B981]' : 'bg-[#222] text-gray-400'}`}>
                     MODULE {mod.id}
                   </div>
-                  <button onClick={() => toggleModule(mod.id)} className="transition transform active:scale-90">
-                    {isCompleted ? <CheckCircle className="text-[#10B981]" size={24} /> : <Circle className="text-gray-500" size={24} />}
+                  <button onClick={() => isEnrolled && toggleModule(mod.id)} className="transition transform active:scale-90">
+                    {!isEnrolled ? <Lock className="text-gray-500" size={24} /> : isCompleted ? <CheckCircle className="text-[#10B981]" size={24} /> : <Circle className="text-gray-500" size={24} />}
                   </button>
                 </div>
-                <h4 className="font-bold text-lg mb-2 leading-tight text-white">{mod.title}</h4>
+                <h4 className="font-bold text-lg mb-2 leading-tight text-white">{mod.title} {!isEnrolled && <span className="text-red-500 text-sm ml-2">🔒 Locked</span>}</h4>
                 <p className="text-gray-500 text-sm mb-6">{mod.desc}</p>
                 
-                <button onClick={() => !isCompleted && toggleModule(mod.id)} className={`w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition ${isCompleted ? 'bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/30' : 'bg-[#FFD700]/10 text-[#FFD700] border border-[#FFD700]/30 hover:bg-[#FFD700]/20'}`}>
-                  {isCompleted ? 'COMPLETED' : <><Play size={16} fill="currentColor" /> Start Learning</>}
+                <button onClick={() => { if(!isEnrolled) setShowPaymentModal(true); else if(!isCompleted) toggleModule(mod.id); }} className={`w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition cursor-pointer pointer-events-auto z-10 ${!isEnrolled ? 'bg-[#FFD700] text-black hover:bg-yellow-400' : isCompleted ? 'bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/30' : 'bg-[#FFD700]/10 text-[#FFD700] border border-[#FFD700]/30 hover:bg-[#FFD700]/20'}`}>
+                  {!isEnrolled ? (`Unlock Now ${displaySymbol}${localPrice}`) : isCompleted ? 'COMPLETED' : <><Play size={16} fill="currentColor" /> Start Learning</>}
                 </button>
               </div>
             );
@@ -169,15 +157,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
 
         {/* Certificate Unlock */}
         <div className="mt-8">
-          {(!isEnrolled || percentComplete < 100) ? (
-             <div className="bg-[#111] border border-[#333] border-dashed rounded-2xl p-8 flex flex-col items-center justify-center text-center">
-                <Lock size={32} className="text-gray-600 mb-4" />
-                <h3 className="text-gray-400 font-bold mb-2">E-Certificate Locked</h3>
-                <p className="text-gray-600 text-sm">Enroll and complete all 4 modules to unlock your official Web3 competency certificate.</p>
-             </div>
-          ) : (
-             <CertificateGenerator userProfile={userProfile} onToast={onToast} />
-          )}
+          <CertificateGenerator isCompleted={percentComplete === 100} isEnrolled={isEnrolled} userProfile={userProfile} priceUSD={priceUSD} displaySymbol={displaySymbol} localPrice={localPrice} onUnlock={() => setShowPaymentModal(true)} onToast={onToast} />
         </div>
       </div>
     </div>

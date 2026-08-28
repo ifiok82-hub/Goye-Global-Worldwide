@@ -1,179 +1,140 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
-import { Download } from 'lucide-react';
+import { Download, Lock } from 'lucide-react';
 
-export default function CertificateGenerator({ userProfile, onToast }: any) {
-  const certificateRef = useRef<HTMLDivElement>(null);
+export default function CertificateGenerator({ isCompleted, isEnrolled, userProfile, priceUSD, displaySymbol, localPrice, onUnlock }: any) {
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const studentName = `${userProfile?.firstName || 'Student'} ${userProfile?.surname || ''}`.trim();
-  const issueDate = new Date().toISOString().split('T')[0];
-  const certId = `GASV-CERT-${userProfile?.uid?.substring(0,6) || 'XXXX'}-${Math.floor(Math.random() * 9000 + 1000)}`;
-  
+  const handleDownload = () => {
+    if (!isEnrolled) {
+      if (onUnlock) onUnlock();
+      return;
+    }
+    if (!isCompleted) {
+      alert("Please complete all modules to unlock your certificate.");
+      return;
+    }
 
-  const handleDownload = async () => {
-    if (!certificateRef.current) return;
     setIsGenerating(true);
-    if(onToast) onToast('Generating High-Resolution Certificate...');
-
     try {
-      const canvas = await html2canvas(certificateRef.current, {
-        scale: 2, // High resolution
-        backgroundColor: '#0b0f19',
-        logging: false
-      });
-
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
+      const doc = new jsPDF({
         orientation: 'landscape',
         unit: 'px',
-        format: [canvas.width, canvas.height]
+        format: [800, 600]
       });
 
-      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-      pdf.save(`Sirwise_AI_Web3_Certificate_${userProfile?.surname || 'Student'}.pdf`);
+      // Background
+      doc.setFillColor(11, 15, 25);
+      doc.rect(0, 0, 800, 600, 'F');
       
-      if(onToast) onToast('Certificate Downloaded Successfully!');
-    } catch (error) {
-      console.error('Error generating certificate:', error);
-      if(onToast) onToast('Error generating certificate');
+      // Border
+      doc.setDrawColor(255, 215, 0);
+      doc.setLineWidth(4);
+      doc.rect(20, 20, 760, 560);
+
+      const pupilName = userProfile?.firstName || userProfile?.pupilName || 'Student Name';
+      const issueDate = new Date().toISOString().split('T')[0];
+
+      // Texts
+      doc.setTextColor(255, 215, 0);
+      doc.setFontSize(16);
+      doc.text('SIRWISE AI WEB3 ACADEMY', 400, 80, { align: 'center' });
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(36);
+      doc.text('CERTIFICATE OF DIGITAL COMPETENCY', 400, 140, { align: 'center' });
+
+      doc.setTextColor(150, 150, 150);
+      doc.setFontSize(14);
+      doc.text('Proudly Presented To', 400, 200, { align: 'center' });
+
+      doc.setTextColor(255, 215, 0);
+      doc.setFontSize(48);
+      doc.text(pupilName, 400, 260, { align: 'center' });
+      
+      // Line under name
+      doc.setLineWidth(1);
+      doc.line(200, 280, 600, 280);
+
+      doc.setTextColor(200, 200, 200);
+      doc.setFontSize(14);
+      doc.text('for successfully completing the 4-week interactive virtual training curriculum', 400, 320, { align: 'center' });
+      doc.text('in modern technology, artificial intelligence, digital creation, and web3 fundamentals.', 400, 340, { align: 'center' });
+
+      // Badges
+      doc.setTextColor(255, 215, 0);
+      doc.setFontSize(12);
+      doc.text('AI & Prompt Engineering   |   Digital Asset Creation   |   Web3 & Cyber Safety', 400, 420, { align: 'center' });
+
+      // Footer
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(14);
+      doc.text(issueDate, 150, 500, { align: 'center' });
+      doc.setTextColor(150, 150, 150);
+      doc.setFontSize(10);
+      doc.text('Date of Issuance', 150, 520, { align: 'center' });
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(14);
+      doc.text('GOYE Global Worldwide RC BN3583773', 650, 500, { align: 'center' });
+      doc.setTextColor(150, 150, 150);
+      doc.setFontSize(10);
+      doc.text('Verified by Blockchain', 650, 520, { align: 'center' });
+      
+      // QR simulation text
+      doc.setTextColor(255, 215, 0);
+      doc.setFontSize(10);
+      doc.text('Verify at: www.gasv.store/verify', 400, 520, { align: 'center' });
+
+      doc.save(`${pupilName.replace(/\s+/g, '_')}_Sirwise_Certificate.pdf`);
+    } catch (e) {
+      console.error(e);
+      alert('Error generating certificate. Please try again.');
     }
     setIsGenerating(false);
   };
+
+  if (!isEnrolled) {
+    return (
+      <div className="flex flex-col items-center justify-center mt-8">
+        <button 
+          onClick={onUnlock}
+          className="bg-[#222] text-gray-500 font-black py-4 px-8 rounded-xl flex items-center justify-center gap-2 cursor-pointer pointer-events-auto z-10"
+        >
+          <Lock size={24} />
+          Payment Required {displaySymbol}{localPrice}
+        </button>
+        <p className="text-gray-500 text-xs mt-2 text-center">Enroll to unlock your certificate</p>
+      </div>
+    );
+  }
+
+  if (!isCompleted) {
+    return (
+      <div className="flex flex-col items-center justify-center mt-8">
+        <button 
+          disabled
+          className="bg-[#222] text-gray-500 font-black py-4 px-8 rounded-xl flex items-center justify-center gap-2 opacity-70"
+        >
+          <Lock size={24} />
+          DOWNLOAD E-CERTIFICATE
+        </button>
+        <p className="text-[#FFD700] text-xs mt-2 text-center font-bold">Complete all modules to unlock</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center justify-center mt-8">
       <button 
         onClick={handleDownload} 
         disabled={isGenerating}
-        className="bg-[#FFD700] text-black font-black py-4 px-8 rounded-xl flex items-center justify-center gap-2 hover:bg-yellow-400 transition transform active:scale-95 disabled:opacity-50 shadow-[0_0_20px_rgba(255,215,0,0.3)]"
+        className="bg-[#FFD700] text-black font-black py-4 px-8 rounded-xl flex items-center justify-center gap-2 hover:bg-yellow-400 transition cursor-pointer pointer-events-auto z-10 shadow-[0_0_20px_rgba(255,215,0,0.3)]"
       >
         <Download size={24} />
         {isGenerating ? 'GENERATING PDF...' : 'DOWNLOAD E-CERTIFICATE'}
       </button>
       <p className="text-gray-400 text-xs mt-2 text-center">Your official verified Web3 & AI credential</p>
-
-      {/* Hidden Certificate DOM for html2canvas to render */}
-      <div style={{ position: "absolute", left: "-9999px", top: "-9999px" }}>
-        <div 
-          ref={certificateRef}
-          style={{
-            width: '1200px',
-            height: '850px',
-            backgroundColor: '#0b0f19',
-            padding: '40px',
-            boxSizing: 'border-box',
-            fontFamily: 'sans-serif',
-            position: 'relative'
-          }}
-        >
-          {/* Outer Border */}
-          <div style={{
-            width: '100%',
-            height: '100%',
-            border: '4px solid #eab308',
-            position: 'relative',
-            padding: '40px',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxSizing: 'border-box'
-          }}>
-            {/* Inner Border */}
-            <div style={{
-              position: 'absolute',
-              top: '15px',
-              left: '15px',
-              right: '15px',
-              bottom: '15px',
-              border: '1px solid rgba(234, 179, 8, 0.3)',
-              pointerEvents: 'none'
-            }}></div>
-
-            <div style={{
-              color: '#eab308',
-              letterSpacing: '8px',
-              fontSize: '14px',
-              fontWeight: 'bold',
-              textTransform: 'uppercase',
-              marginBottom: '10px'
-            }}>
-              Sirwise AI Web3 Academy
-            </div>
-            
-            <h1 style={{
-              color: '#ffffff',
-              fontSize: '48px',
-              fontWeight: '900',
-              margin: '0 0 5px 0',
-              letterSpacing: '2px',
-              textAlign: 'center'
-            }}>
-              CERTIFICATE OF DIGITAL COMPETENCY
-            </h1>
-            <p style={{ color: '#888', fontSize: '14px', letterSpacing: '4px', textTransform: 'uppercase', marginBottom: '60px' }}>
-              Proudly Presented To
-            </p>
-
-            <h2 style={{
-              color: '#eab308',
-              fontSize: '64px',
-              fontWeight: '900',
-              margin: '0 0 20px 0',
-              textTransform: 'uppercase',
-              borderBottom: '2px solid #eab308',
-              paddingBottom: '10px',
-              textAlign: 'center',
-              width: '80%'
-            }}>
-              {studentName}
-            </h2>
-
-            <p style={{ color: '#ccc', fontSize: '18px', textAlign: 'center', maxWidth: '800px', lineHeight: '1.6', marginBottom: '60px' }}>
-              for successfully completing the 4-week interactive virtual training curriculum in modern technology, 
-              artificial intelligence, digital creation, and web3 fundamentals.
-            </p>
-
-            {/* Badges */}
-            <div style={{ display: 'flex', gap: '20px', marginBottom: '80px' }}>
-              <div style={{ padding: '8px 16px', border: '1px solid #eab308', borderRadius: '30px', color: '#fff', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                🤖 AI & Prompt Engineering
-              </div>
-              <div style={{ padding: '8px 16px', border: '1px solid #eab308', borderRadius: '30px', color: '#fff', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                🎨 Digital Asset Creation
-              </div>
-              <div style={{ padding: '8px 16px', border: '1px solid #eab308', borderRadius: '30px', color: '#fff', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                🌐 Web3 & Cyber Safety
-              </div>
-            </div>
-
-            {/* Footer / Signatures */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', width: '90%', marginTop: 'auto', alignItems: 'flex-end' }}>
-              <div style={{ textAlign: 'center', width: '30%' }}>
-                <div style={{ color: '#fff', fontSize: '20px', fontWeight: 'bold', borderBottom: '1px solid #555', paddingBottom: '10px', marginBottom: '5px' }}>
-                  {issueDate}
-                </div>
-                <div style={{ color: '#888', fontSize: '14px' }}>Date of Issuance</div>
-              </div>
-              <div style={{ textAlign: 'center', width: '30%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <div style={{ padding: '8px', background: '#fff', borderRadius: '8px', marginBottom: '8px' }}>
-                  <img src={"https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://www.gasv.store/verify"} alt="QR" style={{width:'80px', height:'80px', display:'block'}} />
-                </div>
-                <div style={{ color: '#666', fontSize: '12px', marginBottom: '2px' }}>ID: {certId}</div>
-                <div style={{ color: '#eab308', fontSize: '12px', fontWeight: 'bold' }}>gasv.store/verify</div>
-              </div>
-              <div style={{ textAlign: 'center', width: '30%' }}>
-                <div style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold', borderBottom: '1px solid #555', paddingBottom: '10px', marginBottom: '5px', lineHeight: '1.2' }}>
-                  Sirwise AI Web3 Academy<br/>GOYE Global Worldwide RC BN3583773
-                </div>
-                <div style={{ color: '#888', fontSize: '14px' }}>Verified by Blockchain</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
