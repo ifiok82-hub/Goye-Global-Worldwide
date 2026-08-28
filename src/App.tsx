@@ -92,6 +92,7 @@ export default function App() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [showEsimVideoModal, setShowEsimVideoModal] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  const [showSirwiseBot, setShowSirwiseBot] = useState(false);
   
   const [isAdminAuth, setIsAdminAuth] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
@@ -436,7 +437,18 @@ export default function App() {
             <div className="text-[10px] text-black font-bold">RC BN3583773</div>
             <div className="text-[10px] text-black font-bold">www.gasv.store</div>
         </div>
-        <div className="flex justify-center gap-4 mt-2">
+        <div className="flex flex-wrap justify-center gap-2 mt-3 px-2 z-[60] relative" style={{ pointerEvents: 'auto' }}>
+            <button onClick={() => { document.getElementById('programs')?.scrollIntoView({behavior:'smooth'}) }} className="text-black font-bold text-[10px] hover:bg-black/10 px-2 py-1 rounded cursor-pointer pointer-events-auto touch-manipulation z-[100] relative">Programs</button>
+            <button onClick={() => { document.getElementById('our-method')?.scrollIntoView({behavior:'smooth'}) }} className="text-black font-bold text-[10px] hover:bg-black/10 px-2 py-1 rounded cursor-pointer pointer-events-auto touch-manipulation z-[100] relative">Our method</button>
+            <button onClick={() => { document.getElementById('community')?.scrollIntoView({behavior:'smooth'}) }} className="text-black font-bold text-[10px] hover:bg-black/10 px-2 py-1 rounded cursor-pointer pointer-events-auto touch-manipulation z-[100] relative">Community</button>
+            <button onClick={() => { if(!isAuthenticated) setTab('auth'); else { setTab('academy'); setTimeout(()=>document.getElementById('dashboard')?.scrollIntoView({behavior:'smooth'}), 100); } }} className="text-[#FFD700] bg-black font-bold text-[10px] hover:bg-black/80 px-2 py-1 rounded-full flex items-center gap-1 cursor-pointer pointer-events-auto touch-manipulation z-[100] relative">Student dashboard <ChevronRight size={10} /></button>
+            <button onClick={() => { setTab('academy'); }} className="text-white bg-blue-900 font-bold text-[10px] hover:bg-blue-800 px-2 py-1 rounded-full flex items-center gap-1 cursor-pointer pointer-events-auto touch-manipulation z-[100] relative">Start learning <ChevronRight size={10} /></button>
+            <button onClick={() => setShowReferralModal(true)} className="text-black font-bold text-[10px] hover:bg-black/10 px-2 py-1 rounded cursor-pointer pointer-events-auto touch-manipulation z-[100] relative">Referral</button>
+        </div>
+        <div className="w-full bg-[#FFD700] text-black text-center text-[10px] font-black py-1 cursor-pointer pointer-events-auto z-[100] relative" onClick={() => document.getElementById('programs')?.scrollIntoView({behavior:'smooth'})}>
+          EXPLORE THE PROGRAMS →
+        </div>
+        <div className="flex justify-center gap-4 mt-2 z-[60] relative pointer-events-auto">
             
             <button onClick={() => setShowScanModal(true)} className="flex items-center gap-1 bg-black text-[#10B981] px-2 py-1 rounded text-[10px] font-bold"><Search size={12} /> Scan</button>
             <button onClick={() => setShowVoiceModal(true)} className="flex items-center gap-1 bg-black text-[#3b82f6] px-2 py-1 rounded text-[10px] font-bold"><Mic size={12} /> Record</button>
@@ -444,6 +456,7 @@ export default function App() {
         </div>
         {showMoreMenu && (
             <div className="absolute top-[80px] right-[10px] bg-[#111] border border-[#FFD700] rounded-xl shadow-2xl z-[99999] w-[200px] overflow-hidden">
+                <button onClick={() => setShowMoreMenu(false)} className="absolute top-2 right-2 text-gray-500 hover:text-white pointer-events-auto z-10"><X size={16} /></button>
                 <button onClick={() => { setShowReferralModal(true); setShowMoreMenu(false); }} className="w-full text-left px-4 py-3 border-b border-[#222] text-sm text-white hover:bg-[#222] flex items-center gap-2"><Users size={16} className="text-[#FFD700]"/> 🤝 Referral & Earn</button>
                 <button onClick={() => { setShowLanguageModal(true); setShowMoreMenu(false); }} className="w-full text-left px-4 py-3 border-b border-[#222] text-sm text-white hover:bg-[#222] flex items-center gap-2"><Globe size={16} className="text-[#3b82f6]"/> 🌐 Language</button>
                 <button onClick={() => { setShowCurrencyModal(true); setShowMoreMenu(false); }} className="w-full text-left px-4 py-3 border-b border-[#222] text-sm text-white hover:bg-[#222] flex items-center gap-2"><DollarSign size={16} className="text-[#10B981]"/> 💱 Currency ({currentCurrency})</button>
@@ -458,45 +471,20 @@ export default function App() {
 
       <main className="w-full mx-auto pb-12">
         {(tab === 'auth') ? (
-           <div className="fixed inset-0" style={{background: 'rgba(0,0,0,0.8)', zIndex: 1000}} onClick={() => setTab('home')}>
-             <div style={{
-               position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', 
-               width: '90%', maxWidth: '350px', background: '#fff', borderRadius: '16px', padding: '24px', zIndex: 1001
-             }} onClick={e => e.stopPropagation()}>
-               <div className="flex justify-between items-center mb-4">
-                 <h2 className="text-black font-bold text-xl">Login</h2>
-                 <button onClick={() => setTab('home')} className="text-black"><X size={24}/></button>
-               </div>
-               <input id="login-email-input" type="email" placeholder="Email" className="w-full bg-gray-100 border border-gray-300 text-black p-3 rounded-xl mb-4" />
-               <input id="login-password-input" type="password" placeholder="Password" className="w-full bg-gray-100 border border-gray-300 text-black p-3 rounded-xl mb-6" />
-               <button onClick={async () => { 
-                 const email = (document.getElementById('login-email-input') as HTMLInputElement).value;
-                 const password = (document.getElementById('login-password-input') as HTMLInputElement).value;
-                 if(!email || !password) { setToastMsg('Please enter email and password'); return; }
-                 
-                 try {
-                     setToastMsg('Logging in...');
-                     const { signInWithEmailAndPassword } = await import('firebase/auth');
-                     const { auth } = await import('./lib/firebase');
-                     const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                     const u = userCredential.user;
-                     localStorage.setItem('goye_active_user', JSON.stringify({ uid: u.uid, contact: u.email })); 
-                     window.location.reload(); 
-                 } catch(err) {
-                     setToastMsg('Login failed. Falling back to local auth.');
-                     localStorage.setItem('goye_active_user', JSON.stringify({ contact: email })); 
-                     window.location.reload(); 
-                 }
-               }} className="w-full bg-[#FFD700] text-black font-bold py-3 rounded-xl mb-4 pointer-events-auto">Login</button>
-               <div className="text-center">
-                 <button className="text-black font-semibold text-sm">Register an account</button>
-               </div>
-             </div>
-           </div>
+           <AuthScreen 
+             onAuthenticated={(user, profile) => {
+               setIsAuthenticated(true);
+               setCurrentUser(user);
+               setUserProfile(profile);
+               setTab('home');
+             }} 
+             onClose={() => setTab('home')}
+           />
         ) : null}
         
         {(tab !== 'downloads' && tab !== 'admin' && tab !== 'support') && (
           <div className="px-4 mt-8 animate-in fade-in duration-500 pb-[100px]">
+
             {!isAuthenticated && tab === 'home' && (
                <div className="bg-[#111] border-2 border-[#FFD700] p-4 rounded-xl mb-6 text-center">
                  <h3 className="text-[#FFD700] font-bold mb-2">Welcome to GOYE Store</h3>
@@ -774,6 +762,13 @@ export default function App() {
         </div>
       </footer>
 
+      
+      <div className="fixed bottom-[90px] right-[10px] z-[99] pointer-events-auto">
+        <button onClick={() => setShowSirwiseBot(true)} className="bg-[#FFD700] w-[70px] h-[70px] rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(255,215,0,0.4)] border-2 border-black animate-bounce cursor-pointer pointer-events-auto">
+          <span className="text-3xl">🤖</span>
+        </button>
+      </div>
+      <SirwiseAITeacher isOpen={showSirwiseBot} onClose={() => setShowSirwiseBot(false)} />
       
       {/* Fixed Bottom Nav */}
       <nav className="fixed bottom-0 left-0 right-0 h-[80px] bg-[#0a0a0a] border-t border-[#222] z-[5000] flex overflow-x-auto items-center justify-between px-2 pb-safe w-full max-w-[420px] mx-auto hide-scrollbar pointer-events-auto">

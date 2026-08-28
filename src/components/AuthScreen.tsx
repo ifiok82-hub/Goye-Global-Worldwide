@@ -1528,7 +1528,7 @@ export const COUNTRIES = [
 ];
 
 
-export default function AuthScreen({ onAuthenticated }: { onAuthenticated: (user: any, profile: any) => void }) {
+export default function AuthScreen({ onAuthenticated, onClose }: { onAuthenticated: (user: any, profile: any) => void, onClose?: () => void }) {
   const [isLogin, setIsLogin] = useState(true);
   const [authMethod, setAuthMethod] = useState<'email' | 'phone'>('email');
   
@@ -1899,9 +1899,7 @@ export default function AuthScreen({ onAuthenticated }: { onAuthenticated: (user
               <Mail size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
               <input required type="email" placeholder="Email Address" value={contact} onChange={e=>setContact(e.target.value)} className="w-full bg-black/50 border border-[#333] focus:border-[#FFD700] rounded-xl py-3 pl-10 pr-4 text-white text-sm outline-none transition-colors" />
             </div>
-          ) : (
-            
-            {/* Country Selector (Searchable) */}
+          ) : ( <> {/* Country Selector (Searchable) */}
             <div className="relative z-50">
               <div 
                 className="w-full bg-black/50 border border-[#333] focus:border-[#FFD700] rounded-xl py-3 px-4 text-white text-sm flex items-center justify-between cursor-pointer"
@@ -1941,9 +1939,7 @@ export default function AuthScreen({ onAuthenticated }: { onAuthenticated: (user
                   </div>
                 ))}
               </div>
-            </div>
-
-            <div className="flex gap-2">
+            </div> <div className="flex gap-2">
               <div className="bg-[#222] text-white py-3 px-3 rounded-xl flex items-center text-sm font-bold min-w-[80px] justify-center border border-[#333]">
                 {countryCode}
               </div>
@@ -1973,10 +1969,7 @@ export default function AuthScreen({ onAuthenticated }: { onAuthenticated: (user
             </div>
 
             <div className="relative">
-              <input type="text" placeholder="Your School Name (Optional)" className="w-full bg-black/50 border border-[#333] focus:border-[#FFD700] rounded-xl py-3 px-4 text-white text-sm outline-none transition-colors" />
-            </div>
-
-          )}
+              <input type="text" placeholder="Your School Name (Optional)" className="w-full bg-black/50 border border-[#333] focus:border-[#FFD700] rounded-xl py-3 px-4 text-white text-sm outline-none transition-colors" /> </div> </> )}
 
           <div className="relative">
             <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />

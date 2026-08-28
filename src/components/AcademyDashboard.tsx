@@ -64,21 +64,21 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
           {userCurrency !== 'USD' && <div className="text-gray-500 text-sm font-bold">Pay {displaySymbol}{localPrice}</div>}
         </div>
         
-        <div className="flex flex-col gap-3 mt-4">
-          <button onClick={handleEnrollSuccess} className="bg-[#FFD700] text-black font-bold h-[50px] rounded-xl flex items-center justify-center gap-2">
-            <span className="text-lg">💳</span> Paystack (OPay, Card, Bank)
+        <div className="flex flex-col gap-[8px] mt-4 w-full">
+          <button onClick={handleEnrollSuccess} className="bg-[#FFD700] text-black font-bold h-[50px] w-full rounded-[12px] flex items-center justify-center gap-2 cursor-pointer pointer-events-auto touch-manipulation z-10">
+            Paystack (OPay, Card, Bank)
           </button>
-          <button onClick={handleEnrollSuccess} className="bg-[#FFD700] text-black font-bold h-[50px] rounded-xl flex items-center justify-center gap-2">
-            <span className="text-lg">🌊</span> Flutterwave
+          <button onClick={handleEnrollSuccess} className="bg-[#FFD700] text-black font-bold h-[50px] w-full rounded-[12px] flex items-center justify-center gap-2 cursor-pointer pointer-events-auto touch-manipulation z-10">
+            Flutterwave (Card, USSD)
           </button>
-          <button onClick={handleEnrollSuccess} className="bg-[#FFD700] text-black font-bold h-[50px] rounded-xl flex items-center justify-center gap-2">
-            <span className="text-lg">P</span> PayPal
+          <button onClick={handleEnrollSuccess} className="bg-[#FFD700] text-black font-bold h-[50px] w-full rounded-[12px] flex items-center justify-center gap-2 cursor-pointer pointer-events-auto touch-manipulation z-10">
+            PayPal (Zap, Transfer)
           </button>
-          <button onClick={handleEnrollSuccess} className="bg-[#FFD700] text-black font-bold h-[50px] rounded-xl flex items-center justify-center gap-2">
-            <span className="text-lg font-serif">₿</span> Crypto USDC
+          <button onClick={handleEnrollSuccess} className="bg-[#FFD700] text-black font-bold h-[50px] w-full rounded-[12px] flex items-center justify-center gap-2 cursor-pointer pointer-events-auto touch-manipulation z-10">
+            Crypto USDC
           </button>
-          <button onClick={handleEnrollSuccess} className="bg-[#FFD700] text-black font-bold h-[50px] rounded-xl flex items-center justify-center gap-2">
-            <span className="text-lg">π</span> Pi GCV $314k
+          <button onClick={handleEnrollSuccess} className="bg-[#FFD700] text-black font-bold h-[50px] w-full rounded-[12px] flex items-center justify-center gap-2 cursor-pointer pointer-events-auto touch-manipulation z-10">
+            Pi GCV $314k
           </button>
         </div>
       </div>
@@ -94,10 +94,10 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
         <div className="bg-[#111] p-6 rounded-full border border-[#333] mb-6">
           <Lock size={48} className="text-[#FFD700]" />
         </div>
-        <h2 className="text-white text-2xl font-black mb-3">Payment Required</h2>
-        <p className="text-gray-400 text-sm mb-8">Please enroll to access Sirwise AI Web3 Academy studies and your AI Tutor.</p>
-        <button onClick={() => setShowPaymentModal(true)} className="bg-[#FFD700] text-black font-bold py-3 px-8 rounded-xl w-full max-w-[300px]">
-          Pay Now
+        <h2 className="text-[#FFD700] text-2xl font-black mb-3">🔒 Locked</h2>
+        <p className="text-gray-400 text-sm mb-8">Access is restricted. Please purchase to unlock Academy progress, modules, Sirwise AI Tutor, Live Class (Google Meet) and Certificates.</p>
+        <button onClick={() => setShowPaymentModal(true)} className="bg-[#FFD700] text-black font-bold py-3 px-8 rounded-xl w-full max-w-[300px] cursor-pointer pointer-events-auto z-10 touch-manipulation">
+          Start Learning
         </button>
       </div>
     );
@@ -106,7 +106,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
   const percentComplete = Math.round((progress.length / MODULES.length) * 100);
 
   return (
-    <div className="w-full">
+    <div id="dashboard" className="w-full">
       <div className="bg-[#111] rounded-3xl p-8 border border-[#333] mb-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-[#FFD700]/5 rounded-full blur-[80px] pointer-events-none"></div>
         <div className="relative z-10">
