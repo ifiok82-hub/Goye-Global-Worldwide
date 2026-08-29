@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+const fs = require('fs');
+
+const code = `import React, { useState } from 'react';
 import { db, auth } from '../lib/firebase';
 import { doc, getDoc, updateDoc, increment, collection, addDoc, serverTimestamp, setDoc, arrayUnion } from 'firebase/firestore';
 import { X, ShieldCheck, Lock, Upload, Copy, CheckCircle, RefreshCw, ChevronRight, Zap } from 'lucide-react';
@@ -31,14 +33,14 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
   const displaySymbol = currentCurrency.symbol || '$';
   const displayPrice = (priceUSD * currentCurrency.rate).toFixed(2);
   const localPrice = displayPrice;
-  const priceNGN = priceUSD * 1600;
+  const priceNGN = priceUSD * 1600; // Paystack NGN rate
   
   const formSubmitId = 'b5ff137904e20ed9fbad829a69fc150b';
   
   const sanitizeInput = (input: string) => input.replace(/<[^>]*>?/gm, '').trim();
   const validateEmail = (e: string) => {
     const sanitized = sanitizeInput(e);
-    const emailRegex = /^[^s@]+@[^s@]+.[^s@]+$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(sanitized) ? sanitized : null;
   };
   
@@ -206,7 +208,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
             
             <h2 className="text-xl font-black text-white mb-2">{product?.name || 'Sirwise AI Web3 Academy 4-Week'}</h2>
             <div className="text-3xl font-black text-[#FFD700] mb-1">
-               USD
+              ${priceUSD} USD
             </div>
             {userCurrency !== 'USD' && (
               <div className="text-gray-400 text-sm font-bold mb-6">
@@ -260,7 +262,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                   USDC Crypto (Solana / EVM)
                 </button>
                 <button onClick={() => setActiveGateway('pi')} className="bg-[#FFD700] text-black font-bold h-[50px] w-full mt-2 rounded-[12px] flex items-center justify-center gap-2 cursor-pointer pointer-events-auto z-10 hover:bg-[#ffe033] transition">
-                  Pi Network GCV 14k
+                  Pi Network GCV $314k
                 </button>
                 <button onClick={() => setActiveGateway('bank')} className="w-full h-[50px] bg-[#FFD700] text-black font-bold rounded-xl flex items-center justify-center pointer-events-auto cursor-pointer hover:bg-[#ffe033] transition mt-2">
                   Bank / OPay / Card Transfer
@@ -310,7 +312,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
             </div>
           ) : (
             <div className="animate-in fade-in slide-in-from-right-4">
-              <h3 className="text-[#8b5cf6] font-bold mb-4">Pay with Pi Network GCV 14k</h3>
+              <h3 className="text-[#8b5cf6] font-bold mb-4">Pay with Pi Network GCV $314k</h3>
               <p className="text-gray-400 text-xs mb-4">Send Pi payment to this wallet:</p>
               <div className="bg-black p-3 rounded-xl border border-[#333] flex justify-between items-center mb-4">
                 <span className="text-white text-sm font-mono truncate">{paymentConfig?.pi || localStorage.getItem('pi_wallet') || 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ'}</span>
@@ -345,3 +347,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
     </div>
   );
 }
+`;
+
+fs.writeFileSync('src/components/UnifiedCheckoutModal.tsx', code);
+console.log('UnifiedCheckoutModal written successfully');

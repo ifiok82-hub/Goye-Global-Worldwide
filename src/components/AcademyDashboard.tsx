@@ -18,11 +18,24 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
   const [loading, setLoading] = useState(true);
 
   const priceUSD = 49.99;
-  const userCurrency = localStorage.getItem('goye_currency') || 'USD';
-  const rates:any = { NGN: 1500, GBP: 0.79, EUR: 0.92, INR: 83, CAD: 1.35, AUD: 1.52, ZAR: 18, GHS: 13, KES: 130, AED: 3.67, BRL: 5.0, MXN: 17.0 };
-  const rate = rates[userCurrency] || 1;
-  const localPrice = (priceUSD * rate).toFixed(2);
-  const displaySymbol = userCurrency === 'USD' ? '' : userCurrency + ' ';
+  const currencies: Record<string, { symbol: string; name: string; rate: number }> = {
+    USD: { symbol: "$", name: "US Dollar", rate: 1 },
+    NGN: { symbol: "₦", name: "Naira", rate: 1500 },
+    GBP: { symbol: "£", name: "Pound", rate: 0.79 },
+    EUR: { symbol: "€", name: "Euro", rate: 0.92 },
+    CAD: { symbol: "C$", name: "Canadian", rate: 1.35 },
+    AUD: { symbol: "A$", name: "Australian", rate: 1.52 },
+    INR: { symbol: "₹", name: "Rupee", rate: 83 },
+    ZAR: { symbol: "R", name: "Rand", rate: 18.5 },
+    GHS: { symbol: "₵", name: "Cedi", rate: 15 },
+    KES: { symbol: "KSh", name: "Shilling", rate: 130 },
+    AED: { symbol: "AED", name: "Dirham", rate: 3.67 }
+  };
+  const userCurrency = localStorage.getItem("goye_currency") || localStorage.getItem("currency") || "USD";
+  const currentCurrency = currencies[userCurrency] || { symbol: "$", name: "US Dollar", rate: 1 };
+  const displaySymbol = currentCurrency.symbol || "$";
+  const displayPrice = (priceUSD * currentCurrency.rate).toFixed(2);
+  const localPrice = displayPrice;
 
   useEffect(() => {
     let enrolled = false;

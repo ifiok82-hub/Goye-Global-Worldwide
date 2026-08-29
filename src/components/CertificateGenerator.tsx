@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import jsPDF from 'jspdf';
 import { Download, Lock } from 'lucide-react';
 
-export default function CertificateGenerator({ isCompleted, isEnrolled, userProfile, priceUSD, displaySymbol, localPrice, onUnlock }: any) {
+export default function CertificateGenerator({ isCompleted, isEnrolled, userProfile, priceUSD = 49.99, displaySymbol = "$", localPrice = "49.99", onUnlock, onToast }: any) {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handleDownload = () => {
