@@ -294,7 +294,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                   USDC Crypto (Solana / EVM)
                 </button>
                 <button onClick={() => setActiveGateway('pi')} className="bg-[#FFD700] text-black font-bold h-[50px] w-full mt-2 rounded-[12px] flex items-center justify-center gap-2 cursor-pointer pointer-events-auto z-10 hover:bg-[#ffe033] transition">
-                  Pi Network GCV 14k
+                  Pi Network GCV $314,159
                 </button>
                 <button onClick={() => { setActiveGateway('bank'); setBankSubmitted(false); }} className="w-full h-[50px] bg-[#FFD700] text-black font-bold rounded-xl flex items-center justify-center pointer-events-auto cursor-pointer hover:bg-[#ffe033] transition mt-2">
                   Bank / OPay / Card Transfer
@@ -412,7 +412,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
             </div>
           ) : (
             <div className="animate-in fade-in slide-in-from-right-4">
-              <h3 className="text-[#8b5cf6] font-bold mb-4">Pay with Pi Network GCV 14k</h3>
+              <h3 className="text-[#8b5cf6] font-bold mb-4">Pay with Pi Network GCV $314,159</h3>
               <p className="text-gray-400 text-xs mb-4">Send Pi payment to this wallet:</p>
               <div className="bg-black p-3 rounded-xl border border-[#333] flex justify-between items-center mb-4">
                 <span className="text-white text-sm font-mono truncate">{paymentConfig?.pi || localStorage.getItem('pi_wallet') || 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ'}</span>

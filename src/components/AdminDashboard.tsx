@@ -48,7 +48,15 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
     const localOrders = JSON.parse(localStorage.getItem('orders_list') || '[]');
     setOrders(localOrders);
     
-    const localTraffic = JSON.parse(localStorage.getItem('traffic_log') || '[]');
+    let localTraffic = JSON.parse(localStorage.getItem('traffic_log') || '[]');
+    const exclude = localStorage.getItem('exclude_my_clicks') !== 'false';
+    if (exclude) {
+      localTraffic = localTraffic.filter((entry: any) => 
+        entry.is_admin !== true && 
+        entry.isAdmin !== true && 
+        !String(entry.customerName || entry.customer_name).includes('Admin')
+      );
+    }
     setPageViews(localTraffic);
     
     setTotalClicks(parseInt(localStorage.getItem('total_clicks') || '0'));
@@ -96,7 +104,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
     localStorage.setItem('traffic_log', '[]');
     setTotalClicks(0);
     setPageViews([]);
-    showToast('Clicks reset to 0');
+    showToast('✅ Clicks reset to 0 - Admin clicks excluded - True location will show Lagos for you when exclude OFF');
   };
 
   const handleResetRegistered = () => {
@@ -334,17 +342,15 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
                 </thead>
                 <tbody className="divide-y divide-white/5">
                   {pageViews.map((v: any, idx: number) => {
-                    const isAdminClick = v.is_admin || v.isAdmin || v.customerName === 'Admin (Owner)' || v.customer_name === 'Admin (Owner)';
-                    const loc = (v.city && v.city !== 'Unknown' && v.city !== 'Ado-Odo' && v.city !== 'Ilare') ? v.city : 'Lagos';
-                    const countryCode = (v.country && v.country !== 'Unknown') ? v.country : 'NG';
-                    const flagEmoji = v.flag || (countryCode === 'NG' ? '🇳🇬' : '🌍');
+                    const isAdminClick = v.is_admin || v.isAdmin || v.customerName === 'Admin (Owner)' || v.customer_name === 'Admin (Owner)' || String(v.customerName || v.customer_name).includes('Admin');
+                    const loc = v.location || `${v.flag || '🇳🇬'} ${v.country || 'NG'} (${v.city && v.city !== 'Unknown' && v.city !== 'Ado-Odo' && v.city !== 'Ilare' ? v.city : 'Lagos'})`;
                     return (
                       <tr key={v.id || idx} className="hover:bg-white/[0.02] transition">
-                        <td className="p-3 text-white font-bold">{flagEmoji} {countryCode} ({loc})</td>
-                        <td className="p-3 text-gray-300 font-medium">{v.customerName || v.customer_name || (isAdminClick ? 'Admin (Owner)' : 'Guest')}</td>
+                        <td className="p-3 text-white font-bold">{loc}</td>
+                        <td className="p-3 text-gray-300 font-medium">{v.customerName || v.customer_name || (isAdminClick ? 'Admin (Owner)' : 'Guest Customer')}</td>
                         <td className="p-3 text-[#3b82f6] font-mono text-xs">{v.path || v.page || '/'}</td>
                         <td className="p-3"><span className="text-yellow-500 text-[10px] border border-yellow-500/50 px-2 py-1 rounded font-bold">Browsing</span></td>
-                        <td className="p-3 text-gray-500 text-xs">{v.timestamp ? new Date(v.timestamp).toLocaleTimeString() : 'Just now'}</td>
+                        <td className="p-3 text-gray-500 text-xs">{v.time || (v.timestamp ? new Date(v.timestamp).toLocaleTimeString() : 'Just now')}</td>
                         <td className="p-3 text-gray-400 text-xs">{v.device || 'Desktop'}</td>
                         <td className="p-3 text-xs">
                           {isAdminClick ? (

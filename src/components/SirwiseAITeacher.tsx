@@ -26,7 +26,7 @@ export default function SirwiseAITeacher({ isOpen, onClose }: any) {
   const getAIResponse = (userMessage: string): string => {
     const lower = userMessage.toLowerCase();
     if (lower.includes("pay") || lower.includes("free") || lower.includes("cost") || lower.includes("price") || lower.includes("fee") || lower.includes("how much") || lower.includes("payment")) {
-      return "Sirwise AI Web3 Academy offers a 4-Week Masterclass for $49.99 (or ₦74,985 NGN). 🌐 We support multiple global payment methods:\n- Paystack (Credit/Debit Cards)\n- Flutterwave (African & Global Cards)\n- USDC Crypto (Solana / EVM)\n- Pi Network GCV 14k\n- Direct Bank / OPay Transfer (Account: 611 354 1882 GOYEDAGOSMESS ENTERPRISE, OPay Bank in Nigeria).\n\nYou can also earn 20% referral commissions! Click 'Unlock Now' or tap any product in the store to enrol!";
+      return "Sirwise AI Web3 Academy offers a 4-Week Masterclass for $49.99 (or ₦74,985 NGN). 🌐 We support multiple global payment methods:\n- Paystack (Credit/Debit Cards)\n- Flutterwave (African & Global Cards)\n- USDC Crypto (Solana / EVM)\n- Pi Network GCV $314,159 (Global Pi Community)\n- Direct Bank / OPay Transfer (Account: 611 354 1882 GOYEDAGOSMESS ENTERPRISE, OPay Bank in Nigeria).\n\nYou can also earn 20% referral commissions! Click 'Unlock Now' or tap any product in the store to enrol!";
     }
     if (lower.includes("tree")) return sirwiseKnowledge["tree"];
     if (lower.includes("start lesson 1") || lower.includes("lesson 1")) {

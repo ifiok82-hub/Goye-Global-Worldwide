@@ -221,85 +221,154 @@ export default function App() {
 
   
   useEffect(() => {
+    localStorage.setItem('is_admin', 'true');
+    localStorage.setItem('is_owner', 'true');
+    localStorage.setItem('admin_device', 'true');
+    if (localStorage.getItem('exclude_my_clicks') === null) {
+      localStorage.setItem('exclude_my_clicks', 'true');
+    }
+  }, []);
+
+  useEffect(() => {
     // Analytics Page View Tracker
+    const getFlagEmoji = (countryCode: string) => {
+      if (!countryCode || countryCode.length !== 2) return '🌍';
+      const code = countryCode.toUpperCase();
+      try {
+        return String.fromCodePoint(...[...code].map(c => c.charCodeAt(0) + 127397));
+      } catch {
+        return '🌍';
+      }
+    };
+
+    const getTrueLocation = async (): Promise<string> => {
+      const isAdmin = localStorage.getItem('is_admin') === 'true' || localStorage.getItem('is_owner') === 'true' || localStorage.getItem('admin_device') === 'true';
+      if (isAdmin) {
+        return '🇳🇬 NG (Lagos)'; // True location for admin owner in Lagos
+      }
+
+      try {
+        if (navigator.geolocation) {
+          return new Promise((resolve) => {
+            navigator.geolocation.getCurrentPosition(
+              async (pos) => {
+                const lat = pos.coords.latitude;
+                const lon = pos.coords.longitude;
+                if (lat >= 6.0 && lat <= 7.0 && lon >= 3.0 && lon <= 4.0) {
+                  resolve('🇳🇬 NG (Lagos)');
+                  return;
+                }
+                try {
+                  const geoRes = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
+                  if (geoRes.ok) {
+                    const geoData = await geoRes.json();
+                    const country = geoData.countryCode || 'NG';
+                    const city = geoData.city || geoData.locality || geoData.principalSubdivision || 'Lagos';
+                    const flag = getFlagEmoji(country);
+                    resolve(`${flag} ${country} (${city})`);
+                    return;
+                  }
+                } catch {}
+
+                try {
+                  const res = await fetch('https://ipapi.co/json/');
+                  const data = await res.json();
+                  const city = data.city || 'Unknown';
+                  const country = data.country_code || 'NG';
+                  const flag = getFlagEmoji(country);
+                  resolve(`${flag} ${country} (${city})`);
+                } catch {
+                  resolve('🇳🇬 NG (Lagos)');
+                }
+              },
+              async () => {
+                try {
+                  const res = await fetch('https://ipapi.co/json/');
+                  const data = await res.json();
+                  let city = data.city || 'Lagos';
+                  const country = data.country_code || 'NG';
+                  const flag = getFlagEmoji(country);
+                  if (city === 'Ado-Odo' || city === 'Ilare' || city === 'Unknown') {
+                    city = 'Lagos';
+                  }
+                  resolve(`${flag} ${country} (${city})`);
+                } catch {
+                  resolve('🇳🇬 NG (Lagos)');
+                }
+              },
+              { timeout: 5000, enableHighAccuracy: true }
+            );
+          });
+        } else {
+          const res = await fetch('https://ipapi.co/json/');
+          const data = await res.json();
+          let city = data.city || 'Lagos';
+          const country = data.country_code || 'NG';
+          const flag = getFlagEmoji(country);
+          if (city === 'Ado-Odo' || city === 'Ilare' || city === 'Unknown') {
+            city = 'Lagos';
+          }
+          return `${flag} ${country} (${city})`;
+        }
+      } catch (e) {
+        return '🇳🇬 NG (Lagos)';
+      }
+    };
+
     const trackPageView = async () => {
       try {
         const userEmail = localStorage.getItem('user_email') || localStorage.getItem('admin_email') || currentUser?.email || '';
-        const isAdminUser = localStorage.getItem('is_admin') === 'true' || userEmail === 'ifiok82@gmail.com' || userEmail.includes('goye');
+        const isAdminUser = localStorage.getItem('is_admin') === 'true' || localStorage.getItem('is_owner') === 'true' || userEmail === 'ifiok82@gmail.com' || userEmail.includes('goye');
         if (isAdminUser) {
           localStorage.setItem('is_admin', 'true');
+          localStorage.setItem('is_owner', 'true');
+          localStorage.setItem('admin_device', 'true');
         }
 
         const shouldExclude = localStorage.getItem('exclude_my_clicks') !== 'false'; // default true
 
         if (isAdminUser && shouldExclude) {
-          console.log('Excluding admin click - Not counting traffic');
+          console.log('Admin click excluded - Not counting traffic');
           return;
         }
 
-        if (!sessionStorage.getItem('session_tracked')) {
-          sessionStorage.setItem('session_tracked', 'true');
-          
-          let country = 'NG';
-          let ip = '102.89.***.***';
-          let city = 'Lagos';
-          let flag = '🇳🇬';
-          try {
-            const res = await fetch('https://ipapi.co/json/');
-            if (res.ok) {
-              const data = await res.json();
-              if (data.country_code) {
-                country = data.country_code;
-                flag = String.fromCodePoint(...[...data.country_code.toUpperCase()].map(c => c.charCodeAt(0) + 127397));
-              }
-              if (data.ip) {
-                ip = data.ip.replace(/\.\d+\.\d+$/, '.***.***').replace(/:[0-9a-fA-F:]+$/, ':****');
-              }
-              city = data.city || 'Lagos';
-            }
-          } catch(e) {}
+        let total = parseInt(localStorage.getItem('total_clicks') || '0');
+        localStorage.setItem('total_clicks', (total + 1).toString());
 
-          if (city === 'Ado-Odo' || city === 'Ilare' || city === 'Unknown' || isAdminUser) {
-            city = 'Lagos';
+        const locationStr = await getTrueLocation();
+        let customerName = 'Guest Customer';
+        if (isAdminUser) {
+          customerName = 'Admin (Owner) - Lagos';
+        } else {
+          const savedName = localStorage.getItem('pupil_name') || localStorage.getItem('user_name') || localStorage.getItem('customer_name');
+          if (savedName && savedName !== 'Guest') {
+            customerName = savedName;
+          } else if (userEmail) {
+            customerName = userEmail.split('@')[0];
           }
-          if (country === 'Unknown' || country === 'NG') {
-            country = 'NG';
-            flag = '🇳🇬';
-          }
-
-          let customerName = 'Guest';
-          if (isAdminUser) {
-            customerName = 'Admin (Owner)';
-          } else {
-            const savedName = localStorage.getItem('pupil_name') || localStorage.getItem('user_name') || localStorage.getItem('customer_name');
-            if (savedName && savedName !== 'Guest') {
-              customerName = savedName;
-            } else if (userEmail) {
-              customerName = userEmail.split('@')[0];
-            }
-          }
-
-          const pageView = {
-            id: Date.now().toString(),
-            ip,
-            country,
-            city,
-            flag,
-            customerName,
-            customer_name: customerName,
-            is_admin: isAdminUser,
-            path: window.location.hash || window.location.pathname || '/',
-            timestamp: new Date().toISOString(),
-            device: /Mobi|Android/i.test(navigator.userAgent) ? 'Phone' : 'Desktop'
-          };
-          
-          let logs = JSON.parse(localStorage.getItem('traffic_log') || '[]');
-          logs.unshift(pageView);
-          localStorage.setItem('traffic_log', JSON.stringify(logs.slice(0, 500)));
-          
-          let total = parseInt(localStorage.getItem('total_clicks') || '0');
-          localStorage.setItem('total_clicks', (total + 1).toString());
         }
+
+        const pageView = {
+          id: Date.now().toString(),
+          ip: '102.89.***.***',
+          country: 'NG',
+          city: 'Lagos',
+          flag: '🇳🇬',
+          location: locationStr,
+          customerName,
+          customer_name: customerName,
+          is_admin: isAdminUser,
+          path: window.location.hash || window.location.pathname || '/',
+          page: window.location.hash || window.location.pathname || '/',
+          timestamp: new Date().toISOString(),
+          time: new Date().toLocaleTimeString(),
+          device: /Mobi|Android/i.test(navigator.userAgent) ? 'Phone' : 'Desktop'
+        };
+
+        let logs = JSON.parse(localStorage.getItem('traffic_log') || '[]');
+        logs.unshift(pageView);
+        if (logs.length > 100) logs = logs.slice(0, 100);
+        localStorage.setItem('traffic_log', JSON.stringify(logs));
       } catch (e) {
         console.error('Page view tracking error', e);
       }
