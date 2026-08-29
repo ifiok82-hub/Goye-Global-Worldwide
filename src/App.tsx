@@ -445,25 +445,26 @@ export default function App() {
             <button onClick={() => { setTab('academy'); }} className="text-white bg-blue-900 font-bold text-[10px] hover:bg-blue-800 px-2 py-1 rounded-full flex items-center gap-1 cursor-pointer pointer-events-auto touch-manipulation z-[100] relative">Start learning <ChevronRight size={10} /></button>
             <button onClick={() => setShowReferralModal(true)} className="text-black font-bold text-[10px] hover:bg-black/10 px-2 py-1 rounded cursor-pointer pointer-events-auto touch-manipulation z-[100] relative">Referral</button>
         </div>
-        <div className="w-full bg-[#FFD700] text-black text-center text-[10px] font-black py-1 cursor-pointer pointer-events-auto z-[100] relative" onClick={() => document.getElementById('programs')?.scrollIntoView({behavior:'smooth'})}>
+        <button onClick={() => { const el = document.getElementById("programs"); if(el) el.scrollIntoView({behavior: "smooth"}); }} className="w-full bg-[#FFD700] text-black text-center text-[10px] font-black py-1 cursor-pointer pointer-events-auto z-[100] relative block">
           EXPLORE THE PROGRAMS →
-        </div>
+        </button>
         <div className="flex justify-center gap-4 mt-2 z-[60] relative pointer-events-auto">
             
-            <button onClick={() => setShowScanModal(true)} className="flex items-center gap-1 bg-black text-[#10B981] px-2 py-1 rounded text-[10px] font-bold"><Search size={12} /> Scan</button>
-            <button onClick={() => setShowVoiceModal(true)} className="flex items-center gap-1 bg-black text-[#3b82f6] px-2 py-1 rounded text-[10px] font-bold"><Mic size={12} /> Record</button>
-            <button onClick={() => setShowMoreMenu(!showMoreMenu)} className="flex items-center gap-1 bg-black text-white px-2 py-1 rounded text-[10px] font-bold"><MoreHorizontal size={12} /> More</button>
+            <button onClick={() => setShowQRModal(true)} className="flex items-center gap-1 bg-black text-[#FFD700] px-2 py-1 rounded text-[10px] font-bold cursor-pointer pointer-events-auto z-[100]"><QrCode size={12} /> QR</button>
+            <button onClick={() => setShowScanModal(true)} className="flex items-center gap-1 bg-black text-[#10B981] px-2 py-1 rounded text-[10px] font-bold cursor-pointer pointer-events-auto z-[100]"><Search size={12} /> Scan</button>
+            <button onClick={() => setShowVoiceModal(true)} className="flex items-center gap-1 bg-black text-[#3b82f6] px-2 py-1 rounded text-[10px] font-bold cursor-pointer pointer-events-auto z-[100]"><Mic size={12} /> Record</button>
+            <button onClick={() => setShowMoreMenu(!showMoreMenu)} className="flex items-center gap-1 bg-black text-white px-2 py-1 rounded text-[10px] font-bold cursor-pointer pointer-events-auto z-[100]"><MoreHorizontal size={12} /> More</button>
         </div>
         {showMoreMenu && (
-            <div className="absolute top-[80px] right-[10px] bg-[#111] border border-[#FFD700] rounded-xl shadow-2xl z-[99999] w-[200px] overflow-hidden">
+            <div className="absolute top-[80px] right-[10px] bg-[#111] border border-[#FFD700] rounded-xl shadow-2xl z-[99999] w-[200px] overflow-hidden pointer-events-auto">
                 <button onClick={() => setShowMoreMenu(false)} className="absolute top-2 right-2 text-gray-500 hover:text-white pointer-events-auto z-10"><X size={16} /></button>
-                <button onClick={() => { setShowReferralModal(true); setShowMoreMenu(false); }} className="w-full text-left px-4 py-3 border-b border-[#222] text-sm text-white hover:bg-[#222] flex items-center gap-2"><Users size={16} className="text-[#FFD700]"/> 🤝 Referral & Earn</button>
-                <button onClick={() => { setShowLanguageModal(true); setShowMoreMenu(false); }} className="w-full text-left px-4 py-3 border-b border-[#222] text-sm text-white hover:bg-[#222] flex items-center gap-2"><Globe size={16} className="text-[#3b82f6]"/> 🌐 Language</button>
-                <button onClick={() => { setShowCurrencyModal(true); setShowMoreMenu(false); }} className="w-full text-left px-4 py-3 border-b border-[#222] text-sm text-white hover:bg-[#222] flex items-center gap-2"><DollarSign size={16} className="text-[#10B981]"/> 💱 Currency ({currentCurrency})</button>
-                <button onClick={handlePushNotification} className="w-full text-left px-4 py-3 border-b border-[#222] text-sm text-white hover:bg-[#222] flex items-center gap-2"><Bell size={16} className="text-[#FF8C00]"/> 🔔 Notifications</button>
-                <button onClick={() => { showToast('Terms & Privacy opened.'); setShowMoreMenu(false); }} className="w-full text-left px-4 py-3 border-b border-[#222] text-sm text-white hover:bg-[#222] flex items-center gap-2"><FileText size={16} className="text-[#10B981]"/> 📄 Terms & Privacy</button>
-                <button onClick={handleInstallClick} className="w-full text-left px-4 py-3 border-b border-[#222] text-sm text-white hover:bg-[#222] flex items-center gap-2"><Smartphone size={16} className="text-[#8b5cf6]"/> 📲 Install App</button>
-                <button onClick={() => { localStorage.removeItem('goye_active_user'); setIsAuthenticated(false); setCurrentUser(null); setTab('auth'); setShowMoreMenu(false); }} className="w-full text-left px-4 py-3 text-sm text-red-500 hover:bg-[#222] flex items-center gap-2"><Lock size={16} className="text-red-500"/> 🚪 Log Out</button>
+                <button onClick={() => { setShowReferralModal(true); setShowMoreMenu(false); }} className="w-full text-left px-4 py-3 border-b border-[#222] text-sm text-white hover:bg-[#222] flex items-center gap-2 cursor-pointer pointer-events-auto z-[100]"><Users size={16} className="text-[#FFD700]"/> 🤝 Referral & Earn</button>
+                <button onClick={() => { setShowLanguageModal(true); setShowMoreMenu(false); }} className="w-full text-left px-4 py-3 border-b border-[#222] text-sm text-white hover:bg-[#222] flex items-center gap-2 cursor-pointer pointer-events-auto z-[100]"><Globe size={16} className="text-[#3b82f6]"/> 🌐 Language</button>
+                <button onClick={() => { setShowCurrencyModal(true); setShowMoreMenu(false); }} className="w-full text-left px-4 py-3 border-b border-[#222] text-sm text-white hover:bg-[#222] flex items-center gap-2 cursor-pointer pointer-events-auto z-[100]"><DollarSign size={16} className="text-[#10B981]"/> 💱 Currency ({currentCurrency})</button>
+                <button onClick={handlePushNotification} className="w-full text-left px-4 py-3 border-b border-[#222] text-sm text-white hover:bg-[#222] flex items-center gap-2 cursor-pointer pointer-events-auto z-[100]"><Bell size={16} className="text-[#FF8C00]"/> 🔔 Notifications</button>
+                <button onClick={() => { showToast('Terms & Privacy opened.'); setShowMoreMenu(false); }} className="w-full text-left px-4 py-3 border-b border-[#222] text-sm text-white hover:bg-[#222] flex items-center gap-2 cursor-pointer pointer-events-auto z-[100]"><FileText size={16} className="text-[#10B981]"/> 📄 Terms & Privacy</button>
+                <button onClick={handleInstallClick} className="w-full text-left px-4 py-3 border-b border-[#222] text-sm text-white hover:bg-[#222] flex items-center gap-2 cursor-pointer pointer-events-auto z-[100]"><Smartphone size={16} className="text-[#8b5cf6]"/> 📲 Install App</button>
+                <button onClick={() => { localStorage.removeItem('goye_active_user'); setIsAuthenticated(false); setCurrentUser(null); setTab('auth'); setShowMoreMenu(false); }} className="w-full text-left px-4 py-3 text-sm text-red-500 hover:bg-[#222] flex items-center gap-2 cursor-pointer pointer-events-auto z-[100]"><Lock size={16} className="text-red-500"/> 🚪 Log Out</button>
             </div>
         )}
       </header>
@@ -546,11 +547,11 @@ export default function App() {
                               a.download = `${product.name}.txt`;
                               a.click();
                             }
-                          }} className="w-full bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/50 font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-[#10B981]/30">
+                          }} className="w-full bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/50 font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-[#10B981]/30 cursor-pointer pointer-events-auto z-10 touch-manipulation">
                             <Download size={18}/> Access Content
                           </button>
                         ) : (
-                          <button onClick={() => { setSelectedProduct(product);  }} className="w-full bg-[#FFD700] text-black font-black py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-yellow-400">
+                          <button onClick={() => { setSelectedProduct(product); }} className="w-full bg-[#FFD700] text-black font-black py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-yellow-400 cursor-pointer pointer-events-auto z-10 touch-manipulation">
                             <ShoppingCart size={18}/> Buy & Unlock
                           </button>
                         )}
@@ -781,20 +782,39 @@ export default function App() {
         </div>
       )}
 
+      
       {showScanModal && (
         <div className="fixed inset-0 bg-black/90 z-[99999] flex items-center justify-center p-4 pointer-events-auto">
-          <div className="bg-[#111] border border-[#333] p-6 rounded-3xl w-[90%] max-w-[400px] flex flex-col items-center relative">
-            <button onClick={() => setShowScanModal(false)} className="absolute top-2 right-2 text-gray-500 font-bold">X</button>
-            <h3 className="font-black text-white mb-4">QR Scanner</h3>
-            <div className="w-full aspect-square bg-black border-2 border-[#10B981] border-dashed flex flex-col items-center justify-center text-gray-500 mb-4 rounded-xl relative overflow-hidden">
-                <div className="absolute top-0 w-full h-[2px] bg-[#10B981] animate-[scan_2s_ease-in-out_infinite]"></div>
-                Scanning...
+          <ScanModal onClose={() => setShowScanModal(false)} onScanResult={(res) => { alert(res); setShowScanModal(false); }} />
+        </div>
+      )}
+
+      {showVoiceModal && (
+        <div className="fixed inset-0 bg-black/90 z-[99999] flex items-center justify-center p-4 pointer-events-auto">
+          <div className="bg-[#111] border border-[#3b82f6] p-6 rounded-3xl w-[90%] max-w-[400px] flex flex-col items-center relative">
+            <button onClick={() => setShowVoiceModal(false)} className="absolute top-2 right-2 text-gray-500 font-bold cursor-pointer pointer-events-auto z-[100]">X</button>
+            <h3 className="font-black text-[#3b82f6] mb-4">Record Capstone</h3>
+            <div className="w-full aspect-video bg-black flex flex-col items-center justify-center text-gray-500 mb-4 rounded-xl border border-[#222]">
+              <Mic size={48} className="text-[#3b82f6] mb-2" />
+              <span>Camera & Mic</span>
             </div>
-            <input type="text" placeholder="Or enter code manually..." className="w-full bg-black border border-[#333] text-white p-3 rounded-xl mb-4" />
-            <button onClick={() => { showToast('Scan processing...'); setShowScanModal(false); }} className="w-full bg-[#10B981] text-black font-bold py-3 rounded-xl">Verify Scan</button>
+            <button onClick={() => { showToast('Recording started (simulated)...'); setTimeout(()=> { showToast('Recording saved!'); setShowVoiceModal(false); }, 3000); }} className="w-full bg-[#3b82f6] text-white font-bold py-3 rounded-xl cursor-pointer pointer-events-auto z-[100]">Start Recording</button>
           </div>
         </div>
       )}
+
+      {showQRModal && (
+        <div className="fixed inset-0 bg-black/90 z-[99999] flex items-center justify-center p-4 pointer-events-auto">
+          <div className="bg-white border-[3px] border-[#FFD700] p-6 rounded-[24px] w-[250px] flex flex-col items-center relative cursor-pointer pointer-events-auto z-[100]" onClick={() => setShowQRModal(false)}>
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://www.gasv.store" alt="GOYE QR" style={{width:'200px', height:'200px', display:'block', borderRadius:'16px'}} />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg">
+              <span className="text-2xl text-[#3b82f6]">🌐</span>
+            </div>
+            <p className="text-black font-bold mt-2 text-[14px] text-center mb-0 leading-tight">Scan Me<br/>www.gasv.store</p>
+          </div>
+        </div>
+      )}
+
 
       {showReferralModal && (
         <div className="fixed inset-0 bg-black/90 z-[99999] flex items-center justify-center p-4 pointer-events-auto">
@@ -817,10 +837,10 @@ export default function App() {
       {showLanguageModal && (
         <div className="fixed inset-0 bg-black/90 z-[99999] flex items-center justify-center p-4 pointer-events-auto">
           <div className="bg-[#111] border border-[#333] p-6 rounded-3xl w-[90%] max-w-[300px] flex flex-col items-center relative max-h-[80vh] overflow-y-auto">
-            <button onClick={() => setShowLanguageModal(false)} className="absolute top-2 right-2 text-gray-500 font-bold">X</button>
+            <button onClick={() => setShowLanguageModal(false)} className="absolute top-2 right-2 text-gray-500 font-bold cursor-pointer pointer-events-auto z-[100]">X</button>
             <h3 className="font-black text-white mb-4">Select Language</h3>
             {['English', 'French (Français)', 'Spanish (Español)', 'Arabic (العربية)', 'Hindi (हिन्दी)'].map(lang => (
-               <button key={lang} onClick={() => { showToast(lang + ' selected'); setShowLanguageModal(false); }} className="w-full text-left p-3 border-b border-[#222] text-white hover:bg-[#222]">{lang}</button>
+               <button key={lang} onClick={() => { showToast(lang + ' selected'); setShowLanguageModal(false); window.location.reload(); }} className="w-full text-left p-3 border-b border-[#222] text-white hover:bg-[#222] cursor-pointer pointer-events-auto z-[100] font-bold">{lang}</button>
             ))}
           </div>
         </div>
@@ -829,10 +849,10 @@ export default function App() {
       {showCurrencyModal && (
         <div className="fixed inset-0 bg-black/90 z-[99999] flex items-center justify-center p-4 pointer-events-auto">
           <div className="bg-[#111] border border-[#333] p-6 rounded-3xl w-[90%] max-w-[300px] flex flex-col items-center relative max-h-[80vh] overflow-y-auto">
-            <button onClick={() => setShowCurrencyModal(false)} className="absolute top-2 right-2 text-gray-500 font-bold">X</button>
+            <button onClick={() => setShowCurrencyModal(false)} className="absolute top-2 right-2 text-gray-500 font-bold cursor-pointer pointer-events-auto z-[100]">X</button>
             <h3 className="font-black text-white mb-4">Select Currency</h3>
             {['USD', 'NGN', 'GBP', 'EUR', 'CAD', 'AUD', 'INR', 'ZAR'].map(curr => (
-               <button key={curr} onClick={() => { localStorage.setItem('goye_currency', curr); setCurrentCurrency(curr); showToast('Currency set to ' + curr); setShowCurrencyModal(false); window.location.reload(); }} className="w-full text-left p-3 border-b border-[#222] text-white hover:bg-[#222] font-bold">{curr}</button>
+               <button key={curr} onClick={() => { localStorage.setItem('goye_currency', curr); setCurrentCurrency(curr); showToast('Currency set to ' + curr); setShowCurrencyModal(false); window.location.reload(); }} className="w-full text-left p-3 border-b border-[#222] text-white hover:bg-[#222] font-bold cursor-pointer pointer-events-auto z-[100]">{curr}</button>
             ))}
           </div>
         </div>

@@ -154,8 +154,12 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
           if (onToast) onToast("📧 Sending Automated Email & 📱 WhatsApp Receipt...");
         }, 800);
         
-        if (product.category === 'academy' && (window as any).unlockAcademy) {
-           (window as any).unlockAcademy();
+        if (product.category === 'academy') {
+          localStorage.setItem('sirwise_paid', 'true');
+          localStorage.setItem('payment_verified', 'true');
+          localStorage.setItem('payment_date', new Date().toISOString());
+          if ((window as any).unlockAcademy) (window as any).unlockAcademy();
+          if (onToast) onToast("Payment Successful! Academy Unlocked!");
         }
 
         setSuccess(true);
@@ -263,16 +267,16 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
             <div>
               <p className="text-xs text-gray-400 text-center mb-6 uppercase tracking-widest font-bold">Choose Payment Method</p>
               <div className="space-y-2">
-                <button onClick={payWithPaystack} className="w-full h-[50px] bg-[#FFD700] text-black font-bold rounded-xl hover:scale-105 transition flex items-center justify-center pointer-events-auto cursor-pointer">
+                <button onClick={payWithPaystack} className="bg-[#FFD700] text-black font-bold h-[50px] w-full mt-2 rounded-[12px] flex items-center justify-center gap-2 cursor-pointer pointer-events-auto z-10">
                   Pay with Paystack (Global Cards)
                 </button>
-                <button onClick={payWithFlutterwave} className="w-full h-[50px] bg-[#FFD700] text-black font-bold rounded-xl hover:scale-105 transition flex items-center justify-center pointer-events-auto cursor-pointer">
+                <button onClick={payWithFlutterwave} className="bg-[#FFD700] text-black font-bold h-[50px] w-full mt-2 rounded-[12px] flex items-center justify-center gap-2 cursor-pointer pointer-events-auto z-10">
                   Flutterwave (Africa)
                 </button>
-                <button onClick={() => setActiveGateway('crypto')} className="w-full h-[50px] bg-[#FFD700] text-black font-bold rounded-xl hover:scale-105 transition flex items-center justify-center pointer-events-auto cursor-pointer">
+                <button onClick={() => setActiveGateway('crypto')} className="bg-[#FFD700] text-black font-bold h-[50px] w-full mt-2 rounded-[12px] flex items-center justify-center gap-2 cursor-pointer pointer-events-auto z-10">
                   USDC Crypto
                 </button>
-                <button onClick={() => setActiveGateway('pi')} className="w-full h-[50px] bg-[#FFD700] text-black font-bold rounded-xl hover:scale-105 transition flex items-center justify-center pointer-events-auto cursor-pointer">
+                <button onClick={() => setActiveGateway('pi')} className="bg-[#FFD700] text-black font-bold h-[50px] w-full mt-2 rounded-[12px] flex items-center justify-center gap-2 cursor-pointer pointer-events-auto z-10">
                   Pi GCV $314k
                 </button>
                 <button onClick={() => setActiveGateway('bank')} className="w-full h-[50px] bg-[#FFD700] text-black font-bold rounded-xl hover:scale-105 transition flex items-center justify-center pointer-events-auto cursor-pointer">

@@ -147,7 +147,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
                 <h4 className="font-bold text-lg mb-2 leading-tight text-white">{mod.title} {!isEnrolled && <span className="text-red-500 text-sm ml-2">🔒 Locked</span>}</h4>
                 <p className="text-gray-500 text-sm mb-6">{mod.desc}</p>
                 
-                <button onClick={() => { if(!isEnrolled) setShowPaymentModal(true); else if(!isCompleted) toggleModule(mod.id); }} className={`w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition cursor-pointer pointer-events-auto z-10 ${!isEnrolled ? 'bg-[#FFD700] text-black hover:bg-yellow-400' : isCompleted ? 'bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/30' : 'bg-[#FFD700]/10 text-[#FFD700] border border-[#FFD700]/30 hover:bg-[#FFD700]/20'}`}>
+                <button onClick={() => { if(!isEnrolled) onPurchase({ id: 'academy', name: 'Sirwise AI Web3 Academy 4-Week', price: 49.99, category: 'academy' }); else if(!isCompleted) toggleModule(mod.id); }} className={`w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition cursor-pointer pointer-events-auto z-10 ${!isEnrolled ? 'bg-[#FFD700] text-black hover:bg-yellow-400' : isCompleted ? 'bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/30' : 'bg-[#FFD700]/10 text-[#FFD700] border border-[#FFD700]/30 hover:bg-[#FFD700]/20'}`}>
                   {!isEnrolled ? (`Unlock Now ${displaySymbol}${localPrice}`) : isCompleted ? 'COMPLETED' : <><Play size={16} fill="currentColor" /> Start Learning</>}
                 </button>
               </div>
@@ -157,7 +157,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
 
         {/* Certificate Unlock */}
         <div className="mt-8">
-          <CertificateGenerator isCompleted={percentComplete === 100} isEnrolled={isEnrolled} userProfile={userProfile} priceUSD={priceUSD} displaySymbol={displaySymbol} localPrice={localPrice} onUnlock={() => setShowPaymentModal(true)} onToast={onToast} />
+          <CertificateGenerator isCompleted={percentComplete === 100} isEnrolled={isEnrolled} userProfile={userProfile} priceUSD={priceUSD} displaySymbol={displaySymbol} localPrice={localPrice} onUnlock={() => onPurchase({ id: 'academy', name: 'Sirwise AI Web3 Academy 4-Week', price: 49.99, category: 'academy' })} onToast={onToast} />
         </div>
       </div>
     </div>
