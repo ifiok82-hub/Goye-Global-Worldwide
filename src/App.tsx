@@ -90,6 +90,7 @@ export default function App() {
 
   const [tab, setTab] = useState(window.location.hash.replace('#', '') || 'home');
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [showEsimVideoModal, setShowEsimVideoModal] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
   const [showSirwiseBot, setShowSirwiseBot] = useState(false);

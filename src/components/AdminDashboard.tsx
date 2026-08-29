@@ -281,10 +281,10 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
             <div className="bg-[#111] border border-[#333] rounded-2xl p-6">
               <h3 className="text-white font-bold mb-4">Revenue Breakdown by Product</h3>
               <div className="space-y-3">
-                 {Object.entries(breakdownByProduct).map(([name, val]) => (
+                 {Object.entries(breakdownByProduct).map(([name, val]: [string, any]) => (
                      <div key={name} className="flex justify-between items-center text-sm">
                          <span className="text-gray-400">{name}</span>
-                         <span className="text-[#10B981] font-bold">${val.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                         <span className="text-[#10B981] font-bold">${(val || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                      </div>
                  ))}
                  {Object.keys(breakdownByProduct).length === 0 && <div className="text-gray-500 text-sm">No revenue yet.</div>}
@@ -294,10 +294,10 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
             <div className="bg-[#111] border border-[#333] rounded-2xl p-6">
               <h3 className="text-white font-bold mb-4">Revenue Breakdown by Country</h3>
               <div className="space-y-3">
-                 {Object.entries(breakdownByCountry).map(([name, val]) => (
+                 {Object.entries(breakdownByCountry).map(([name, val]: [string, any]) => (
                      <div key={name} className="flex justify-between items-center text-sm">
                          <span className="text-gray-400">{name}</span>
-                         <span className="text-[#10B981] font-bold">${val.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                         <span className="text-[#10B981] font-bold">${(val || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
                      </div>
                  ))}
                  {Object.keys(breakdownByCountry).length === 0 && <div className="text-gray-500 text-sm">No revenue yet.</div>}

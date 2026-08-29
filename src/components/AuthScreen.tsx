@@ -1675,7 +1675,7 @@ export default function AuthScreen({ onAuthenticated, onClose }: { onAuthenticat
             id: uid,
             pupilName: firstName + ' ' + surname,
             parentName: '',
-            country: selectedCountry || {flag: '🌍', name: 'Unknown', currency: 'USD'},
+            country: {flag: '🌍', name: 'Unknown', currency: 'USD'},
             age: '',
             email: emailToUse,
             whatsapp: contactValue,
@@ -1917,7 +1917,8 @@ export default function AuthScreen({ onAuthenticated, onClose }: { onAuthenticat
                     onChange={(e) => {
                       const q = e.target.value.toLowerCase();
                       document.querySelectorAll('.country-item').forEach(el => {
-                        el.style.display = el.innerText.toLowerCase().includes(q) ? 'block' : 'none';
+                        const htmlEl = el as HTMLElement;
+                        htmlEl.style.display = htmlEl.innerText.toLowerCase().includes(q) ? 'block' : 'none';
                       });
                     }}
                   />
