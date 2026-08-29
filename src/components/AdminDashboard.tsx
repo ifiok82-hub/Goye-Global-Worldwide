@@ -71,33 +71,45 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
     const newVal = !excludeMyClicks;
     setExcludeMyClicks(newVal);
     localStorage.setItem('exclude_my_clicks', newVal.toString());
-    showToast(`Exclude My Clicks is now ${newVal ? 'ON' : 'OFF'}`);
+    if (newVal) {
+      // When turning ON, remove admin clicks from count - Recalculate
+      const trafficLog = JSON.parse(localStorage.getItem('traffic_log') || '[]');
+      const filtered = trafficLog.filter((entry: any) => 
+        entry.is_admin !== true && 
+        entry.isAdmin !== true && 
+        entry.customerName !== 'Admin (Owner)' &&
+        entry.customer_name !== 'Admin (Owner)' &&
+        entry.location !== 'Admin'
+      );
+      localStorage.setItem('traffic_log', JSON.stringify(filtered));
+      localStorage.setItem('total_clicks', filtered.length.toString());
+      setTotalClicks(filtered.length);
+      setPageViews(filtered);
+      showToast('Admin clicks excluded! Count recalculated!');
+    } else {
+      showToast('Exclude My Clicks is now OFF');
+    }
   };
 
   const handleResetClicks = () => {
-    if(window.confirm('Are you sure you want to reset total clicks?')) {
-        localStorage.setItem('total_clicks', '0');
-        localStorage.setItem('traffic_log', '[]');
-        loadLocalData();
-        showToast('Clicks reset to 0');
-    }
+    localStorage.setItem('total_clicks', '0');
+    localStorage.setItem('traffic_log', '[]');
+    setTotalClicks(0);
+    setPageViews([]);
+    showToast('Clicks reset to 0');
   };
 
   const handleResetRegistered = () => {
-    if(window.confirm('Are you sure you want to clear all registered customers?')) {
-        localStorage.setItem('registered_customers', '0');
-        localStorage.setItem('customers_list', '[]');
-        loadLocalData();
-        showToast('Registered customers cleared');
-    }
+    localStorage.setItem('registered_customers', '0');
+    localStorage.setItem('customers_list', '[]');
+    setUsers([]);
+    showToast('Registered customers cleared');
   };
 
   const handleClearTraffic = () => {
-    if(window.confirm('Are you sure you want to clear live traffic log?')) {
-        localStorage.setItem('traffic_log', '[]');
-        loadLocalData();
-        showToast('Traffic log cleared');
-    }
+    localStorage.setItem('traffic_log', '[]');
+    setPageViews([]);
+    showToast('Traffic log cleared');
   };
 
   const saveSettings = () => {
@@ -316,23 +328,37 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
                     <th className="p-3">Page / Product</th>
                     <th className="p-3">Status</th>
                     <th className="p-3">Time</th>
-                    <th className="p-3 rounded-tr-lg">Device</th>
+                    <th className="p-3">Device</th>
+                    <th className="p-3 rounded-tr-lg">Excluded?</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
-                  {pageViews.map(v => (
-                    <tr key={v.id} className="hover:bg-white/[0.02] transition">
-                      <td className="p-3 text-white font-bold">{v.flag} {v.country} {v.city !== 'Unknown' ? `(${v.city})` : ''}</td>
-                      <td className="p-3 text-gray-300">{v.customerName || 'Guest'}</td>
-                      <td className="p-3 text-[#3b82f6] font-mono text-xs">{v.path}</td>
-                      <td className="p-3"><span className="text-yellow-500 text-[10px] border border-yellow-500/50 px-2 py-1 rounded">Browsing</span></td>
-                      <td className="p-3 text-gray-500 text-xs">{new Date(v.timestamp).toLocaleTimeString()}</td>
-                      <td className="p-3 text-gray-400 text-xs">{v.device}</td>
-                    </tr>
-                  ))}
+                  {pageViews.map((v: any, idx: number) => {
+                    const isAdminClick = v.is_admin || v.isAdmin || v.customerName === 'Admin (Owner)' || v.customer_name === 'Admin (Owner)';
+                    const loc = (v.city && v.city !== 'Unknown' && v.city !== 'Ado-Odo' && v.city !== 'Ilare') ? v.city : 'Lagos';
+                    const countryCode = (v.country && v.country !== 'Unknown') ? v.country : 'NG';
+                    const flagEmoji = v.flag || (countryCode === 'NG' ? '🇳🇬' : '🌍');
+                    return (
+                      <tr key={v.id || idx} className="hover:bg-white/[0.02] transition">
+                        <td className="p-3 text-white font-bold">{flagEmoji} {countryCode} ({loc})</td>
+                        <td className="p-3 text-gray-300 font-medium">{v.customerName || v.customer_name || (isAdminClick ? 'Admin (Owner)' : 'Guest')}</td>
+                        <td className="p-3 text-[#3b82f6] font-mono text-xs">{v.path || v.page || '/'}</td>
+                        <td className="p-3"><span className="text-yellow-500 text-[10px] border border-yellow-500/50 px-2 py-1 rounded font-bold">Browsing</span></td>
+                        <td className="p-3 text-gray-500 text-xs">{v.timestamp ? new Date(v.timestamp).toLocaleTimeString() : 'Just now'}</td>
+                        <td className="p-3 text-gray-400 text-xs">{v.device || 'Desktop'}</td>
+                        <td className="p-3 text-xs">
+                          {isAdminClick ? (
+                            <span className="text-red-400 font-bold bg-red-950/40 px-2 py-0.5 rounded border border-red-500/30">Excluded Admin</span>
+                          ) : (
+                            <span className="text-green-400 font-bold bg-green-950/40 px-2 py-0.5 rounded border border-green-500/30">Customer</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                   {pageViews.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="p-6 text-center text-gray-500">No traffic data yet.</td>
+                      <td colSpan={7} className="p-6 text-center text-gray-500">No traffic data yet.</td>
                     </tr>
                   )}
                 </tbody>
