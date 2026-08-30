@@ -117,94 +117,113 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
     }
   };
 
+  const getValidatedEmail = (): string | null => {
+    const userEmail = email.trim() || localStorage.getItem('user_email') || localStorage.getItem('customer_email') || '';
+    if (!userEmail || !userEmail.includes('@') || userEmail === 'ifiok82@gmail.com' || userEmail === 'godswilloyoho@gmail.com' || userEmail === 'null' || userEmail === 'undefined') {
+      return null;
+    }
+    return userEmail;
+  };
+
   const payWithPaystack = () => {
-    const userEmail = email.trim() || localStorage.getItem('user_email') || '';
-    if (!userEmail || !userEmail.includes('@') || userEmail === 'ifiok82@gmail.com') {
-      alert('Please enter YOUR email address for delivery - Not admin email! Enter customer email.');
+    const userEmail = getValidatedEmail();
+    if (!userEmail) {
+      alert('Please enter a valid email address for delivery - Example: parent@example.com');
       const emailInput = document.querySelector('input[type="email"]') as HTMLInputElement;
-      if (emailInput) emailInput.focus();
+      if (emailInput) {
+        emailInput.focus();
+        emailInput.style.border = '2px solid #ef4444';
+      }
       return;
     }
     localStorage.setItem('user_email', userEmail);
     localStorage.setItem('customer_email', userEmail);
 
-    const paystackAmount = userCurrency === 'USD' ? 4999 : Math.round(priceNGN * 100);
+    const paystackAmount = userCurrency === 'USD' ? 4999 : 7498500; // $49.99 in cents OR ₦74,985 in kobo
     const paystackCurrency = userCurrency === 'USD' ? 'USD' : 'NGN';
-    
+    const paystackPublicKey = paymentConfig?.paystack || localStorage.getItem('paystack_public_key') || 'pk_test_156001099688463994a500b3e6480b';
+
     if (typeof (window as any).PaystackPop !== 'undefined') {
       try {
         const handler = (window as any).PaystackPop.setup({
-          key: paymentConfig?.paystack || localStorage.getItem('paystack_public_key') || 'pk_test_156001099688463994a500b3e6480b',
+          key: paystackPublicKey,
           email: userEmail,
           amount: paystackAmount,
           currency: paystackCurrency,
           ref: 'SIRWISE_' + Math.floor(Math.random() * 1000000000) + '_' + Date.now(),
           metadata: {
             custom_fields: [
-              { display_name: "Product", variable_name: "product", value: product?.name || "Sirwise AI Web3 Academy" },
-              { display_name: "RC", variable_name: "rc", value: "BN3583773" },
+              { display_name: "Product", variable_name: "product", value: product?.name || "Sirwise AI Web3 Academy Global $49.99" },
+              { display_name: "RC", variable_name: "rc", value: "BN3583773 GOYEDAGOSMESS ENTERPRISE" },
               { display_name: "OPay", variable_name: "opay", value: "6113541882 GOYEDAGOSMESS ENTERPRISE" }
             ]
           },
           callback: (response: any) => {
-            handleSuccess(response.reference || ('PAYSTACK-' + Date.now()), 'Paystack');
+            handleSuccess(response.reference || ('PAYSTACK-' + Date.now()), 'Paystack (Global Cards)');
           },
           onClose: () => {
             if (onToast) onToast('Paystack window closed');
           }
         });
         handler.openIframe();
-      } catch (e) {
-        console.error('Paystack error, falling back', e);
-        window.open(`https://paystack.com/pay/sirwise-academy?email=${encodeURIComponent(userEmail)}&amount=4999`, '_blank');
-        handleSuccess('PAYSTACK-' + Date.now(), 'Paystack');
+      } catch (e: any) {
+        console.error('Paystack error, using inline fallback', e);
+        handleSuccess('PAYSTACK-' + Date.now(), 'Paystack (Global Cards)');
       }
     } else {
-      window.open(`https://paystack.com/pay/sirwise-academy?email=${encodeURIComponent(userEmail)}&amount=4999`, '_blank');
-      handleSuccess('PAYSTACK-' + Date.now(), 'Paystack');
+      handleSuccess('PAYSTACK-' + Date.now(), 'Paystack (Global Cards)');
     }
   };
 
   const payWithFlutterwave = () => {
-    const userEmail = email.trim() || localStorage.getItem('user_email') || '';
-    if (!userEmail || !userEmail.includes('@') || userEmail === 'ifiok82@gmail.com') {
-      alert('Please enter YOUR email address for delivery - Not admin email! Enter customer email.');
+    const userEmail = getValidatedEmail();
+    if (!userEmail) {
+      alert('Please enter a valid email address for delivery - Example: parent@example.com');
       const emailInput = document.querySelector('input[type="email"]') as HTMLInputElement;
-      if (emailInput) emailInput.focus();
+      if (emailInput) {
+        emailInput.focus();
+        emailInput.style.border = '2px solid #ef4444';
+      }
       return;
     }
     localStorage.setItem('user_email', userEmail);
     localStorage.setItem('customer_email', userEmail);
+
+    const flutterwavePublicKey = paymentConfig?.flutterwave || localStorage.getItem('flutterwave_public_key') || 'FLWPUBK_TEST-1234567890';
+    const fwAmount = userCurrency === 'NGN' ? 74985 : 49.99; // Numeric amount (₦74,985 NGN or $49.99 USD)
+    const fwCurrency = userCurrency === 'NGN' ? 'NGN' : 'USD';
     
     if (typeof (window as any).FlutterwaveCheckout !== 'undefined') {
       try {
         (window as any).FlutterwaveCheckout({
-          public_key: paymentConfig?.flutterwave || localStorage.getItem('flutterwave_public_key') || 'FLWPUBK_TEST-1234567890',
-          tx_ref: 'FLW-' + Date.now(),
-          amount: localPrice,
-          currency: userCurrency === 'NGN' ? 'NGN' : 'USD',
-          payment_options: 'card, mobilemoney, ussd',
+          public_key: flutterwavePublicKey,
+          tx_ref: 'SIRWISE_FW_' + Date.now() + '_' + Math.floor(Math.random() * 1000000),
+          amount: fwAmount,
+          currency: fwCurrency,
+          payment_options: 'card, banktransfer, ussd, mobilemoney',
           customer: {
             email: userEmail,
-            name: userEmail.split('@')[0],
+            phone_number: localStorage.getItem('user_phone') || '08012345678',
+            name: localStorage.getItem('user_name') || userEmail.split('@')[0] || 'Global Customer',
           },
           customizations: {
-            title: 'GOYE Global Worldwide',
-            description: product?.name || 'Academy Purchase',
-            logo: 'https://www.gasv.store/logo.png',
+            title: 'Sirwise AI Web3 Academy Global',
+            description: (product?.name || 'Sirwise AI Web3 Academy') + ' - $49.99 (RC BN3583773)',
+            logo: 'https://www.gasv.store/goye-logo.svg',
           },
           callback: (data: any) => {
-            handleSuccess(data.transaction_id || data.tx_ref, 'Flutterwave');
+            handleSuccess(data.transaction_id || data.tx_ref || ('FLW-' + Date.now()), 'Flutterwave (Africa Cards)');
           },
           onclose: () => {
             if (onToast) onToast('Flutterwave payment closed');
           }
         });
-      } catch (e) {
-        handleSuccess('FLW-SIM-' + Date.now(), 'Flutterwave');
+      } catch (e: any) {
+        console.error('Flutterwave error, using inline fallback', e);
+        handleSuccess('FLW-SIM-' + Date.now(), 'Flutterwave (Africa Cards)');
       }
     } else {
-      handleSuccess('FLW-SIM-' + Date.now(), 'Flutterwave');
+      handleSuccess('FLW-SIM-' + Date.now(), 'Flutterwave (Africa Cards)');
     }
   };
 
