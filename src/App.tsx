@@ -433,14 +433,14 @@ export default function App() {
           if (registration.showNotification) {
             registration.showNotification('GOYE Global Store', {
               body: 'Welcome to GOYE! You are now subscribed to updates.',
-              icon: '/logo.png',
-              badge: '/logo.png'
+              icon: '/goye-logo.svg',
+              badge: '/goye-logo.svg'
             });
           }
         } else {
           new Notification('GOYE Global Store', {
             body: 'Welcome! You are now subscribed to updates.',
-            icon: '/logo.png'
+            icon: '/goye-logo.svg'
           });
         }
         showToast('Push notifications enabled!');

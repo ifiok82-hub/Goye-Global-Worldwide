@@ -4,9 +4,11 @@ import { X, ShieldCheck, Lock, Copy, CheckCircle, RefreshCw, ChevronRight, Zap, 
 export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, onToast }: any) {
   const [activeGateway, setActiveGateway] = useState<string | null>(null);
   const [email, setEmail] = useState(() => {
-    const saved = localStorage.getItem('user_email') || localStorage.getItem('pupil_email') || '';
-    if (saved === 'ifiok82@gmail.com') {
+    const saved = (localStorage.getItem('user_email') || localStorage.getItem('pupil_email') || '').trim();
+    if (saved.includes('ifiok82') || saved.includes('godswilloyoho') || saved.includes('goye@gasv.store') || saved === 'null' || saved === 'undefined') {
       localStorage.removeItem('user_email');
+      localStorage.removeItem('customer_email');
+      localStorage.removeItem('pupil_email');
       return '';
     }
     return saved;
@@ -19,7 +21,9 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
   const [submittedBankRef, setSubmittedBankRef] = useState('');
   const [success, setSuccess] = useState(false);
 
-  const priceUSD = product?.price || 49.99;
+  const priceUSD = (product?.price && typeof product.price === 'number' && product.price > 0) ? product.price : 49.99;
+  const rawProductName = product?.name || 'Sirwise AI Web3 Academy 4-Week Masterclass';
+  const cleanProductName = rawProductName.includes('Micro-SaaS') ? 'Sirwise AI Web3 Academy Global' : rawProductName;
   const userCurrency = localStorage.getItem('goye_currency') || localStorage.getItem('currency') || 'USD';
   
   const currencies: Record<string, { symbol: string; name: string; rate: number }> = {
@@ -41,7 +45,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
   const displayPrice = (priceUSD * currentCurrency.rate).toFixed(2);
   const localPrice = displayPrice;
   const priceNGN = priceUSD * 1500;
-  const nairaAmount = priceNGN.toFixed(2); // 74985.00
+  const nairaAmount = priceNGN === 74985 || priceUSD === 49.99 ? '74,985.00' : priceNGN.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   
   const formSubmitId = 'b5ff137904e20ed9fbad829a69fc150b';
   
@@ -62,9 +66,9 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
             id: 'ORD-' + Date.now(),
             ref: ref,
             customerName: email ? email.split('@')[0] : 'Guest Pupil',
-            customerEmail: email || 'guest@gasv.store',
+            customerEmail: email || 'goyedagosmess@gmail.com',
             country: country,
-            productName: product?.name || 'Sirwise AI Web3 Academy 4-Week',
+            productName: cleanProductName,
             amount: `₦${nairaAmount} (${displaySymbol}${localPrice})`,
             amountUSD: priceUSD,
             currency: userCurrency,
@@ -91,8 +95,8 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
             body: JSON.stringify({
-                _subject: 'NEW ORDER: ' + (product?.name || 'Academy') + ' (' + method + ')',
-                Product: product?.name,
+                _subject: 'NEW ORDER: ' + cleanProductName + ' (' + method + ')',
+                Product: cleanProductName,
                 Amount: `₦${nairaAmount} (${displaySymbol}${localPrice})`,
                 Customer_Email: email,
                 Method: method,
@@ -118,8 +122,8 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
   };
 
   const getValidatedEmail = (): string | null => {
-    const userEmail = email.trim() || localStorage.getItem('user_email') || localStorage.getItem('customer_email') || '';
-    if (!userEmail || !userEmail.includes('@') || userEmail === 'ifiok82@gmail.com' || userEmail === 'godswilloyoho@gmail.com' || userEmail === 'null' || userEmail === 'undefined') {
+    let userEmail = (email.trim() || localStorage.getItem('user_email') || localStorage.getItem('customer_email') || '').trim();
+    if (!userEmail || !userEmail.includes('@') || userEmail.includes('ifiok82') || userEmail.includes('godswilloyoho') || userEmail.includes('goye@gasv.store') || userEmail === 'null' || userEmail === 'undefined') {
       return null;
     }
     return userEmail;
@@ -128,7 +132,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
   const payWithPaystack = () => {
     const userEmail = getValidatedEmail();
     if (!userEmail) {
-      alert('Please enter a valid email address for delivery - Example: parent@example.com');
+      alert('Enter valid email');
       const emailInput = document.querySelector('input[type="email"]') as HTMLInputElement;
       if (emailInput) {
         emailInput.focus();
@@ -153,7 +157,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
           ref: 'SIRWISE_' + Math.floor(Math.random() * 1000000000) + '_' + Date.now(),
           metadata: {
             custom_fields: [
-              { display_name: "Product", variable_name: "product", value: product?.name || "Sirwise AI Web3 Academy Global $49.99" },
+              { display_name: "Product", variable_name: "product", value: cleanProductName + " $49.99" },
               { display_name: "RC", variable_name: "rc", value: "BN3583773 GOYEDAGOSMESS ENTERPRISE" },
               { display_name: "OPay", variable_name: "opay", value: "6113541882 GOYEDAGOSMESS ENTERPRISE" }
             ]
@@ -178,7 +182,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
   const payWithFlutterwave = () => {
     const userEmail = getValidatedEmail();
     if (!userEmail) {
-      alert('Please enter a valid email address for delivery - Example: parent@example.com');
+      alert('Enter valid email');
       const emailInput = document.querySelector('input[type="email"]') as HTMLInputElement;
       if (emailInput) {
         emailInput.focus();
@@ -190,25 +194,25 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
     localStorage.setItem('customer_email', userEmail);
 
     const flutterwavePublicKey = paymentConfig?.flutterwave || localStorage.getItem('flutterwave_public_key') || 'FLWPUBK_TEST-1234567890';
-    const fwAmount = userCurrency === 'NGN' ? 74985 : 49.99; // Numeric amount (₦74,985 NGN or $49.99 USD)
-    const fwCurrency = userCurrency === 'NGN' ? 'NGN' : 'USD';
+    const customerName = localStorage.getItem('user_name') || userEmail.split('@')[0] || 'Global Customer';
+    const customerPhone = localStorage.getItem('user_phone') || '08012345678';
     
     if (typeof (window as any).FlutterwaveCheckout !== 'undefined') {
       try {
         (window as any).FlutterwaveCheckout({
           public_key: flutterwavePublicKey,
-          tx_ref: 'SIRWISE_FW_' + Date.now() + '_' + Math.floor(Math.random() * 1000000),
-          amount: fwAmount,
-          currency: fwCurrency,
-          payment_options: 'card, banktransfer, ussd, mobilemoney',
+          tx_ref: 'SIRWISE_FW_' + Date.now(),
+          amount: 74985,
+          currency: 'NGN',
+          email: userEmail,
           customer: {
             email: userEmail,
-            phone_number: localStorage.getItem('user_phone') || '08012345678',
-            name: localStorage.getItem('user_name') || userEmail.split('@')[0] || 'Global Customer',
+            name: customerName,
+            phone_number: customerPhone,
           },
           customizations: {
-            title: 'Sirwise AI Web3 Academy Global',
-            description: (product?.name || 'Sirwise AI Web3 Academy') + ' - $49.99 (RC BN3583773)',
+            title: 'Sirwise AI Web3 Academy',
+            description: 'RC BN3583773',
             logo: 'https://www.gasv.store/goye-logo.svg',
           },
           callback: (data: any) => {
@@ -347,19 +351,21 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
             <label className="block text-xs font-bold text-gray-400 mb-2 uppercase">Your Email Address (for delivery)</label>
             <input 
               type="email" 
-              placeholder="Enter your email address for delivery" 
+              placeholder="Enter your email" 
               className="w-full bg-black border border-[#333] p-4 rounded-xl text-white mb-6 focus:border-[#FFD700] outline-none text-sm font-medium"
-              value={email === 'ifiok82@gmail.com' ? '' : email}
+              value={email}
               onChange={e => {
                 const val = e.target.value;
-                if (val === 'ifiok82@gmail.com') {
+                if (val.includes('ifiok82') || val.includes('godswilloyoho') || val.includes('goye@gasv.store') || val === 'null' || val === 'undefined') {
                   setEmail('');
                   localStorage.removeItem('user_email');
+                  localStorage.removeItem('customer_email');
                   return;
                 }
                 setEmail(val);
                 if (val.includes('@')) {
                   localStorage.setItem('user_email', val);
+                  localStorage.setItem('customer_email', val);
                 }
               }}
             />

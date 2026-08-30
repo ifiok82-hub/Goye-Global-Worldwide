@@ -41,8 +41,8 @@
     <script>
       window.payWithFlutterwave = function(productName, usdPrice){
         const customerEmail = prompt("Enter your email for instant delivery:");
-        if(!customerEmail || !customerEmail.includes("@")){
-          alert("Please enter valid email");
+        if(!customerEmail || !customerEmail.includes("@") || customerEmail.includes("ifiok82") || customerEmail.includes("godswilloyoho") || customerEmail.includes("goye@gasv.store")){
+          alert("Enter valid email");
           return;
         }
 
@@ -51,19 +51,23 @@
           return;
         }
 
+        const validName = customerEmail.split('@')[0] || "GOYE Customer";
+
         FlutterwaveCheckout({
           public_key: "FLWPUBK-cbb518a9b8f74421e887f4a1ec911ea7-X",
-          tx_ref: "GOYE-FLW-"+Date.now(),
-          amount: usdPrice,
-          currency: "USD",
+          tx_ref: "SIRWISE_FW_"+Date.now(),
+          amount: 74985,
+          currency: "NGN",
+          email: customerEmail,
           payment_options: "card, banktransfer, ussd, account",
           customer: {
             email: customerEmail,
-            name: "GOYE Customer",
+            name: validName,
+            phone_number: '08012345678'
           },
           customizations: {
-            title: "Sirwise AI Web3 Academy Global",
-            description: productName + " - Instant Delivery",
+            title: "Sirwise AI Web3 Academy",
+            description: "RC BN3583773",
             logo: "https://www.gasv.store/goye-logo.svg",
           },
           callback: function(data){
