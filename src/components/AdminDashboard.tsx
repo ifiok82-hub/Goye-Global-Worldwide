@@ -67,15 +67,45 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
   useEffect(() => {
     loadLocalData();
     
-    // For legacy/payouts still from firestore if needed, but we don't strictly need them
+    // Real-time Firestore stats listener
+    const unsubStats = onSnapshot(doc(db, 'stats_global', 'global'), (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        const exclude = localStorage.getItem('exclude_my_clicks') !== 'false';
+        if (!exclude && data.total_clicks !== undefined) {
+          setTotalClicks(data.total_clicks);
+        }
+      }
+    }, (e) => console.warn('Firestore stats snapshot warning:', e));
+
+    // Real-time Firestore global traffic log listener across 190+ countries
+    const unsubTraffic = onSnapshot(collection(db, 'traffic_log_global'), (snapshot) => {
+      const logs: any[] = [];
+      snapshot.forEach(docSnap => {
+        logs.push({ id: docSnap.id, ...docSnap.data() });
+      });
+      // Sort descending by timestamp / createdAt
+      logs.sort((a, b) => new Date(b.timestamp || b.createdAt || 0).getTime() - new Date(a.timestamp || a.createdAt || 0).getTime());
+      
+      const exclude = localStorage.getItem('exclude_my_clicks') !== 'false';
+      const filtered = exclude
+        ? logs.filter((entry: any) => !entry.is_admin && !entry.isAdmin && !String(entry.customerName || entry.customer_name).includes('Admin'))
+        : logs;
+
+      setPageViews(filtered);
+      setTotalClicks(filtered.length);
+    }, (e) => console.warn('Firestore global traffic log snapshot warning:', e));
+
     const unsubPayouts = onSnapshot(collection(db, 'payout_requests'), (snap) => {
       setPayouts(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     });
     
     return () => {
+      unsubStats();
+      unsubTraffic();
       unsubPayouts();
     };
-  }, []);
+  }, [excludeMyClicks]);
 
   const handleToggleExclude = () => {
     const newVal = !excludeMyClicks;
@@ -101,11 +131,14 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
     }
   };
 
-  const handleResetClicks = () => {
+  const handleResetClicks = async () => {
     localStorage.setItem('total_clicks', '0');
     localStorage.setItem('traffic_log', '[]');
     setTotalClicks(0);
     setPageViews([]);
+    try {
+      await setDoc(doc(db, 'stats_global', 'global'), { total_clicks: 0 }, { merge: true });
+    } catch (e) {}
     showToast('✅ Clicks reset to 0 - Admin clicks excluded - True location will show Lagos for you when exclude OFF');
   };
 

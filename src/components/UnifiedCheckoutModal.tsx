@@ -127,14 +127,17 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
     }
     localStorage.setItem('user_email', userEmail);
     localStorage.setItem('customer_email', userEmail);
+
+    const paystackAmount = userCurrency === 'USD' ? 4999 : Math.round(priceNGN * 100);
+    const paystackCurrency = userCurrency === 'USD' ? 'USD' : 'NGN';
     
     if (typeof (window as any).PaystackPop !== 'undefined') {
       try {
         const handler = (window as any).PaystackPop.setup({
           key: paymentConfig?.paystack || localStorage.getItem('paystack_public_key') || 'pk_test_156001099688463994a500b3e6480b',
           email: userEmail,
-          amount: Math.round(priceNGN * 100),
-          currency: 'NGN',
+          amount: paystackAmount,
+          currency: paystackCurrency,
           ref: 'SIRWISE_' + Math.floor(Math.random() * 1000000000) + '_' + Date.now(),
           metadata: {
             custom_fields: [
@@ -153,11 +156,11 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
         handler.openIframe();
       } catch (e) {
         console.error('Paystack error, falling back', e);
-        window.open(`https://paystack.com/pay/sirwise-academy?email=${encodeURIComponent(userEmail)}`, '_blank');
+        window.open(`https://paystack.com/pay/sirwise-academy?email=${encodeURIComponent(userEmail)}&amount=4999`, '_blank');
         handleSuccess('PAYSTACK-' + Date.now(), 'Paystack');
       }
     } else {
-      window.open(`https://paystack.com/pay/sirwise-academy?email=${encodeURIComponent(userEmail)}`, '_blank');
+      window.open(`https://paystack.com/pay/sirwise-academy?email=${encodeURIComponent(userEmail)}&amount=4999`, '_blank');
       handleSuccess('PAYSTACK-' + Date.now(), 'Paystack');
     }
   };

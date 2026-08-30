@@ -357,13 +357,33 @@ export default function App() {
           location: locationStr,
           customerName,
           customer_name: customerName,
+          email: userEmail || 'guest@gasv.store',
           is_admin: isAdminUser,
           path: window.location.hash || window.location.pathname || '/',
           page: window.location.hash || window.location.pathname || '/',
           timestamp: new Date().toISOString(),
           time: new Date().toLocaleTimeString(),
-          device: /Mobi|Android/i.test(navigator.userAgent) ? 'Phone' : 'Desktop'
+          device: /Mobi|Android/i.test(navigator.userAgent) ? 'Phone' : 'Desktop',
+          global: true
         };
+
+        // Save to global Firestore for 190+ countries real-time admin sync
+        try {
+          await addDoc(collection(db, 'traffic_log_global'), {
+            ...pageView,
+            createdAt: new Date().toISOString()
+          });
+
+          const statsRef = doc(db, 'stats_global', 'global');
+          await setDoc(statsRef, {
+            total_clicks: increment(1),
+            last_click: new Date().toISOString(),
+            last_location: locationStr,
+            last_customer: customerName
+          }, { merge: true });
+        } catch (fsErr) {
+          console.warn('Firestore global tracking write warning:', fsErr);
+        }
 
         let logs = JSON.parse(localStorage.getItem('traffic_log') || '[]');
         logs.unshift(pageView);
