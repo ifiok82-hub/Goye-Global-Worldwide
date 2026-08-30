@@ -56,10 +56,12 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
         entry.isAdmin !== true && 
         !String(entry.customerName || entry.customer_name).includes('Admin')
       );
+      setPageViews(localTraffic);
+      setTotalClicks(localTraffic.length);
+    } else {
+      setPageViews(localTraffic);
+      setTotalClicks(parseInt(localStorage.getItem('total_clicks') || '0'));
     }
-    setPageViews(localTraffic);
-    
-    setTotalClicks(parseInt(localStorage.getItem('total_clicks') || '0'));
   };
 
   useEffect(() => {
