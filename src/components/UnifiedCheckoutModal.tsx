@@ -3,7 +3,14 @@ import { X, ShieldCheck, Lock, Copy, CheckCircle, RefreshCw, ChevronRight, Zap, 
 
 export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, onToast }: any) {
   const [activeGateway, setActiveGateway] = useState<string | null>(null);
-  const [email, setEmail] = useState(() => localStorage.getItem('user_email') || localStorage.getItem('pupil_email') || '');
+  const [email, setEmail] = useState(() => {
+    const saved = localStorage.getItem('user_email') || localStorage.getItem('pupil_email') || '';
+    if (saved === 'ifiok82@gmail.com') {
+      localStorage.removeItem('user_email');
+      return '';
+    }
+    return saved;
+  });
   const [cryptoTxHash, setCryptoTxHash] = useState('');
   const [bankRef, setBankRef] = useState('');
   const [cryptoVerifying, setCryptoVerifying] = useState(false);
@@ -112,13 +119,14 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
 
   const payWithPaystack = () => {
     const userEmail = email.trim() || localStorage.getItem('user_email') || '';
-    if (!userEmail || !userEmail.includes('@')) {
-      alert('Please enter your email address for delivery first!');
+    if (!userEmail || !userEmail.includes('@') || userEmail === 'ifiok82@gmail.com') {
+      alert('Please enter YOUR email address for delivery - Not admin email! Enter customer email.');
       const emailInput = document.querySelector('input[type="email"]') as HTMLInputElement;
       if (emailInput) emailInput.focus();
       return;
     }
     localStorage.setItem('user_email', userEmail);
+    localStorage.setItem('customer_email', userEmail);
     
     if (typeof (window as any).PaystackPop !== 'undefined') {
       try {
@@ -145,23 +153,25 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
         handler.openIframe();
       } catch (e) {
         console.error('Paystack error, falling back', e);
+        window.open(`https://paystack.com/pay/sirwise-academy?email=${encodeURIComponent(userEmail)}`, '_blank');
         handleSuccess('PAYSTACK-' + Date.now(), 'Paystack');
       }
     } else {
-      window.open('https://paystack.com/pay/sirwise-academy', '_blank');
+      window.open(`https://paystack.com/pay/sirwise-academy?email=${encodeURIComponent(userEmail)}`, '_blank');
       handleSuccess('PAYSTACK-' + Date.now(), 'Paystack');
     }
   };
 
   const payWithFlutterwave = () => {
     const userEmail = email.trim() || localStorage.getItem('user_email') || '';
-    if (!userEmail || !userEmail.includes('@')) {
-      alert('Please enter your email address for delivery first!');
+    if (!userEmail || !userEmail.includes('@') || userEmail === 'ifiok82@gmail.com') {
+      alert('Please enter YOUR email address for delivery - Not admin email! Enter customer email.');
       const emailInput = document.querySelector('input[type="email"]') as HTMLInputElement;
       if (emailInput) emailInput.focus();
       return;
     }
     localStorage.setItem('user_email', userEmail);
+    localStorage.setItem('customer_email', userEmail);
     
     if (typeof (window as any).FlutterwaveCheckout !== 'undefined') {
       try {
@@ -297,10 +307,21 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
             <label className="block text-xs font-bold text-gray-400 mb-2 uppercase">Your Email Address (for delivery)</label>
             <input 
               type="email" 
-              placeholder="e.g. parent@example.com" 
-              className="w-full bg-black border border-[#333] p-4 rounded-xl text-white mb-6 focus:border-[#FFD700] outline-none text-sm"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
+              placeholder="Enter your email address for delivery" 
+              className="w-full bg-black border border-[#333] p-4 rounded-xl text-white mb-6 focus:border-[#FFD700] outline-none text-sm font-medium"
+              value={email === 'ifiok82@gmail.com' ? '' : email}
+              onChange={e => {
+                const val = e.target.value;
+                if (val === 'ifiok82@gmail.com') {
+                  setEmail('');
+                  localStorage.removeItem('user_email');
+                  return;
+                }
+                setEmail(val);
+                if (val.includes('@')) {
+                  localStorage.setItem('user_email', val);
+                }
+              }}
             />
             <p className="text-gray-400 text-xs leading-relaxed mb-4">You are purchasing a digital product. Instantly delivered to your email and downloads section.</p>
           </div>
@@ -314,31 +335,126 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
           {!activeGateway ? (
             <div>
               <p className="text-xs text-gray-400 text-center mb-6 uppercase tracking-widest font-bold">Choose Payment Method</p>
-              <div className="space-y-2">
-                <button onClick={payWithPaystack} className="bg-[#FFD700] text-black font-bold h-[50px] w-full mt-2 rounded-[12px] flex items-center justify-center gap-2 cursor-pointer pointer-events-auto z-10 hover:bg-[#ffe033] transition">
-                  Pay with Paystack (Global Cards)
+              <div className="space-y-3">
+                <button 
+                  onClick={payWithPaystack} 
+                  style={{
+                    background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+                    color: '#000',
+                    fontWeight: '800',
+                    fontSize: '15px',
+                    height: '56px',
+                    width: '100%',
+                    borderRadius: '16px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    pointerEvents: 'auto',
+                    zIndex: 10,
+                    position: 'relative',
+                    touchAction: 'manipulation',
+                    boxShadow: '0 4px 12px rgba(255, 215, 0, 0.3)'
+                  }}
+                  className="flex items-center justify-center gap-2 hover:brightness-110 transition active:scale-[0.98]"
+                >
+                  <span>💳</span> Pay with Paystack (Global Cards)
                 </button>
-                <button onClick={payWithFlutterwave} className="bg-[#FFD700] text-black font-bold h-[50px] w-full mt-2 rounded-[12px] flex items-center justify-center gap-2 cursor-pointer pointer-events-auto z-10 hover:bg-[#ffe033] transition">
-                  Flutterwave (Africa Cards)
+                <button 
+                  onClick={payWithFlutterwave} 
+                  style={{
+                    background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+                    color: '#000',
+                    fontWeight: '800',
+                    fontSize: '15px',
+                    height: '56px',
+                    width: '100%',
+                    borderRadius: '16px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    pointerEvents: 'auto',
+                    zIndex: 10,
+                    position: 'relative',
+                    touchAction: 'manipulation',
+                    boxShadow: '0 4px 12px rgba(255, 215, 0, 0.3)'
+                  }}
+                  className="flex items-center justify-center gap-2 hover:brightness-110 transition active:scale-[0.98]"
+                >
+                  <span>🌍</span> Flutterwave (Africa Cards)
                 </button>
-                <button onClick={() => setActiveGateway('crypto')} className="bg-[#FFD700] text-black font-bold h-[50px] w-full mt-2 rounded-[12px] flex items-center justify-center gap-2 cursor-pointer pointer-events-auto z-10 hover:bg-[#ffe033] transition">
-                  USDC Crypto (Solana / EVM)
+                <button 
+                  onClick={() => setActiveGateway('crypto')} 
+                  style={{
+                    background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+                    color: '#000',
+                    fontWeight: '800',
+                    fontSize: '15px',
+                    height: '56px',
+                    width: '100%',
+                    borderRadius: '16px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    pointerEvents: 'auto',
+                    zIndex: 10,
+                    position: 'relative',
+                    touchAction: 'manipulation',
+                    boxShadow: '0 4px 12px rgba(255, 215, 0, 0.3)'
+                  }}
+                  className="flex items-center justify-center gap-2 hover:brightness-110 transition active:scale-[0.98]"
+                >
+                  <span>🦊</span> USDC Crypto (Ethereum - Metamask)
                 </button>
-                <button onClick={() => setActiveGateway('pi')} className="bg-[#FFD700] text-black font-bold h-[50px] w-full mt-2 rounded-[12px] flex items-center justify-center gap-2 cursor-pointer pointer-events-auto z-10 hover:bg-[#ffe033] transition">
-                  Pi Network GCV $314,159
+                <button 
+                  onClick={() => setActiveGateway('pi')} 
+                  style={{
+                    background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+                    color: '#000',
+                    fontWeight: '800',
+                    fontSize: '15px',
+                    height: '56px',
+                    width: '100%',
+                    borderRadius: '16px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    pointerEvents: 'auto',
+                    zIndex: 10,
+                    position: 'relative',
+                    touchAction: 'manipulation',
+                    boxShadow: '0 4px 12px rgba(255, 215, 0, 0.3)'
+                  }}
+                  className="flex items-center justify-center gap-2 hover:brightness-110 transition active:scale-[0.98]"
+                >
+                  <span>🟣</span> Pi Network GCV $314,159
                 </button>
-                <button onClick={() => { setActiveGateway('bank'); setBankSubmitted(false); }} className="w-full h-[50px] bg-[#FFD700] text-black font-bold rounded-xl flex items-center justify-center pointer-events-auto cursor-pointer hover:bg-[#ffe033] transition mt-2">
-                  Bank / OPay / Card Transfer
+                <button 
+                  onClick={() => { setActiveGateway('bank'); setBankSubmitted(false); }} 
+                  style={{
+                    background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+                    color: '#000',
+                    fontWeight: '800',
+                    fontSize: '15px',
+                    height: '56px',
+                    width: '100%',
+                    borderRadius: '16px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    pointerEvents: 'auto',
+                    zIndex: 10,
+                    position: 'relative',
+                    touchAction: 'manipulation',
+                    boxShadow: '0 4px 12px rgba(255, 215, 0, 0.3)'
+                  }}
+                  className="flex items-center justify-center gap-2 hover:brightness-110 transition active:scale-[0.98]"
+                >
+                  <span>🏦</span> Bank / OPay / Card Transfer
                 </button>
               </div>
             </div>
           ) : activeGateway === 'crypto' ? (
             <div className="animate-in fade-in slide-in-from-right-4">
-              <h3 className="text-[#10B981] font-bold mb-4">Pay with Crypto (USDC)</h3>
-              <p className="text-gray-400 text-xs mb-4">Send exactly <strong>${priceUSD} USDC</strong> to this address:</p>
+              <h3 className="text-[#10B981] font-bold text-lg mb-4">Pay with Crypto USDC (Ethereum - MetaMask)</h3>
+              <p className="text-gray-300 text-xs mb-4">Send exactly <strong className="text-[#10B981]">${priceUSD} USDC</strong> (Ethereum ERC20 / EVM) to this address:</p>
               <div className="bg-black p-3 rounded-xl border border-[#333] flex justify-between items-center mb-4">
-                <span className="text-white text-sm font-mono truncate">{paymentConfig?.crypto || localStorage.getItem('crypto_wallet') || '0xaeed4e48f2146aadd07e85219f209053616e4'}</span>
-                <button onClick={() => { navigator.clipboard.writeText(paymentConfig?.crypto || localStorage.getItem('crypto_wallet') || '0xaeed4e48f2146aadd07e85219f209053616e4'); if(onToast) onToast('Wallet address copied!'); else alert('Wallet address copied!'); }} className="text-gray-400 hover:text-white p-1"><Copy size={16}/></button>
+                <span className="text-white text-xs font-mono truncate">{paymentConfig?.crypto || localStorage.getItem('crypto_wallet') || '0xaeed4e48f2146aadd07e85219f209053616e4'}</span>
+                <button onClick={() => { navigator.clipboard.writeText(paymentConfig?.crypto || localStorage.getItem('crypto_wallet') || '0xaeed4e48f2146aadd07e85219f209053616e4'); if(onToast) onToast('Wallet address copied!'); else alert('Wallet address copied!'); }} className="text-gray-400 hover:text-white p-1 cursor-pointer"><Copy size={16}/></button>
               </div>
               <input 
                 placeholder="Paste Tx Hash here" 
@@ -346,11 +462,11 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                 value={cryptoTxHash}
                 onChange={e => setCryptoTxHash(e.target.value)}
               />
-              <button onClick={submitCrypto} disabled={cryptoVerifying} className="w-full bg-[#10B981] text-black font-bold py-3 rounded-xl mb-4 disabled:opacity-50 cursor-pointer pointer-events-auto z-10">
-                {cryptoVerifying ? 'Verifying...' : 'Submit Tx for Verification'}
+              <button onClick={submitCrypto} disabled={cryptoVerifying} className="w-full bg-[#10B981] text-black font-bold py-3.5 rounded-xl mb-4 disabled:opacity-50 cursor-pointer pointer-events-auto z-10 shadow-lg">
+                {cryptoVerifying ? 'Verifying on-chain...' : 'Submit Tx for Verification'}
               </button>
-              <p className="text-gray-500 text-[10px] text-center">⚠️ Verified on-chain to confirm transaction before auto-unlocking.</p>
-              <button onClick={() => setActiveGateway(null)} className="mt-4 text-gray-400 text-xs underline block mx-auto cursor-pointer pointer-events-auto">Back to Methods</button>
+              <p className="text-gray-500 text-[10px] text-center">⚠️ Verified on-chain via EVM to confirm transaction before auto-unlocking.</p>
+              <button onClick={() => setActiveGateway(null)} className="mt-4 text-gray-400 text-xs underline block mx-auto cursor-pointer pointer-events-auto hover:text-white">Back to Methods</button>
             </div>
           ) : activeGateway === 'bank' ? (
             <div className="animate-in fade-in slide-in-from-right-4">
