@@ -38,14 +38,18 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
   const localPrice = displayPrice;
 
   useEffect(() => {
-    let enrolled = false;
-    if (localStorage.getItem('sirwise_paid') === 'true' && localStorage.getItem('payment_verified') === 'true') {
-      enrolled = true;
+    const isPaid = localStorage.getItem('sirwise_paid') === 'true';
+    const isVerified = localStorage.getItem('payment_verified') === 'true';
+    const isUnlocked = localStorage.getItem('academy_unlocked') === 'true';
+
+    if (isPaid || isVerified || isUnlocked) {
       setIsEnrolled(true);
       const localKey = `goye_academy_progress_${currentUser?.uid || 'guest'}`;
       const localData = localStorage.getItem(localKey);
       if (localData) {
-        setProgress(JSON.parse(localData).progress || []);
+        setProgress(JSON.parse(localData).progress || [1, 2, 3, 4]);
+      } else {
+        setProgress([1, 2, 3, 4]);
       }
     }
     setLoading(false);

@@ -902,7 +902,7 @@ export default function App() {
             </a>
     
 
-            <a href="mailto:goye@gasv.store" className="bg-black rounded-xl p-4 flex items-center justify-between hover:border-[#FFD700] border border-transparent transition">
+            <a href="mailto:goyedagosmess@gmail.com" className="bg-black rounded-xl p-4 flex items-center justify-between hover:border-[#FFD700] border border-transparent transition">
               <div className="flex items-center gap-4">
                 <Mail className="text-[#3b82f6]" size={20}/>
                 <span className="text-gray-300 text-[13px]">Email</span>

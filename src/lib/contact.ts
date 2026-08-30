@@ -1,6 +1,6 @@
 // GOYE Support & Contact Helper
 
-export const GOYE_SUPPORT_EMAIL = 'goye@gasv.store';
+export const GOYE_SUPPORT_EMAIL = 'goyedagosmess@gmail.com';
 export const GOYE_WEBSITE_URL = 'https://www.gasv.store';
 export const GOYE_BUSINESS_PHONE = '2348033584736'; // GOYE Official Business WhatsApp (never displayed raw in UI)
 

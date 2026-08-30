@@ -227,6 +227,24 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
     }
   };
 
+  const connectMetaMask = async () => {
+    if (typeof (window as any).ethereum !== 'undefined') {
+      try {
+        const accounts = await (window as any).ethereum.request({ method: 'eth_requestAccounts' });
+        if (accounts && accounts[0]) {
+          const addr = accounts[0];
+          setCryptoTxHash('EVM-' + addr.slice(0, 8) + '...' + addr.slice(-6));
+          if (onToast) onToast(`MetaMask Connected: ${addr.slice(0, 6)}...${addr.slice(-4)}`);
+          else alert(`MetaMask Connected: ${addr}`);
+        }
+      } catch (e: any) {
+        alert('MetaMask notice: ' + (e.message || 'Could not connect wallet'));
+      }
+    } else {
+      alert('MetaMask not detected in browser. Please copy the wallet address or open in MetaMask app browser.');
+    }
+  };
+
   const submitCrypto = () => {
     if (!cryptoTxHash) {
       if (onToast) onToast('Please enter transaction hash or reference');
@@ -478,6 +496,9 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                 <span className="text-white text-xs font-mono truncate">{paymentConfig?.crypto || localStorage.getItem('crypto_wallet') || '0xaeed4e48f2146aadd07e85219f209053616e4'}</span>
                 <button onClick={() => { navigator.clipboard.writeText(paymentConfig?.crypto || localStorage.getItem('crypto_wallet') || '0xaeed4e48f2146aadd07e85219f209053616e4'); if(onToast) onToast('Wallet address copied!'); else alert('Wallet address copied!'); }} className="text-gray-400 hover:text-white p-1 cursor-pointer"><Copy size={16}/></button>
               </div>
+              <button onClick={connectMetaMask} className="w-full bg-[#1e293b] text-[#38bdf8] border border-[#38bdf8]/40 font-bold py-2.5 rounded-xl mb-3 flex items-center justify-center gap-2 cursor-pointer pointer-events-auto hover:bg-[#334155] transition">
+                <span>🦊</span> Connect MetaMask Wallet (window.ethereum)
+              </button>
               <input 
                 placeholder="Paste Tx Hash here" 
                 className="w-full bg-black border border-[#333] p-3 rounded-xl text-white mb-4 focus:border-[#10B981] outline-none text-sm"

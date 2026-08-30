@@ -32,7 +32,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
   const [settings, setSettings] = useState({
     freeQueries: 3,
     referralCommission: 20,
-    contactEmail: 'goye@gasv.store'
+    contactEmail: 'goyedagosmess@gmail.com'
   });
 
   const [excludeMyClicks, setExcludeMyClicks] = useState(localStorage.getItem('exclude_my_clicks') !== 'false');
@@ -140,6 +140,17 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
       await setDoc(doc(db, 'stats_global', 'global'), { total_clicks: 0 }, { merge: true });
     } catch (e) {}
     showToast('✅ Clicks reset to 0 - Admin clicks excluded - True location will show Lagos for you when exclude OFF');
+  };
+
+  const handleAdminTestingUnlock = () => {
+    localStorage.setItem('sirwise_paid', 'true');
+    localStorage.setItem('payment_verified', 'true');
+    localStorage.setItem('academy_unlocked', 'true');
+    localStorage.setItem('is_admin', 'true');
+    localStorage.setItem('goye_academy_progress_guest', JSON.stringify({ isEnrolled: true, progress: [1, 2, 3, 4] }));
+    alert('🔓 Admin unlocked 100% testing - customers still need $49.99');
+    console.log('Admin unlocked 100% testing mode');
+    window.location.hash = '#academy';
   };
 
   const handleResetRegistered = () => {
@@ -314,6 +325,9 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
           </div>
           
           <div className="flex gap-2 flex-wrap mb-4 z-5 relative">
+              <button onClick={handleAdminTestingUnlock} className="h-[40px] rounded-[8px] border border-[#FFD700] bg-[#FFD700] text-black px-4 flex items-center gap-2 pointer-events-auto cursor-pointer hover:bg-yellow-400 text-xs font-black transition shadow-lg">
+                 🔓 Admin Testing Unlock (100%)
+              </button>
               <button onClick={handleResetClicks} className="h-[40px] rounded-[8px] border border-red-500 bg-[#111] text-white px-4 flex items-center gap-2 pointer-events-auto cursor-pointer hover:bg-red-500/20 text-xs font-bold transition">
                  🗑️ Reset Clicks to 0
               </button>

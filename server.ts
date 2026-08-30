@@ -1918,7 +1918,7 @@ app.post('/api/payments/payoneer/payout', async (req, res) => {
 // Merchant Notification & Order Fulfillment Engine
 // -------------------------------------------------------------------------
 
-const MERCHANT_EMAIL = process.env.MERCHANT_NOTIFICATION_EMAIL || 'goye@gasv.store';
+const MERCHANT_EMAIL = process.env.MERCHANT_NOTIFICATION_EMAIL || 'goyedagosmess@gmail.com';
 
 interface PurchaseNotificationPayload {
   productName: string;
@@ -1931,7 +1931,7 @@ interface PurchaseNotificationPayload {
   unlockedAccess?: string;
 }
 
-// 1. Purchase Notification Dispatcher (Email to goye@gasv.store + Customer Receipt + Telegram)
+// 1. Purchase Notification Dispatcher (Email to goyedagosmess@gmail.com + Customer Receipt + Telegram)
 async function sendMerchantPurchaseNotification(payload: PurchaseNotificationPayload) {
   const { productName, amount, currency, customerEmail, txId, timestamp, gateway, unlockedAccess } = payload;
   
@@ -1941,7 +1941,7 @@ async function sendMerchantPurchaseNotification(payload: PurchaseNotificationPay
   const resendApiKey = process.env.RESEND_API_KEY;
   const isResendConfigured = resendApiKey && !resendApiKey.includes('123456789');
 
-  // A. Dispatch Merchant Purchase Alert Email to goye@gasv.store
+  // A. Dispatch Merchant Purchase Alert Email to goyedagosmess@gmail.com
   let merchantEmailSent = false;
   if (isResendConfigured) {
     try {
@@ -2170,19 +2170,19 @@ interface EsimProvisionResult {
 async function provisionEsimAccess(productName: string, customerEmail: string, orderRef: string): Promise<EsimProvisionResult> {
   console.log(`📋 [eSIM MANUAL FULFILLMENT ENGINE] Processing orderRef: ${orderRef} | Product: ${productName} | Customer: ${customerEmail}`);
 
-  const email = customerEmail || 'goye@gasv.store';
+  const email = customerEmail || 'goyedagosmess@gmail.com';
   const placeholderLpa = `LPA:1$SMDP.GOYE.ESIM$GOYE-${orderRef}`;
   const placeholderQr = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent('Generating REAL eSIM QR... Check email in 2 mins. Ref: ' + orderRef)}`;
 
   // Send admin notification
   try {
-    await fetch("https://formsubmit.co/ajax/goye@gasv.store", {
+    await fetch("https://formsubmit.co/ajax/goyedagosmess@gmail.com", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         _cc: "goyedagosmess@gmail.com",
         subject: `NEW eSIM ORDER RECEIVED - ${productName} - Ref: ${orderRef}`,
-        message: `NEW eSIM ORDER RECEIVED (MANUAL FULFILLMENT MODE)\n\nProduct Name: ${productName}\nOrder Ref: ${orderRef}\nCustomer Email: ${email}\n\nADMIN FULFILLMENT INSTRUCTIONS:\n1. Go to https://partner.esimcard.com\n2. Buy Packages -> ${productName}\n3. Pay with $9.40 balance\n4. Email generated QR Code to ${email}\n\nMerchant Copies Sent To:\n- goye@gasv.store\n- goyedagosmess@gmail.com`
+        message: `NEW eSIM ORDER RECEIVED (MANUAL FULFILLMENT MODE)\n\nProduct Name: ${productName}\nOrder Ref: ${orderRef}\nCustomer Email: ${email}\n\nADMIN FULFILLMENT INSTRUCTIONS:\n1. Go to https://partner.esimcard.com\n2. Buy Packages -> ${productName}\n3. Pay with $9.40 balance\n4. Email generated QR Code to ${email}\n\nMerchant Copies Sent To:\n- goyedagosmess@gmail.com\n- goyedagosmess@gmail.com`
       })
     });
   } catch (err: any) {
@@ -2465,7 +2465,7 @@ app.post('/api/webhooks/payment', async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: 'Payment verified, order COMPLETED, access unlocked, and merchant purchase alert dispatched to goye@gasv.store.',
+      message: 'Payment verified, order COMPLETED, access unlocked, and merchant purchase alert dispatched to goyedagosmess@gmail.com.',
       order: completedOrder
     });
   } catch (err: any) {
@@ -2677,7 +2677,7 @@ app.get('/api/esimcard/packages', async (req, res) => {
 // POST /api/esimcard/order - Order an eSIM package via eSIMCard.com Partner API
 app.post('/api/esimcard/order', async (req, res) => {
   const { package_code, productName, customer_email, customerEmail, order_ref, orderRef } = req.body || {};
-  const email = customer_email || customerEmail || 'goye@gasv.store';
+  const email = customer_email || customerEmail || 'goyedagosmess@gmail.com';
   const ref = order_ref || orderRef || `GOYE-ESIM-${Date.now()}`;
   const pkgName = productName || package_code || 'eSIM Package';
 
@@ -2702,13 +2702,13 @@ app.post('/api/esimcard/order', async (req, res) => {
 
   // Dispatch Email Notifications to admins and customer via FormSubmit
   try {
-    await fetch("https://formsubmit.co/ajax/goye@gasv.store", {
+    await fetch("https://formsubmit.co/ajax/goyedagosmess@gmail.com", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         _cc: "goyedagosmess@gmail.com",
         subject: `NEW eSIM ORDER RECEIVED - ${pkgName} - Ref: ${ref}`,
-        message: `NEW eSIM ORDER RECEIVED (MANUAL FULFILLMENT MODE)\n\nPackage: ${pkgName}\nOrder Ref: ${ref}\nCustomer Email: ${email}\n\nADMIN FULFILLMENT INSTRUCTIONS:\n1. Open https://partner.esimcard.com\n2. Buy Packages -> ${pkgName}\n3. Pay with $9.40 balance\n4. Email generated QR Code to ${email}\n\nMerchant Copies Sent To:\n- goye@gasv.store\n- goyedagosmess@gmail.com`
+        message: `NEW eSIM ORDER RECEIVED (MANUAL FULFILLMENT MODE)\n\nPackage: ${pkgName}\nOrder Ref: ${ref}\nCustomer Email: ${email}\n\nADMIN FULFILLMENT INSTRUCTIONS:\n1. Open https://partner.esimcard.com\n2. Buy Packages -> ${pkgName}\n3. Pay with $9.40 balance\n4. Email generated QR Code to ${email}\n\nMerchant Copies Sent To:\n- goyedagosmess@gmail.com\n- goyedagosmess@gmail.com`
       })
     });
   } catch (fsErr: any) {
