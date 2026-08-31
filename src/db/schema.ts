@@ -46,3 +46,12 @@ export const academyAccess = pgTable('academy_access', {
   hasFullAccess: boolean('has_full_access').default(false),
   createdAt: timestamp('created_at').defaultNow(),
 });
+
+export const leads = pgTable('leads', {
+  id: serial('id').primaryKey(),
+  email: text('email').notNull().unique(),
+  createdAt: timestamp('created_at').defaultNow(),
+  sourceDomain: text('source_domain'),
+  convertedToBuyer: boolean('converted_to_buyer').default(false),
+});
+

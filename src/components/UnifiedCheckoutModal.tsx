@@ -36,8 +36,8 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
   const displaySymbol = currentCurrency.symbol || '$';
   const displayPrice = (priceUSD * currentCurrency.rate).toFixed(2);
   const localPrice = displayPrice;
-  const priceNGN = priceUSD * 1500;
-  const nairaAmount = priceNGN === 74985 || priceUSD === 49.99 ? '74,985.00' : priceNGN.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const priceNGN = (priceUSD === 3.00 || product?.id === 'web3-starter-toolkit') ? 2500 : (priceUSD === 19.99 ? 29900 : (priceUSD === 49.99 ? 74985 : priceUSD * 1500));
+  const nairaAmount = priceNGN.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   
   const formSubmitId = 'b5ff137904e20ed9fbad829a69fc150b';
   
@@ -173,8 +173,8 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
       localStorage.getItem('paystack_public_key') || 
       'pk_live_9f7e06b21fa6dc4e3e94cc00c74587c01249a89b';
 
-    const nairaPrice = Math.round(priceUSD * 1550);
-    const amountInKobo = nairaPrice * 100; // e.g., 7498500 kobo for NGN 74,985
+    const nairaPrice = Math.round(priceNGN);
+    const amountInKobo = nairaPrice * 100; // e.g., 250000 kobo for NGN 2,500
 
     if (typeof (window as any).PaystackPop !== 'undefined' && typeof (window as any).PaystackPop.setup === 'function') {
       try {

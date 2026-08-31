@@ -7,6 +7,8 @@ import { ALL_PRODUCTS } from './data';
 import UnifiedCheckoutModal from './components/UnifiedCheckoutModal';
 import AcademyDashboard from './components/AcademyDashboard';
 import EsimVideoModal from './components/EsimVideoModal';
+import FreeLeadMagnetModal from './components/FreeLeadMagnetModal';
+import PostPurchaseUpsellModal from './components/PostPurchaseUpsellModal';
 
 import ScanModal from './components/ScanModal';
 import ReferralDashboardModal from './components/ReferralDashboardModal';
@@ -23,12 +25,18 @@ import { collection, onSnapshot, setDoc, doc, getDoc, updateDoc, increment, addD
 
 
 // Dummy components for things that were in App.tsx
-const HeroSection = ({ onLogoTap, onPlayVideo }: any) => (
+const HeroSection = ({ onLogoTap, onPlayVideo, onOpenLeadMagnet }: any) => (
   <div className="bg-[#0a0a0a] border border-[#FFD700] rounded-[2rem] p-6 text-center mt-6 relative mx-4 pointer-events-auto">
     <div className="flex flex-col gap-3 mb-8">
       <div className="bg-[#FFD700] text-black text-[11px] font-bold py-2 px-5 rounded-full mx-auto inline-flex items-center gap-2">
         <span className="text-yellow-600">⚡</span> 100% DIGITAL PRODUCTS STORE
       </div>
+      <button 
+        onClick={onOpenLeadMagnet}
+        className="bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 text-black font-black text-xs py-2 px-4 rounded-xl mx-auto inline-flex items-center gap-2 shadow-lg transition active:scale-95 cursor-pointer"
+      >
+        <span>🎁 Free Download: 5-Minute AI Prompt Blueprint</span>
+      </button>
     </div>
     
     <div onClick={onLogoTap} className="inline-block cursor-pointer w-full mb-8">
@@ -170,6 +178,33 @@ export default function App() {
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
+  const [showLeadMagnetModal, setShowLeadMagnetModal] = useState(false);
+  const [showPostPurchaseUpsellModal, setShowPostPurchaseUpsellModal] = useState(false);
+
+  // Auto-Trigger Lead Magnet (Timed or Exit Intent)
+  useEffect(() => {
+    const isCaptured = localStorage.getItem('sirwise_lead_captured') === 'true';
+    if (!isCaptured) {
+      const timer = setTimeout(() => {
+        if (!sessionStorage.getItem('lead_modal_dismissed')) {
+          setShowLeadMagnetModal(true);
+        }
+      }, 3500);
+
+      const handleMouseLeave = (e: MouseEvent) => {
+        if (e.clientY <= 10 && !sessionStorage.getItem('lead_modal_dismissed')) {
+          setShowLeadMagnetModal(true);
+        }
+      };
+
+      document.addEventListener('mouseleave', handleMouseLeave);
+
+      return () => {
+        clearTimeout(timer);
+        document.removeEventListener('mouseleave', handleMouseLeave);
+      };
+    }
+  }, []);
   const [currentCurrency, setCurrentCurrency] = useState(localStorage.getItem('goye_preferred_currency') || 'USD');
   const [exchangeRates, setExchangeRates] = useState(CURRENCIES);
 
@@ -665,12 +700,16 @@ export default function App() {
             )}
             {tab === 'home' && (
               <>
-                <HeroSection onLogoTap={() => {
-                  const newCount = adminTapCount + 1;
-                  setAdminTapCount(newCount);
-                  if (newCount >= 5) { setShowAdminLogin(true); setAdminTapCount(0); }
-                  setTimeout(() => setAdminTapCount(0), 3000);
-                }} />
+                <HeroSection 
+                  onOpenLeadMagnet={() => setShowLeadMagnetModal(true)}
+                  onLogoTap={() => {
+                    const newCount = adminTapCount + 1;
+                    setAdminTapCount(newCount);
+                    if (newCount >= 5) { setShowAdminLogin(true); setAdminTapCount(0); }
+                    setTimeout(() => setAdminTapCount(0), 3000);
+                  }} 
+                />
+
 
                 {/* Programs Section */}
                 <div id="programs-section" className="mt-8 mb-8 border-t border-[#333] pt-6 scroll-mt-24">
@@ -863,11 +902,45 @@ export default function App() {
 
       {selectedProduct && (
         <UnifiedCheckoutModal product={selectedProduct} paymentConfig={paymentConfig} onClose={() => {
+          const wasStarter = selectedProduct.id === 'web3-starter-toolkit' || selectedProduct.price <= 5.0;
           setSelectedProduct(null);
           const items = JSON.parse(localStorage.getItem('my_downloads') || '[]');
           setPurchasedItems(Array.isArray(items) ? items : []);
+          if (wasStarter && localStorage.getItem('sirwise_paid') === 'true') {
+            setShowPostPurchaseUpsellModal(true);
+          }
         }} onToast={showToast} />
       )}
+
+      <FreeLeadMagnetModal 
+        isOpen={showLeadMagnetModal} 
+        onClose={() => {
+          setShowLeadMagnetModal(false);
+          sessionStorage.setItem('lead_modal_dismissed', 'true');
+        }}
+        onClaimTripwire={() => {
+          setShowLeadMagnetModal(false);
+          setSelectedProduct(ALL_PRODUCTS[0]);
+        }}
+        onToast={showToast}
+      />
+
+      <PostPurchaseUpsellModal 
+        isOpen={showPostPurchaseUpsellModal}
+        onClose={() => setShowPostPurchaseUpsellModal(false)}
+        onAcceptUpsell={() => {
+          setShowPostPurchaseUpsellModal(false);
+          setSelectedProduct({
+            id: '1000-prompts-upsell',
+            name: '1000 Viral AI Prompts Mega-Pack (50% OFF UPGRADE)',
+            icon: '🤖',
+            price: 19.99,
+            category: 'prompts',
+            badge: 'SPECIAL UPGRADE (₦29,900)'
+          });
+        }}
+      />
+
 
       {showEsimVideoModal && <EsimVideoModal onClose={() => setShowEsimVideoModal(false)} />}
       

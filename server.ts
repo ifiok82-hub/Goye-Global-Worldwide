@@ -2266,6 +2266,14 @@ async function recordAndFulfillPurchase(params: {
         { upsert: true }
       );
 
+      // Mark matching lead as converted_to_buyer
+      if (customerEmail) {
+        await database.collection('leads').updateMany(
+          { email: customerEmail.trim().toLowerCase() },
+          { $set: { converted_to_buyer: true, convertedAt: timestamp } }
+        );
+      }
+
       // Record in 'user_access' collection for customer
       await database.collection('user_access').updateOne(
         { email: customerEmail, productName: productName },
@@ -3149,6 +3157,103 @@ app.post('/api/contact/email', async (req: any, res: any) => {
     return res.status(500).json({ success: false, message: err.message || 'Contact dispatch error' });
   }
 });
+
+// 5.5 API: Free Lead Magnet Capture & Management
+const inMemoryLeads: any[] = [];
+
+app.post('/api/leads', async (req: any, res: any) => {
+  try {
+    const { email, sourceDomain } = req.body || {};
+    if (!email || typeof email !== 'string' || !email.includes('@') || !email.includes('.')) {
+      return res.status(400).json({ success: false, message: 'Valid email address is required.' });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const domain = sourceDomain || 'gasv.store';
+    const createdAt = new Date().toISOString();
+    const leadId = `LEAD-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+
+    const leadDoc = {
+      id: leadId,
+      email: cleanEmail,
+      created_at: createdAt,
+      source_domain: domain,
+      converted_to_buyer: false
+    };
+
+    // Store in Database
+    try {
+      const database = await getDb();
+      if (database) {
+        await database.collection('leads').updateOne(
+          { email: cleanEmail },
+          { $setOnInsert: leadDoc },
+          { upsert: true }
+        );
+      }
+    } catch (e) {
+      console.warn('DB lead save warning:', e);
+    }
+
+    // In-memory array fallback
+    const existingIndex = inMemoryLeads.findIndex(l => l.email === cleanEmail);
+    if (existingIndex === -1) {
+      inMemoryLeads.unshift(leadDoc);
+    }
+
+    // Optional FormSubmit notification for admin
+    try {
+      fetch('https://formsubmit.co/ajax/b5ff137904e20ed9fbad829a69fc150b', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({
+          _subject: 'NEW LEAD CAPTURED: ' + cleanEmail + ' (' + domain + ')',
+          Email: cleanEmail,
+          Source: domain,
+          Date: createdAt
+        })
+      }).catch(() => {});
+    } catch (e) {}
+
+    return res.status(200).json({
+      success: true,
+      message: 'Lead captured successfully. Free instant access unlocked.',
+      lead: leadDoc,
+      downloadUrl: 'https://www.gasv.store/downloads/sirwise_ai_masterclass_v1.pdf'
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message || 'Lead capture failure' });
+  }
+});
+
+app.get(['/api/leads', '/api/admin/leads'], async (req: any, res: any) => {
+  try {
+    let dbLeads: any[] = [];
+    try {
+      const database = await getDb();
+      if (database) {
+        dbLeads = await database.collection('leads').find({}).sort({ created_at: -1 }).toArray();
+      }
+    } catch (e) {
+      console.warn('DB leads fetch warning:', e);
+    }
+
+    const allLeads = dbLeads.length > 0 ? dbLeads : inMemoryLeads;
+    const totalCount = allLeads.length;
+    const convertedCount = allLeads.filter(l => l.converted_to_buyer).length;
+
+    return res.status(200).json({
+      success: true,
+      leads: allLeads,
+      totalCount: totalCount,
+      convertedCount: convertedCount,
+      conversionRate: totalCount > 0 ? ((convertedCount / totalCount) * 100).toFixed(1) + '%' : '0%'
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message || 'Fetch leads failure' });
+  }
+});
+
 
 // 6. API: Paystack Direct Redirect Verification Handler
 app.get(['/payment/verify', '/api/payments/paystack/callback'], async (req: any, res: any) => {
