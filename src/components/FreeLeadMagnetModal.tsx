@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Sparkles, Download, ArrowRight, ShieldCheck, CheckCircle2, Zap } from 'lucide-react';
+import { X, Sparkles, Download, ArrowRight, ShieldCheck, CheckCircle2, Zap, Loader2 } from 'lucide-react';
 
 interface FreeLeadMagnetModalProps {
   isOpen: boolean;
@@ -17,7 +17,21 @@ export default function FreeLeadMagnetModal({ isOpen, onClose, onClaimTripwire, 
   if (!isOpen) return null;
 
   const validateEmail = (val: string) => {
-    return val && val.includes('@') && val.includes('.') && val.trim().length > 4;
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(val.trim());
+  };
+
+  const triggerPdfDownload = () => {
+    const downloadUrl = 'https://www.gasv.store/downloads/sirwise_ai_masterclass_v1.pdf';
+    
+    // Create hidden anchor for instant download trigger
+    const a = document.createElement('a');
+    a.href = downloadUrl;
+    a.target = '_blank';
+    a.download = '5-Minute-AI-Prompt-Blueprint.pdf';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
   const handleLeadSubmit = async (e: React.FormEvent) => {
@@ -26,19 +40,20 @@ export default function FreeLeadMagnetModal({ isOpen, onClose, onClaimTripwire, 
     
     const cleanEmail = email.trim();
     if (!validateEmail(cleanEmail)) {
-      setErrorMessage('Please enter a valid email address.');
+      setErrorMessage('Please enter a valid email address e.g. name@example.com');
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      // 1. Save lead to backend database
-      const response = await fetch('/api/leads', {
+      // 1. Send POST to /api/leads/subscribe
+      const response = await fetch('/api/leads/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: cleanEmail,
+          source: 'lead_magnet',
           sourceDomain: window.location.hostname || 'gasv.store'
         })
       });
@@ -50,14 +65,13 @@ export default function FreeLeadMagnetModal({ isOpen, onClose, onClaimTripwire, 
       localStorage.setItem('user_email', cleanEmail);
       localStorage.setItem('customer_email', cleanEmail);
 
-      // 3. Trigger instant PDF download
+      // 3. Trigger instant browser download & show success UI
       triggerPdfDownload();
-
       setIsSuccess(true);
-      if (onToast) onToast('🎉 Instant access granted! Download starting...');
+      if (onToast) onToast('🎉 Success! Your free blueprint is ready.');
     } catch (err: any) {
-      console.warn('Lead capture network fallback:', err);
-      // Local fallback
+      console.warn('Lead subscription network fallback:', err);
+      // Local fallback for offline mode
       localStorage.setItem('sirwise_lead_captured', 'true');
       localStorage.setItem('user_email', cleanEmail);
       triggerPdfDownload();
@@ -65,19 +79,6 @@ export default function FreeLeadMagnetModal({ isOpen, onClose, onClaimTripwire, 
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const triggerPdfDownload = () => {
-    const downloadUrl = 'https://www.gasv.store/downloads/sirwise_ai_masterclass_v1.pdf';
-    
-    // Create hidden anchor for instant download trigger
-    const a = document.createElement('a');
-    a.href = downloadUrl;
-    a.target = '_blank';
-    a.download = '5_Minute_AI_Prompt_Blueprint_Sirwise.pdf';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
   };
 
   return (
@@ -148,10 +149,13 @@ export default function FreeLeadMagnetModal({ isOpen, onClose, onClaimTripwire, 
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-gradient-to-r from-[#FFD700] to-[#FFA500] hover:from-[#ffe033] hover:to-[#ffb733] text-black font-black py-4 px-6 rounded-xl flex items-center justify-center gap-2 text-base shadow-lg transition-transform active:scale-95 disabled:opacity-50"
+                className="w-full bg-gradient-to-r from-[#FFD700] to-[#FFA500] hover:from-[#ffe033] hover:to-[#ffb733] text-black font-black py-4 px-6 rounded-xl flex items-center justify-center gap-2 text-base shadow-lg transition-transform active:scale-95 disabled:opacity-50 cursor-pointer"
               >
                 {isSubmitting ? (
-                  <span>Unlocking Access...</span>
+                  <>
+                    <Loader2 size={20} className="animate-spin text-black" />
+                    <span>Unlocking your free guide...</span>
+                  </>
                 ) : (
                   <>
                     <Zap size={20} className="fill-black" />
@@ -167,24 +171,27 @@ export default function FreeLeadMagnetModal({ isOpen, onClose, onClaimTripwire, 
             </div>
           </div>
         ) : (
-          /* Success Screen & Tripwire Intro */
-          <div className="text-center py-4">
+          /* Success Screen Modal */
+          <div className="text-center py-4 animate-fade-in">
             <div className="w-16 h-16 bg-[#FFD700]/10 border-2 border-[#FFD700] rounded-full flex items-center justify-center mx-auto mb-4 text-[#FFD700]">
               <Download size={32} />
             </div>
 
-            <h3 className="text-2xl font-black text-white mb-2">🎉 Access Granted!</h3>
+            <h3 className="text-2xl font-black text-white mb-2">🎉 Success! Your free blueprint is ready.</h3>
             <p className="text-gray-300 text-sm mb-6">
-              Your <strong>5-Minute AI Prompt Blueprint PDF</strong> download has been triggered automatically.
+              Your download for <strong>5-Minute-AI-Prompt-Blueprint.pdf</strong> has started automatically. If it didn't start, click below:
             </p>
 
-            <button
+            <a
+              href="https://www.gasv.store/downloads/sirwise_ai_masterclass_v1.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
               onClick={triggerPdfDownload}
-              className="w-full bg-[#222] hover:bg-[#333] border border-[#FFD700] text-[#FFD700] font-bold py-3 px-6 rounded-xl flex items-center justify-center gap-2 text-sm mb-6 transition"
+              className="w-full bg-[#FFD700] hover:bg-yellow-400 text-black font-black py-4 px-6 rounded-xl flex items-center justify-center gap-2 text-base shadow-lg transition mb-6 cursor-pointer"
             >
-              <Download size={16} />
-              <span>Download PDF Again</span>
-            </button>
+              <Download size={20} />
+              <span>Download PDF Now</span>
+            </a>
 
             {/* Tripwire Special Offer */}
             <div className="bg-gradient-to-b from-[#1a180a] to-[#111] border-2 border-[#FFD700] rounded-2xl p-5 text-left mb-6 shadow-inner">
@@ -202,7 +209,7 @@ export default function FreeLeadMagnetModal({ isOpen, onClose, onClaimTripwire, 
                   onClose();
                   if (onClaimTripwire) onClaimTripwire();
                 }}
-                className="w-full bg-[#FFD700] hover:bg-yellow-400 text-black font-black py-3 rounded-xl flex items-center justify-center gap-2 text-sm shadow transition"
+                className="w-full bg-[#FFD700] hover:bg-yellow-400 text-black font-black py-3 rounded-xl flex items-center justify-center gap-2 text-sm shadow transition cursor-pointer"
               >
                 <span>Get Starter Toolkit for ₦2,500</span>
                 <ArrowRight size={16} />
@@ -211,7 +218,7 @@ export default function FreeLeadMagnetModal({ isOpen, onClose, onClaimTripwire, 
 
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-300 text-xs underline"
+              className="text-gray-500 hover:text-gray-300 text-xs underline cursor-pointer"
             >
               Close and browse website
             </button>
@@ -221,3 +228,4 @@ export default function FreeLeadMagnetModal({ isOpen, onClose, onClaimTripwire, 
     </div>
   );
 }
+

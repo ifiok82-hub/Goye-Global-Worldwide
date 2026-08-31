@@ -3161,15 +3161,16 @@ app.post('/api/contact/email', async (req: any, res: any) => {
 // 5.5 API: Free Lead Magnet Capture & Management
 const inMemoryLeads: any[] = [];
 
-app.post('/api/leads', async (req: any, res: any) => {
+app.post(['/api/leads', '/api/leads/subscribe'], async (req: any, res: any) => {
   try {
-    const { email, sourceDomain } = req.body || {};
+    const { email, sourceDomain, source } = req.body || {};
     if (!email || typeof email !== 'string' || !email.includes('@') || !email.includes('.')) {
       return res.status(400).json({ success: false, message: 'Valid email address is required.' });
     }
 
     const cleanEmail = email.trim().toLowerCase();
     const domain = sourceDomain || 'gasv.store';
+    const leadSource = source || 'lead_magnet';
     const createdAt = new Date().toISOString();
     const leadId = `LEAD-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
 
@@ -3177,11 +3178,12 @@ app.post('/api/leads', async (req: any, res: any) => {
       id: leadId,
       email: cleanEmail,
       created_at: createdAt,
+      source: leadSource,
       source_domain: domain,
       converted_to_buyer: false
     };
 
-    // Store in Database
+    // Store in Database (upsert to handle existing emails gracefully)
     try {
       const database = await getDb();
       if (database) {
@@ -3201,15 +3203,16 @@ app.post('/api/leads', async (req: any, res: any) => {
       inMemoryLeads.unshift(leadDoc);
     }
 
-    // Optional FormSubmit notification for admin
+    // Notification trigger for admin
     try {
       fetch('https://formsubmit.co/ajax/b5ff137904e20ed9fbad829a69fc150b', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({
-          _subject: 'NEW LEAD CAPTURED: ' + cleanEmail + ' (' + domain + ')',
+          _subject: 'NEW LEAD SUBSCRIBED: ' + cleanEmail + ' (' + leadSource + ')',
           Email: cleanEmail,
-          Source: domain,
+          Source: leadSource,
+          Domain: domain,
           Date: createdAt
         })
       }).catch(() => {});
@@ -3217,12 +3220,12 @@ app.post('/api/leads', async (req: any, res: any) => {
 
     return res.status(200).json({
       success: true,
-      message: 'Lead captured successfully. Free instant access unlocked.',
+      message: 'Lead subscribed successfully. Free instant access unlocked.',
       lead: leadDoc,
       downloadUrl: 'https://www.gasv.store/downloads/sirwise_ai_masterclass_v1.pdf'
     });
   } catch (err: any) {
-    return res.status(500).json({ success: false, message: err.message || 'Lead capture failure' });
+    return res.status(500).json({ success: false, message: err.message || 'Lead subscription failure' });
   }
 });
 
