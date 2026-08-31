@@ -3158,6 +3158,34 @@ app.post('/api/contact/email', async (req: any, res: any) => {
   }
 });
 
+// Downloads Endpoint for Blueprint & Masterclass files
+app.get([
+  '/downloads/sirwise_ai_masterclass_v1.pdf',
+  '/downloads/5-Minute-AI-Prompt-Blueprint.pdf',
+  '/downloads/5_Minute_AI_Prompt_Blueprint_Sirwise.pdf'
+], (req: any, res: any) => {
+  const htmlPath = path.join(process.cwd(), 'public', 'downloads', 'sirwise_ai_masterclass_v1.html');
+  if (fs.existsSync(htmlPath)) {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.sendFile(htmlPath);
+  }
+  const txtPath = path.join(process.cwd(), 'public', 'downloads', '5-Minute-AI-Prompt-Blueprint.txt');
+  if (fs.existsSync(txtPath)) {
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    return res.sendFile(txtPath);
+  }
+  res.status(404).send('Blueprint document not found');
+});
+
+app.get('/downloads/5-Minute-AI-Prompt-Blueprint.txt', (req: any, res: any) => {
+  const txtPath = path.join(process.cwd(), 'public', 'downloads', '5-Minute-AI-Prompt-Blueprint.txt');
+  if (fs.existsSync(txtPath)) {
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    return res.sendFile(txtPath);
+  }
+  res.status(404).send('Blueprint text file not found');
+});
+
 // 5.5 API: Free Lead Magnet Capture & Management
 const inMemoryLeads: any[] = [];
 

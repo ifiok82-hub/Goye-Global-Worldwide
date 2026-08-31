@@ -1,0 +1,76 @@
+================================================================================
+          THE 5-MINUTE AI PROMPT BLUEPRINT FOR ENTREPRENEURS
+        Save 15+ Hours/Week Automating Marketing, Sales & Operations
+                 Powered by Sirwise AI Web3 Academy
+================================================================================
+
+WELCOME!
+Thank you for downloading the official AI Prompt Blueprint. This short guide 
+contains battle-tested prompt frameworks compatible with ChatGPT, Google Gemini, 
+and Claude. Use these exact copy-paste templates to cut your daily business 
+tasks down from hours to minutes.
+
+--------------------------------------------------------------------------------
+PROMPT 1: THE HIGH-CONVERTING SOCIAL MEDIA COPY GENERATOR
+--------------------------------------------------------------------------------
+Goal: Create 5 engaging social media posts for your business in 30 seconds.
+
+COPY & PASTE THIS PROMPT:
+"Act as a direct-response marketing expert. Write 5 short, high-converting 
+social media posts promoting [INSERT YOUR PRODUCT/SERVICE NAME]. 
+- Target Audience: [INSERT TARGET AUDIENCE, e.g., Small Business Owners / Creators]
+- Main Benefit: [INSERT MAIN BENEFIT, e.g., Saves 5 hours a week]
+- Tone: Professional, energetic, and persuasive.
+- Structure: Start each post with a strong hook, followed by 3 key bullet points 
+  showing the value, and end with a clear Call to Action (CTA) directing readers 
+  to visit [INSERT YOUR WEBSITE URL]."
+
+--------------------------------------------------------------------------------
+PROMPT 2: THE 60-SECOND CLIENT PROPOSAL WRITER
+--------------------------------------------------------------------------------
+Goal: Turn raw client requirements into a professional service proposal instantly.
+
+COPY & PASTE THIS PROMPT:
+"Act as a senior business consultant. Generate a structured, professional project 
+proposal based on these details:
+- Client Problem: [INSERT CLIENT PROBLEM]
+- Offered Solution: [INSERT YOUR SOLUTION]
+- Key Deliverables: [LIST 2-3 DELIVERABLES]
+- Timeline: [INSERT TIMELINE, e.g., 7 Days]
+Structure the output into 4 clear sections: Executive Summary, Project Scope, 
+Timeline & Milestones, and Next Steps. Keep the language concise and compelling."
+
+--------------------------------------------------------------------------------
+PROMPT 3: THE AUTOMATED CUSTOMER SUPPORT & FAQ ENGINE
+--------------------------------------------------------------------------------
+Goal: Generate clear answers for customer questions to use in emails or WhatsApp.
+
+COPY & PASTE THIS PROMPT:
+"Act as a helpful customer support representative for [INSERT YOUR COMPANY NAME]. 
+Write a polite, reassuring response to a customer asking: '[INSERT CUSTOMER QUESTION]'.
+- Ensure the answer addresses their main concern clearly.
+- Provide reassurance about security and instant delivery.
+- Keep the response under 100 words and end with an offer to help further."
+
+--------------------------------------------------------------------------------
+PROMPT 4: THE VIRAL HEADLINE & HOOK GENERATOR
+--------------------------------------------------------------------------------
+Goal: Generate attention-grabbing titles for emails, ads, or landing pages.
+
+COPY & PASTE THIS PROMPT:
+"Generate 10 magnetic headlines for a page selling [INSERT PRODUCT NAME]. 
+Use proven psychological triggers (curiosity, urgency, speed, and simplicity). 
+Avoid spammy words. Focus on the transformation the customer gets after using the product."
+
+--------------------------------------------------------------------------------
+WHAT IS NEXT?
+--------------------------------------------------------------------------------
+Ready to take your business to the next level? 
+
+Upgrade to our "Ultimate Web3 & AI Starter Toolkit" for just ₦2,500 ($3.00) 
+or explore our full online masterclasses at:
+- Learning Academy: https://sirwise.online
+- Digital Store & Checkout: https://gasv.store
+
+© Goyedagosmess Enterprise | Sirwise AI Web3 Academy
+================================================================================
