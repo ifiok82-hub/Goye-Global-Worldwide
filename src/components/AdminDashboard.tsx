@@ -35,7 +35,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
     contactEmail: 'goyedagosmess@gmail.com'
   });
 
-  const [excludeMyClicks, setExcludeMyClicks] = useState(localStorage.getItem('exclude_my_clicks') !== 'false');
+  const [excludeMyClicks, setExcludeMyClicks] = useState(localStorage.getItem('exclude_my_clicks') === 'true');
 
   // Modals for full CRM
   const [showCustomersModal, setShowCustomersModal] = useState(false);
@@ -48,20 +48,18 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
     const localOrders = JSON.parse(localStorage.getItem('orders_list') || '[]');
     setOrders(localOrders);
     
-    let localTraffic = JSON.parse(localStorage.getItem('traffic_log') || '[]');
-    const exclude = localStorage.getItem('exclude_my_clicks') !== 'false';
+    let localTraffic = JSON.parse(localStorage.getItem('global_traffic') || localStorage.getItem('traffic_log') || '[]');
+    const exclude = localStorage.getItem('exclude_my_clicks') === 'true';
     if (exclude) {
       localTraffic = localTraffic.filter((entry: any) => 
         entry.is_admin !== true && 
         entry.isAdmin !== true && 
         !String(entry.customerName || entry.customer_name).includes('Admin')
       );
-      setPageViews(localTraffic);
-      setTotalClicks(localTraffic.length);
-    } else {
-      setPageViews(localTraffic);
-      setTotalClicks(parseInt(localStorage.getItem('total_clicks') || '0'));
     }
+    setPageViews(localTraffic);
+    const savedClicks = parseInt(localStorage.getItem('total_clicks_global') || localStorage.getItem('total_clicks') || '0');
+    setTotalClicks(Math.max(savedClicks, localTraffic.length));
   };
 
   useEffect(() => {
@@ -71,8 +69,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
     const unsubStats = onSnapshot(doc(db, 'stats_global', 'global'), (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
-        const exclude = localStorage.getItem('exclude_my_clicks') !== 'false';
-        if (!exclude && data.total_clicks !== undefined) {
+        if (data.total_clicks !== undefined && data.total_clicks > 0) {
           setTotalClicks(data.total_clicks);
         }
       }
@@ -87,13 +84,17 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
       // Sort descending by timestamp / createdAt
       logs.sort((a, b) => new Date(b.timestamp || b.createdAt || 0).getTime() - new Date(a.timestamp || a.createdAt || 0).getTime());
       
-      const exclude = localStorage.getItem('exclude_my_clicks') !== 'false';
+      const exclude = localStorage.getItem('exclude_my_clicks') === 'true';
       const filtered = exclude
         ? logs.filter((entry: any) => !entry.is_admin && !entry.isAdmin && !String(entry.customerName || entry.customer_name).includes('Admin'))
         : logs;
 
-      setPageViews(filtered);
-      setTotalClicks(filtered.length);
+      if (filtered.length > 0) {
+        setPageViews(filtered);
+        setTotalClicks(prev => Math.max(prev, filtered.length));
+      } else {
+        loadLocalData();
+      }
     }, (e) => console.warn('Firestore global traffic log snapshot warning:', e));
 
     const unsubPayouts = onSnapshot(collection(db, 'payout_requests'), (snap) => {

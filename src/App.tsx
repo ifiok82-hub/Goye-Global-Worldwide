@@ -315,6 +315,56 @@ export default function App() {
       }
     };
 
+    const trackClickGlobal = (pageName: string) => {
+      try {
+        const userEmail = localStorage.getItem('user_email') || localStorage.getItem('admin_email') || currentUser?.email || 'guest@gasv.store';
+        const loc = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+        let flag = '🌍';
+        if (loc.includes('Lagos') || loc.includes('Africa/Lagos')) flag = '🇳🇬 NG (Lagos)';
+        else if (loc.includes('America') || loc.includes('New_York') || loc.includes('Los_Angeles')) flag = '🇺🇸 US';
+        else if (loc.includes('London') || loc.includes('Europe/London')) flag = '🇬🇧 GB';
+        else if (loc.includes('Kolkata') || loc.includes('Asia/Kolkata')) flag = '🇮🇳 IN';
+
+        const log = {
+          id: 'CLK-' + Date.now(),
+          location: flag,
+          page: pageName,
+          date: new Date().toISOString(),
+          timestamp: new Date().toISOString(),
+          email: userEmail,
+          customerName: userEmail.split('@')[0] || 'Guest',
+          is_admin: localStorage.getItem('is_admin') === 'true'
+        };
+
+        addDoc(collection(db, 'traffic_log_global'), {
+          ...log,
+          createdAt: new Date().toISOString()
+        }).catch(e => console.warn(e));
+
+        setDoc(doc(db, 'stats_global', 'global'), {
+          total_clicks: increment(1),
+          last_click: new Date().toISOString(),
+          last_location: flag,
+          last_customer: userEmail.split('@')[0] || 'Guest'
+        }, { merge: true }).catch(e => console.warn(e));
+
+        let logs = JSON.parse(localStorage.getItem('global_traffic') || localStorage.getItem('traffic_log') || '[]');
+        logs.unshift(log);
+        localStorage.setItem('global_traffic', JSON.stringify(logs.slice(0, 100)));
+        localStorage.setItem('traffic_log', JSON.stringify(logs.slice(0, 100)));
+
+        let clicks = parseInt(localStorage.getItem('total_clicks_global') || localStorage.getItem('total_clicks') || '0') + 1;
+        localStorage.setItem('total_clicks_global', clicks.toString());
+        localStorage.setItem('total_clicks', clicks.toString());
+
+        console.log('Click tracked', flag, pageName);
+      } catch (e) {
+        console.error('trackClickGlobal error', e);
+      }
+    };
+
+    (window as any).trackClickGlobal = trackClickGlobal;
+
     const trackPageView = async () => {
       try {
         const userEmail = localStorage.getItem('user_email') || localStorage.getItem('admin_email') || currentUser?.email || '';
@@ -325,15 +375,9 @@ export default function App() {
           localStorage.setItem('admin_device', 'true');
         }
 
-        const shouldExclude = localStorage.getItem('exclude_my_clicks') !== 'false'; // default true
-
-        if (isAdminUser && shouldExclude) {
-          console.log('Admin click excluded - Not counting traffic');
-          return;
-        }
-
-        let total = parseInt(localStorage.getItem('total_clicks') || '0');
+        let total = parseInt(localStorage.getItem('total_clicks') || localStorage.getItem('total_clicks_global') || '0');
         localStorage.setItem('total_clicks', (total + 1).toString());
+        localStorage.setItem('total_clicks_global', (total + 1).toString());
 
         const locationStr = await getTrueLocation();
         let customerName = 'Guest Customer';
@@ -367,7 +411,6 @@ export default function App() {
           global: true
         };
 
-        // Save to global Firestore for 190+ countries real-time admin sync
         try {
           await addDoc(collection(db, 'traffic_log_global'), {
             ...pageView,
@@ -385,10 +428,11 @@ export default function App() {
           console.warn('Firestore global tracking write warning:', fsErr);
         }
 
-        let logs = JSON.parse(localStorage.getItem('traffic_log') || '[]');
+        let logs = JSON.parse(localStorage.getItem('traffic_log') || localStorage.getItem('global_traffic') || '[]');
         logs.unshift(pageView);
         if (logs.length > 100) logs = logs.slice(0, 100);
         localStorage.setItem('traffic_log', JSON.stringify(logs));
+        localStorage.setItem('global_traffic', JSON.stringify(logs));
       } catch (e) {
         console.error('Page view tracking error', e);
       }

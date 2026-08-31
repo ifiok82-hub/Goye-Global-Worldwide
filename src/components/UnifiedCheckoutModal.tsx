@@ -5,7 +5,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
   const [activeGateway, setActiveGateway] = useState<string | null>(null);
   const [email, setEmail] = useState(() => {
     const saved = (localStorage.getItem('user_email') || localStorage.getItem('pupil_email') || '').trim();
-    if (saved.includes('ifiok82') || saved.includes('godswilloyoho') || saved.includes('goye@gasv.store') || saved === 'null' || saved === 'undefined') {
+    if (!saved || saved.includes('ifiok82') || saved.includes('godswilloyoho') || saved.includes('goyedagos') || saved.includes('goye@gasv.store') || saved === 'null' || saved === 'undefined' || !saved.includes('.')) {
       localStorage.removeItem('user_email');
       localStorage.removeItem('customer_email');
       localStorage.removeItem('pupil_email');
@@ -13,6 +13,15 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
     }
     return saved;
   });
+
+  React.useEffect(() => {
+    const saved = (localStorage.getItem('user_email') || '').trim();
+    if (saved && (saved.includes('goyedagos') || saved.includes('ifiok82') || saved.includes('godswilloyoho') || saved.includes('goye@gasv.store') || saved === 'null' || saved === 'undefined' || !saved.includes('.'))) {
+      localStorage.removeItem('user_email');
+      localStorage.removeItem('customer_email');
+      setEmail('');
+    }
+  }, []);
   const [cryptoTxHash, setCryptoTxHash] = useState('');
   const [bankRef, setBankRef] = useState('');
   const [cryptoVerifying, setCryptoVerifying] = useState(false);
@@ -66,7 +75,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
             id: 'ORD-' + Date.now(),
             ref: ref,
             customerName: email ? email.split('@')[0] : 'Guest Pupil',
-            customerEmail: email || 'goyedagosmess@gmail.com',
+            customerEmail: email || '',
             country: country,
             productName: cleanProductName,
             amount: `₦${nairaAmount} (${displaySymbol}${localPrice})`,
@@ -124,35 +133,35 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
 
   const getValidatedEmail = (): string | null => {
     let userEmail = (email.trim() || localStorage.getItem('user_email') || localStorage.getItem('customer_email') || '').trim();
-    if (!userEmail || !userEmail.includes('@') || userEmail.includes('ifiok82') || userEmail.includes('godswilloyoho') || userEmail.includes('goye@gasv.store') || userEmail === 'null' || userEmail === 'undefined') {
+    if (!userEmail || userEmail.length < 5 || !userEmail.includes('@') || !userEmail.includes('.') || userEmail.includes('ifiok82') || userEmail.includes('godswilloyoho') || userEmail.includes('goyedagos') || userEmail.includes('goye@gasv.store') || userEmail === 'null' || userEmail === 'undefined' || userEmail.includes('ico')) {
       return null;
     }
     return userEmail;
   };
 
   const payWithPaystack = () => {
-    const userEmail = getValidatedEmail();
-    if (!userEmail) {
-      alert('Enter valid email');
-      const emailInput = document.querySelector('input[type="email"]') as HTMLInputElement;
-      if (emailInput) {
-        emailInput.focus();
-        emailInput.style.border = '2px solid #ef4444';
+    const emailInput = getValidatedEmail();
+    if (!emailInput) {
+      alert('Enter complete valid email e.g. parent@gmail.com');
+      const inputEl = document.querySelector('input[type="email"]') as HTMLInputElement;
+      if (inputEl) {
+        inputEl.focus();
+        inputEl.style.border = '2px solid #ef4444';
       }
       return;
     }
-    localStorage.setItem('user_email', userEmail);
-    localStorage.setItem('customer_email', userEmail);
+    localStorage.setItem('user_email', emailInput);
+    localStorage.setItem('customer_email', emailInput);
 
     const paystackAmount = userCurrency === 'USD' ? 4999 : 7498500; // $49.99 in cents OR ₦74,985 in kobo
     const paystackCurrency = userCurrency === 'USD' ? 'USD' : 'NGN';
-    const paystackPublicKey = paymentConfig?.paystack || localStorage.getItem('paystack_public_key') || 'pk_test_156001099688463994a500b3e6480b';
+    const paystackPublicKey = paymentConfig?.paystack || localStorage.getItem('paystack_public_key') || 'pk_live_f89c6d3a9504e9a1127048';
 
     if (typeof (window as any).PaystackPop !== 'undefined') {
       try {
         const handler = (window as any).PaystackPop.setup({
           key: paystackPublicKey,
-          email: userEmail,
+          email: emailInput,
           amount: paystackAmount,
           currency: paystackCurrency,
           ref: 'SIRWISE_' + Math.floor(Math.random() * 1000000000) + '_' + Date.now(),
@@ -164,7 +173,11 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
             ]
           },
           callback: (response: any) => {
-            handleSuccess(response.reference || ('PAYSTACK-' + Date.now()), 'Paystack (Global Cards)');
+            if (!response || !response.reference) {
+              alert('No payment reference - Payment failed');
+              return;
+            }
+            handleSuccess(response.reference, 'Paystack (Global Cards)');
           },
           onClose: () => {
             if (onToast) onToast('Paystack window closed');
@@ -172,31 +185,31 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
         });
         handler.openIframe();
       } catch (e: any) {
-        console.error('Paystack error, using inline fallback', e);
-        handleSuccess('PAYSTACK-' + Date.now(), 'Paystack (Global Cards)');
+        console.error('Paystack error', e);
+        alert('Paystack initialization notice: Please try Bank / OPay Transfer if window is blocked.');
       }
     } else {
-      handleSuccess('PAYSTACK-' + Date.now(), 'Paystack (Global Cards)');
+      alert('Paystack SDK loading... Please try again or use Bank / OPay Transfer.');
     }
   };
 
   const payWithFlutterwave = () => {
-    const userEmail = getValidatedEmail();
-    if (!userEmail) {
-      alert('Enter valid email');
-      const emailInput = document.querySelector('input[type="email"]') as HTMLInputElement;
-      if (emailInput) {
-        emailInput.focus();
-        emailInput.style.border = '2px solid #ef4444';
+    const emailInput = getValidatedEmail();
+    if (!emailInput) {
+      alert('Enter complete valid email e.g. parent@gmail.com');
+      const inputEl = document.querySelector('input[type="email"]') as HTMLInputElement;
+      if (inputEl) {
+        inputEl.focus();
+        inputEl.style.border = '2px solid #ef4444';
       }
       return;
     }
-    localStorage.setItem('user_email', userEmail);
-    localStorage.setItem('customer_email', userEmail);
+    localStorage.setItem('user_email', emailInput);
+    localStorage.setItem('customer_email', emailInput);
 
-    const flutterwavePublicKey = paymentConfig?.flutterwave || localStorage.getItem('flutterwave_public_key') || 'FLWPUBK_TEST-1234567890';
-    const customerName = localStorage.getItem('user_name') || userEmail.split('@')[0] || 'Global Customer';
-    const customerPhone = localStorage.getItem('user_phone') || '08012345678';
+    const flutterwavePublicKey = paymentConfig?.flutterwave || localStorage.getItem('flutterwave_public_key') || 'FLWPUBK-cbb518a9b8f74421e887f4a1ec911ea7-X';
+    const customerName = emailInput.split('@')[0] || 'Global Customer';
+    const customerPhone = '2348033584736';
     
     if (typeof (window as any).FlutterwaveCheckout !== 'undefined') {
       try {
@@ -205,30 +218,34 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
           tx_ref: 'SIRWISE_FW_' + Date.now(),
           amount: 74985,
           currency: 'NGN',
-          email: userEmail,
+          payment_options: 'card,ussd,banktransfer',
           customer: {
-            email: userEmail,
+            email: emailInput,
             name: customerName,
             phone_number: customerPhone,
           },
           customizations: {
             title: 'Sirwise AI Web3 Academy',
-            description: 'RC BN3583773',
-            logo: 'https://www.gasv.store/goye-logo.svg',
+            description: 'Global $49.99 RC BN3583773',
+            logo: 'https://www.gasv.store/logo.png',
           },
           callback: (data: any) => {
-            handleSuccess(data.transaction_id || data.tx_ref || ('FLW-' + Date.now()), 'Flutterwave (Africa Cards)');
+            if (data && (data.status === 'successful' || data.status === 'completed' || data.transaction_id || data.tx_ref)) {
+              handleSuccess(data.transaction_id || data.tx_ref || ('FLW-' + Date.now()), 'Flutterwave (Africa Cards)');
+            } else {
+              alert('Payment not successful - Real money required - Amount must be ₦74,985');
+            }
           },
           onclose: () => {
             if (onToast) onToast('Flutterwave payment closed');
           }
         });
       } catch (e: any) {
-        console.error('Flutterwave error, using inline fallback', e);
-        handleSuccess('FLW-SIM-' + Date.now(), 'Flutterwave (Africa Cards)');
+        console.error('Flutterwave error', e);
+        alert('Flutterwave initialization notice: Please use Bank / OPay Transfer or Paystack.');
       }
     } else {
-      handleSuccess('FLW-SIM-' + Date.now(), 'Flutterwave (Africa Cards)');
+      alert('Flutterwave SDK loading... Please try again or use Bank Transfer.');
     }
   };
 
@@ -352,19 +369,19 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
             <label className="block text-xs font-bold text-gray-400 mb-2 uppercase">Your Email Address (for delivery)</label>
             <input 
               type="email" 
-              placeholder="Enter your email" 
+              placeholder="Enter your complete email e.g. parent@gmail.com" 
               className="w-full bg-black border border-[#333] p-4 rounded-xl text-white mb-6 focus:border-[#FFD700] outline-none text-sm font-medium"
               value={email}
               onChange={e => {
                 const val = e.target.value;
-                if (val.includes('ifiok82') || val.includes('godswilloyoho') || val.includes('goye@gasv.store') || val === 'null' || val === 'undefined') {
+                if (val.includes('ifiok82') || val.includes('godswilloyoho') || val.includes('goyedagos') || val.includes('goye@gasv.store') || val === 'null' || val === 'undefined') {
                   setEmail('');
                   localStorage.removeItem('user_email');
                   localStorage.removeItem('customer_email');
                   return;
                 }
                 setEmail(val);
-                if (val.includes('@')) {
+                if (val.includes('@') && val.includes('.')) {
                   localStorage.setItem('user_email', val);
                   localStorage.setItem('customer_email', val);
                 }
