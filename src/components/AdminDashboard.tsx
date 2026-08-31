@@ -97,6 +97,23 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
       }
     }, (e) => console.warn('Firestore global traffic log snapshot warning:', e));
 
+    // Fetch server-side traffic logs
+    fetch('/api/admin/traffic')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.traffic) && data.traffic.length > 0) {
+          setPageViews(prev => {
+            const map = new Map();
+            [...data.traffic, ...prev].forEach((item: any) => {
+              if (item.id) map.set(item.id, item);
+            });
+            return Array.from(map.values()).sort((a: any, b: any) => new Date(b.timestamp || b.createdAt || 0).getTime() - new Date(a.timestamp || a.createdAt || 0).getTime());
+          });
+          setTotalClicks(prev => Math.max(prev, data.traffic.length));
+        }
+      })
+      .catch(e => console.warn('Server traffic fetch error:', e));
+
     const unsubPayouts = onSnapshot(collection(db, 'payout_requests'), (snap) => {
       setPayouts(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     });

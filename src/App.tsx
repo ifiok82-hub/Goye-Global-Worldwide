@@ -17,6 +17,7 @@ import CurrencyModal, { CURRENCIES } from './components/CurrencyModal';
 import { Bell, User } from 'lucide-react';
 import { GoyeLogo } from './components/GoyeLogo';
 import SirwiseAITeacher from './components/SirwiseAITeacher';
+import { trackUserClick } from './utils/analytics';
 import { db } from './lib/firebase';
 import { collection, onSnapshot, setDoc, doc, getDoc, updateDoc, increment, addDoc } from 'firebase/firestore';
 
@@ -609,7 +610,7 @@ export default function App() {
         <div className="flex flex-wrap justify-center gap-2 mt-3 px-2 z-[60] relative" style={{ pointerEvents: 'auto' }}>
             <button onClick={() => { setTab("home"); setTimeout(() => { const el = document.getElementById("programs-section") || document.getElementById("programs"); if(el) el.scrollIntoView({behavior: "smooth"}); }, 100); }} className="text-black font-bold text-[10px] hover:bg-black/10 px-2 py-1 rounded cursor-pointer pointer-events-auto touch-manipulation z-[100] relative">Programs</button>
             <button onClick={() => { setTab("home"); setTimeout(() => { const el = document.getElementById("our-method-section") || document.getElementById("our-method"); if(el) el.scrollIntoView({behavior: "smooth"}); }, 100); }} className="text-black font-bold text-[10px] hover:bg-black/10 px-2 py-1 rounded cursor-pointer pointer-events-auto touch-manipulation z-[100] relative">Our method</button>
-            <button onClick={() => { window.open("https://wa.me/2348033584736?text=Join%20Sirwise%20Community", "_blank"); }} className="text-black font-bold text-[10px] hover:bg-black/10 px-2 py-1 rounded cursor-pointer pointer-events-auto touch-manipulation z-[100] relative">Community</button>
+            <button onClick={() => { trackUserClick("Community", "Header"); window.open("/go/whatsapp?text=Join%20Sirwise%20Community", "_blank"); }} className="text-black font-bold text-[10px] hover:bg-black/10 px-2 py-1 rounded cursor-pointer pointer-events-auto touch-manipulation z-[100] relative">Community</button>
             <button onClick={() => { if(!isAuthenticated) setTab("auth"); else { setTab("academy"); setTimeout(()=>document.getElementById("dashboard")?.scrollIntoView({behavior:"smooth"}), 100); } }} className="text-[#FFD700] bg-black font-bold text-[10px] hover:bg-black/80 px-2 py-1 rounded-full flex items-center gap-1 cursor-pointer pointer-events-auto touch-manipulation z-[100] relative">Student dashboard <ChevronRight size={10} /></button>
             <button onClick={() => { if(localStorage.getItem("sirwise_paid") !== "true" || localStorage.getItem("academy_unlocked") !== "true") { setSelectedProduct({ id: "academy", name: "Sirwise AI Web3 Academy 4-Week Masterclass", price: 49.99, category: "academy" }); setShowCheckoutModal(true); } else { setTab("academy"); } }} className="text-white bg-blue-900 font-bold text-[10px] hover:bg-blue-800 px-2 py-1 rounded-full flex items-center gap-1 cursor-pointer pointer-events-auto touch-manipulation z-[100] relative">Start learning <ChevronRight size={10} /></button>
             <button onClick={() => setShowReferralModal(true)} className="text-black font-bold text-[10px] hover:bg-black/10 px-2 py-1 rounded cursor-pointer pointer-events-auto touch-manipulation z-[100] relative">Referral</button>
@@ -739,7 +740,7 @@ export default function App() {
                   <div className="bg-gradient-to-r from-[#111] to-[#1a1a1a] p-6 rounded-2xl border border-[#FFD700] text-center">
                     <h2 className="text-[#FFD700] text-xl font-black mb-2 uppercase">Join Global Pupil Community</h2>
                     <p className="text-gray-300 text-xs mb-4">Connect with pupils and parents across 190+ countries in our safe community group.</p>
-                    <a href="https://wa.me/2348033584736?text=Join%20Sirwise%20Community" target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 bg-[#25D366] text-black font-black px-6 py-3 rounded-xl text-xs hover:bg-[#20ba5a] transition">
+                    <a href="/go/whatsapp?text=Join%20Sirwise%20Community" target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 bg-[#25D366] text-black font-black px-6 py-3 rounded-xl text-xs hover:bg-[#20ba5a] transition">
                       💬 Join WhatsApp Community
                     </a>
                   </div>
@@ -937,19 +938,19 @@ export default function App() {
             </a>
     
 
-            <a href="https://wa.me/2348033584736?text=Hello%20Sirwise%20AI%20Web3%20Academy%20RC%20BN3583773" target="_blank" className="bg-black rounded-xl p-4 flex items-center justify-between hover:border-[#25D366] border border-transparent transition">
+            <a href="/go/whatsapp?text=Hello%20Sirwise%20AI%20Web3%20Academy%20RC%20BN3583773" target="_blank" rel="noopener noreferrer" className="bg-black rounded-xl p-4 flex items-center justify-between hover:border-[#25D366] border border-transparent transition">
               <div className="flex items-center gap-4">
                 <MessageCircle className="text-[#25D366]" size={20}/>
-                <span className="text-gray-300 text-[13px]">WhatsApp</span>
+                <span className="text-gray-300 text-[13px]">WhatsApp Support</span>
               </div>
               <span className="bg-[#111] text-[#25D366] px-4 py-2 rounded-lg text-[13px] font-bold border border-[#333]">💬 Chat on WhatsApp</span>
             </a>
     
 
-            <a href="mailto:goyedagosmess@gmail.com" className="bg-black rounded-xl p-4 flex items-center justify-between hover:border-[#FFD700] border border-transparent transition">
+            <a href="/contact.html" className="bg-black rounded-xl p-4 flex items-center justify-between hover:border-[#FFD700] border border-transparent transition">
               <div className="flex items-center gap-4">
                 <Mail className="text-[#3b82f6]" size={20}/>
-                <span className="text-gray-300 text-[13px]">Email</span>
+                <span className="text-gray-300 text-[13px]">Contact Portal</span>
               </div>
               <span className="bg-[#111] text-white px-4 py-2 rounded-lg text-[13px] font-bold border border-[#333]">📧 Email Support</span>
             </a>
@@ -990,7 +991,7 @@ export default function App() {
               showToast('You are currently offline. Please reconnect to launch support.');
               return;
             }
-            window.open('https://wa.me/2348033584736?text=Hello%20GOYE%20Sirwise%20Academy%20RC%20BN3583773', '_blank');
+            window.open('/go/whatsapp?text=Hello%20GOYE%20Sirwise%20Academy%20RC%20BN3583773', '_blank');
           }} style={{display:'inline-flex', alignItems:'center', gap:'8px', background:'#25D366', color:'#fff', padding:'12px 24px', borderRadius:'12px', border:'none', cursor:'pointer', fontSize:'14px', fontWeight:'bold'}}>
             <MessageCircle size={18}/> WhatsApp Support
           </button>
@@ -1123,7 +1124,7 @@ export default function App() {
           <Download size={24} />
           <span className="text-[9px] font-bold">DOWNLOADS</span>
         </button>
-        <a href="https://wa.me/2348033584736?text=Hello%20Sirwise%20AI%20Web3%20Academy%20RC%20BN3583773" target="_blank" className="min-w-[60px] flex-shrink-0 flex flex-col items-center justify-center gap-1 transition transform active:scale-90 active:opacity-70 text-gray-500 hover:text-[#25D366]">
+        <a href="/go/whatsapp?text=Hello%20Sirwise%20AI%20Web3%20Academy%20RC%20BN3583773" target="_blank" rel="noopener noreferrer" className="min-w-[60px] flex-shrink-0 flex flex-col items-center justify-center gap-1 transition transform active:scale-90 active:opacity-70 text-gray-500 hover:text-[#25D366]">
           <MessageCircle size={24} />
           <span className="text-[9px] font-bold">SUPPORT</span>
         </a>

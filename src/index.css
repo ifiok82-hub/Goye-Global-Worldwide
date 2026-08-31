@@ -88,41 +88,12 @@ body {
 }
 
 /* Fix third-party payment modals (Paystack, Flutterwave, OPay) */
-iframe[name^="paystack"], iframe[name^="flutterwave"], .paystack-modal, .flutterwave-modal {
-  position: fixed !important;
-  inset: 0 !important;
-  z-index: 99999 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  max-width: 100vw !important;
-  margin: 0 !important;
+iframe[name*="paystack"], iframe[name*="flutterwave"], iframe[src*="paystack"], iframe[src*="flutterwave"], .paystack-modal, .flutterwave-modal {
+  z-index: 999999 !important;
 }
 
 /* Ensure any dropdowns within the iframe or absolute elements don't get clipped or misaligned */
 body.active-modal {
-  overflow: hidden !important;
-}
-
-/* Force Paystack/Flutterwave/OPay modal overlays to use proper z-index and responsive layout */
-.paystack-modal, .flutterwave-modal, #paystack-checkout-iframe, iframe[name^="paystack"], iframe[name^="flutterwave"] {
-  position: fixed !important; 
-  inset: 0 !important; 
-  z-index: 9999 !important; 
-  background: rgba(0,0,0,0.75) !important; 
-  display: flex !important; 
-  align-items: center !important; 
-  justify-content: center !important;
-  width: 100vw !important;
-  height: 100vh !important;
-}
-
-/* Ensure inner modal content boxes */
-.paystack-modal-inner, .paystack-checkout, .flutterwave-modal-inner {
-  max-width: 90vw !important; 
-  width: 450px !important; 
-  background: #0f172a !important; 
-  color: #ffffff !important; 
-  border-radius: 12px !important; 
   overflow: hidden !important;
 }
 

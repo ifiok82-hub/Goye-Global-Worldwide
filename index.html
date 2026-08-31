@@ -41,8 +41,8 @@
     <script>
       window.payWithFlutterwave = function(productName, usdPrice){
         const customerEmail = prompt("Enter your email for instant delivery (e.g. parent@gmail.com):");
-        if(!customerEmail || customerEmail.length < 5 || !customerEmail.includes("@") || !customerEmail.includes(".") || customerEmail.includes("ifiok82") || customerEmail.includes("godswilloyoho") || customerEmail.includes("goyedagos") || customerEmail.includes("goye@gasv.store") || customerEmail === "null" || customerEmail.includes("null") || customerEmail.includes("ico")){
-          alert("Enter complete valid email e.g. parent@gmail.com");
+        if(!customerEmail || customerEmail.length < 5 || !customerEmail.includes("@") || !customerEmail.includes(".") || customerEmail === "null" || customerEmail.includes("null")){
+          alert("Please enter a complete valid email address (e.g. parent@gmail.com)");
           return;
         }
 
@@ -62,7 +62,7 @@
           customer: {
             email: customerEmail,
             name: validName,
-            phone_number: '2348033584736'
+            phone_number: ''
           },
           customizations: {
             title: "Sirwise AI Web3 Academy",

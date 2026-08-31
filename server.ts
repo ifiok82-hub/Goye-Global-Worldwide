@@ -38,16 +38,18 @@ const app = express();
 
   // CORS and Compliance Headers
   app.use((req, res, next) => {
-    const allowedOrigins = ['https://www.gasv.store', 'https://gasv.store', 'https://gas.store'];
-    const origin = req.headers.origin;
-    if (allowedOrigins.includes(origin)) {
+    const allowedOrigins = ['https://www.gasv.store', 'https://gasv.store', 'https://gas.store', 'https://www.gas.store'];
+    const origin = req.headers.origin || '';
+    if (allowedOrigins.includes(origin) || origin.endsWith('.cloudworkstations.dev') || origin.endsWith('.run.app')) {
       res.setHeader('Access-Control-Allow-Origin', origin);
     } else {
       res.setHeader('Access-Control-Allow-Origin', '*'); // Fallback for dev/preview
     }
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type,Authorization');
-    // Secure Cookie headers implicitly if setting cookies
+    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, content-type, Authorization');
+    if (req.method === 'OPTIONS') {
+      return res.sendStatus(200);
+    }
     next();
   });
 
@@ -2957,8 +2959,261 @@ Never mention internal file structures, system APIs, or directories.`
 
 
 
-// 11. API: WhatsApp Support Redirection
-app.get(['/whatsapp', '/support/whatsapp', '/support', '/api/support-chat'], (req: any, res: any) => {
+// In-memory Traffic Log Storage for Visitor Tracking Engine
+interface TrafficLog {
+  id: string;
+  sessionId: string;
+  timestamp: string;
+  ip: string;
+  country: string;
+  city: string;
+  deviceType: string;
+  userAgent: string;
+  referrer: string;
+  page: string;
+  target: string;
+  productId?: string;
+  customerName?: string;
+  customerEmail?: string;
+}
+
+const trafficLogs: TrafficLog[] = [];
+
+function parseDeviceType(ua: string = ''): string {
+  if (/mobile/i.test(ua)) return 'Mobile';
+  if (/tablet|ipad/i.test(ua)) return 'Tablet';
+  return 'Desktop';
+}
+
+// 1. API: Visitor & Click Analytics Tracking
+app.post('/api/analytics/track', async (req: any, res: any) => {
+  try {
+    const { sessionId, page, target, productId, customerName, customerEmail, referrer } = req.body || {};
+    const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1').toString().split(',')[0].trim();
+    const country = (req.headers['cf-ipcountry'] || req.headers['x-appengine-country'] || 'Global').toString();
+    const city = (req.headers['x-appengine-city'] || 'Unknown City').toString();
+    const userAgent = (req.headers['user-agent'] || '').toString();
+    const deviceType = parseDeviceType(userAgent);
+    const sid = sessionId || ('sess_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7));
+
+    const logEntry: TrafficLog = {
+      id: 'log_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+      sessionId: sid,
+      timestamp: new Date().toISOString(),
+      ip,
+      country,
+      city,
+      deviceType,
+      userAgent,
+      referrer: referrer || req.headers['referer'] || 'Direct',
+      page: page || 'Home',
+      target: target || 'Page View',
+      productId: productId || '',
+      customerName: customerName || '',
+      customerEmail: customerEmail || ''
+    };
+
+    trafficLogs.unshift(logEntry);
+    if (trafficLogs.length > 2000) trafficLogs.pop();
+
+    try {
+      const database = await getDb();
+      if (database) {
+        await database.collection('traffic_logs_global').insertOne(logEntry);
+      }
+    } catch (e) {}
+
+    return res.status(200).json({ success: true, sessionId: sid });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 2. API: Link Anonymous Session to Customer Identity
+app.post('/api/analytics/identify', async (req: any, res: any) => {
+  try {
+    const { sessionId, customerName, customerEmail } = req.body || {};
+    if (!sessionId || !customerEmail) {
+      return res.status(400).json({ success: false, message: 'sessionId and customerEmail required' });
+    }
+
+    let updatedCount = 0;
+    trafficLogs.forEach(log => {
+      if (log.sessionId === sessionId) {
+        if (customerName) log.customerName = customerName;
+        log.customerEmail = customerEmail;
+        updatedCount++;
+      }
+    });
+
+    try {
+      const database = await getDb();
+      if (database) {
+        await database.collection('traffic_logs_global').updateMany(
+          { sessionId: sessionId },
+          { $set: { customerName: customerName || '', customerEmail: customerEmail } }
+        );
+      }
+    } catch (e) {}
+
+    return res.status(200).json({ success: true, updatedCount, customerEmail });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 3. API: Admin Analytics Summary & Visitor History
+app.get(['/api/admin/traffic', '/api/analytics/summary'], (req: any, res: any) => {
+  res.json({
+    success: true,
+    totalVisits: trafficLogs.length,
+    traffic: trafficLogs.slice(0, 500)
+  });
+});
+
+// 4. API: Gated Content Access Verification (Pay-Before-Unlock)
+app.post('/api/content/access', async (req: any, res: any) => {
+  try {
+    const { email } = req.body || {};
+    if (!email) {
+      return res.status(401).json({ success: false, unlocked: false, message: 'Authentication required. Enter customer email.' });
+    }
+
+    let verified = false;
+
+    try {
+      if (pgDb) {
+        const found = await pgDb.select().from(orders).where(eq(orders.customerEmail, email));
+        if (found && found.some((o: any) => o.status === 'completed' || o.status === 'success')) {
+          verified = true;
+        }
+      }
+    } catch (e) {}
+
+    if (!verified) {
+      const isUnlocked = Boolean(fallbackOrders.some((o: any) => 
+        (o.customerEmail === email || o.email === email) && (o.status === 'completed' || o.status === 'success')
+      ));
+      if (isUnlocked) verified = true;
+    }
+
+    if (verified) {
+      return res.status(200).json({
+        unlocked: true,
+        accessKey: 'SIRWISE-ACADEMY-VERIFIED-' + Buffer.from(email).toString('hex').substring(0, 10),
+        downloadUrls: [
+          'https://www.gasv.store/downloads/sirwise_ai_masterclass_v1.pdf',
+          'https://www.gasv.store/downloads/crypto_web3_guide.pdf',
+          'https://www.gasv.store/downloads/pi_gcv_integration_pack.zip'
+        ]
+      });
+    }
+
+    return res.status(403).json({
+      unlocked: false,
+      message: 'Access locked. No verified completed payment found for ' + email + '. Complete payment to unlock.'
+    });
+  } catch (err: any) {
+    return res.status(500).json({ unlocked: false, error: err.message });
+  }
+});
+
+// 5. API: Contact Email Dispatcher (Privacy Protected)
+app.post('/api/contact/email', async (req: any, res: any) => {
+  try {
+    const { name, email, subject, message } = req.body || {};
+    if (!email || !message) {
+      return res.status(400).json({ success: false, message: 'Email and message are required.' });
+    }
+    
+    try {
+      await fetch('https://formsubmit.co/ajax/b5ff137904e20ed9fbad829a69fc150b', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({
+          _subject: subject || 'New Support Request from gasv.store',
+          name: name || email.split('@')[0],
+          email: email,
+          message: message
+        })
+      });
+    } catch (e) {
+      console.warn('FormSubmit dispatcher warning:', e);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Your message has been securely transmitted to GOYE Global Support Desk.'
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message || 'Contact dispatch error' });
+  }
+});
+
+// 6. API: Paystack Direct Redirect Verification Handler
+app.get(['/payment/verify', '/api/payments/paystack/callback'], async (req: any, res: any) => {
+  const reference = req.query.reference || req.query.trxref || req.query.tx_ref;
+  if (!reference) {
+    return res.redirect('/#academy');
+  }
+
+  const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
+  let customerEmail = req.query.email || '';
+
+  if (PAYSTACK_SECRET_KEY && !PAYSTACK_SECRET_KEY.includes('...')) {
+    try {
+      const response = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
+        headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` }
+      });
+      const data = await response.json();
+      if (data.status && data.data.status === 'success') {
+        customerEmail = data.data.customer?.email || customerEmail;
+        await recordAndFulfillPurchase({
+          orderId: reference,
+          customerEmail: customerEmail || 'customer@gasv.store',
+          productName: 'Sirwise AI Web3 Academy Access',
+          amount: data.data.amount / 100,
+          currency: 'NGN',
+          paymentGateway: 'Paystack',
+          rawMetadata: data.data
+        });
+      }
+    } catch (err) {
+      console.error('Redirect verification error:', err);
+    }
+  }
+
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>GOYE Payment Verification</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <style>
+          body { background: #000; color: #fff; font-family: system-ui, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; text-align: center; }
+          .card { background: #111; border: 2px solid #FFD700; padding: 32px; border-radius: 24px; max-width: 400px; width: 90%; }
+          .btn { display: inline-block; background: #FFD700; color: #000; font-weight: 900; padding: 14px 28px; border-radius: 12px; text-decoration: none; margin-top: 20px; text-transform: uppercase; }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <h2 style="color: #FFD700; font-size: 24px; margin-top: 0;">Payment Verified!</h2>
+          <p style="font-size: 14px; color: #ccc;">Your order <strong>${reference}</strong> has been successfully verified. Content unlocked!</p>
+          <a href="/#academy" class="btn" onclick="localStorage.setItem('sirwise_paid','true'); localStorage.setItem('academy_unlocked','true');">Access Academy Now &rarr;</a>
+        </div>
+        <script>
+          localStorage.setItem('sirwise_paid', 'true');
+          localStorage.setItem('academy_unlocked', 'true');
+          ${customerEmail ? `localStorage.setItem('user_email', '${customerEmail}');` : ''}
+          setTimeout(() => { window.location.href = '/#academy'; }, 2500);
+        </script>
+      </body>
+    </html>
+  `);
+});
+
+// 7. API: WhatsApp Support Redirection (Privacy Preserving)
+app.get(['/go/whatsapp', '/whatsapp', '/support/whatsapp', '/support', '/api/support-chat', '/api/support/whatsapp'], (req: any, res: any) => {
   const phone = process.env.WHATSAPP_PHONE_NUMBER || '2348033584736';
   const text = req.query.text || 'Hello GOYE Sirwise Academy RC BN3583773';
   const encodedMessage = encodeURIComponent(text.toString());

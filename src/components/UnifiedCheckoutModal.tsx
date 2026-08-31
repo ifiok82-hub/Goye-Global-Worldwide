@@ -1,27 +1,10 @@
 import React, { useState } from 'react';
 import { X, ShieldCheck, Lock, Copy, CheckCircle, RefreshCw, ChevronRight, Zap, ExternalLink } from 'lucide-react';
+import { identifyUserSession, trackUserClick } from '../utils/analytics';
 
 export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, onToast }: any) {
   const [activeGateway, setActiveGateway] = useState<string | null>(null);
-  const [email, setEmail] = useState(() => {
-    const saved = (localStorage.getItem('user_email') || localStorage.getItem('pupil_email') || '').trim();
-    if (!saved || saved.includes('ifiok82') || saved.includes('godswilloyoho') || saved.includes('goyedagos') || saved.includes('goye@gasv.store') || saved === 'null' || saved === 'undefined' || !saved.includes('.')) {
-      localStorage.removeItem('user_email');
-      localStorage.removeItem('customer_email');
-      localStorage.removeItem('pupil_email');
-      return '';
-    }
-    return saved;
-  });
-
-  React.useEffect(() => {
-    const saved = (localStorage.getItem('user_email') || '').trim();
-    if (saved && (saved.includes('goyedagos') || saved.includes('ifiok82') || saved.includes('godswilloyoho') || saved.includes('goye@gasv.store') || saved === 'null' || saved === 'undefined' || !saved.includes('.'))) {
-      localStorage.removeItem('user_email');
-      localStorage.removeItem('customer_email');
-      setEmail('');
-    }
-  }, []);
+  const [email, setEmail] = useState('');
   const [cryptoTxHash, setCryptoTxHash] = useState('');
   const [bankRef, setBankRef] = useState('');
   const [cryptoVerifying, setCryptoVerifying] = useState(false);
@@ -95,6 +78,9 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
             localStorage.setItem('payment_verified', 'true');
             localStorage.setItem('academy_unlocked', 'true');
             localStorage.setItem('payment_date', new Date().toISOString());
+            if (email) {
+                identifyUserSession(email.split('@')[0], email);
+            }
             if ((window as any).unlockAcademy) (window as any).unlockAcademy();
         }
 
@@ -132,17 +118,43 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
   };
 
   const getValidatedEmail = (): string | null => {
-    let userEmail = (email.trim() || localStorage.getItem('user_email') || localStorage.getItem('customer_email') || '').trim();
-    if (!userEmail || userEmail.length < 5 || !userEmail.includes('@') || !userEmail.includes('.') || userEmail.includes('ifiok82') || userEmail.includes('godswilloyoho') || userEmail.includes('goyedagos') || userEmail.includes('goye@gasv.store') || userEmail === 'null' || userEmail === 'undefined' || userEmail.includes('ico')) {
+    const userEmail = email.trim();
+    if (!userEmail || userEmail.length < 5 || !userEmail.includes('@') || !userEmail.includes('.') || userEmail === 'null' || userEmail === 'undefined') {
       return null;
     }
     return userEmail;
   };
 
-  const payWithPaystack = () => {
+  const initializePaystackServerRedirect = async (userEmail: string) => {
+    try {
+      if (onToast) onToast('Initializing Paystack secure checkout...');
+      const res = await fetch('/api/payments/paystack/initialize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: userEmail,
+          amountUsd: priceUSD,
+          currencyCode: userCurrency || 'USD'
+        })
+      });
+      const data = await res.json();
+      if (data.success && data.authorization_url) {
+        window.location.href = data.authorization_url;
+      } else if (data.simulation && data.reference) {
+        window.location.href = `/payment/verify?reference=${encodeURIComponent(data.reference)}`;
+      } else {
+        alert(data.error || 'Unable to initialize Paystack session. Please try Bank / OPay Transfer.');
+      }
+    } catch (err: any) {
+      console.error('Paystack server init error', err);
+      alert('Network error initializing Paystack. Please try Bank / OPay Transfer.');
+    }
+  };
+
+  const handlePaystackPayment = () => {
     const emailInput = getValidatedEmail();
     if (!emailInput) {
-      alert('Enter complete valid email e.g. parent@gmail.com');
+      alert('Please enter your email address before proceeding with payment.');
       const inputEl = document.querySelector('input[type="email"]') as HTMLInputElement;
       if (inputEl) {
         inputEl.focus();
@@ -152,46 +164,56 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
     }
     localStorage.setItem('user_email', emailInput);
     localStorage.setItem('customer_email', emailInput);
+    trackUserClick('Paystack Payment Click', 'CheckoutModal', product?.id || 'academy');
 
-    const paystackAmount = userCurrency === 'USD' ? 4999 : 7498500; // $49.99 in cents OR ₦74,985 in kobo
-    const paystackCurrency = userCurrency === 'USD' ? 'USD' : 'NGN';
-    const paystackPublicKey = paymentConfig?.paystack || localStorage.getItem('paystack_public_key') || 'pk_live_f89c6d3a9504e9a1127048';
+    const paystackPublicKey = 
+      (import.meta.env && import.meta.env.VITE_PAYSTACK_PUBLIC_KEY) || 
+      (window as any).env?.VITE_PAYSTACK_PUBLIC_KEY || 
+      paymentConfig?.paystack || 
+      localStorage.getItem('paystack_public_key') || 
+      'pk_live_9f7e06b21fa6dc4e3e94cc00c74587c01249a89b';
 
-    if (typeof (window as any).PaystackPop !== 'undefined') {
+    const nairaPrice = Math.round(priceUSD * 1550);
+    const amountInKobo = nairaPrice * 100; // e.g., 7498500 kobo for NGN 74,985
+
+    if (typeof (window as any).PaystackPop !== 'undefined' && typeof (window as any).PaystackPop.setup === 'function') {
       try {
         const handler = (window as any).PaystackPop.setup({
           key: paystackPublicKey,
           email: emailInput,
-          amount: paystackAmount,
-          currency: paystackCurrency,
-          ref: 'SIRWISE_' + Math.floor(Math.random() * 1000000000) + '_' + Date.now(),
+          amount: amountInKobo,
+          currency: 'NGN',
+          ref: 'GOYE_' + Math.floor((Math.random() * 1000000000) + 1),
           metadata: {
             custom_fields: [
-              { display_name: "Product", variable_name: "product", value: cleanProductName + " $49.99" },
-              { display_name: "RC", variable_name: "rc", value: "BN3583773 GOYEDAGOSMESS ENTERPRISE" },
-              { display_name: "OPay", variable_name: "opay", value: "6113541882 GOYEDAGOSMESS ENTERPRISE" }
+              { display_name: "Product", variable_name: "product", value: cleanProductName },
+              { display_name: "RC", variable_name: "rc", value: "BN3583773 GOYEDAGOSMESS ENTERPRISE" }
             ]
           },
-          callback: (response: any) => {
-            if (!response || !response.reference) {
-              alert('No payment reference - Payment failed');
-              return;
-            }
-            handleSuccess(response.reference, 'Paystack (Global Cards)');
+          onClose: function() {
+            console.log('Window closed');
+            if (onToast) onToast('Paystack checkout window closed');
           },
-          onClose: () => {
-            if (onToast) onToast('Paystack window closed');
+          callback: function(response: any) {
+            if (response && response.reference) {
+              window.location.href = `/payment/verify?reference=${encodeURIComponent(response.reference)}`;
+            } else {
+              handleSuccess('GOYE_' + Date.now(), 'Paystack (Global Cards)');
+            }
           }
         });
         handler.openIframe();
       } catch (e: any) {
-        console.error('Paystack error', e);
-        alert('Paystack initialization notice: Please try Bank / OPay Transfer if window is blocked.');
+        console.error('Paystack popup setup error, falling back to server redirect:', e);
+        initializePaystackServerRedirect(emailInput);
       }
     } else {
-      alert('Paystack SDK loading... Please try again or use Bank / OPay Transfer.');
+      console.warn('PaystackPop inline SDK not loaded, redirecting via server API...');
+      initializePaystackServerRedirect(emailInput);
     }
   };
+
+  const payWithPaystack = handlePaystackPayment;
 
   const payWithFlutterwave = () => {
     const emailInput = getValidatedEmail();
@@ -209,7 +231,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
 
     const flutterwavePublicKey = paymentConfig?.flutterwave || localStorage.getItem('flutterwave_public_key') || 'FLWPUBK-cbb518a9b8f74421e887f4a1ec911ea7-X';
     const customerName = emailInput.split('@')[0] || 'Global Customer';
-    const customerPhone = '2348033584736';
+    const customerPhone = '';
     
     if (typeof (window as any).FlutterwaveCheckout !== 'undefined') {
       try {
@@ -267,7 +289,27 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
     }
   };
 
+  const selectGatewayWithEmailCheck = (gateway: string) => {
+    const emailInput = getValidatedEmail();
+    if (!emailInput) {
+      alert('Please enter your email address before selecting a payment method.');
+      const inputEl = document.querySelector('input[type="email"]') as HTMLInputElement;
+      if (inputEl) {
+        inputEl.focus();
+        inputEl.style.border = '2px solid #ef4444';
+      }
+      return;
+    }
+    setActiveGateway(gateway);
+    if (gateway === 'bank') setBankSubmitted(false);
+  };
+
   const submitCrypto = () => {
+    const emailInput = getValidatedEmail();
+    if (!emailInput) {
+      alert('Please enter your email address before submitting.');
+      return;
+    }
     if (!cryptoTxHash) {
       if (onToast) onToast('Please enter transaction hash or reference');
       else alert('Please enter transaction hash or reference');
@@ -282,6 +324,11 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
   };
 
   const submitBankTransfer = () => {
+    const emailInput = getValidatedEmail();
+    if (!emailInput) {
+      alert('Please enter your email address before submitting.');
+      return;
+    }
     if (!bankRef.trim()) {
       if (onToast) onToast('Please enter Reference / Sender Name');
       else alert('Please enter Reference / Sender Name');
@@ -369,21 +416,15 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
             <label className="block text-xs font-bold text-gray-400 mb-2 uppercase">Your Email Address (for delivery)</label>
             <input 
               type="email" 
-              placeholder="Enter your complete email e.g. parent@gmail.com" 
+              placeholder="your.email@example.com" 
               className="w-full bg-black border border-[#333] p-4 rounded-xl text-white mb-6 focus:border-[#FFD700] outline-none text-sm font-medium"
               value={email}
               onChange={e => {
                 const val = e.target.value;
-                if (val.includes('ifiok82') || val.includes('godswilloyoho') || val.includes('goyedagos') || val.includes('goye@gasv.store') || val === 'null' || val === 'undefined') {
-                  setEmail('');
-                  localStorage.removeItem('user_email');
-                  localStorage.removeItem('customer_email');
-                  return;
-                }
                 setEmail(val);
                 if (val.includes('@') && val.includes('.')) {
-                  localStorage.setItem('user_email', val);
-                  localStorage.setItem('customer_email', val);
+                  localStorage.setItem('user_email', val.trim());
+                  localStorage.setItem('customer_email', val.trim());
                 }
               }}
             />
@@ -445,7 +486,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                   <span>🌍</span> Flutterwave (Africa Cards)
                 </button>
                 <button 
-                  onClick={() => setActiveGateway('crypto')} 
+                  onClick={() => selectGatewayWithEmailCheck('crypto')} 
                   style={{
                     background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
                     color: '#000',
@@ -467,7 +508,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                   <span>🦊</span> USDC Crypto (Ethereum - Metamask)
                 </button>
                 <button 
-                  onClick={() => setActiveGateway('pi')} 
+                  onClick={() => selectGatewayWithEmailCheck('pi')} 
                   style={{
                     background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
                     color: '#000',
@@ -489,7 +530,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                   <span>🟣</span> Pi Network GCV $314,159
                 </button>
                 <button 
-                  onClick={() => { setActiveGateway('bank'); setBankSubmitted(false); }} 
+                  onClick={() => selectGatewayWithEmailCheck('bank')} 
                   style={{
                     background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
                     color: '#000',
@@ -607,7 +648,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                   <button
                     onClick={() => {
                       const text = `Hello GOYE Global I just transferred to 6113541882 OPay GOYEDAGOSMESS ENTERPRISE Reference: ${submittedBankRef}`;
-                      window.open(`https://wa.me/2348033584736?text=${encodeURIComponent(text)}`, '_blank');
+                      window.open(`/go/whatsapp?text=${encodeURIComponent(text)}`, '_blank');
                     }}
                     className="w-full bg-[#25D366] text-black font-black py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-[#20bd5a] transition cursor-pointer pointer-events-auto text-sm shadow-md"
                   >

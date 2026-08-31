@@ -63,6 +63,26 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
     } else {
       setIsEnrolled(false);
       setProgress([]);
+
+      const userEmail = (localStorage.getItem('user_email') || currentUser?.email || '').trim();
+      if (userEmail) {
+        fetch('/api/content/access', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: userEmail })
+        })
+        .then(r => r.json())
+        .then(d => {
+          if (d.unlocked) {
+            setIsEnrolled(true);
+            localStorage.setItem('sirwise_paid', 'true');
+            localStorage.setItem('payment_verified', 'true');
+            localStorage.setItem('academy_unlocked', 'true');
+            setProgress([1, 2, 3, 4]);
+          }
+        })
+        .catch(() => {});
+      }
     }
     setLoading(false);
   }, [currentUser, userProfile]);
