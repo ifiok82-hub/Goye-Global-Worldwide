@@ -168,7 +168,7 @@ let fallbackProducts: any[] = defaultPhysicalProducts;
 let fallbackOrders: any[] = [
   {
     orderId: 'GOYE-ORD-884920',
-    customerEmail: 'ifiok82@gmail.com',
+    customerEmail: 'goyedagosmess@gmail.com',
     productName: 'SIRWISE AI Academy - 1,000 Credits & Masterclass Module 1',
     amount: 19.00,
     currency: 'USD',
@@ -181,7 +181,7 @@ let fallbackOrders: any[] = [
   },
   {
     orderId: 'GOYE-ORD-202688',
-    customerEmail: 'ifiok82@gmail.com',
+    customerEmail: 'goyedagosmess@gmail.com',
     productName: 'GOYE Global 10GB Travel eSIM Bundle',
     amount: 4.00,
     currency: 'USD',
@@ -1104,7 +1104,7 @@ app.get('/api/track-order', async (req, res) => {
       itemTitle: mockItemTitle,
       totalAmountUSD: foundOrder ? foundOrder.amount : 49.99,
       totalAmountNGN: foundOrder ? foundOrder.amount * 1400 : 70000,
-      customerEmail: foundOrder ? foundOrder.customerEmail : 'ifiok82@gmail.com',
+      customerEmail: foundOrder ? foundOrder.customerEmail : 'goyedagosmess@gmail.com',
       escrowProtected: true,
       timeline: [
         {
@@ -2371,7 +2371,7 @@ app.post('/api/webhooks/payment', async (req, res) => {
   let orderId = '';
   let amount = 0;
   let currency = 'USD';
-  let customerEmail = 'ifiok82@gmail.com';
+  let customerEmail = 'goyedagosmess@gmail.com';
   let productName = 'SIRWISE AI Academy / GOYE Pro Product Pass';
 
   // 1. Identify Paystack Event (charge.success)
@@ -2398,7 +2398,7 @@ app.post('/api/webhooks/payment', async (req, res) => {
     orderId = data.reference || `paystack-${Date.now()}`;
     amount = data.amount ? (data.amount / 100) : (body.amountUsd || 19.00);
     currency = data.currency || 'NGN';
-    customerEmail = data.customer?.email || body.email || 'ifiok82@gmail.com';
+    customerEmail = data.customer?.email || body.email || 'goyedagosmess@gmail.com';
     productName = data.metadata?.product_name || data.metadata?.course_name || body.productName || 'GOYE Store / Sirwise AI Academy Access';
   }
   // 2. Identify Flutterwave Event (charge.completed)
@@ -2417,7 +2417,7 @@ app.post('/api/webhooks/payment', async (req, res) => {
     orderId = data.tx_ref || data.reference || `flw-${Date.now()}`;
     amount = Number(data.amount || body.amountUsd || 25.00);
     currency = (data.currency || 'USD').toUpperCase();
-    customerEmail = data.customer?.email || body.email || 'ifiok82@gmail.com';
+    customerEmail = data.customer?.email || body.email || 'goyedagosmess@gmail.com';
     productName = data.meta?.product_name || data.narration || body.productName || 'GOYE Digital Product Bundle';
   }
   // 3. Identify Pi Network & Crypto Payment Events
@@ -2426,7 +2426,7 @@ app.post('/api/webhooks/payment', async (req, res) => {
     orderId = body.paymentId || body.txHash || body.reference || `crypto-${Date.now()}`;
     amount = Number(body.amount || body.amountUsd || body.piAmount || 19.00);
     currency = (body.currency || (gateway.includes('Pi') ? 'PI' : 'USD')).toUpperCase();
-    customerEmail = body.customerEmail || body.email || body.userUid || 'ifiok82@gmail.com';
+    customerEmail = body.customerEmail || body.email || body.userUid || 'goyedagosmess@gmail.com';
     productName = body.productName || body.courseName || 'Sirwise AI Academy Web3 Masterclass Module';
   }
   // 4. Identify Payoneer / PayPal / Google Pay Events
@@ -2436,7 +2436,7 @@ app.post('/api/webhooks/payment', async (req, res) => {
     orderId = body.orderId || body.transactionId || body.reference || `${rawGw}-${Date.now()}`;
     amount = Number(body.amount || body.amountUsd || 19.00);
     currency = (body.currency || 'USD').toUpperCase();
-    customerEmail = body.customerEmail || body.email || 'ifiok82@gmail.com';
+    customerEmail = body.customerEmail || body.email || 'goyedagosmess@gmail.com';
     productName = body.productName || body.courseName || 'GOYE Store / Sirwise AI Academy Access';
   }
   // 5. Fallback / Direct Purchase Webhook Payload
@@ -2445,7 +2445,7 @@ app.post('/api/webhooks/payment', async (req, res) => {
     orderId = body.orderId || body.reference || `goye-wh-${Date.now()}`;
     amount = Number(body.amount || body.amountUsd || 19.00);
     currency = (body.currency || 'USD').toUpperCase();
-    customerEmail = body.customerEmail || body.email || 'ifiok82@gmail.com';
+    customerEmail = body.customerEmail || body.email || 'goyedagosmess@gmail.com';
     productName = body.productName || body.courseName || 'Sirwise AI Academy Course Access';
   }
 
@@ -2509,7 +2509,7 @@ app.post('/api/payments/paystack/webhook', async (req, res) => {
   if (event === 'charge.success' && data && data.status === 'success') {
     const reference = data.reference || `paystack-${Date.now()}`;
     let amountUsd = data.metadata && data.metadata.original_usd_amount ? Number(data.metadata.original_usd_amount) : (data.amount / 100) / 1550;
-    const email = data.customer ? data.customer.email : 'ifiok82@gmail.com';
+    const email = data.customer ? data.customer.email : 'goyedagosmess@gmail.com';
     const prodName = data.metadata?.product_name || 'GOYE Store / Sirwise AI Academy Access';
 
     await recordAndFulfillPurchase({
@@ -2560,7 +2560,7 @@ app.post('/api/payments/flutterwave/webhook', async (req, res) => {
     if (payload.currency === 'NGN') {
       amountUsd = amountUsd / 1550;
     }
-    const email = payload.customer ? payload.customer.email : 'ifiok82@gmail.com';
+    const email = payload.customer ? payload.customer.email : 'goyedagosmess@gmail.com';
     const prodName = payload.meta?.product_name || 'GOYE Digital Product Bundle';
 
     await recordAndFulfillPurchase({
@@ -2958,12 +2958,9 @@ Never mention internal file structures, system APIs, or directories.`
 
 
 // 11. API: WhatsApp Support Redirection
-app.get('/api/support-chat', (req, res) => {
-  const phone = process.env.WHATSAPP_PHONE_NUMBER;
-  if (!phone) {
-    return res.status(500).send('Support offline.');
-  }
-  const text = req.query.text || 'Hello GOYE Support, I need assistance.';
+app.get(['/whatsapp', '/support/whatsapp', '/support', '/api/support-chat'], (req: any, res: any) => {
+  const phone = process.env.WHATSAPP_PHONE_NUMBER || '2348033584736';
+  const text = req.query.text || 'Hello GOYE Sirwise Academy RC BN3583773';
   const encodedMessage = encodeURIComponent(text.toString());
   res.redirect(302, `https://wa.me/${phone}?text=${encodedMessage}`);
 });

@@ -318,7 +318,7 @@ export default function App() {
     const trackPageView = async () => {
       try {
         const userEmail = localStorage.getItem('user_email') || localStorage.getItem('admin_email') || currentUser?.email || '';
-        const isAdminUser = localStorage.getItem('is_admin') === 'true' || localStorage.getItem('is_owner') === 'true' || userEmail === 'ifiok82@gmail.com' || userEmail.includes('goye');
+        const isAdminUser = localStorage.getItem('is_admin') === 'true' || localStorage.getItem('is_owner') === 'true' || userEmail === 'goyedagosmess@gmail.com' || userEmail.includes('goye');
         if (isAdminUser) {
           localStorage.setItem('is_admin', 'true');
           localStorage.setItem('is_owner', 'true');
@@ -567,7 +567,7 @@ export default function App() {
             <button onClick={() => { setTab("home"); setTimeout(() => { const el = document.getElementById("our-method-section") || document.getElementById("our-method"); if(el) el.scrollIntoView({behavior: "smooth"}); }, 100); }} className="text-black font-bold text-[10px] hover:bg-black/10 px-2 py-1 rounded cursor-pointer pointer-events-auto touch-manipulation z-[100] relative">Our method</button>
             <button onClick={() => { window.open("https://wa.me/2348033584736?text=Join%20Sirwise%20Community", "_blank"); }} className="text-black font-bold text-[10px] hover:bg-black/10 px-2 py-1 rounded cursor-pointer pointer-events-auto touch-manipulation z-[100] relative">Community</button>
             <button onClick={() => { if(!isAuthenticated) setTab("auth"); else { setTab("academy"); setTimeout(()=>document.getElementById("dashboard")?.scrollIntoView({behavior:"smooth"}), 100); } }} className="text-[#FFD700] bg-black font-bold text-[10px] hover:bg-black/80 px-2 py-1 rounded-full flex items-center gap-1 cursor-pointer pointer-events-auto touch-manipulation z-[100] relative">Student dashboard <ChevronRight size={10} /></button>
-            <button onClick={() => { if(localStorage.getItem("sirwise_paid") !== "true") { setSelectedProduct({ id: "academy", name: "Sirwise AI Web3 Academy 4-Week", price: 49.99, category: "academy" }); setShowCheckoutModal(true); } else { setTab("academy"); } }} className="text-white bg-blue-900 font-bold text-[10px] hover:bg-blue-800 px-2 py-1 rounded-full flex items-center gap-1 cursor-pointer pointer-events-auto touch-manipulation z-[100] relative">Start learning <ChevronRight size={10} /></button>
+            <button onClick={() => { if(localStorage.getItem("sirwise_paid") !== "true" || localStorage.getItem("academy_unlocked") !== "true") { setSelectedProduct({ id: "academy", name: "Sirwise AI Web3 Academy 4-Week Masterclass", price: 49.99, category: "academy" }); setShowCheckoutModal(true); } else { setTab("academy"); } }} className="text-white bg-blue-900 font-bold text-[10px] hover:bg-blue-800 px-2 py-1 rounded-full flex items-center gap-1 cursor-pointer pointer-events-auto touch-manipulation z-[100] relative">Start learning <ChevronRight size={10} /></button>
             <button onClick={() => setShowReferralModal(true)} className="text-black font-bold text-[10px] hover:bg-black/10 px-2 py-1 rounded cursor-pointer pointer-events-auto touch-manipulation z-[100] relative">Referral</button>
         </div>
         <button onClick={() => { setTab("home"); setTimeout(() => { const el = document.getElementById("programs-section") || document.getElementById("programs"); if(el) el.scrollIntoView({behavior: "smooth"}); }, 100); }} className="w-full bg-[#FFD700] text-black text-center text-[10px] font-black py-1 cursor-pointer pointer-events-auto z-[100] relative block hover:bg-[#ffe033]">
@@ -946,7 +946,7 @@ export default function App() {
               showToast('You are currently offline. Please reconnect to launch support.');
               return;
             }
-            window.open('/api/support-chat?text=Hello GOYE Support', '_blank');
+            window.open('https://wa.me/2348033584736?text=Hello%20GOYE%20Sirwise%20Academy%20RC%20BN3583773', '_blank');
           }} style={{display:'inline-flex', alignItems:'center', gap:'8px', background:'#25D366', color:'#fff', padding:'12px 24px', borderRadius:'12px', border:'none', cursor:'pointer', fontSize:'14px', fontWeight:'bold'}}>
             <MessageCircle size={18}/> WhatsApp Support
           </button>

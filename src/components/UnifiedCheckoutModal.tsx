@@ -84,6 +84,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
         if (!isPending) {
             localStorage.setItem('sirwise_paid', 'true');
             localStorage.setItem('payment_verified', 'true');
+            localStorage.setItem('academy_unlocked', 'true');
             localStorage.setItem('payment_date', new Date().toISOString());
             if ((window as any).unlockAcademy) (window as any).unlockAcademy();
         }
