@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Sparkles, Download, ArrowRight, ShieldCheck, CheckCircle2, Zap, Loader2, FileText, Copy, Check, Eye } from 'lucide-react';
+import ShareBlueprintSection from './ShareBlueprintSection';
 
 interface FreeLeadMagnetModalProps {
   isOpen: boolean;
@@ -377,6 +378,11 @@ Structure the output into 4 clear sections: Executive Summary, Project Scope, Ti
                 <span>Get Starter Toolkit for ₦2,500</span>
                 <ArrowRight size={16} />
               </button>
+            </div>
+
+            {/* One-Click Social Sharing Section */}
+            <div className="mb-4 text-left">
+              <ShareBlueprintSection compact onToast={onToast} />
             </div>
 
             <button

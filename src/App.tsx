@@ -16,6 +16,7 @@ import VoiceModal from './components/VoiceModal';
 import LanguageModal from './components/LanguageModal';
 import AdminDashboard from './components/AdminDashboard';
 import CurrencyModal, { CURRENCIES } from './components/CurrencyModal';
+import ShareBlueprintSection from './components/ShareBlueprintSection';
 import { Bell, User } from 'lucide-react';
 import { GoyeLogo } from './components/GoyeLogo';
 import SirwiseAITeacher from './components/SirwiseAITeacher';
@@ -709,6 +710,8 @@ export default function App() {
                     setTimeout(() => setAdminTapCount(0), 3000);
                   }} 
                 />
+
+                <ShareBlueprintSection onToast={showToast} />
 
 
                 {/* Programs Section */}

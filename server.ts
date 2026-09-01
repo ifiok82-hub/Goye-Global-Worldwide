@@ -2994,7 +2994,7 @@ function parseDeviceType(ua: string = ''): string {
 }
 
 // 1. API: Visitor & Click Analytics Tracking
-app.post('/api/analytics/track', async (req: any, res: any) => {
+app.post(['/api/analytics/track', '/api/analytics/log', '/api/traffic/log'], async (req: any, res: any) => {
   try {
     const { sessionId, page, target, productId, customerName, customerEmail, referrer } = req.body || {};
     const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1').toString().split(',')[0].trim();
@@ -3071,10 +3071,28 @@ app.post('/api/analytics/identify', async (req: any, res: any) => {
 });
 
 // 3. API: Admin Analytics Summary & Visitor History
-app.get(['/api/admin/traffic', '/api/analytics/summary'], (req: any, res: any) => {
+app.get(['/api/admin/traffic', '/api/analytics/summary', '/api/admin/analytics/stats'], async (req: any, res: any) => {
+  let dbLeadsCount = inMemoryLeads.length;
+  try {
+    const database = await getDb();
+    if (database) {
+      const count = await database.collection('leads').countDocuments();
+      if (count > 0) dbLeadsCount = count;
+    }
+  } catch (e) {}
+
+  const totalClicks = trafficLogs.length;
+  const leadSubmissions = dbLeadsCount;
+  const conversionRateNum = totalClicks > 0 ? (leadSubmissions / totalClicks) * 100 : 0;
+  const conversionRate = conversionRateNum.toFixed(1) + '%';
+
   res.json({
     success: true,
-    totalVisits: trafficLogs.length,
+    totalVisits: totalClicks,
+    totalClicks: totalClicks,
+    leadSubmissions: leadSubmissions,
+    conversionRateNum: conversionRateNum,
+    conversionRate: conversionRate,
     traffic: trafficLogs.slice(0, 500)
   });
 });

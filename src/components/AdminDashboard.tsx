@@ -12,6 +12,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
   const [orders, setOrders] = useState<any[]>([]); // Orders list
   const [pageViews, setPageViews] = useState<any[]>([]); // Traffic log
   const [totalClicks, setTotalClicks] = useState(0);
+  const [leadSubmissions, setLeadSubmissions] = useState(0);
   
   const [payouts, setPayouts] = useState<any[]>([]);
   
@@ -97,22 +98,29 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
       }
     }, (e) => console.warn('Firestore global traffic log snapshot warning:', e));
 
-    // Fetch server-side traffic logs
-    fetch('/api/admin/traffic')
+    // Fetch server-side traffic logs & lead submission stats
+    fetch('/api/admin/analytics/stats')
       .then(res => res.json())
       .then(data => {
-        if (data.success && Array.isArray(data.traffic) && data.traffic.length > 0) {
-          setPageViews(prev => {
-            const map = new Map();
-            [...data.traffic, ...prev].forEach((item: any) => {
-              if (item.id) map.set(item.id, item);
+        if (data.success) {
+          if (Array.isArray(data.traffic) && data.traffic.length > 0) {
+            setPageViews(prev => {
+              const map = new Map();
+              [...data.traffic, ...prev].forEach((item: any) => {
+                if (item.id) map.set(item.id, item);
+              });
+              return Array.from(map.values()).sort((a: any, b: any) => new Date(b.timestamp || b.createdAt || 0).getTime() - new Date(a.timestamp || a.createdAt || 0).getTime());
             });
-            return Array.from(map.values()).sort((a: any, b: any) => new Date(b.timestamp || b.createdAt || 0).getTime() - new Date(a.timestamp || a.createdAt || 0).getTime());
-          });
-          setTotalClicks(prev => Math.max(prev, data.traffic.length));
+          }
+          if (typeof data.totalClicks === 'number') {
+            setTotalClicks(prev => Math.max(prev, data.totalClicks));
+          }
+          if (typeof data.leadSubmissions === 'number') {
+            setLeadSubmissions(data.leadSubmissions);
+          }
         }
       })
-      .catch(e => console.warn('Server traffic fetch error:', e));
+      .catch(e => console.warn('Server analytics fetch error:', e));
 
     const unsubPayouts = onSnapshot(collection(db, 'payout_requests'), (snap) => {
       setPayouts(snap.docs.map(d => ({ id: d.id, ...d.data() })));
@@ -299,21 +307,41 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
 
       {activeTab === 'analytics' && (
         <div className="space-y-6 animate-in fade-in">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-[#111] border border-[#333] rounded-2xl p-4 cursor-pointer hover:border-[#FFD700] transition" >
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="bg-[#111] border border-[#333] rounded-2xl p-4 cursor-pointer hover:border-[#FFD700] transition">
               <div className="flex items-center gap-2 text-gray-400 mb-2">
                 <Eye size={16} className="text-[#3b82f6]" />
-                <span className="text-[10px] uppercase font-bold">Total Clicks & Traffic</span>
+                <span className="text-[10px] uppercase font-bold">Total Link Clicks</span>
               </div>
               <div className="text-2xl font-black text-white">
                 {totalClicks.toLocaleString()}
+              </div>
+            </div>
+
+            <div className="bg-[#111] border border-[#333] rounded-2xl p-4 cursor-pointer hover:border-[#FFD700] transition">
+              <div className="flex items-center gap-2 text-gray-400 mb-2">
+                <Mail size={16} className="text-[#FFD700]" />
+                <span className="text-[10px] uppercase font-bold">Lead Submissions</span>
+              </div>
+              <div className="text-2xl font-black text-[#FFD700]">
+                {leadSubmissions.toLocaleString()}
+              </div>
+            </div>
+
+            <div className="bg-[#111] border border-[#333] rounded-2xl p-4 cursor-pointer hover:border-[#FFD700] transition">
+              <div className="flex items-center gap-2 text-gray-400 mb-2">
+                <Activity size={16} className="text-[#10B981]" />
+                <span className="text-[10px] uppercase font-bold">Conversion Rate</span>
+              </div>
+              <div className="text-2xl font-black text-[#10B981]">
+                {totalClicks > 0 ? ((leadSubmissions / totalClicks) * 100).toFixed(1) + '%' : '0.0%'}
               </div>
             </div>
             
             <div className="bg-[#111] border border-[#333] rounded-2xl p-4 cursor-pointer hover:border-[#FFD700] transition" onClick={() => setShowCustomersModal(true)}>
               <div className="flex items-center gap-2 text-gray-400 mb-2">
                 <UserPlus size={16} className="text-[#10B981]" />
-                <span className="text-[10px] uppercase font-bold">Registered Customers</span>
+                <span className="text-[10px] uppercase font-bold">Registered Users</span>
               </div>
               <div className="text-2xl font-black text-white">
                 {users.length.toLocaleString()}
