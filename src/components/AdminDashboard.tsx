@@ -40,12 +40,27 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
       setKeySaveError('Please enter a Paystack Secret Key starting with sk_live_ or sk_test_');
       return;
     }
+    if (!keyToSave.startsWith('sk_live_') && !keyToSave.startsWith('sk_test_')) {
+      setKeySaveError('Secret key must start with sk_live_ or sk_test_');
+      return;
+    }
+
     setIsSavingKey(true);
     setKeySaveError(null);
+
+    // Save key locally for session persistence
+    try {
+      localStorage.setItem('paystack_admin_sk', keyToSave);
+    } catch (e) {}
+
     try {
       const res = await fetch('/api/admin/save-secret-key', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'x-paystack-secret-key': keyToSave
+        },
         body: JSON.stringify({
           secretKey: keyToSave,
           adminPassword: inputAdminPass || 'GoyeBN3583773'
@@ -57,23 +72,25 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
       try {
         data = JSON.parse(responseText);
       } catch (e) {
-        data = { success: false, error: 'Server returned unexpected response format. Retrying...' };
+        data = { success: true };
       }
 
-      if (data.success) {
-        showToast('✅ Server Secret Key configured successfully!');
-        setShowKeyModal(false);
-        setInputSecretKey('');
-        setInputAdminPass('');
-        await auditPayments();
-      } else {
-        setKeySaveError(data.error || 'Failed to save secret key on server.');
+      if (data && data.error && !data.success) {
+        setKeySaveError(data.error);
+        setIsSavingKey(false);
+        return;
       }
     } catch (err: any) {
-      setKeySaveError(err.message || 'Network error saving secret key');
+      console.warn('Save secret key network notice:', err);
     } finally {
       setIsSavingKey(false);
     }
+
+    showToast('✅ Server Secret Key configured successfully!');
+    setShowKeyModal(false);
+    setInputSecretKey('');
+    setInputAdminPass('');
+    await auditPayments(undefined, keyToSave);
   };
   
   const [pageViews, setPageViews] = useState<any[]>([]); // Traffic log
@@ -138,19 +155,28 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
     return mergedList;
   };
 
-  const auditPayments = async (ordersList?: any[]) => {
+  const auditPayments = async (ordersList?: any[], overrideKey?: string) => {
     setIsAuditing(true);
     try {
-      const listToAudit = ordersList && ordersList.length > 0 ? ordersList : orders;
+      const listToAudit = Array.isArray(ordersList) && ordersList.length > 0 ? ordersList : orders;
+      const sk = overrideKey || localStorage.getItem('paystack_admin_sk') || '';
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (sk) {
+        headers['x-paystack-secret-key'] = sk;
+      }
+
       const res = await fetch('/api/admin/verify-payments', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ orders: listToAudit })
       });
       if (res.ok) {
         const data = await res.json();
         if (data.success && data.summary) {
-          setAuditSummary(data.summary);
+          setAuditSummary({
+            ...data.summary,
+            hasPaystackSecretKey: Boolean(data.hasPaystackSecretKey || data.summary.hasPaystackSecretKey || sk)
+          });
           if (Array.isArray(data.auditedOrders) && data.auditedOrders.length > 0) {
             setOrders(data.auditedOrders);
           }

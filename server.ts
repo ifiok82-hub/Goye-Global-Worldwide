@@ -2887,7 +2887,12 @@ const COUNTRY_MAP: Record<string, { flag: string; name: string }> = {
   TR: { flag: '🇹🇷', name: 'Turkey' }
 };
 
-function getPaystackSecretKey(): string | null {
+function getPaystackSecretKey(req?: any): string | null {
+  const headerKey = req?.headers?.['x-paystack-secret-key'] || req?.headers?.['authorization']?.replace('Bearer ', '');
+  if (headerKey && typeof headerKey === 'string' && headerKey.trim() && headerKey.trim().startsWith('sk_') && !headerKey.includes('...')) {
+    return headerKey.trim();
+  }
+
   const envKey = process.env.PAYSTACK_SECRET_KEY || process.env.PAYSTACK_SECRET || process.env.PAYSTACK_SK || process.env.PAYSTACK_KEY;
   if (envKey && typeof envKey === 'string' && envKey.trim() && !envKey.includes('your_paystack') && !envKey.includes('...') && envKey !== 'sk_live_') {
     return envKey.trim();
@@ -2941,8 +2946,8 @@ app.post('/api/admin/save-secret-key', (req, res) => {
   }
 });
 
-async function verifyPaystackTransactionServerSide(ref: string) {
-  const secretKey = getPaystackSecretKey();
+async function verifyPaystackTransactionServerSide(ref: string, req?: any) {
+  const secretKey = getPaystackSecretKey(req);
   if (!secretKey) {
     return {
       success: false,
@@ -3024,7 +3029,7 @@ async function verifyPaystackTransactionServerSide(ref: string) {
 
 // GET /api/paystack/auth-check - Safe Paystack server API connectivity & auth check
 app.get('/api/paystack/auth-check', async (req, res) => {
-  const secretKey = getPaystackSecretKey();
+  const secretKey = getPaystackSecretKey(req);
   if (!secretKey) {
     return res.status(200).json({
       authStatus: 'FAIL',
@@ -3077,13 +3082,13 @@ app.get('/api/paystack/verify/:reference', async (req, res) => {
     return res.status(400).json({ success: false, error: 'Transaction reference is required' });
   }
 
-  const result = await verifyPaystackTransactionServerSide(reference);
+  const result = await verifyPaystackTransactionServerSide(reference, req);
   return res.json(result);
 });
 
 // POST /api/admin/verify-payments - Comprehensive server-side audit of all store payments
 app.post('/api/admin/verify-payments', async (req, res) => {
-  const secretKey = getPaystackSecretKey();
+  const secretKey = getPaystackSecretKey(req);
   const inputOrders = Array.isArray(req.body.orders) ? req.body.orders : [];
 
   let allOrdersToAudit = inputOrders;
