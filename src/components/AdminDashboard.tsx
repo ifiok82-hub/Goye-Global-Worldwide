@@ -107,11 +107,17 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
   const [editingProduct, setEditingProduct] = useState<any>(null);
   
   const [paymentConfig, setPaymentConfig] = useState({
-    paystack: localStorage.getItem('paystack_public_key') || '',
-    flutterwave: localStorage.getItem('flutterwave_public_key') || '',
-    crypto: localStorage.getItem('crypto_wallet') || '',
-    pi: localStorage.getItem('pi_wallet') || ''
+    paystack: localStorage.getItem('paystack_public_key') || 'pk_live_9f7e06b21fa6dc4e3e94cc0',
+    paystackSecret: localStorage.getItem('paystack_secret_key') || localStorage.getItem('paystack_admin_sk') || '',
+    flutterwave: localStorage.getItem('flutterwave_public_key') || 'FLWPUBK-cbb518a9b8f74421e8871',
+    flutterwaveSecret: localStorage.getItem('flutterwave_secret_key') || '',
+    crypto: localStorage.getItem('crypto_wallet') || '0xaeed4e48f2146aadd07e85219f20',
+    pi: localStorage.getItem('pi_wallet') || 'GBR4B47WY7JDK2JKUUQQTWWI'
   });
+
+  const [showPaystackSecret, setShowPaystackSecret] = useState(false);
+  const [showFlutterwaveSecret, setShowFlutterwaveSecret] = useState(false);
+  const [isSavingGateways, setIsSavingGateways] = useState(false);
   
   const [settings, setSettings] = useState({
     freeQueries: 3,
@@ -247,6 +253,23 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
   useEffect(() => {
     loadLocalData();
     refreshOrders();
+
+    // Fetch server gateway keys configuration
+    fetch('/api/admin/get-gateway-keys')
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          setPaymentConfig(prev => ({
+            paystack: data.paystackPublicKey || prev.paystack,
+            paystackSecret: data.paystackSecretKey || prev.paystackSecret,
+            flutterwave: data.flutterwavePublicKey || prev.flutterwave,
+            flutterwaveSecret: data.flutterwaveSecretKey || prev.flutterwaveSecret,
+            crypto: data.cryptoWallet || prev.crypto,
+            pi: data.piWallet || prev.pi
+          }));
+        }
+      })
+      .catch(e => console.warn('Fetch gateway keys warning:', e));
 
     // 1. Real-time Firestore Orders Listener
     const unsubOrders = onSnapshot(collection(db, 'orders'), (snapshot) => {
@@ -402,15 +425,48 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
     setDoc(doc(db, 'settings', 'global'), settings).then(() => showToast('Settings saved!'));
   };
 
-  const savePaymentConfig = () => {
-    setDoc(doc(db, 'settings', 'payments'), paymentConfig).then(() => {
+  const savePaymentConfig = async () => {
+    setIsSavingGateways(true);
+    try {
       localStorage.setItem('PAYMENT_CONFIG', JSON.stringify(paymentConfig));
-      localStorage.setItem('paystack_public_key', paymentConfig.paystack);
-      localStorage.setItem('flutterwave_public_key', paymentConfig.flutterwave);
-      localStorage.setItem('crypto_wallet', paymentConfig.crypto);
-      localStorage.setItem('pi_wallet', paymentConfig.pi);
-      showToast('Payment config saved & broadcasted!');
-    });
+      localStorage.setItem('paystack_public_key', paymentConfig.paystack.trim());
+      localStorage.setItem('paystack_secret_key', paymentConfig.paystackSecret.trim());
+      localStorage.setItem('paystack_admin_sk', paymentConfig.paystackSecret.trim());
+      localStorage.setItem('flutterwave_public_key', paymentConfig.flutterwave.trim());
+      localStorage.setItem('flutterwave_secret_key', paymentConfig.flutterwaveSecret.trim());
+      localStorage.setItem('crypto_wallet', paymentConfig.crypto.trim());
+      localStorage.setItem('pi_wallet', paymentConfig.pi.trim());
+
+      await setDoc(doc(db, 'settings', 'payments'), paymentConfig, { merge: true });
+
+      await fetch('/api/admin/save-gateway-keys', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-paystack-secret-key': paymentConfig.paystackSecret.trim(),
+          'x-flutterwave-secret-key': paymentConfig.flutterwaveSecret.trim()
+        },
+        body: JSON.stringify({
+          paystackPublicKey: paymentConfig.paystack.trim(),
+          paystackSecretKey: paymentConfig.paystackSecret.trim(),
+          flutterwavePublicKey: paymentConfig.flutterwave.trim(),
+          flutterwaveSecretKey: paymentConfig.flutterwaveSecret.trim(),
+          cryptoWallet: paymentConfig.crypto.trim(),
+          piWallet: paymentConfig.pi.trim(),
+          adminPassword: 'GoyeBN3583773'
+        })
+      });
+
+      showToast('✅ Payment Public & Secret Gateway Keys Activated!');
+      if (paymentConfig.paystackSecret) {
+        await auditPayments(undefined, paymentConfig.paystackSecret.trim());
+      }
+    } catch (e) {
+      console.warn('Save payment config error:', e);
+      showToast('⚠️ Payment keys saved locally!');
+    } finally {
+      setIsSavingGateways(false);
+    }
   };
 
   const saveProduct = () => {
@@ -891,29 +947,187 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
       )}
 
       {activeTab === 'payments' && (
-        <div className="bg-[#111] border border-[#333] rounded-2xl p-6">
-          <h3 className="text-[#FFD700] font-bold mb-4 flex items-center gap-2"><CreditCard /> Payment Gateways Configuration</h3>
-          <div className="grid gap-6 md:grid-cols-2">
-            <div>
-              <label className="text-xs text-gray-400 block mb-1">Paystack Public Key</label>
-              <input type="text" className="w-full bg-black border border-[#333] rounded p-3 text-white focus:border-[#FFD700] outline-none transition" value={paymentConfig.paystack} onChange={e => setPaymentConfig({...paymentConfig, paystack: e.target.value})} placeholder="pk_live_..." />
+        <div className="space-y-6">
+          <div className="bg-[#111] border border-[#333] rounded-2xl p-6 shadow-2xl">
+            <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
+              <h3 className="text-[#FFD700] font-black text-lg flex items-center gap-2">
+                <CreditCard size={20} /> Payment Gateways Configuration
+              </h3>
+              <span className="bg-[#FFD700]/10 text-[#FFD700] text-xs px-3 py-1 rounded-full font-bold border border-[#FFD700]/30">
+                GOYE LIVE ESCROW
+              </span>
             </div>
-            <div>
-              <label className="text-xs text-gray-400 block mb-1">Flutterwave Public Key</label>
-              <input type="text" className="w-full bg-black border border-[#333] rounded p-3 text-white focus:border-[#FFD700] outline-none transition" value={paymentConfig.flutterwave} onChange={e => setPaymentConfig({...paymentConfig, flutterwave: e.target.value})} placeholder="FLWPUBK_..." />
+
+            <div className="space-y-6">
+              {/* Paystack Box */}
+              <div className="bg-black/60 border border-white/10 rounded-xl p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-blue-500/20 text-blue-400 font-black rounded-lg flex items-center justify-center text-xs">
+                      PS
+                    </div>
+                    <div>
+                      <h4 className="text-white font-bold text-sm">Paystack Gateway Configuration</h4>
+                      <p className="text-gray-400 text-xs">Used for Debit/Credit Cards & Bank Transfers</p>
+                    </div>
+                  </div>
+                  {auditSummary.hasPaystackSecretKey || paymentConfig.paystackSecret ? (
+                    <span className="text-[10px] bg-emerald-950 text-emerald-400 font-extrabold px-2.5 py-1 rounded-full border border-emerald-800/40 flex items-center gap-1">
+                      <CheckCircle size={10} /> Live Secret Key Configured
+                    </span>
+                  ) : (
+                    <span className="text-[10px] bg-amber-950 text-amber-400 font-extrabold px-2.5 py-1 rounded-full border border-amber-800/40 flex items-center gap-1">
+                      <AlertTriangle size={10} /> Secret Key Needed
+                    </span>
+                  )}
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="text-xs text-gray-300 font-bold block mb-1">
+                      Paystack Public Key <span className="text-gray-500 font-normal">(Client-side)</span>
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full bg-[#111] border border-[#333] rounded-xl p-3 text-white text-xs font-mono focus:border-[#FFD700] outline-none transition"
+                      value={paymentConfig.paystack}
+                      onChange={e => setPaymentConfig({ ...paymentConfig, paystack: e.target.value })}
+                      placeholder="pk_live_... or pk_test_..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs text-gray-300 font-bold block mb-1">
+                      Paystack Secret Key <span className="text-red-400 font-bold">(Required for Live Audit & Access)</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showPaystackSecret ? 'text' : 'password'}
+                        className="w-full bg-[#111] border border-[#333] rounded-xl p-3 pr-10 text-white text-xs font-mono focus:border-[#FFD700] outline-none transition"
+                        value={paymentConfig.paystackSecret}
+                        onChange={e => setPaymentConfig({ ...paymentConfig, paystackSecret: e.target.value })}
+                        placeholder="sk_live_... or sk_test_..."
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPaystackSecret(!showPaystackSecret)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition"
+                      >
+                        <Eye size={16} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Flutterwave Box */}
+              <div className="bg-black/60 border border-white/10 rounded-xl p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-orange-500/20 text-orange-400 font-black rounded-lg flex items-center justify-center text-xs">
+                      FLW
+                    </div>
+                    <div>
+                      <h4 className="text-white font-bold text-sm">Flutterwave Gateway Configuration</h4>
+                      <p className="text-gray-400 text-xs">Used for Global Cards & African Currencies</p>
+                    </div>
+                  </div>
+                  {paymentConfig.flutterwaveSecret ? (
+                    <span className="text-[10px] bg-emerald-950 text-emerald-400 font-extrabold px-2.5 py-1 rounded-full border border-emerald-800/40 flex items-center gap-1">
+                      <CheckCircle size={10} /> Live Secret Key Configured
+                    </span>
+                  ) : (
+                    <span className="text-[10px] bg-amber-950 text-amber-400 font-extrabold px-2.5 py-1 rounded-full border border-amber-800/40 flex items-center gap-1">
+                      <AlertTriangle size={10} /> Secret Key Needed
+                    </span>
+                  )}
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="text-xs text-gray-300 font-bold block mb-1">
+                      Flutterwave Public Key <span className="text-gray-500 font-normal">(Client-side)</span>
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full bg-[#111] border border-[#333] rounded-xl p-3 text-white text-xs font-mono focus:border-[#FFD700] outline-none transition"
+                      value={paymentConfig.flutterwave}
+                      onChange={e => setPaymentConfig({ ...paymentConfig, flutterwave: e.target.value })}
+                      placeholder="FLWPUBK_... or FLWPUBK_TEST-..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs text-gray-300 font-bold block mb-1">
+                      Flutterwave Secret Key <span className="text-amber-400 font-bold">(Server Verification)</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showFlutterwaveSecret ? 'text' : 'password'}
+                        className="w-full bg-[#111] border border-[#333] rounded-xl p-3 pr-10 text-white text-xs font-mono focus:border-[#FFD700] outline-none transition"
+                        value={paymentConfig.flutterwaveSecret}
+                        onChange={e => setPaymentConfig({ ...paymentConfig, flutterwaveSecret: e.target.value })}
+                        placeholder="FLWSECK_... or FLWSECK_TEST-..."
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowFlutterwaveSecret(!showFlutterwaveSecret)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition"
+                      >
+                        <Eye size={16} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Crypto & Pi Wallets */}
+              <div className="bg-black/60 border border-white/10 rounded-xl p-5 space-y-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-yellow-500/20 text-[#FFD700] font-black rounded-lg flex items-center justify-center text-xs">
+                    💎
+                  </div>
+                  <div>
+                    <h4 className="text-white font-bold text-sm">Web3 & Crypto Wallet Addresses</h4>
+                    <p className="text-gray-400 text-xs">Direct Wallet Deposit Destinations for Instant Access</p>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="text-xs text-gray-300 font-bold block mb-1">USDC Crypto Wallet Address (TRC20/ERC20)</label>
+                    <input
+                      type="text"
+                      className="w-full bg-[#111] border border-[#333] rounded-xl p-3 text-white text-xs font-mono focus:border-[#FFD700] outline-none transition"
+                      value={paymentConfig.crypto}
+                      onChange={e => setPaymentConfig({ ...paymentConfig, crypto: e.target.value })}
+                      placeholder="0x..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs text-gray-300 font-bold block mb-1">Pi Network Wallet Address</label>
+                    <input
+                      type="text"
+                      className="w-full bg-[#111] border border-[#333] rounded-xl p-3 text-white text-xs font-mono focus:border-[#FFD700] outline-none transition"
+                      value={paymentConfig.pi}
+                      onChange={e => setPaymentConfig({ ...paymentConfig, pi: e.target.value })}
+                      placeholder="G..."
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
-            <div>
-              <label className="text-xs text-gray-400 block mb-1">USDC Crypto Wallet Address (TRC20/ERC20)</label>
-              <input type="text" className="w-full bg-black border border-[#333] rounded p-3 text-white focus:border-[#FFD700] outline-none transition" value={paymentConfig.crypto} onChange={e => setPaymentConfig({...paymentConfig, crypto: e.target.value})} placeholder="0x..." />
-            </div>
-            <div>
-              <label className="text-xs text-gray-400 block mb-1">Pi Network Wallet</label>
-              <input type="text" className="w-full bg-black border border-[#333] rounded p-3 text-white focus:border-[#FFD700] outline-none transition" value={paymentConfig.pi} onChange={e => setPaymentConfig({...paymentConfig, pi: e.target.value})} placeholder="GA..." />
-            </div>
+
+            <button
+              onClick={savePaymentConfig}
+              disabled={isSavingGateways}
+              className="bg-[#FFD700] hover:bg-yellow-400 text-black font-black text-sm px-8 py-3.5 rounded-xl mt-6 w-full max-w-sm transition flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
+            >
+              {isSavingGateways ? <RefreshCw size={18} className="animate-spin" /> : <ShieldCheck size={18} />}
+              {isSavingGateways ? 'Saving Gateways...' : 'Save & Activate Gateways'}
+            </button>
           </div>
-          <button onClick={savePaymentConfig} className="bg-[#FFD700] hover:bg-yellow-400 text-black font-bold px-6 py-3 rounded-xl mt-6 w-full max-w-xs transition">
-            Save Gateways
-          </button>
         </div>
       )}
 

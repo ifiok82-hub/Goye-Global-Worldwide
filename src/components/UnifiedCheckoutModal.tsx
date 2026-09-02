@@ -166,7 +166,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                 Tx_Ref: ref,
                 Account: '6113541882 OPay',
                 Status: isPending ? 'Pending Verification' : 'Completed',
-                Country: country.name
+                Country: typeof country === 'object' && country ? (country.name || country.country || 'Unknown') : String(country || 'Unknown')
             })
         }).catch(err => console.log('FormSubmit notify silent fail', err));
 

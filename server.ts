@@ -2909,6 +2909,117 @@ function getPaystackSecretKey(req?: any): string | null {
   return null;
 }
 
+function getFlutterwaveSecretKey(req?: any): string | null {
+  const headerKey = req?.headers?.['x-flutterwave-secret-key'] || req?.headers?.['authorization']?.replace('Bearer ', '');
+  if (headerKey && typeof headerKey === 'string' && headerKey.trim() && (headerKey.trim().startsWith('FLWSECK') || headerKey.trim().startsWith('FLWSECK_TEST')) && !headerKey.includes('...')) {
+    return headerKey.trim();
+  }
+
+  const envKey = process.env.FLUTTERWAVE_SECRET_KEY || process.env.FLUTTERWAVE_SECRET || process.env.FLW_SECRET_KEY || process.env.FLW_SK;
+  if (envKey && typeof envKey === 'string' && envKey.trim() && !envKey.includes('your_flutterwave') && !envKey.includes('...')) {
+    return envKey.trim();
+  }
+  try {
+    const configPath = path.join(process.cwd(), '.server-config.json');
+    if (fs.existsSync(configPath)) {
+      const cfg = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      if (cfg.FLUTTERWAVE_SECRET_KEY && typeof cfg.FLUTTERWAVE_SECRET_KEY === 'string' && cfg.FLUTTERWAVE_SECRET_KEY.trim() && !cfg.FLUTTERWAVE_SECRET_KEY.includes('your_flutterwave') && !cfg.FLUTTERWAVE_SECRET_KEY.includes('...')) {
+        return cfg.FLUTTERWAVE_SECRET_KEY.trim();
+      }
+    }
+  } catch (e) {}
+  return null;
+}
+
+// GET /api/admin/get-gateway-keys - Retrieve current gateway keys status
+app.get('/api/admin/get-gateway-keys', (req, res) => {
+  try {
+    const configPath = path.join(process.cwd(), '.server-config.json');
+    let cfg: Record<string, any> = {};
+    if (fs.existsSync(configPath)) {
+      try { cfg = JSON.parse(fs.readFileSync(configPath, 'utf8')); } catch (e) {}
+    }
+
+    const paystackPublic = cfg.PAYSTACK_PUBLIC_KEY || process.env.PAYSTACK_PUBLIC_KEY || 'pk_live_9f7e06b21fa6dc4e3e94cc0';
+    const paystackSecret = getPaystackSecretKey(req) || cfg.PAYSTACK_SECRET_KEY || '';
+    const flutterwavePublic = cfg.FLUTTERWAVE_PUBLIC_KEY || process.env.FLUTTERWAVE_PUBLIC_KEY || 'FLWPUBK-cbb518a9b8f74421e8871';
+    const flutterwaveSecret = getFlutterwaveSecretKey(req) || cfg.FLUTTERWAVE_SECRET_KEY || '';
+    const cryptoWallet = cfg.CRYPTO_WALLET || process.env.CRYPTO_WALLET || '0xaed4e48f2146aadd07e85219f20';
+    const piWallet = cfg.PI_WALLET || process.env.PI_WALLET || 'GBR4B47WY7JDK2JKUUQQTWWI';
+
+    return res.json({
+      success: true,
+      paystackPublicKey: paystackPublic,
+      paystackSecretKey: paystackSecret,
+      flutterwavePublicKey: flutterwavePublic,
+      flutterwaveSecretKey: flutterwaveSecret,
+      cryptoWallet,
+      piWallet,
+      hasPaystackSecretKey: Boolean(paystackSecret),
+      hasFlutterwaveSecretKey: Boolean(flutterwaveSecret)
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/admin/save-gateway-keys - Bulk save all public and secret gateway keys on server
+app.post('/api/admin/save-gateway-keys', (req, res) => {
+  try {
+    const { paystackPublicKey, paystackSecretKey, flutterwavePublicKey, flutterwaveSecretKey, cryptoWallet, piWallet, adminPassword } = req.body || {};
+    
+    if (adminPassword && adminPassword !== 'GoyeBN3583773') {
+      return res.status(401).json({ success: false, error: 'Invalid admin authorization password.' });
+    }
+
+    const configPath = path.join(process.cwd(), '.server-config.json');
+    let cfg: Record<string, any> = {};
+    if (fs.existsSync(configPath)) {
+      try { cfg = JSON.parse(fs.readFileSync(configPath, 'utf8')); } catch (e) {}
+    }
+
+    if (paystackPublicKey) {
+      cfg.PAYSTACK_PUBLIC_KEY = paystackPublicKey.trim();
+      process.env.PAYSTACK_PUBLIC_KEY = paystackPublicKey.trim();
+    }
+    if (paystackSecretKey) {
+      cfg.PAYSTACK_SECRET_KEY = paystackSecretKey.trim();
+      process.env.PAYSTACK_SECRET_KEY = paystackSecretKey.trim();
+    }
+    if (flutterwavePublicKey) {
+      cfg.FLUTTERWAVE_PUBLIC_KEY = flutterwavePublicKey.trim();
+      process.env.FLUTTERWAVE_PUBLIC_KEY = flutterwavePublicKey.trim();
+    }
+    if (flutterwaveSecretKey) {
+      cfg.FLUTTERWAVE_SECRET_KEY = flutterwaveSecretKey.trim();
+      process.env.FLUTTERWAVE_SECRET_KEY = flutterwaveSecretKey.trim();
+    }
+    if (cryptoWallet) {
+      cfg.CRYPTO_WALLET = cryptoWallet.trim();
+      process.env.CRYPTO_WALLET = cryptoWallet.trim();
+    }
+    if (piWallet) {
+      cfg.PI_WALLET = piWallet.trim();
+      process.env.PI_WALLET = piWallet.trim();
+    }
+
+    try {
+      fs.writeFileSync(configPath, JSON.stringify(cfg, null, 2));
+    } catch (e) {
+      console.error('Error writing .server-config.json:', e);
+    }
+
+    return res.json({
+      success: true,
+      message: 'Payment Gateway keys and secret keys saved to server successfully!',
+      hasPaystackSecretKey: Boolean(process.env.PAYSTACK_SECRET_KEY),
+      hasFlutterwaveSecretKey: Boolean(process.env.FLUTTERWAVE_SECRET_KEY)
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message || 'Error saving gateway keys' });
+  }
+});
+
 // POST /api/admin/save-secret-key - Secure endpoint to set Paystack secret key on server
 app.post('/api/admin/save-secret-key', (req, res) => {
   try {
