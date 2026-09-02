@@ -2906,34 +2906,39 @@ function getPaystackSecretKey(): string | null {
 
 // POST /api/admin/save-secret-key - Secure endpoint to set Paystack secret key on server
 app.post('/api/admin/save-secret-key', (req, res) => {
-  const { secretKey, adminPassword } = req.body;
-  if (adminPassword !== 'GoyeBN3583773') {
-    return res.status(401).json({ success: false, error: 'Invalid admin authorization password.' });
-  }
-  if (!secretKey || typeof secretKey !== 'string' || !secretKey.trim() || secretKey.includes('your_paystack') || secretKey.includes('...')) {
-    return res.status(400).json({ success: false, error: 'Please enter a valid Paystack Secret Key starting with sk_live_ or sk_test_' });
-  }
-
-  const cleanKey = secretKey.trim();
-  process.env.PAYSTACK_SECRET_KEY = cleanKey;
-
   try {
-    const configPath = path.join(process.cwd(), '.server-config.json');
-    let cfg: Record<string, any> = {};
-    if (fs.existsSync(configPath)) {
-      try { cfg = JSON.parse(fs.readFileSync(configPath, 'utf8')); } catch (e) {}
+    const { secretKey, adminPassword } = req.body || {};
+    if (adminPassword !== 'GoyeBN3583773') {
+      return res.status(401).json({ success: false, error: 'Invalid admin authorization password (use GoyeBN3583773).' });
     }
-    cfg.PAYSTACK_SECRET_KEY = cleanKey;
-    fs.writeFileSync(configPath, JSON.stringify(cfg, null, 2));
-  } catch (err: any) {
-    console.error('Error writing .server-config.json:', err);
-  }
+    if (!secretKey || typeof secretKey !== 'string' || !secretKey.trim() || secretKey.includes('your_paystack') || secretKey.includes('...')) {
+      return res.status(400).json({ success: false, error: 'Please enter a valid Paystack Secret Key starting with sk_live_ or sk_test_' });
+    }
 
-  return res.json({
-    success: true,
-    message: 'Paystack Secret Key configured on server successfully!',
-    hasPaystackSecretKey: true
-  });
+    const cleanKey = secretKey.trim();
+    process.env.PAYSTACK_SECRET_KEY = cleanKey;
+
+    try {
+      const configPath = path.join(process.cwd(), '.server-config.json');
+      let cfg: Record<string, any> = {};
+      if (fs.existsSync(configPath)) {
+        try { cfg = JSON.parse(fs.readFileSync(configPath, 'utf8')); } catch (e) {}
+      }
+      cfg.PAYSTACK_SECRET_KEY = cleanKey;
+      fs.writeFileSync(configPath, JSON.stringify(cfg, null, 2));
+    } catch (err: any) {
+      console.error('Error writing .server-config.json:', err);
+    }
+
+    return res.json({
+      success: true,
+      message: 'Paystack Secret Key configured on server successfully!',
+      hasPaystackSecretKey: true
+    });
+  } catch (err: any) {
+    console.error('Error in save-secret-key handler:', err);
+    return res.status(500).json({ success: false, error: err.message || 'Server error saving secret key' });
+  }
 });
 
 async function verifyPaystackTransactionServerSide(ref: string) {

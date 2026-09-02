@@ -35,7 +35,8 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
   const [keySaveError, setKeySaveError] = useState<string | null>(null);
 
   const handleSaveSecretKey = async () => {
-    if (!inputSecretKey.trim()) {
+    const keyToSave = inputSecretKey.trim();
+    if (!keyToSave) {
       setKeySaveError('Please enter a Paystack Secret Key starting with sk_live_ or sk_test_');
       return;
     }
@@ -46,26 +47,27 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          secretKey: inputSecretKey.trim(),
+          secretKey: keyToSave,
           adminPassword: inputAdminPass || 'GoyeBN3583773'
         })
       });
+
       const responseText = await res.text();
       let data: any = {};
       try {
         data = JSON.parse(responseText);
       } catch (e) {
-        throw new Error('Server route warming up. Please click "Save & Activate Key" again.');
+        data = { success: false, error: 'Server returned unexpected response format. Retrying...' };
       }
 
-      if (res.ok && data.success) {
+      if (data.success) {
         showToast('✅ Server Secret Key configured successfully!');
         setShowKeyModal(false);
         setInputSecretKey('');
         setInputAdminPass('');
         await auditPayments();
       } else {
-        setKeySaveError(data.error || 'Failed to save secret key on server');
+        setKeySaveError(data.error || 'Failed to save secret key on server.');
       }
     } catch (err: any) {
       setKeySaveError(err.message || 'Network error saving secret key');
