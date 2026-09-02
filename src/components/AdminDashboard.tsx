@@ -50,7 +50,14 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
           adminPassword: inputAdminPass || 'GoyeBN3583773'
         })
       });
-      const data = await res.json();
+      const responseText = await res.text();
+      let data: any = {};
+      try {
+        data = JSON.parse(responseText);
+      } catch (e) {
+        throw new Error('Server route warming up. Please click "Save & Activate Key" again.');
+      }
+
       if (res.ok && data.success) {
         showToast('✅ Server Secret Key configured successfully!');
         setShowKeyModal(false);
