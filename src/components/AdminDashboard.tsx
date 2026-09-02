@@ -7,9 +7,12 @@ import { ALL_PRODUCTS } from '../data';
 export default function AdminDashboard({ showToast }: { showToast: (m: string) => void }) {
   const [activeTab, setActiveTab] = useState('analytics');
   
-  // LocalStorage Data
+  // LocalStorage & Realtime Database Data
   const [users, setUsers] = useState<any[]>([]); // Customers list
   const [orders, setOrders] = useState<any[]>([]); // Orders list
+  const [isLoadingOrders, setIsLoadingOrders] = useState(false);
+  const [ordersError, setOrdersError] = useState<string | null>(null);
+  
   const [pageViews, setPageViews] = useState<any[]>([]); // Traffic log
   const [totalClicks, setTotalClicks] = useState(0);
   const [leadSubmissions, setLeadSubmissions] = useState(0);
@@ -42,12 +45,51 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
   const [showCustomersModal, setShowCustomersModal] = useState(false);
   const [showOrdersModal, setShowOrdersModal] = useState(false);
 
+  const isOrderPaid = (o: any): boolean => {
+    if (!o) return false;
+    const s = String(o.status || '').toLowerCase().trim();
+    return s === 'completed' || s === 'paid' || s === 'success' || s === 'active';
+  };
+
+  const mergeOrders = (newOrders: any[]) => {
+    setOrders(prev => {
+      const map = new Map();
+      [...prev, ...newOrders].forEach(o => {
+        const key = o.ref || o.orderRef || o.orderId || o.id;
+        if (key) {
+          const existing = map.get(key);
+          if (!existing || (!isOrderPaid(existing) && isOrderPaid(o))) {
+            map.set(key, o);
+          }
+        }
+      });
+      const merged = Array.from(map.values());
+      merged.sort((a: any, b: any) => {
+        const da = new Date(a.date || a.purchasedAt || a.createdAt || 0).getTime();
+        const dbTime = new Date(b.date || b.purchasedAt || b.createdAt || 0).getTime();
+        return dbTime - da;
+      });
+      return merged;
+    });
+  };
+
+  const mergeUsers = (newUsers: any[]) => {
+    setUsers(prev => {
+      const map = new Map();
+      [...prev, ...newUsers].forEach(u => {
+        const key = (u.email || u.id || u.uid || '').toLowerCase().trim();
+        if (key) map.set(key, u);
+      });
+      return Array.from(map.values());
+    });
+  };
+
   const loadLocalData = () => {
     const localUsers = JSON.parse(localStorage.getItem('customers_list') || '[]');
-    setUsers(localUsers);
+    mergeUsers(localUsers);
     
     const localOrders = JSON.parse(localStorage.getItem('orders_list') || '[]');
-    setOrders(localOrders);
+    mergeOrders(localOrders);
     
     let localTraffic = JSON.parse(localStorage.getItem('global_traffic') || localStorage.getItem('traffic_log') || '[]');
     const exclude = localStorage.getItem('exclude_my_clicks') === 'true';
@@ -63,8 +105,50 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
     setTotalClicks(Math.max(savedClicks, localTraffic.length));
   };
 
+  const refreshOrders = async () => {
+    setIsLoadingOrders(true);
+    setOrdersError(null);
+    try {
+      const res = await fetch('/api/orders');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.orders)) {
+          mergeOrders(data.orders);
+        }
+      }
+    } catch (err: any) {
+      console.warn('Orders refresh warning:', err);
+      setOrdersError(err.message || 'Unable to sync backend orders');
+    } finally {
+      setIsLoadingOrders(false);
+    }
+  };
+
   useEffect(() => {
     loadLocalData();
+    refreshOrders();
+
+    // 1. Real-time Firestore Orders Listener
+    const unsubOrders = onSnapshot(collection(db, 'orders'), (snapshot) => {
+      const fsOrders: any[] = [];
+      snapshot.forEach(docSnap => {
+        fsOrders.push({ id: docSnap.id, ...docSnap.data() });
+      });
+      if (fsOrders.length > 0) {
+        mergeOrders(fsOrders);
+      }
+    }, (e) => console.warn('Firestore orders snapshot warning:', e));
+
+    // 2. Real-time Firestore Registered Users Listener
+    const unsubUsers = onSnapshot(collection(db, 'users'), (snapshot) => {
+      const fsUsers: any[] = [];
+      snapshot.forEach(docSnap => {
+        fsUsers.push({ id: docSnap.id, ...docSnap.data() });
+      });
+      if (fsUsers.length > 0) {
+        mergeUsers(fsUsers);
+      }
+    }, (e) => console.warn('Firestore users snapshot warning:', e));
     
     // Real-time Firestore stats listener
     const unsubStats = onSnapshot(doc(db, 'stats_global', 'global'), (docSnap) => {
@@ -127,6 +211,8 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
     });
     
     return () => {
+      unsubOrders();
+      unsubUsers();
       unsubStats();
       unsubTraffic();
       unsubPayouts();
@@ -225,45 +311,52 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
   };
 
   const exportOrders = () => {
-    let csv = 'ID,Customer,Country,Product,Amount,Currency,Method,Status,Date\n';
+    let csv = 'Order ID,Customer Email,Customer Name,Country,Product,Amount,Payment Method,Status,Date (WAT Lagos)\n';
     orders.forEach(o => {
-      csv += `${o.id},${o.customerName},${o.country?.name},${o.productName},${o.amount},${o.currency},${o.method},${o.status},${o.date}\n`;
+      const statusStr = o.status || 'COMPLETED';
+      const rawDate = o.date || o.purchasedAt || o.createdAt;
+      const dateStr = rawDate ? new Date(rawDate).toLocaleString('en-GB', { timeZone: 'Africa/Lagos' }) : 'N/A';
+      const countryName = o.country?.name || 'Global';
+      csv += `"${o.ref || o.orderId || o.id}","${o.customerEmail || o.email || ''}","${o.customerName || ''}","${countryName}","${o.productName || ''}","${o.amount || o.amountUSD || o.price || 0}","${o.method || o.paymentMethod || ''}","${statusStr}","${dateStr}"\n`;
     });
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.setAttribute('href', url);
-    a.setAttribute('download', 'orders.csv');
+    a.setAttribute('download', `goye_completed_orders_${new Date().toISOString().split('T')[0]}.csv`);
     a.click();
   };
 
   const exportCustomers = () => {
-    let csv = 'ID,Pupil,Parent,Country,Age,Email,WhatsApp,Date,Status\n';
+    let csv = 'Customer ID,Email,Pupil Name,Parent Name,Country,Age,WhatsApp,Status,Date Registered (WAT Lagos)\n';
     users.forEach(u => {
-      csv += `${u.id},${u.pupilName},${u.parentName},${u.country?.name},${u.age},${u.email},${u.whatsapp},${u.date},${u.status}\n`;
+      const rawDate = u.date || u.createdAt;
+      const dateStr = rawDate ? new Date(rawDate).toLocaleString('en-GB', { timeZone: 'Africa/Lagos' }) : 'N/A';
+      const countryName = u.country?.name || 'Global';
+      csv += `"${u.id || u.uid}","${u.email || ''}","${u.pupilName || u.name || ''}","${u.parentName || ''}","${countryName}","${u.age || ''}","${u.whatsapp || u.phone || ''}","${u.status || 'Registered'}","${dateStr}"\n`;
     });
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.setAttribute('href', url);
-    a.setAttribute('download', 'customers.csv');
+    a.setAttribute('download', `goye_registered_customers_${new Date().toISOString().split('T')[0]}.csv`);
     a.click();
   };
 
-  const totalGross = orders.filter(o => o.status === 'paid').reduce((sum, o) => sum + (Number(o.amountUSD || o.amount) || 0), 0);
+  const totalGross = orders.filter(isOrderPaid).reduce((sum, o) => sum + (Number(o.amountUSD || o.price || o.amount) || 0), 0);
   
   // Breakdown by Product
   const breakdownByProduct = orders.reduce((acc, o) => {
-      if(o.status === 'paid') {
-          acc[o.productName] = (acc[o.productName] || 0) + (Number(o.amountUSD || o.amount) || 0);
+      if(isOrderPaid(o)) {
+          acc[o.productName] = (acc[o.productName] || 0) + (Number(o.amountUSD || o.price || o.amount) || 0);
       }
       return acc;
   }, {} as Record<string, number>);
 
   const breakdownByCountry = orders.reduce((acc, o) => {
-      if(o.status === 'paid' && o.country) {
-          const key = `${o.country.flag} ${o.country.name}`;
-          acc[key] = (acc[key] || 0) + (Number(o.amountUSD || o.amount) || 0);
+      if(isOrderPaid(o) && o.country) {
+          const key = `${o.country.flag || '🌍'} ${o.country.name || 'Global'}`;
+          acc[key] = (acc[key] || 0) + (Number(o.amountUSD || o.price || o.amount) || 0);
       }
       return acc;
   }, {} as Record<string, number>);
@@ -283,13 +376,25 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
 
   return (
     <div className="max-w-6xl mx-auto px-4 mt-8 animate-in fade-in duration-500 pb-20">
-      <div className="mb-6">
-        <h2 className="text-3xl font-black text-white">Store Management Suite</h2>
-        <p className="text-gray-400">Manage all aspects of your store, access control, and revenue.</p>
+      <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-black text-white">Store Management Suite</h2>
+          <p className="text-gray-400 text-sm">Real-time store management, completed sales tracking, & access control.</p>
+        </div>
+        <div className="flex gap-2">
+          <button 
+            onClick={refreshOrders} 
+            disabled={isLoadingOrders}
+            className="flex items-center gap-2 bg-[#111] hover:bg-white/10 text-[#FFD700] border border-[#FFD700]/40 px-4 py-2 rounded-xl text-sm font-bold transition"
+          >
+            <RefreshCw size={16} className={isLoadingOrders ? 'animate-spin' : ''} />
+            {isLoadingOrders ? 'Syncing...' : 'Sync Live Orders'}
+          </button>
+        </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex overflow-x-auto gap-2 mb-8 pb-2 hide-scrollbar">
+      <div className="flex overflow-x-auto gap-2 mb-8 pb-2 hide-scrollbar w-full border-b border-[#222]">
         {TABS.map(t => {
           const Icon = t.icon;
           const isActive = activeTab === t.id;
@@ -297,7 +402,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
             <button
               key={t.id}
               onClick={() => setActiveTab(t.id)}
-              className={`flex items-center gap-2 px-4 py-3 rounded-xl font-bold transition whitespace-nowrap ${isActive ? 'bg-[#FFD700] text-black' : 'bg-[#111] text-gray-400 border border-[#333] hover:text-white'}`}
+              className={`flex items-center gap-2 px-4 py-3 rounded-xl font-bold transition whitespace-nowrap flex-shrink-0 min-w-max text-sm ${isActive ? 'bg-[#FFD700] text-black shadow-lg scale-105' : 'bg-[#111] text-gray-400 border border-[#333] hover:text-white hover:border-gray-500'}`}
             >
               <Icon size={18} /> {t.label}
             </button>
@@ -547,12 +652,33 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
 
       {activeTab === 'orders' && (
         <div className="bg-[#111] border border-[#333] rounded-2xl p-6">
-          <div className="flex justify-between items-center mb-4">
-             <h3 className="text-[#FFD700] font-bold flex items-center gap-2"><ShoppingCart /> Completed Orders</h3>
-             <button onClick={exportOrders} className="flex items-center gap-2 text-sm text-white bg-black border border-[#333] px-3 py-1 rounded hover:border-[#FFD700]">
-                 <Download size={14}/> Export CSV
-             </button>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+             <div>
+                <h3 className="text-[#FFD700] font-bold text-lg flex items-center gap-2"><ShoppingCart /> Live Completed Orders</h3>
+                <p className="text-gray-400 text-xs mt-0.5">Real-time synchronized across Firestore database & live server records.</p>
+             </div>
+             <div className="flex items-center gap-2">
+                 <button 
+                   onClick={refreshOrders} 
+                   disabled={isLoadingOrders}
+                   className="flex items-center gap-1.5 text-xs text-gray-300 bg-black border border-[#333] px-3 py-1.5 rounded hover:border-[#FFD700] transition disabled:opacity-50"
+                 >
+                   <RefreshCw size={13} className={isLoadingOrders ? 'animate-spin' : ''} />
+                   {isLoadingOrders ? 'Refreshing...' : 'Refresh'}
+                 </button>
+                 <button onClick={exportOrders} className="flex items-center gap-1.5 text-xs text-black bg-[#FFD700] px-3 py-1.5 rounded font-bold hover:bg-yellow-400 transition">
+                     <Download size={13}/> Export CSV
+                 </button>
+             </div>
           </div>
+
+          {ordersError && (
+            <div className="mb-4 p-3 bg-red-950/40 border border-red-500/30 rounded-xl flex items-center justify-between text-xs text-red-300">
+              <span>⚠️ {ordersError}</span>
+              <button onClick={refreshOrders} className="underline font-bold hover:text-white">Retry Sync</button>
+            </div>
+          )}
+
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm whitespace-nowrap">
               <thead className="bg-white/5 text-gray-400 text-xs uppercase font-bold">
@@ -564,27 +690,63 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
                   <th className="p-4">Amount</th>
                   <th className="p-4">Payment Method</th>
                   <th className="p-4">Status</th>
-                  <th className="p-4 rounded-tr-lg">Date</th>
+                  <th className="p-4 rounded-tr-lg">Date (WAT Lagos)</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                {orders.map(o => (
-                  <tr key={o.id} className="hover:bg-white/[0.02]">
-                    <td className="p-4 font-mono text-xs text-gray-400">{o.ref || o.id}</td>
-                    <td className="p-4 text-white font-bold">{o.customerName || maskEmail(o.customerEmail)}</td>
-                    <td className="p-4">{o.country?.flag} {o.country?.name}</td>
-                    <td className="p-4 text-[#FFD700] font-bold">{o.productName}</td>
-                    <td className="p-4 text-[#10B981] font-bold">{o.currency} {o.amount}</td>
-                    <td className="p-4 text-gray-400 uppercase text-xs">{o.method}</td>
-                    <td className="p-4">
-                      <span className={`px-2 py-1 rounded text-[10px] font-bold ${o.status==='paid' ? 'bg-[#10B981]/20 text-[#10B981]' : 'bg-yellow-500/20 text-yellow-500'}`}>
-                        {o.status}
-                      </span>
+                {orders.map(o => {
+                  const paid = isOrderPaid(o);
+                  const rawDate = o.date || o.purchasedAt || o.createdAt;
+                  let formattedDate = 'Just now';
+                  if (rawDate) {
+                    try {
+                      formattedDate = new Date(rawDate).toLocaleString('en-GB', { 
+                        day: '2-digit', 
+                        month: 'short', 
+                        year: 'numeric', 
+                        hour: '2-digit', 
+                        minute: '2-digit',
+                        timeZone: 'Africa/Lagos'
+                      });
+                    } catch (e) {
+                      formattedDate = String(rawDate);
+                    }
+                  }
+
+                  return (
+                    <tr key={o.ref || o.id} className="hover:bg-white/[0.02] transition">
+                      <td className="p-4 font-mono text-xs text-gray-400">{o.ref || o.orderRef || o.orderId || o.id}</td>
+                      <td className="p-4 text-white font-bold">{o.customerName || maskEmail(o.customerEmail || o.email)}</td>
+                      <td className="p-4">{o.country?.flag || '🌍'} {o.country?.name || 'Global'}</td>
+                      <td className="p-4 text-[#FFD700] font-bold">{o.productName}</td>
+                      <td className="p-4 text-[#10B981] font-bold">{o.currency || 'USD'} {o.amount || `$${o.amountUSD || o.price || 0}`}</td>
+                      <td className="p-4 text-gray-400 uppercase text-xs">{o.method || o.paymentMethod || 'Paystack'}</td>
+                      <td className="p-4">
+                        <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide ${paid ? 'bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/30' : 'bg-yellow-500/20 text-yellow-500 border border-yellow-500/30'}`}>
+                          {paid ? 'Completed' : (o.status || 'Pending')}
+                        </span>
+                      </td>
+                      <td className="p-4 text-gray-400 text-xs font-mono">{formattedDate}</td>
+                    </tr>
+                  );
+                })}
+                {orders.length === 0 && !isLoadingOrders && (
+                  <tr>
+                    <td colSpan={8} className="p-8 text-center text-gray-500">
+                      <ShoppingCart size={32} className="mx-auto mb-2 opacity-30" />
+                      <p className="font-bold text-gray-400">No orders recorded yet.</p>
+                      <p className="text-xs text-gray-600 mt-1">Orders placed via Paystack, Flutterwave, PayPal, Crypto, or Pi GCV will automatically appear here in real-time.</p>
                     </td>
-                    <td className="p-4 text-gray-500 text-xs">{new Date(o.date).toLocaleString()}</td>
                   </tr>
-                ))}
-                {orders.length === 0 && <tr><td colSpan={8} className="p-4 text-center text-gray-500">No orders yet.</td></tr>}
+                )}
+                {isLoadingOrders && orders.length === 0 && (
+                  <tr>
+                    <td colSpan={8} className="p-8 text-center text-[#FFD700]">
+                      <RefreshCw size={24} className="mx-auto mb-2 animate-spin" />
+                      <p className="text-xs font-bold">Syncing live orders from database...</p>
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

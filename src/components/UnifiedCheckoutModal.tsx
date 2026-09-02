@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { X, ShieldCheck, Lock, Copy, CheckCircle, RefreshCw, ChevronRight, Zap, ExternalLink } from 'lucide-react';
 import { identifyUserSession, trackUserClick } from '../utils/analytics';
+import { db } from '../lib/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 
 export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, onToast }: any) {
   const [activeGateway, setActiveGateway] = useState<string | null>(null);
@@ -54,24 +56,89 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
         const countryJSON = localStorage.getItem('goye_selected_country');
         const country = countryJSON ? JSON.parse(countryJSON) : { flag: '🌍', name: 'Unknown' };
         
-        orders.unshift({
-            id: 'ORD-' + Date.now(),
-            ref: ref,
+        const orderDocId = ref || ('ORD-' + Date.now());
+        const timestampStr = new Date().toISOString();
+        const formattedDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Lagos' });
+
+        const newOrder = {
+            id: orderDocId,
+            orderId: orderDocId,
+            ref: ref || orderDocId,
+            orderRef: ref || orderDocId,
             customerName: email ? email.split('@')[0] : 'Guest Pupil',
             customerEmail: email || '',
+            email: email || '',
             country: country,
             productName: cleanProductName,
             amount: `₦${nairaAmount} (${displaySymbol}${localPrice})`,
             amountUSD: priceUSD,
+            price: priceUSD,
             currency: userCurrency,
             paymentMethod: method,
+            method: method,
             account: method.includes('Bank') || method.includes('OPay') ? '6113541882 OPay GOYEDAGOSMESS ENTERPRISE' : method,
-            transactionId: ref,
-            date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
-            status: isPending ? 'Pending Verification' : 'Completed'
-        });
-        
+            transactionId: ref || orderDocId,
+            date: formattedDate,
+            purchasedAt: timestampStr,
+            createdAt: timestampStr,
+            status: isPending ? 'Pending Verification' : 'COMPLETED',
+            is_verified: !isPending
+        };
+
+        // Save locally
+        orders.unshift(newOrder);
         localStorage.setItem('orders_list', JSON.stringify(orders));
+
+        // Save real-time to Firestore database
+        try {
+          await setDoc(doc(db, 'orders', orderDocId), newOrder, { merge: true });
+        } catch (fsErr) {
+          console.warn('Firestore real-time order write warning:', fsErr);
+        }
+
+        // Save customer to Firestore registered users collection
+        if (email) {
+          try {
+            const custId = email.trim().toLowerCase();
+            const customerObj = {
+              id: custId,
+              email: custId,
+              pupilName: email.split('@')[0],
+              parentName: 'Parent of ' + email.split('@')[0],
+              country: country,
+              is_verified: true,
+              date: timestampStr,
+              createdAt: timestampStr,
+              lastOrderAt: timestampStr
+            };
+            await setDoc(doc(db, 'users', custId), customerObj, { merge: true });
+
+            // Also update customers_list in localStorage
+            let custs = JSON.parse(localStorage.getItem('customers_list') || '[]');
+            if (!custs.some((c: any) => c.email === custId)) {
+              custs.unshift(customerObj);
+              localStorage.setItem('customers_list', JSON.stringify(custs));
+            }
+          } catch (custErr) {
+            console.warn('Firestore customer write warning:', custErr);
+          }
+        }
+
+        // Trigger Postgres API save
+        try {
+          fetch('/api/pg/orders', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              orderRef: orderDocId,
+              productName: cleanProductName,
+              price: priceUSD,
+              gateway: method,
+              email: email,
+              productId: product?.id || 'academy-pass'
+            })
+          }).catch(e => console.warn('PG Order endpoint notice:', e));
+        } catch (e) {}
 
         if (!isPending) {
             localStorage.setItem('sirwise_paid', 'true');
