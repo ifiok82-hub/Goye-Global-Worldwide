@@ -477,15 +477,51 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
   // Breakdown by Country (for verified live orders)
   const breakdownByCountry = verifiedOrders.reduce((acc, o) => {
     if (o.country) {
-      const key = `${o.country.flag || '🌍'} ${o.country.name || 'Unspecified'}`;
+      const key = safeCountryStr(o.country);
       const val = Number(o.amountUSD || o.price || o.amount) || 0;
       acc[key] = (acc[key] || 0) + val;
     }
     return acc;
   }, {} as Record<string, number>);
 
-  const maskEmail = (email: string) => email ? email.substring(0,3) + '***@' + email.split('@')[1] : '';
-  const maskPhone = (phone: string) => phone ? phone.substring(0, phone.length - 4) + '***' + phone.substring(phone.length - 1) : ''; // Just simple masking
+  const safeString = (val: any, fallback = ''): string => {
+    if (val === null || val === undefined) return fallback;
+    if (typeof val === 'string') return val;
+    if (typeof val === 'number' || typeof val === 'boolean') return String(val);
+    if (typeof val === 'object') {
+      if (val.name && typeof val.name === 'string') return val.name;
+      if (val.title && typeof val.title === 'string') return val.title;
+      if (val.label && typeof val.label === 'string') return val.label;
+      if (val.text && typeof val.text === 'string') return val.text;
+      if (val.value !== undefined) return safeString(val.value, fallback);
+      try {
+        return JSON.stringify(val);
+      } catch (e) {
+        return fallback;
+      }
+    }
+    return String(val);
+  };
+
+  const safeCountryStr = (c: any): string => {
+    if (!c) return 'Unspecified';
+    if (typeof c === 'string') return c;
+    if (typeof c === 'object') {
+      const flag = typeof c.flag === 'string' ? c.flag : '🌍';
+      const name = typeof c.name === 'string' ? c.name : (typeof c.country === 'string' ? c.country : 'Unspecified');
+      return `${flag} ${name}`;
+    }
+    return String(c);
+  };
+
+  const maskEmail = (emailInput: any) => {
+    const email = safeString(emailInput);
+    return email && email.includes('@') ? email.substring(0,3) + '***@' + email.split('@')[1] : (email || '');
+  };
+  const maskPhone = (phoneInput: any) => {
+    const phone = safeString(phoneInput);
+    return phone && phone.length > 4 ? phone.substring(0, phone.length - 4) + '***' + phone.substring(phone.length - 1) : (phone || '');
+  };
 
   const TABS = [
     { id: 'analytics', icon: Activity, label: 'Analytics Overview' },
@@ -802,16 +838,36 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
                 </thead>
                 <tbody className="divide-y divide-white/5">
                   {pageViews.map((v: any, idx: number) => {
-                    const isAdminClick = v.is_admin || v.isAdmin || v.customerName === 'Admin (Owner)' || v.customer_name === 'Admin (Owner)' || String(v.customerName || v.customer_name).includes('Admin');
-                    const loc = v.location || `${v.flag || '🇳🇬'} ${v.country || 'NG'} (${v.city && v.city !== 'Unknown' && v.city !== 'Ado-Odo' && v.city !== 'Ilare' ? v.city : 'Lagos'})`;
+                    const isAdminClick = v.is_admin || v.isAdmin || v.customerName === 'Admin (Owner)' || v.customer_name === 'Admin (Owner)' || String(v.customerName || v.customer_name || '').includes('Admin');
+                    
+                    let locStr = '🇳🇬 NG (Lagos)';
+                    if (typeof v.location === 'string' && v.location.trim()) {
+                      locStr = v.location;
+                    } else if (v.location && typeof v.location === 'object') {
+                      const f = safeString(v.location.flag || v.flag, '🇳🇬');
+                      const c = safeString(v.location.name || v.location.country || v.country, 'NG');
+                      const city = safeString(v.location.city || v.city, '');
+                      locStr = `${f} ${c}${city ? ` (${city})` : ''}`;
+                    } else {
+                      const f = safeString(v.flag, '🇳🇬');
+                      const c = safeString(v.country, 'NG');
+                      const city = safeString(v.city, 'Lagos');
+                      locStr = `${f} ${c} (${city !== 'Unknown' && city !== 'Ado-Odo' && city !== 'Ilare' ? city : 'Lagos'})`;
+                    }
+
+                    const custName = safeString(v.customerName || v.customer_name || (isAdminClick ? 'Admin (Owner)' : 'Guest Customer'));
+                    const pathStr = safeString(v.path || v.page, '/');
+                    const timeStr = typeof v.time === 'string' ? v.time : (v.timestamp ? new Date(v.timestamp).toLocaleTimeString() : 'Just now');
+                    const deviceStr = safeString(v.device, 'Desktop');
+
                     return (
                       <tr key={v.id || idx} className="hover:bg-white/[0.02] transition">
-                        <td className="p-3 text-white font-bold">{loc}</td>
-                        <td className="p-3 text-gray-300 font-medium">{v.customerName || v.customer_name || (isAdminClick ? 'Admin (Owner)' : 'Guest Customer')}</td>
-                        <td className="p-3 text-[#3b82f6] font-mono text-xs">{v.path || v.page || '/'}</td>
+                        <td className="p-3 text-white font-bold">{locStr}</td>
+                        <td className="p-3 text-gray-300 font-medium">{custName}</td>
+                        <td className="p-3 text-[#3b82f6] font-mono text-xs">{pathStr}</td>
                         <td className="p-3"><span className="text-yellow-500 text-[10px] border border-yellow-500/50 px-2 py-1 rounded font-bold">Browsing</span></td>
-                        <td className="p-3 text-gray-500 text-xs">{v.time || (v.timestamp ? new Date(v.timestamp).toLocaleTimeString() : 'Just now')}</td>
-                        <td className="p-3 text-gray-400 text-xs">{v.device || 'Desktop'}</td>
+                        <td className="p-3 text-gray-500 text-xs">{timeStr}</td>
+                        <td className="p-3 text-gray-400 text-xs">{deviceStr}</td>
                         <td className="p-3 text-xs">
                           {isAdminClick ? (
                             <span className="text-red-400 font-bold bg-red-950/40 px-2 py-0.5 rounded border border-red-500/30">Excluded Admin</span>
@@ -883,26 +939,34 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                {users.map(u => (
-                  <tr key={u.id} className="hover:bg-white/[0.02]">
-                    <td className="p-4 text-white font-bold">{u.pupilName || u.name || u.email}</td>
-                    <td className="p-4 text-gray-300">{u.parentName || '-'}</td>
-                    <td className="p-4">{u.country?.flag || '🌍'} {u.country?.name || 'Unknown'}</td>
-                    <td className="p-4 text-gray-400">
-                      <div>{maskEmail(u.email)}</div>
-                      <div className="text-xs">{maskPhone(u.whatsapp || u.phone)}</div>
-                    </td>
-                    <td className="p-4">
-                      {u.is_verified ? 
-                        <span className="px-2 py-1 bg-[#10B981]/20 text-[#10B981] rounded text-[10px] font-bold">Verified</span> : 
-                        <span className="px-2 py-1 bg-yellow-500/20 text-yellow-500 rounded text-[10px] font-bold">Pending</span>}
-                    </td>
-                    <td className="p-4 text-gray-500 text-xs">{new Date(u.date || u.createdAt).toLocaleDateString()}</td>
-                    <td className="p-4">
-                      <button className="text-red-400 hover:text-red-300"><Trash2 size={16}/></button>
-                    </td>
-                  </tr>
-                ))}
+                {users.map((u, idx) => {
+                  const pupilNameStr = safeString(u.pupilName || u.name || u.email, 'Customer');
+                  const parentNameStr = safeString(u.parentName, '-');
+                  const countryStr = safeCountryStr(u.country);
+                  const emailStr = safeString(u.email);
+                  const phoneStr = safeString(u.whatsapp || u.phone);
+
+                  return (
+                    <tr key={u.id || idx} className="hover:bg-white/[0.02]">
+                      <td className="p-4 text-white font-bold">{pupilNameStr}</td>
+                      <td className="p-4 text-gray-300">{parentNameStr}</td>
+                      <td className="p-4">{countryStr}</td>
+                      <td className="p-4 text-gray-400">
+                        <div>{maskEmail(emailStr)}</div>
+                        <div className="text-xs">{maskPhone(phoneStr)}</div>
+                      </td>
+                      <td className="p-4">
+                        {u.is_verified ? 
+                          <span className="px-2 py-1 bg-[#10B981]/20 text-[#10B981] rounded text-[10px] font-bold">Verified</span> : 
+                          <span className="px-2 py-1 bg-yellow-500/20 text-yellow-500 rounded text-[10px] font-bold">Pending</span>}
+                      </td>
+                      <td className="p-4 text-gray-500 text-xs">{new Date(u.date || u.createdAt || Date.now()).toLocaleDateString()}</td>
+                      <td className="p-4">
+                        <button className="text-red-400 hover:text-red-300"><Trash2 size={16}/></button>
+                      </td>
+                    </tr>
+                  );
+                })}
                 {users.length === 0 && <tr><td colSpan={7} className="p-4 text-center text-gray-500">No customers yet.</td></tr>}
               </tbody>
             </table>
@@ -954,7 +1018,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                {orders.map(o => {
+                {orders.map((o, idx) => {
                   const paid = isOrderPaid(o);
                   const rawDate = o.date || o.purchasedAt || o.createdAt;
                   let formattedDate = 'Just now';
@@ -974,13 +1038,13 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
                   }
 
                   return (
-                    <tr key={o.ref || o.id} className="hover:bg-white/[0.02] transition">
-                      <td className="p-4 font-mono text-xs text-gray-400">{o.ref || o.orderRef || o.orderId || o.id}</td>
-                      <td className="p-4 text-white font-bold">{o.customerName || maskEmail(o.customerEmail || o.email)}</td>
-                      <td className="p-4">{o.country?.flag || '🌍'} {(!o.country?.name || o.country.name === 'Unknown') ? 'Unspecified' : o.country.name}</td>
-                      <td className="p-4 text-[#FFD700] font-bold">{o.productName}</td>
-                      <td className="p-4 text-[#10B981] font-bold">{o.currency || 'USD'} {o.amount || `$${o.amountUSD || o.price || 0}`}</td>
-                      <td className="p-4 text-gray-400 uppercase text-xs">{o.method || o.paymentMethod || 'Paystack'}</td>
+                    <tr key={o.ref || o.id || idx} className="hover:bg-white/[0.02] transition">
+                      <td className="p-4 font-mono text-xs text-gray-400">{safeString(o.ref || o.orderRef || o.orderId || o.id, `ORD-${idx}`)}</td>
+                      <td className="p-4 text-white font-bold">{safeString(o.customerName || maskEmail(o.customerEmail || o.email), 'Guest Customer')}</td>
+                      <td className="p-4">{safeCountryStr(o.country)}</td>
+                      <td className="p-4 text-[#FFD700] font-bold">{safeString(o.productName, 'Digital Item')}</td>
+                      <td className="p-4 text-[#10B981] font-bold">{safeString(o.currency, 'USD')} {safeString(o.amount || `$${o.amountUSD || o.price || 0}`, '$0.00')}</td>
+                      <td className="p-4 text-gray-400 uppercase text-xs">{safeString(o.method || o.paymentMethod, 'Paystack')}</td>
                       <td className="p-4">
                         {(() => {
                           const cat = o.verificationCategory || (o.verifiedLive ? 'LIVE_VERIFIED' : (o._isSandboxSimulation ? 'TEST_PAYMENT' : 'UNVERIFIED'));
@@ -1162,17 +1226,17 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
                         </thead>
                         <tbody className="divide-y divide-white/5">
                             {users.map((u, i) => (
-                                <tr key={u.id} className="hover:bg-white/[0.02]">
+                                <tr key={u.id || i} className="hover:bg-white/[0.02]">
                                     <td className="p-3 text-gray-500">{i+1}</td>
-                                    <td className="p-3 text-white font-bold">{u.pupilName}</td>
-                                    <td className="p-3 text-gray-300">{u.parentName}</td>
-                                    <td className="p-3">{u.country?.flag} {u.country?.name}</td>
-                                    <td className="p-3">{u.age}</td>
+                                    <td className="p-3 text-white font-bold">{safeString(u.pupilName || u.name, 'Pupil')}</td>
+                                    <td className="p-3 text-gray-300">{safeString(u.parentName, '-')}</td>
+                                    <td className="p-3">{safeCountryStr(u.country)}</td>
+                                    <td className="p-3">{safeString(u.age, '-')}</td>
                                     <td className="p-3 text-gray-400">{maskEmail(u.email)}</td>
-                                    <td className="p-3 text-gray-400">{maskPhone(u.whatsapp)}</td>
-                                    <td className="p-3">{u.slot}</td>
-                                    <td className="p-3 text-xs">{new Date(u.date).toLocaleString()}</td>
-                                    <td className="p-3"><span className="text-green-500 text-xs">{u.status || 'Registered'}</span></td>
+                                    <td className="p-3 text-gray-400">{maskPhone(u.whatsapp || u.phone)}</td>
+                                    <td className="p-3">{safeString(u.slot, '-')}</td>
+                                    <td className="p-3 text-xs">{new Date(u.date || u.createdAt || Date.now()).toLocaleString()}</td>
+                                    <td className="p-3"><span className="text-green-500 text-xs">{safeString(u.status, 'Registered')}</span></td>
                                 </tr>
                             ))}
                             {users.length === 0 && <tr><td colSpan={10} className="p-4 text-center">No customers found.</td></tr>}
@@ -1210,17 +1274,17 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
-                            {orders.map((o) => (
-                                <tr key={o.id} className="hover:bg-white/[0.02]">
-                                    <td className="p-3 text-gray-500 text-xs font-mono">{o.ref || o.id}</td>
-                                    <td className="p-3 text-white font-bold">{o.customerName}</td>
-                                    <td className="p-3">{o.country?.flag} {o.country?.name}</td>
-                                    <td className="p-3 text-[#FFD700]">{o.productName}</td>
-                                    <td className="p-3 text-green-500 font-bold">{o.amount}</td>
-                                    <td className="p-3">{o.currency}</td>
-                                    <td className="p-3 uppercase text-xs">{o.method}</td>
-                                    <td className="p-3"><span className="text-green-500 text-xs">{o.status}</span></td>
-                                    <td className="p-3 text-xs text-gray-400">{new Date(o.date).toLocaleString()}</td>
+                            {orders.map((o, i) => (
+                                <tr key={o.id || i} className="hover:bg-white/[0.02]">
+                                    <td className="p-3 text-gray-500 text-xs font-mono">{safeString(o.ref || o.id, `ORD-${i}`)}</td>
+                                    <td className="p-3 text-white font-bold">{safeString(o.customerName || o.email, 'Customer')}</td>
+                                    <td className="p-3">{safeCountryStr(o.country)}</td>
+                                    <td className="p-3 text-[#FFD700]">{safeString(o.productName, 'Item')}</td>
+                                    <td className="p-3 text-green-500 font-bold">{safeString(o.amount, '0')}</td>
+                                    <td className="p-3">{safeString(o.currency, 'USD')}</td>
+                                    <td className="p-3 uppercase text-xs">{safeString(o.method || o.paymentMethod, 'Paystack')}</td>
+                                    <td className="p-3"><span className="text-green-500 text-xs">{safeString(o.status, 'COMPLETED')}</span></td>
+                                    <td className="p-3 text-xs text-gray-400">{new Date(o.date || o.purchasedAt || Date.now()).toLocaleString()}</td>
                                 </tr>
                             ))}
                             {orders.length === 0 && <tr><td colSpan={9} className="p-4 text-center">No orders found.</td></tr>}
