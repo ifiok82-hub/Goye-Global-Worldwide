@@ -2866,6 +2866,231 @@ app.post('/api/payments/simulate-webhook', async (req, res) => {
 });
 
 
+// -------------------------------------------------------------------------
+// Paystack Direct Server-Side Verification & Audit Engine
+// -------------------------------------------------------------------------
+
+const COUNTRY_MAP: Record<string, { flag: string; name: string }> = {
+  NG: { flag: '🇳🇬', name: 'Nigeria' },
+  US: { flag: '🇺🇸', name: 'United States' },
+  GB: { flag: '🇬🇧', name: 'United Kingdom' },
+  CA: { flag: '🇨🇦', name: 'Canada' },
+  GH: { flag: '🇬🇭', name: 'Ghana' },
+  ZA: { flag: '🇿🇦', name: 'South Africa' },
+  AE: { flag: '🇦🇪', name: 'United Arab Emirates' },
+  SA: { flag: '🇸🇦', name: 'Saudi Arabia' },
+  KE: { flag: '🇰🇪', name: 'Kenya' },
+  IN: { flag: '🇮🇳', name: 'India' },
+  FR: { flag: '🇫🇷', name: 'France' },
+  DE: { flag: '🇩🇪', name: 'Germany' },
+  JP: { flag: '🇯🇵', name: 'Japan' },
+  TR: { flag: '🇹🇷', name: 'Turkey' }
+};
+
+async function verifyPaystackTransactionServerSide(ref: string) {
+  const secretKey = process.env.PAYSTACK_SECRET_KEY || process.env.PAYSTACK_SK;
+  if (!secretKey) {
+    return {
+      success: false,
+      hasSecretKey: false,
+      status: 'UNVERIFIED',
+      category: 'UNVERIFIED',
+      message: 'PAYSTACK_SECRET_KEY environment variable is not configured on the server.'
+    };
+  }
+
+  try {
+    const apiRes = await fetch(`https://api.paystack.co/transaction/verify/${encodeURIComponent(ref)}`, {
+      headers: {
+        'Authorization': `Bearer ${secretKey}`,
+        'Cache-Control': 'no-cache'
+      }
+    });
+
+    const json: any = await apiRes.json();
+    if (apiRes.ok && json.status === true && json.data) {
+      const data = json.data;
+      const isLive = data.domain === 'live';
+      const isSuccess = data.status === 'success';
+      const amountNaira = data.amount ? data.amount / 100 : 0;
+      const amountUsd = data.metadata?.original_usd_amount ? Number(data.metadata.original_usd_amount) : (amountNaira / 1550);
+
+      const countryCode = data.authorization?.country_code || (data.customer?.international_format_phone ? data.customer.international_format_phone.substring(1, 3) : null);
+      const mappedCountry = countryCode && COUNTRY_MAP[countryCode.toUpperCase()] 
+        ? COUNTRY_MAP[countryCode.toUpperCase()] 
+        : null;
+
+      let category = 'UNVERIFIED';
+      if (isSuccess && isLive) {
+        category = 'LIVE_VERIFIED';
+      } else if (data.domain === 'test' || data.metadata?._isSandboxSimulation) {
+        category = 'TEST_PAYMENT';
+      } else if (data.status === 'failed' || data.status === 'abandoned') {
+        category = 'FAILED_ABANDONED';
+      }
+
+      return {
+        success: true,
+        hasSecretKey: true,
+        verified: isSuccess && isLive,
+        isLive,
+        status: data.status,
+        category,
+        reference: data.reference || ref,
+        amountNaira,
+        amountUsd: Number(amountUsd.toFixed(2)),
+        currency: data.currency || 'NGN',
+        paidAt: data.paid_at,
+        channel: data.channel,
+        customerEmail: data.customer?.email,
+        customerName: `${data.customer?.first_name || ''} ${data.customer?.last_name || ''}`.trim() || undefined,
+        country: mappedCountry,
+        gatewayResponse: data.gateway_response,
+        rawData: data
+      };
+    } else {
+      return {
+        success: false,
+        hasSecretKey: true,
+        status: 'UNVERIFIED',
+        category: 'UNVERIFIED',
+        message: json.message || 'Reference not found on Paystack API or transaction incomplete.'
+      };
+    }
+  } catch (err: any) {
+    return {
+      success: false,
+      hasSecretKey: true,
+      status: 'UNVERIFIED',
+      category: 'UNVERIFIED',
+      message: `Paystack API network error: ${err.message}`
+    };
+  }
+}
+
+// GET /api/paystack/verify/:reference - Secure server-side Paystack verification
+app.get('/api/paystack/verify/:reference', async (req, res) => {
+  const { reference } = req.params;
+  if (!reference) {
+    return res.status(400).json({ success: false, error: 'Transaction reference is required' });
+  }
+
+  const result = await verifyPaystackTransactionServerSide(reference);
+  return res.json(result);
+});
+
+// POST /api/admin/verify-payments - Comprehensive server-side audit of all store payments
+app.post('/api/admin/verify-payments', async (req, res) => {
+  const secretKey = process.env.PAYSTACK_SECRET_KEY || process.env.PAYSTACK_SK;
+  const inputOrders = Array.isArray(req.body.orders) ? req.body.orders : [];
+
+  let allOrdersToAudit = inputOrders;
+  if (allOrdersToAudit.length === 0) {
+    try {
+      const database = await getDb();
+      if (database) {
+        allOrdersToAudit = await database.collection('orders').find({}).sort({ purchasedAt: -1 }).toArray();
+      } else {
+        allOrdersToAudit = fallbackOrders;
+      }
+    } catch (e) {
+      allOrdersToAudit = fallbackOrders;
+    }
+  }
+
+  let liveVerifiedCount = 0;
+  let liveVerifiedRevenue = 0;
+  let testCount = 0;
+  let testRevenue = 0;
+  let failedCount = 0;
+  let unverifiedCount = 0;
+  let unverifiedRevenue = 0;
+
+  const auditedOrders = await Promise.all(
+    allOrdersToAudit.map(async (order: any) => {
+      const ref = order.ref || order.orderRef || order.orderId || order.transactionId || order.id || '';
+      const method = String(order.paymentMethod || order.method || order.paymentGateway || '').toLowerCase();
+      const isPaystack = method.includes('paystack') || ref.toLowerCase().includes('paystack') || ref.startsWith('T') || ref.startsWith('ORD-');
+
+      let verificationCategory = 'UNVERIFIED';
+      let verifiedLive = false;
+      let paystackDetails = null;
+      let country = order.country;
+
+      const isExplicitSim = order._isSandboxSimulation === true || order.isSimulated === true || String(order.status || '').toLowerCase().includes('simulat');
+
+      if (isExplicitSim) {
+        verificationCategory = 'TEST_PAYMENT';
+      } else if (isPaystack && ref && secretKey) {
+        const verifyRes = await verifyPaystackTransactionServerSide(ref);
+        if (verifyRes.success && verifyRes.category) {
+          verificationCategory = verifyRes.category;
+          paystackDetails = verifyRes;
+          if (verifyRes.country && (!country || country.name === 'Unknown' || country.name === 'Unspecified')) {
+            country = verifyRes.country;
+          }
+        } else {
+          verificationCategory = 'UNVERIFIED';
+        }
+      } else if (isPaystack && !secretKey) {
+        verificationCategory = 'UNVERIFIED';
+      } else if (method.includes('flutterwave') || method.includes('pi') || method.includes('crypto') || method.includes('bank') || method.includes('opay')) {
+        if (order.status === 'COMPLETED' && !isExplicitSim) {
+          verificationCategory = 'UNVERIFIED';
+        } else {
+          verificationCategory = 'TEST_PAYMENT';
+        }
+      }
+
+      const usdVal = Number(order.amountUSD || order.price || (typeof order.amount === 'number' ? order.amount : parseFloat(String(order.amount || '0').replace(/[^0-9.]/g, '')))) || 0;
+
+      if (verificationCategory === 'LIVE_VERIFIED') {
+        liveVerifiedCount++;
+        liveVerifiedRevenue += usdVal;
+        verifiedLive = true;
+      } else if (verificationCategory === 'TEST_PAYMENT') {
+        testCount++;
+        testRevenue += usdVal;
+      } else if (verificationCategory === 'FAILED_ABANDONED') {
+        failedCount++;
+      } else {
+        unverifiedCount++;
+        unverifiedRevenue += usdVal;
+      }
+
+      let formattedCountry = country;
+      if (!formattedCountry || formattedCountry.name === 'Unknown' || formattedCountry.name === 'undefined') {
+        formattedCountry = { flag: '🌍', name: 'Unspecified' };
+      }
+
+      return {
+        ...order,
+        country: formattedCountry,
+        verificationCategory,
+        verifiedLive,
+        paystackAudit: paystackDetails
+      };
+    })
+  );
+
+  return res.json({
+    success: true,
+    hasPaystackSecretKey: Boolean(secretKey),
+    summary: {
+      liveVerifiedCount,
+      liveVerifiedRevenue: Number(liveVerifiedRevenue.toFixed(2)),
+      testCount,
+      testRevenue: Number(testRevenue.toFixed(2)),
+      failedCount,
+      unverifiedCount,
+      unverifiedRevenue: Number(unverifiedRevenue.toFixed(2)),
+      totalRecordsAudited: auditedOrders.length
+    },
+    auditedOrders
+  });
+});
+
+
 
 // -------------------------------------------------------------------------
 // Existing Gemini Endpoints

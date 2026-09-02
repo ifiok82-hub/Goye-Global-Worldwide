@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CreditCard, Users, ShoppingCart, Package, DollarSign, Settings, Download, Edit, Trash2, CheckCircle, XCircle, Activity, Globe, Eye, UserPlus, RefreshCw, Mail } from 'lucide-react';
+import { CreditCard, Users, ShoppingCart, Package, DollarSign, Settings, Download, Edit, Trash2, CheckCircle, XCircle, Activity, Globe, Eye, UserPlus, RefreshCw, Mail, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { db } from '../lib/firebase';
 import { collection, onSnapshot, doc, setDoc, updateDoc, query, orderBy, limit } from 'firebase/firestore';
 import { ALL_PRODUCTS } from '../data';
@@ -12,6 +12,20 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
   const [orders, setOrders] = useState<any[]>([]); // Orders list
   const [isLoadingOrders, setIsLoadingOrders] = useState(false);
   const [ordersError, setOrdersError] = useState<string | null>(null);
+
+  // Direct Server Payment Audit Summary State
+  const [auditSummary, setAuditSummary] = useState({
+    liveVerifiedCount: 0,
+    liveVerifiedRevenue: 0,
+    testCount: 0,
+    testRevenue: 0,
+    failedCount: 0,
+    unverifiedCount: 0,
+    unverifiedRevenue: 0,
+    totalRecordsAudited: 0,
+    hasPaystackSecretKey: false
+  });
+  const [isAuditing, setIsAuditing] = useState(false);
   
   const [pageViews, setPageViews] = useState<any[]>([]); // Traffic log
   const [totalClicks, setTotalClicks] = useState(0);
@@ -52,6 +66,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
   };
 
   const mergeOrders = (newOrders: any[]) => {
+    let mergedList: any[] = [];
     setOrders(prev => {
       const map = new Map();
       [...prev, ...newOrders].forEach(o => {
@@ -63,14 +78,40 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
           }
         }
       });
-      const merged = Array.from(map.values());
-      merged.sort((a: any, b: any) => {
+      mergedList = Array.from(map.values());
+      mergedList.sort((a: any, b: any) => {
         const da = new Date(a.date || a.purchasedAt || a.createdAt || 0).getTime();
         const dbTime = new Date(b.date || b.purchasedAt || b.createdAt || 0).getTime();
         return dbTime - da;
       });
-      return merged;
+      return mergedList;
     });
+    return mergedList;
+  };
+
+  const auditPayments = async (ordersList?: any[]) => {
+    setIsAuditing(true);
+    try {
+      const listToAudit = ordersList && ordersList.length > 0 ? ordersList : orders;
+      const res = await fetch('/api/admin/verify-payments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orders: listToAudit })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.summary) {
+          setAuditSummary(data.summary);
+          if (Array.isArray(data.auditedOrders) && data.auditedOrders.length > 0) {
+            setOrders(data.auditedOrders);
+          }
+        }
+      }
+    } catch (err: any) {
+      console.warn('Payment audit error:', err);
+    } finally {
+      setIsAuditing(false);
+    }
   };
 
   const mergeUsers = (newUsers: any[]) => {
@@ -89,7 +130,8 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
     mergeUsers(localUsers);
     
     const localOrders = JSON.parse(localStorage.getItem('orders_list') || '[]');
-    mergeOrders(localOrders);
+    const merged = mergeOrders(localOrders);
+    auditPayments(merged);
     
     let localTraffic = JSON.parse(localStorage.getItem('global_traffic') || localStorage.getItem('traffic_log') || '[]');
     const exclude = localStorage.getItem('exclude_my_clicks') === 'true';
@@ -110,12 +152,15 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
     setOrdersError(null);
     try {
       const res = await fetch('/api/orders');
+      let combinedOrders = orders;
       if (res.ok) {
         const data = await res.json();
         if (data.success && Array.isArray(data.orders)) {
-          mergeOrders(data.orders);
+          combinedOrders = mergeOrders(data.orders);
         }
       }
+      await auditPayments(combinedOrders);
+      showToast('✅ Live payment audit complete! Dashboard refreshed.');
     } catch (err: any) {
       console.warn('Orders refresh warning:', err);
       setOrdersError(err.message || 'Unable to sync backend orders');
@@ -343,22 +388,25 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
     a.click();
   };
 
-  const totalGross = orders.filter(isOrderPaid).reduce((sum, o) => sum + (Number(o.amountUSD || o.price || o.amount) || 0), 0);
+  const verifiedOrders = orders.filter(o => o.verificationCategory === 'LIVE_VERIFIED' || o.verifiedLive === true);
+  const totalGross = auditSummary.liveVerifiedRevenue;
   
-  // Breakdown by Product
-  const breakdownByProduct = orders.reduce((acc, o) => {
-      if(isOrderPaid(o)) {
-          acc[o.productName] = (acc[o.productName] || 0) + (Number(o.amountUSD || o.price || o.amount) || 0);
-      }
-      return acc;
+  // Breakdown by Product (for verified live orders)
+  const breakdownByProduct = verifiedOrders.reduce((acc, o) => {
+    const name = o.productName || 'General Store Item';
+    const val = Number(o.amountUSD || o.price || o.amount) || 0;
+    acc[name] = (acc[name] || 0) + val;
+    return acc;
   }, {} as Record<string, number>);
 
-  const breakdownByCountry = orders.reduce((acc, o) => {
-      if(isOrderPaid(o) && o.country) {
-          const key = `${o.country.flag || '🌍'} ${o.country.name || 'Global'}`;
-          acc[key] = (acc[key] || 0) + (Number(o.amountUSD || o.price || o.amount) || 0);
-      }
-      return acc;
+  // Breakdown by Country (for verified live orders)
+  const breakdownByCountry = verifiedOrders.reduce((acc, o) => {
+    if (o.country) {
+      const key = `${o.country.flag || '🌍'} ${o.country.name || 'Unspecified'}`;
+      const val = Number(o.amountUSD || o.price || o.amount) || 0;
+      acc[key] = (acc[key] || 0) + val;
+    }
+    return acc;
   }, {} as Record<string, number>);
 
   const maskEmail = (email: string) => email ? email.substring(0,3) + '***@' + email.split('@')[1] : '';
@@ -384,11 +432,11 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
         <div className="flex gap-2">
           <button 
             onClick={refreshOrders} 
-            disabled={isLoadingOrders}
+            disabled={isLoadingOrders || isAuditing}
             className="flex items-center gap-2 bg-[#111] hover:bg-white/10 text-[#FFD700] border border-[#FFD700]/40 px-4 py-2 rounded-xl text-sm font-bold transition"
           >
-            <RefreshCw size={16} className={isLoadingOrders ? 'animate-spin' : ''} />
-            {isLoadingOrders ? 'Syncing...' : 'Sync Live Orders'}
+            <RefreshCw size={16} className={(isLoadingOrders || isAuditing) ? 'animate-spin' : ''} />
+            {isLoadingOrders || isAuditing ? 'Auditing Paystack...' : 'Sync Live Orders'}
           </button>
         </div>
       </div>
@@ -412,6 +460,70 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
 
       {activeTab === 'analytics' && (
         <div className="space-y-6 animate-in fade-in">
+          {/* URGENT PAYMENT VERIFICATION AUDIT PANEL */}
+          <div className="bg-[#111] border border-[#FFD700]/30 rounded-2xl p-5 shadow-2xl relative overflow-hidden">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 pb-3 border-b border-[#222]">
+              <div>
+                <h3 className="text-white font-black text-base flex items-center gap-2">
+                  <ShieldCheck className="text-[#10B981]" size={20} />
+                  Paystack Server-Side Direct Verification Audit
+                </h3>
+                <p className="text-gray-400 text-xs mt-0.5">
+                  Live verification status directly through Paystack API (Secret Key server-side only).
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider ${auditSummary.hasPaystackSecretKey ? 'bg-emerald-950 text-emerald-400 border border-emerald-800/40' : 'bg-amber-950 text-amber-400 border border-amber-800/40'}`}>
+                  {auditSummary.hasPaystackSecretKey ? '🔒 PAYSTACK SECRET KEY ACTIVE' : '⚠️ NO SECRET KEY ON SERVER'}
+                </span>
+                <button 
+                  onClick={() => auditPayments()} 
+                  disabled={isAuditing}
+                  className="flex items-center gap-1.5 text-xs text-black bg-[#FFD700] hover:bg-yellow-400 px-3 py-1.5 rounded-lg font-bold transition disabled:opacity-50"
+                >
+                  <RefreshCw size={13} className={isAuditing ? 'animate-spin' : ''} />
+                  {isAuditing ? 'Verifying Paystack...' : 'Re-verify All Transactions'}
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="bg-emerald-950/30 border border-emerald-500/40 rounded-xl p-3.5">
+                <div className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                  <CheckCircle size={12} /> LIVE VERIFIED PAYMENTS
+                </div>
+                <div className="text-2xl font-black text-emerald-400">{auditSummary.liveVerifiedCount}</div>
+                <div className="text-xs text-emerald-300 font-bold mt-1">${auditSummary.liveVerifiedRevenue.toFixed(2)} USD</div>
+              </div>
+
+              <div className="bg-amber-950/30 border border-amber-500/40 rounded-xl p-3.5">
+                <div className="text-[10px] font-bold text-amber-400 uppercase tracking-wider mb-1 flex items-center justify-between">
+                  <span>TEST / DEMO DATA</span>
+                  <span className="bg-amber-500/20 text-amber-300 text-[9px] px-1.5 py-0.5 rounded font-black">TEST</span>
+                </div>
+                <div className="text-2xl font-black text-amber-300">{auditSummary.testCount}</div>
+                <div className="text-xs text-amber-400/80 mt-1">${auditSummary.testRevenue.toFixed(2)} USD (EXCLUDED)</div>
+              </div>
+
+              <div className="bg-red-950/30 border border-red-500/40 rounded-xl p-3.5">
+                <div className="text-[10px] font-bold text-red-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                  <XCircle size={12} /> FAILED / ABANDONED
+                </div>
+                <div className="text-2xl font-black text-red-400">{auditSummary.failedCount}</div>
+                <div className="text-xs text-red-400/70 mt-1">0.00 USD</div>
+              </div>
+
+              <div className="bg-gray-900 border border-gray-700 rounded-xl p-3.5">
+                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 flex items-center justify-between">
+                  <span>UNVERIFIED RECORDS</span>
+                  <span className="bg-gray-800 text-gray-400 text-[9px] px-1.5 py-0.5 rounded font-mono">UNCONFIRMED</span>
+                </div>
+                <div className="text-2xl font-black text-gray-300">{auditSummary.unverifiedCount}</div>
+                <div className="text-xs text-gray-400 mt-1">${auditSummary.unverifiedRevenue.toFixed(2)} USD (EXCLUDED)</div>
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             <div className="bg-[#111] border border-[#333] rounded-2xl p-4 cursor-pointer hover:border-[#FFD700] transition">
               <div className="flex items-center gap-2 text-gray-400 mb-2">
@@ -459,19 +571,21 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
                 <span className="text-[10px] uppercase font-bold">Completed Orders</span>
               </div>
               <div className="text-2xl font-black text-white">
-                {orders.filter(o => o.status === 'paid').length.toLocaleString()}
+                {auditSummary.liveVerifiedCount.toLocaleString()}
               </div>
+              <div className="text-[9px] text-gray-500 mt-1 font-bold">VERIFIED LIVE ONLY</div>
             </div>
 
             <div className="bg-[#111] border border-[#333] rounded-2xl p-4 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-16 h-16 bg-[#10B981]/10 rounded-full blur-xl"></div>
               <div className="flex items-center gap-2 text-gray-400 mb-2 relative z-10">
                 <DollarSign size={16} className="text-[#10B981]" />
-                <span className="text-[10px] uppercase font-bold">Gross Revenue</span>
+                <span className="text-[10px] uppercase font-bold">Verified Revenue</span>
               </div>
               <div className="text-2xl font-black text-[#10B981] relative z-10">
                 ${totalGross.toLocaleString(undefined, {minimumFractionDigits: 2})}
               </div>
+              <div className="text-[9px] text-gray-500 mt-1 font-bold relative z-10">EXCLUDES TEST DATA</div>
             </div>
           </div>
           
@@ -717,14 +831,39 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
                     <tr key={o.ref || o.id} className="hover:bg-white/[0.02] transition">
                       <td className="p-4 font-mono text-xs text-gray-400">{o.ref || o.orderRef || o.orderId || o.id}</td>
                       <td className="p-4 text-white font-bold">{o.customerName || maskEmail(o.customerEmail || o.email)}</td>
-                      <td className="p-4">{o.country?.flag || '🌍'} {o.country?.name || 'Global'}</td>
+                      <td className="p-4">{o.country?.flag || '🌍'} {(!o.country?.name || o.country.name === 'Unknown') ? 'Unspecified' : o.country.name}</td>
                       <td className="p-4 text-[#FFD700] font-bold">{o.productName}</td>
                       <td className="p-4 text-[#10B981] font-bold">{o.currency || 'USD'} {o.amount || `$${o.amountUSD || o.price || 0}`}</td>
                       <td className="p-4 text-gray-400 uppercase text-xs">{o.method || o.paymentMethod || 'Paystack'}</td>
                       <td className="p-4">
-                        <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide ${paid ? 'bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/30' : 'bg-yellow-500/20 text-yellow-500 border border-yellow-500/30'}`}>
-                          {paid ? 'Completed' : (o.status || 'Pending')}
-                        </span>
+                        {(() => {
+                          const cat = o.verificationCategory || (o.verifiedLive ? 'LIVE_VERIFIED' : (o._isSandboxSimulation ? 'TEST_PAYMENT' : 'UNVERIFIED'));
+                          if (cat === 'LIVE_VERIFIED') {
+                            return (
+                              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide bg-emerald-950 text-emerald-400 border border-emerald-800/40 flex items-center gap-1 w-fit">
+                                <CheckCircle size={10} /> Live Verified
+                              </span>
+                            );
+                          } else if (cat === 'TEST_PAYMENT') {
+                            return (
+                              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide bg-amber-950 text-amber-400 border border-amber-800/40 flex items-center gap-1 w-fit">
+                                <AlertTriangle size={10} /> Test Data
+                              </span>
+                            );
+                          } else if (cat === 'FAILED_ABANDONED') {
+                            return (
+                              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide bg-red-950 text-red-400 border border-red-800/40 flex items-center gap-1 w-fit">
+                                <XCircle size={10} /> Failed
+                              </span>
+                            );
+                          } else {
+                            return (
+                              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide bg-gray-900 text-gray-400 border border-gray-700/50 flex items-center gap-1 w-fit">
+                                Unverified
+                              </span>
+                            );
+                          }
+                        })()}
                       </td>
                       <td className="p-4 text-gray-400 text-xs font-mono">{formattedDate}</td>
                     </tr>
