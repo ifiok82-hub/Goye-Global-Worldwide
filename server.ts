@@ -2887,8 +2887,57 @@ const COUNTRY_MAP: Record<string, { flag: string; name: string }> = {
   TR: { flag: '🇹🇷', name: 'Turkey' }
 };
 
+function getPaystackSecretKey(): string | null {
+  const envKey = process.env.PAYSTACK_SECRET_KEY || process.env.PAYSTACK_SECRET || process.env.PAYSTACK_SK || process.env.PAYSTACK_KEY;
+  if (envKey && typeof envKey === 'string' && envKey.trim() && !envKey.includes('your_paystack') && !envKey.includes('...') && envKey !== 'sk_live_') {
+    return envKey.trim();
+  }
+  try {
+    const configPath = path.join(process.cwd(), '.server-config.json');
+    if (fs.existsSync(configPath)) {
+      const cfg = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      if (cfg.PAYSTACK_SECRET_KEY && typeof cfg.PAYSTACK_SECRET_KEY === 'string' && cfg.PAYSTACK_SECRET_KEY.trim() && !cfg.PAYSTACK_SECRET_KEY.includes('your_paystack') && !cfg.PAYSTACK_SECRET_KEY.includes('...') && cfg.PAYSTACK_SECRET_KEY !== 'sk_live_') {
+        return cfg.PAYSTACK_SECRET_KEY.trim();
+      }
+    }
+  } catch (e) {}
+  return null;
+}
+
+// POST /api/admin/save-secret-key - Secure endpoint to set Paystack secret key on server
+app.post('/api/admin/save-secret-key', (req, res) => {
+  const { secretKey, adminPassword } = req.body;
+  if (adminPassword !== 'GoyeBN3583773') {
+    return res.status(401).json({ success: false, error: 'Invalid admin authorization password.' });
+  }
+  if (!secretKey || typeof secretKey !== 'string' || !secretKey.trim() || secretKey.includes('your_paystack') || secretKey.includes('...')) {
+    return res.status(400).json({ success: false, error: 'Please enter a valid Paystack Secret Key starting with sk_live_ or sk_test_' });
+  }
+
+  const cleanKey = secretKey.trim();
+  process.env.PAYSTACK_SECRET_KEY = cleanKey;
+
+  try {
+    const configPath = path.join(process.cwd(), '.server-config.json');
+    let cfg: Record<string, any> = {};
+    if (fs.existsSync(configPath)) {
+      try { cfg = JSON.parse(fs.readFileSync(configPath, 'utf8')); } catch (e) {}
+    }
+    cfg.PAYSTACK_SECRET_KEY = cleanKey;
+    fs.writeFileSync(configPath, JSON.stringify(cfg, null, 2));
+  } catch (err: any) {
+    console.error('Error writing .server-config.json:', err);
+  }
+
+  return res.json({
+    success: true,
+    message: 'Paystack Secret Key configured on server successfully!',
+    hasPaystackSecretKey: true
+  });
+});
+
 async function verifyPaystackTransactionServerSide(ref: string) {
-  const secretKey = process.env.PAYSTACK_SECRET_KEY || process.env.PAYSTACK_SK;
+  const secretKey = getPaystackSecretKey();
   if (!secretKey) {
     return {
       success: false,
@@ -2968,6 +3017,54 @@ async function verifyPaystackTransactionServerSide(ref: string) {
   }
 }
 
+// GET /api/paystack/auth-check - Safe Paystack server API connectivity & auth check
+app.get('/api/paystack/auth-check', async (req, res) => {
+  const secretKey = getPaystackSecretKey();
+  if (!secretKey) {
+    return res.status(200).json({
+      authStatus: 'FAIL',
+      resultMessage: 'PAYSTACK SERVER AUTHENTICATION: FAIL',
+      hasSecretKey: false,
+      error: 'PAYSTACK_SECRET_KEY is not defined in server environment variables.'
+    });
+  }
+
+  try {
+    const apiRes = await fetch('https://api.paystack.co/transaction?perPage=1', {
+      headers: {
+        'Authorization': `Bearer ${secretKey}`,
+        'Cache-Control': 'no-cache'
+      }
+    });
+
+    const json: any = await apiRes.json();
+    if (apiRes.ok && json.status === true) {
+      return res.json({
+        authStatus: 'PASS',
+        resultMessage: 'PAYSTACK SERVER AUTHENTICATION: PASS',
+        hasSecretKey: true,
+        apiConnected: true
+      });
+    } else {
+      return res.json({
+        authStatus: 'FAIL',
+        resultMessage: 'PAYSTACK SERVER AUTHENTICATION: FAIL',
+        hasSecretKey: true,
+        apiConnected: false,
+        error: json.message || 'Invalid or unauthorized secret key.'
+      });
+    }
+  } catch (err: any) {
+    return res.json({
+      authStatus: 'FAIL',
+      resultMessage: 'PAYSTACK SERVER AUTHENTICATION: FAIL',
+      hasSecretKey: true,
+      apiConnected: false,
+      error: `Network error connecting to Paystack API: ${err.message}`
+    });
+  }
+});
+
 // GET /api/paystack/verify/:reference - Secure server-side Paystack verification
 app.get('/api/paystack/verify/:reference', async (req, res) => {
   const { reference } = req.params;
@@ -2981,7 +3078,7 @@ app.get('/api/paystack/verify/:reference', async (req, res) => {
 
 // POST /api/admin/verify-payments - Comprehensive server-side audit of all store payments
 app.post('/api/admin/verify-payments', async (req, res) => {
-  const secretKey = process.env.PAYSTACK_SECRET_KEY || process.env.PAYSTACK_SK;
+  const secretKey = getPaystackSecretKey();
   const inputOrders = Array.isArray(req.body.orders) ? req.body.orders : [];
 
   let allOrdersToAudit = inputOrders;

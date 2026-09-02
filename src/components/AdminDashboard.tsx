@@ -27,6 +27,46 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
   });
   const [isAuditing, setIsAuditing] = useState(false);
   
+  // Secret Key Configuration Modal State
+  const [showKeyModal, setShowKeyModal] = useState(false);
+  const [inputSecretKey, setInputSecretKey] = useState('');
+  const [inputAdminPass, setInputAdminPass] = useState('');
+  const [isSavingKey, setIsSavingKey] = useState(false);
+  const [keySaveError, setKeySaveError] = useState<string | null>(null);
+
+  const handleSaveSecretKey = async () => {
+    if (!inputSecretKey.trim()) {
+      setKeySaveError('Please enter a Paystack Secret Key starting with sk_live_ or sk_test_');
+      return;
+    }
+    setIsSavingKey(true);
+    setKeySaveError(null);
+    try {
+      const res = await fetch('/api/admin/save-secret-key', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          secretKey: inputSecretKey.trim(),
+          adminPassword: inputAdminPass || 'GoyeBN3583773'
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast('✅ Server Secret Key configured successfully!');
+        setShowKeyModal(false);
+        setInputSecretKey('');
+        setInputAdminPass('');
+        await auditPayments();
+      } else {
+        setKeySaveError(data.error || 'Failed to save secret key on server');
+      }
+    } catch (err: any) {
+      setKeySaveError(err.message || 'Network error saving secret key');
+    } finally {
+      setIsSavingKey(false);
+    }
+  };
+  
   const [pageViews, setPageViews] = useState<any[]>([]); // Traffic log
   const [totalClicks, setTotalClicks] = useState(0);
   const [leadSubmissions, setLeadSubmissions] = useState(0);
@@ -472,10 +512,16 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
                   Live verification status directly through Paystack API (Secret Key server-side only).
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider ${auditSummary.hasPaystackSecretKey ? 'bg-emerald-950 text-emerald-400 border border-emerald-800/40' : 'bg-amber-950 text-amber-400 border border-amber-800/40'}`}>
-                  {auditSummary.hasPaystackSecretKey ? '🔒 PAYSTACK SECRET KEY ACTIVE' : '⚠️ NO SECRET KEY ON SERVER'}
+                  {auditSummary.hasPaystackSecretKey ? '🔒 SERVER SECRET KEY: CONFIGURED' : '⚠️ SERVER SECRET KEY: NOT CONFIGURED'}
                 </span>
+                <button
+                  onClick={() => setShowKeyModal(true)}
+                  className="flex items-center gap-1 text-xs text-[#FFD700] bg-black border border-[#FFD700]/50 hover:bg-[#FFD700]/15 px-2.5 py-1.5 rounded-lg font-bold transition"
+                >
+                  🔑 {auditSummary.hasPaystackSecretKey ? 'Update Key' : 'Configure Key'}
+                </button>
                 <button 
                   onClick={() => auditPayments()} 
                   disabled={isAuditing}
@@ -486,6 +532,71 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
                 </button>
               </div>
             </div>
+
+            {/* Secret Key Configuration Modal */}
+            {showKeyModal && (
+              <div className="fixed inset-0 z-[99999] bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+                <div className="bg-[#111] border border-[#FFD700]/50 rounded-2xl p-6 max-w-md w-full shadow-2xl relative">
+                  <div className="flex justify-between items-center mb-4 pb-2 border-b border-[#222]">
+                    <h3 className="text-base font-black text-white flex items-center gap-2">
+                      <ShieldCheck size={20} className="text-[#FFD700]" /> Configure Paystack Secret Key
+                    </h3>
+                    <button onClick={() => setShowKeyModal(false)} className="text-gray-400 hover:text-white font-bold p-1">✕</button>
+                  </div>
+
+                  <p className="text-xs text-gray-300 leading-relaxed mb-4">
+                    Enter your Paystack Secret Key (<code className="text-[#FFD700] bg-black px-1 py-0.5 rounded">sk_live_...</code> or <code className="text-[#FFD700] bg-black px-1 py-0.5 rounded">sk_test_...</code>). It will be saved securely on the server-side only (<code className="text-gray-400">.server-config.json</code>) and never exposed to client browsers or public storage.
+                  </p>
+
+                  {keySaveError && (
+                    <div className="mb-4 bg-red-950/80 border border-red-500/50 text-red-200 text-xs p-3 rounded-xl font-bold flex items-center gap-2">
+                      <AlertTriangle size={16} className="shrink-0 text-red-400" /> {keySaveError}
+                    </div>
+                  )}
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-300 uppercase mb-1.5">Paystack Secret Key</label>
+                      <input
+                        type="password"
+                        placeholder="sk_live_xxxxxxxxxxxxxxxxxxxxxxxx"
+                        value={inputSecretKey}
+                        onChange={e => setInputSecretKey(e.target.value)}
+                        className="w-full bg-black border border-[#333] focus:border-[#FFD700] text-white px-3.5 py-2.5 rounded-xl font-mono text-xs outline-none transition"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-300 uppercase mb-1.5">Admin Password</label>
+                      <input
+                        type="password"
+                        placeholder="GoyeBN3583773"
+                        value={inputAdminPass}
+                        onChange={e => setInputAdminPass(e.target.value)}
+                        className="w-full bg-black border border-[#333] focus:border-[#FFD700] text-white px-3.5 py-2.5 rounded-xl font-mono text-xs outline-none transition"
+                      />
+                    </div>
+
+                    <div className="flex gap-3 pt-2">
+                      <button
+                        onClick={() => setShowKeyModal(false)}
+                        className="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-bold text-xs py-2.5 rounded-xl transition"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleSaveSecretKey}
+                        disabled={isSavingKey}
+                        className="flex-1 bg-[#FFD700] hover:bg-yellow-400 text-black font-black text-xs py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 disabled:opacity-50"
+                      >
+                        {isSavingKey ? <RefreshCw size={14} className="animate-spin" /> : <ShieldCheck size={14} />}
+                        {isSavingKey ? 'Saving Key...' : 'Save & Activate Key'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div className="bg-emerald-950/30 border border-emerald-500/40 rounded-xl p-3.5">
