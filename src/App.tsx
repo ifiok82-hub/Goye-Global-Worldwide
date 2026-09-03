@@ -1014,7 +1014,7 @@ export default function App() {
             </a>
     
 
-            <a href="/go/whatsapp?text=Hello%20Sirwise%20AI%20Web3%20Academy%20RC%20BN3583773" target="_blank" rel="noopener noreferrer" className="bg-black rounded-xl p-4 flex items-center justify-between hover:border-[#25D366] border border-transparent transition">
+            <a href="https://wa.me/2348033584736?text=Hello%20Sirwise%20AI%20Web3%20Academy%20RC%20BN3583773" target="_blank" rel="noopener noreferrer" className="bg-black rounded-xl p-4 flex items-center justify-between hover:border-[#25D366] border border-transparent transition">
               <div className="flex items-center gap-4">
                 <MessageCircle className="text-[#25D366]" size={20}/>
                 <span className="text-gray-300 text-[13px]">WhatsApp Support</span>
@@ -1023,7 +1023,7 @@ export default function App() {
             </a>
     
 
-            <a href="/contact.html" className="bg-black rounded-xl p-4 flex items-center justify-between hover:border-[#FFD700] border border-transparent transition">
+            <a href="mailto:goyedagosmess@gmail.com?subject=New%20Sirwise%20Academy%20Inquiry%20RC%20BN3583773" className="bg-black rounded-xl p-4 flex items-center justify-between hover:border-[#FFD700] border border-transparent transition">
               <div className="flex items-center gap-4">
                 <Mail className="text-[#3b82f6]" size={20}/>
                 <span className="text-gray-300 text-[13px]">Contact Portal</span>
@@ -1067,7 +1067,7 @@ export default function App() {
               showToast('You are currently offline. Please reconnect to launch support.');
               return;
             }
-            window.open('/go/whatsapp?text=Hello%20GOYE%20Sirwise%20Academy%20RC%20BN3583773', '_blank');
+            window.open('https://wa.me/2348033584736?text=Hello%20GOYE%20Sirwise%20Academy%20RC%20BN3583773', '_blank');
           }} style={{display:'inline-flex', alignItems:'center', gap:'8px', background:'#25D366', color:'#fff', padding:'12px 24px', borderRadius:'12px', border:'none', cursor:'pointer', fontSize:'14px', fontWeight:'bold'}}>
             <MessageCircle size={18}/> WhatsApp Support
           </button>

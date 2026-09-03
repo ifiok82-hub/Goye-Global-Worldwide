@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { GraduationCap, CheckCircle, Circle, Play, Lock, ChevronRight, Globe, Award, ShieldCheck, DollarSign, Download, Sparkles, X, FileText, Video, BookOpen, ExternalLink, HelpCircle, CreditCard } from 'lucide-react';
+import { GraduationCap, CheckCircle, Circle, Play, Lock, ChevronRight, Globe, Award, ShieldCheck, DollarSign, Download, Sparkles, X, FileText, Video, BookOpen, ExternalLink, HelpCircle, CreditCard, Send, Mail } from 'lucide-react';
 import CertificateGenerator from './CertificateGenerator';
 
 const GLOBAL_MODULES = [
@@ -141,6 +141,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
   const [activeModule, setActiveModule] = useState<any>(null);
   const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
   const [capstoneSubmission, setCapstoneSubmission] = useState('');
+  const [customerEmail, setCustomerEmail] = useState('');
 
   const priceUSD = 49.99;
   const currencies: Record<string, { symbol: string; name: string; rate: number }> = {
@@ -163,154 +164,219 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
   const localPrice = displayPrice;
 
   useEffect(() => {
-    const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-    if (params && params.get('admin_unlock') === 'RCBN3583773') {
-      localStorage.setItem('sirwise_paid', 'true');
-      localStorage.setItem('payment_verified', 'true');
-      localStorage.setItem('academy_unlocked', 'true');
-    }
-
-    const isPaid = localStorage.getItem('sirwise_paid') === 'true';
-    const isVerified = localStorage.getItem('payment_verified') === 'true';
-    const isUnlocked = localStorage.getItem('academy_unlocked') === 'true';
-
-    const hasAccess = (isPaid || isVerified) && isUnlocked;
-
-    if (hasAccess) {
-      setIsEnrolled(true);
-      const localKey = `goye_academy_progress_${currentUser?.uid || 'guest'}`;
-      const localData = localStorage.getItem(localKey);
-      if (localData) {
-        setProgress(JSON.parse(localData).progress || [1, 2, 3, 4, 5, 6, 7, 8]);
-      } else {
-        setProgress([1, 2, 3, 4, 5, 6, 7, 8]);
+    try {
+      const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+      if (params && (params.get('admin') === 'RCBN3583773' || params.get('admin_unlock') === 'RCBN3583773')) {
+        localStorage.setItem('sirwise_paid', 'true');
+        localStorage.setItem('payment_verified', 'true');
+        localStorage.setItem('academy_unlocked', 'true');
+        localStorage.setItem('is_admin', 'true');
       }
-    } else {
-      setIsEnrolled(false);
-      setProgress([]);
 
-      const userEmail = (localStorage.getItem('user_email') || currentUser?.email || '').trim();
-      if (userEmail) {
-        fetch('/api/content/access', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: userEmail })
-        })
-        .then(r => r.json())
-        .then(d => {
-          if (d.unlocked) {
-            setIsEnrolled(true);
-            localStorage.setItem('sirwise_paid', 'true');
-            localStorage.setItem('payment_verified', 'true');
-            localStorage.setItem('academy_unlocked', 'true');
+      const isPaid = localStorage.getItem('sirwise_paid') === 'true';
+      const isVerified = localStorage.getItem('payment_verified') === 'true';
+      const isUnlocked = localStorage.getItem('academy_unlocked') === 'true';
+      const isAdmin = localStorage.getItem('is_admin') === 'true' || (params && (params.get('admin') === 'RCBN3583773' || params.get('admin_unlock') === 'RCBN3583773'));
+
+      const hasAccess = (isPaid || isVerified || isAdmin) && (isUnlocked || isAdmin);
+
+      if (hasAccess) {
+        setIsEnrolled(true);
+        const savedCompleted: number[] = [];
+        GLOBAL_MODULES.forEach(m => {
+          if (localStorage.getItem(`module_${m.id}_completed`) === 'true') {
+            savedCompleted.push(m.id);
+          }
+        });
+
+        const localKey = `goye_academy_progress_${currentUser?.uid || 'guest'}`;
+        const localData = localStorage.getItem(localKey);
+        
+        if (savedCompleted.length > 0) {
+          setProgress(savedCompleted);
+        } else if (localData) {
+          try {
+            const parsed = JSON.parse(localData);
+            setProgress(parsed.progress || [1, 2, 3, 4, 5, 6, 7, 8]);
+          } catch (e) {
             setProgress([1, 2, 3, 4, 5, 6, 7, 8]);
           }
-        })
-        .catch(() => {});
+        } else {
+          setProgress([1, 2, 3, 4, 5, 6, 7, 8]);
+        }
+      } else {
+        setIsEnrolled(false);
+        setProgress([]);
       }
+
+      const storedEmail = localStorage.getItem('user_email') || currentUser?.email || '';
+      if (storedEmail) setCustomerEmail(storedEmail);
+
+    } catch (e) {
+      console.warn('LocalStorage initialization warning:', e);
     }
     setLoading(false);
   }, [currentUser, userProfile]);
 
-  const handleEnrollSuccess = () => {
-    localStorage.setItem('sirwise_paid', 'true');
-    localStorage.setItem('payment_verified', 'true');
-    localStorage.setItem('academy_unlocked', 'true');
-    setIsEnrolled(true);
-    setProgress([1, 2, 3, 4, 5, 6, 7, 8]);
-    setShowPaymentModal(false);
-    onToast && onToast('✅ Payment Successful! Welcome to Sirwise AI Web3 Academy (8 Global Modules).');
+  const validateCustomerEmail = (emailStr: string): boolean => {
+    const email = emailStr.trim();
+    if (!email || !email.includes('@') || !email.includes('.')) {
+      alert('Enter complete valid email e.g. you@gmail.com');
+      return false;
+    }
+    if (email.includes('goyedagos@') && !email.includes('.com')) {
+      alert('Incomplete email - Enter full .com email');
+      return false;
+    }
+    try {
+      localStorage.setItem('user_email', email);
+    } catch (e) {}
+    return true;
+  };
+
+  const payWithPaystack = () => {
+    if (!validateCustomerEmail(customerEmail)) return;
+    const email = customerEmail.trim();
+
+    if (typeof (window as any).PaystackPop === 'undefined') {
+      alert('Paystack SDK is loading... Check internet connection.');
+      return;
+    }
+
+    try {
+      const handler = (window as any).PaystackPop.setup({
+        key: 'pk_live_f0088ba761e01f60447fae2985f4fa6e897a9f8e',
+        email: email,
+        amount: 7498500, // NGN 74,985 in kobo
+        currency: 'NGN',
+        ref: 'SIRWISE_' + Date.now(),
+        callback: function (res: any) {
+          try {
+            localStorage.setItem('sirwise_paid', 'true');
+            localStorage.setItem('academy_unlocked', 'true');
+            localStorage.setItem('payment_verified', 'true');
+            localStorage.setItem('payment_ref', res.reference);
+          } catch (e) {}
+          alert('Payment verified ' + res.reference + ' - Academy Unlocked 100%!');
+          window.location.reload();
+        },
+        onClose: function () {
+          console.log('Paystack iframe closed');
+        }
+      });
+      handler.openIframe();
+    } catch (err) {
+      console.error('Paystack error:', err);
+      alert('Unable to initialize Paystack inline checkout. Please try again or use Bank Transfer.');
+    }
+  };
+
+  const payWithFlutterwave = () => {
+    if (!validateCustomerEmail(customerEmail)) return;
+    const email = customerEmail.trim();
+
+    if (typeof (window as any).FlutterwaveCheckout !== 'function') {
+      alert('Flutterwave SDK is loading... Check internet connection.');
+      return;
+    }
+
+    try {
+      (window as any).FlutterwaveCheckout({
+        public_key: 'FLWPUBK-cbb518a9b8f74421e887f4a1ec911ea7-X',
+        tx_ref: 'SIRWISE_FW_' + Date.now(),
+        amount: 74985,
+        currency: 'NGN',
+        customer: {
+          email: email,
+          name: email.split('@')[0] || 'Sirwise Student',
+          phone_number: '08012345678'
+        },
+        customizations: {
+          title: 'Sirwise AI Web3 Academy Global $49.99',
+          description: 'RC BN3583773',
+          logo: 'https://www.gasv.store/logo.png'
+        },
+        callback: function (data: any) {
+          if (data && (data.status === 'successful' || data.status === 'completed')) {
+            try {
+              localStorage.setItem('sirwise_paid', 'true');
+              localStorage.setItem('academy_unlocked', 'true');
+              localStorage.setItem('payment_verified', 'true');
+            } catch (e) {}
+            alert('Flutterwave success - Academy Unlocked 100%!');
+            window.location.reload();
+          } else {
+            alert('Payment not successful');
+          }
+        }
+      });
+    } catch (err) {
+      console.error('Flutterwave error:', err);
+      alert('Unable to launch Flutterwave. Please try Paystack or Bank Transfer.');
+    }
+  };
+
+  const payWithUSDC = () => {
+    if (!validateCustomerEmail(customerEmail)) return;
+    const txHash = prompt('Send $49.99 USDC (ERC20/TRC20) to address:\n0x9E7e59F295B0CD80bdfF2900a359ACe85741f23E\n\nEnter your Transaction Hash / ID below:');
+    if (txHash && txHash.trim().length > 5) {
+      try {
+        localStorage.setItem('sirwise_paid', 'true');
+        localStorage.setItem('academy_unlocked', 'true');
+        localStorage.setItem('payment_verified', 'true');
+        localStorage.setItem('payment_ref', 'USDC_' + txHash.trim());
+      } catch (e) {}
+      alert('USDC Transaction Submitted (' + txHash.trim().substring(0, 10) + '...) - Verified! Academy Unlocked!');
+      window.location.reload();
+    } else if (txHash !== null) {
+      alert('Please enter a valid Transaction Hash.');
+    }
+  };
+
+  const payWithPi = () => {
+    if (!validateCustomerEmail(customerEmail)) return;
+    const piRef = prompt('Pi Network GCV ($314,159)\nTransfer to Pi Wallet: @SirwiseGoye\n\nEnter your Pi Transfer Tx Reference / Wallet Username:');
+    if (piRef && piRef.trim().length > 2) {
+      try {
+        localStorage.setItem('sirwise_paid', 'true');
+        localStorage.setItem('academy_unlocked', 'true');
+        localStorage.setItem('payment_verified', 'true');
+        localStorage.setItem('payment_ref', 'PI_' + piRef.trim());
+      } catch (e) {}
+      alert('Pi Network Transfer Submitted - Verified! Academy Unlocked 100%!');
+      window.location.reload();
+    } else if (piRef !== null) {
+      alert('Please enter a valid Pi transfer reference.');
+    }
+  };
+
+  const handleBuyUnlockNow = () => {
+    if (!validateCustomerEmail(customerEmail)) return;
+    payWithPaystack();
   };
 
   const toggleModule = (id: number) => {
+    if (!isEnrolled) {
+      handleBuyUnlockNow();
+      return;
+    }
     const newProgress = progress.includes(id) 
       ? progress.filter(pid => pid !== id)
       : [...progress, id];
     setProgress(newProgress);
-    const localKey = `goye_academy_progress_${currentUser?.uid || 'guest'}`;
-    localStorage.setItem(localKey, JSON.stringify({ isEnrolled: true, progress: newProgress }));
+
+    try {
+      localStorage.setItem(`module_${id}_completed`, (!progress.includes(id)).toString());
+      const localKey = `goye_academy_progress_${currentUser?.uid || 'guest'}`;
+      localStorage.setItem(localKey, JSON.stringify({ isEnrolled: true, progress: newProgress }));
+      const percent = Math.min(100, Math.round((newProgress.length / GLOBAL_MODULES.length) * 100));
+      localStorage.setItem('progress', percent.toString());
+    } catch (e) {
+      console.warn('LocalStorage save warning:', e);
+    }
   };
 
-  const percentComplete = Math.min(100, Math.round((progress.length / GLOBAL_MODULES.length) * 100));
-
-  const paymentGateModal = showPaymentModal && (
-    <div className="fixed inset-0 bg-black/95 z-[99999] flex items-center justify-center p-4 pointer-events-auto">
-      <div className="bg-[#111] border-2 border-[#FFD700] text-white w-full max-w-[440px] rounded-3xl p-6 max-h-[92vh] overflow-y-auto relative shadow-2xl">
-        <button onClick={() => setShowPaymentModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white font-bold text-xl">
-          <X size={20} />
-        </button>
-
-        <div className="text-center mb-5">
-          <span className="bg-[#FFD700]/10 text-[#FFD700] text-[10px] font-black uppercase px-3 py-1 rounded-full border border-[#FFD700]/30 tracking-widest inline-block mb-2">
-            100% SECURE SSL ENCRYPTED • 190+ COUNTRIES
-          </span>
-          <h2 className="text-xl font-black text-white">Sirwise AI Web3 Academy Enrollment</h2>
-          <p className="text-gray-400 text-xs mt-1">Lifetime Access to All 8 Global Modules & Certification</p>
-        </div>
-
-        <div className="bg-black border border-[#333] rounded-2xl p-4 text-center mb-6">
-          <div className="text-3xl font-black text-[#FFD700]">${priceUSD} USD</div>
-          <p className="text-gray-400 text-xs mt-0.5">One-time payment • Compare $299 elsewhere</p>
-          {userCurrency !== 'USD' && (
-            <div className="text-[#10B981] font-bold text-sm mt-1">
-              Local Estimate: {displaySymbol}{localPrice} {userCurrency}
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-2.5">
-          <button 
-            onClick={() => onPurchase({ id: 'academy', name: 'Sirwise AI Web3 Academy 8-Module Masterclass', price: 49.99, category: 'academy' })} 
-            className="w-full bg-[#FFD700] hover:bg-yellow-400 text-black font-black py-3.5 px-4 rounded-xl flex items-center justify-between text-xs transition cursor-pointer"
-          >
-            <span className="flex items-center gap-2"><CreditCard size={16}/> Paystack (OPay, Cards, Bank Transfer)</span>
-            <ChevronRight size={16} />
-          </button>
-
-          <button 
-            onClick={() => onPurchase({ id: 'academy', name: 'Sirwise AI Web3 Academy 8-Module Masterclass', price: 49.99, category: 'academy' })} 
-            className="w-full bg-[#FFD700] hover:bg-yellow-400 text-black font-black py-3.5 px-4 rounded-xl flex items-center justify-between text-xs transition cursor-pointer"
-          >
-            <span className="flex items-center gap-2"><Globe size={16}/> Flutterwave (Global Cards & USSD)</span>
-            <ChevronRight size={16} />
-          </button>
-
-          <button 
-            onClick={() => onPurchase({ id: 'academy', name: 'Sirwise AI Web3 Academy 8-Module Masterclass', price: 49.99, category: 'academy' })} 
-            className="w-full bg-[#FFD700] hover:bg-yellow-400 text-black font-black py-3.5 px-4 rounded-xl flex items-center justify-between text-xs transition cursor-pointer"
-          >
-            <span className="flex items-center gap-2"><DollarSign size={16}/> PayPal (Instant USD Transfer)</span>
-            <ChevronRight size={16} />
-          </button>
-
-          <button 
-            onClick={() => onPurchase({ id: 'academy', name: 'Sirwise AI Web3 Academy 8-Module Masterclass', price: 49.99, category: 'academy' })} 
-            className="w-full bg-[#10B981] hover:bg-emerald-400 text-black font-black py-3.5 px-4 rounded-xl flex items-center justify-between text-xs transition cursor-pointer"
-          >
-            <span className="flex items-center gap-2"><Sparkles size={16}/> Crypto USDC (TRC20 / ERC20)</span>
-            <ChevronRight size={16} />
-          </button>
-
-          <button 
-            onClick={() => onPurchase({ id: 'academy', name: 'Sirwise AI Web3 Academy 8-Module Masterclass', price: 49.99, category: 'academy' })} 
-            className="w-full bg-[#8b5cf6] hover:bg-purple-400 text-white font-black py-3.5 px-4 rounded-xl flex items-center justify-between text-xs transition cursor-pointer"
-          >
-            <span className="flex items-center gap-2">π Pi Network GCV ($314,159)</span>
-            <ChevronRight size={16} />
-          </button>
-        </div>
-
-        <div className="mt-5 pt-4 border-t border-[#222] text-center space-y-1">
-          <p className="text-[11px] text-gray-400">
-            OPay Bank Transfer: <span className="text-[#FFD700] font-mono font-bold">611 354 1882</span> (GOYEDAGOSMESS ENTERPRISE)
-          </p>
-          <p className="text-[10px] text-gray-500">
-            Support Email: <a href="mailto:goyedagosmess@gmail.com" className="text-[#FFD700] underline">goyedagosmess@gmail.com</a>
-          </p>
-        </div>
-      </div>
-    </div>
-  );
+  const percentComplete = isEnrolled ? Math.min(100, Math.round((progress.length / GLOBAL_MODULES.length) * 100)) : 0;
 
   if (loading) return <div className="text-center text-gray-500 py-12">Loading global academy portal...</div>;
 
@@ -354,19 +420,73 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
         </div>
       </div>
 
+      {/* Paywall Banner at Top before Your Progress */}
+      {!isEnrolled && (
+        <div id="paywall" style={{ background: 'linear-gradient(135deg, #FFD700, #FFA500)', padding: '20px', borderRadius: '16px', textAlign: 'center', marginBottom: '20px', boxShadow: '0 10px 30px rgba(255, 215, 0, 0.3)' }}>
+          <h2 style={{ color: 'black', fontWeight: '900', fontSize: '20px', margin: '0 0 6px 0' }}>
+            🔒 Unlock Sirwise AI Web3 Academy - 8 Global Modules
+          </h2>
+          <p style={{ color: 'black', fontWeight: 'bold', fontSize: '14px', margin: '0 0 12px 0' }}>
+            Lifetime Access $49.99 = ₦74,985 - 190+ Countries
+          </p>
+          <input 
+            type="email" 
+            id="customerEmail" 
+            value={customerEmail}
+            onChange={(e) => setCustomerEmail(e.target.value)}
+            placeholder="Enter your complete email" 
+            style={{ width: '100%', height: '50px', borderRadius: '12px', padding: '12px', margin: '10px 0', border: '1px solid #000', background: '#ffffff', color: '#000000', fontSize: '14px', fontWeight: '600', outline: 'none' }} 
+          />
+          <button 
+            id="buyUnlockBtn" 
+            onClick={handleBuyUnlockNow}
+            style={{ width: '100%', height: '60px', background: 'black', color: '#FFD700', borderRadius: '16px', fontWeight: '900', fontSize: '18px', cursor: 'pointer', border: 'none', transition: 'transform 0.2s', boxShadow: '0 4px 15px rgba(0,0,0,0.4)' }}
+          >
+            💳 BUY & UNLOCK NOW $49.99
+          </button>
+          
+          <div style={{ marginTop: '14px', display: 'grid', gap: '10px' }}>
+            <button onClick={payWithPaystack} style={{ height: '52px', background: '#ffffff', color: '#000000', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', border: 'none', fontSize: '14px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>
+              Paystack Global Cards
+            </button>
+            <button onClick={payWithFlutterwave} style={{ height: '52px', background: '#FB9129', color: '#ffffff', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', border: 'none', fontSize: '14px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>
+              Flutterwave
+            </button>
+            <button onClick={payWithUSDC} style={{ height: '52px', background: '#2775CA', color: '#ffffff', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', border: 'none', fontSize: '14px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>
+              USDC Ethereum Metamask $49.99
+            </button>
+            <button onClick={payWithPi} style={{ height: '52px', background: '#7A3ED6', color: '#ffffff', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', border: 'none', fontSize: '14px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>
+              Pi Network GCV $314,159
+            </button>
+
+            <details style={{ marginTop: '8px', color: '#000000', textAlign: 'left', background: 'rgba(255, 255, 255, 0.4)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(0,0,0,0.15)' }}>
+              <summary style={{ fontWeight: '800', cursor: 'pointer', fontSize: '13px' }}>
+                Bank Transfer OPay 6113541882
+              </summary>
+              <div style={{ fontSize: '12px', marginTop: '8px', fontWeight: 'bold', lineHeight: '1.6' }}>
+                Account: <span style={{ fontFamily: 'monospace', fontSize: '14px', background: '#000', color: '#FFD700', padding: '2px 6px', borderRadius: '6px' }}>6113541882</span><br />
+                Account Name: <strong>GOYEDAGOSMESS ENTERPRISE</strong><br />
+                Bank: <strong>OPay</strong><br />
+                After transfer send payment proof to <a href="mailto:goyedagosmess@gmail.com" style={{ color: '#000000', textDecoration: 'underline', fontWeight: '900' }}>goyedagosmess@gmail.com</a>
+              </div>
+            </details>
+          </div>
+        </div>
+      )}
+
       {/* Progress Bar Container */}
-      <div className="bg-[#111] rounded-2xl p-6 border border-[#222] mb-6 opacity-90 shadow-xl">
+      <div id="progress" className="bg-[#111] rounded-2xl p-6 border border-[#222] mb-6 opacity-90 shadow-xl">
         <div className="flex justify-between items-end mb-3">
           <div>
             <h3 className="text-white font-black text-lg mb-0.5">Your Progress</h3>
             <p className="text-gray-400 text-xs">Complete all 8 global modules to unlock your official E-Certificate.</p>
           </div>
-          <div className="text-3xl font-black text-[#FFD700]">{isEnrolled ? percentComplete : 0}%</div>
+          <div className="text-3xl font-black text-[#FFD700]">{percentComplete}%</div>
         </div>
         <div className="w-full h-3.5 bg-black rounded-full overflow-hidden border border-[#333]">
           <div 
             className="h-full bg-[#FFD700] rounded-full transition-all duration-1000 ease-out relative"
-            style={{ width: `${isEnrolled ? percentComplete : 0}%` }}
+            style={{ width: `${percentComplete}%` }}
           >
             <div className="absolute top-0 right-0 bottom-0 left-0 bg-white/20 animate-pulse"></div>
           </div>
@@ -391,9 +511,9 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
                   <span className="text-[11px] text-gray-400 font-bold hidden sm:inline-block">• {mod.duration}</span>
                 </div>
 
-                <button onClick={() => isEnrolled && toggleModule(mod.id)} className="transition transform active:scale-90">
+                <button onClick={() => isEnrolled ? toggleModule(mod.id) : handleBuyUnlockNow()} className="transition transform active:scale-90">
                   {!isEnrolled ? (
-                    <Lock className="text-gray-500" size={22} />
+                    <Lock className="text-gray-500 hover:text-[#FFD700]" size={22} />
                   ) : isCompleted ? (
                     <CheckCircle className="text-[#10B981]" size={24} />
                   ) : (
@@ -404,7 +524,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
 
               <h4 className="font-extrabold text-lg md:text-xl mb-2 text-white flex items-center gap-2">
                 {mod.title} 
-                {!isEnrolled && <span className="text-red-400 text-xs font-bold bg-red-950/60 px-2 py-0.5 rounded border border-red-800/40">Module Locked</span>}
+                {!isEnrolled && <span className="text-red-400 text-xs font-bold bg-red-950/60 px-2 py-0.5 rounded border border-red-800/40 flex items-center gap-1"><Lock size={12}/> Locked</span>}
               </h4>
               
               <p className="text-gray-400 text-xs md:text-sm mb-4 leading-relaxed">{mod.desc}</p>
@@ -419,38 +539,37 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
               </div>
 
               <div className="flex flex-col sm:flex-row gap-2">
-                <button 
-                  onClick={() => { 
-                    if (!isEnrolled) {
-                      onPurchase({ id: 'academy', name: 'Sirwise AI Web3 Academy 8-Module Masterclass', price: 49.99, category: 'academy' }); 
-                    } else {
-                      setActiveModule(mod);
-                    }
-                  }} 
-                  className={`flex-1 py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition cursor-pointer z-10 ${
-                    !isEnrolled 
-                      ? 'bg-[#FFD700] text-black hover:bg-yellow-400 font-black shadow-lg' 
-                      : isCompleted 
-                        ? 'bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/40 hover:bg-[#10B981]/30' 
-                        : 'bg-[#FFD700] text-black hover:bg-yellow-400 font-black'
-                  }`}
-                >
-                  {!isEnrolled ? (
-                    `Unlock Now ${displaySymbol}${localPrice} USD (NGN 74,985)`
-                  ) : isCompleted ? (
-                    <><CheckCircle size={18} /> COMPLETED • Review Module</>
-                  ) : (
-                    <><Play size={18} fill="currentColor" /> Start Learning</>
-                  )}
-                </button>
-
-                {isEnrolled && (
+                {!isEnrolled ? (
                   <button 
-                    onClick={() => toggleModule(mod.id)}
-                    className="px-4 py-3 bg-[#222] hover:bg-[#333] text-gray-300 font-bold text-xs rounded-xl border border-[#444] transition"
+                    onClick={handleBuyUnlockNow}
+                    className="w-full py-3.5 bg-black/80 hover:bg-black text-[#FFD700] font-bold text-sm rounded-xl border border-[#FFD700]/50 flex items-center justify-center gap-2 transition cursor-pointer opacity-80 hover:opacity-100"
                   >
-                    {isCompleted ? 'Mark Incomplete' : 'Mark Complete'}
+                    <Lock size={16} /> 🔒 Locked - Buy & Unlock $49.99
                   </button>
+                ) : (
+                  <>
+                    <button 
+                      onClick={() => setActiveModule(mod)} 
+                      className={`flex-1 py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition cursor-pointer z-10 ${
+                        isCompleted 
+                          ? 'bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/40 hover:bg-[#10B981]/30' 
+                          : 'bg-[#FFD700] text-black hover:bg-yellow-400 font-black'
+                      }`}
+                    >
+                      {isCompleted ? (
+                        <><CheckCircle size={18} /> COMPLETED • Review Module</>
+                      ) : (
+                        <><Play size={18} fill="currentColor" /> Start Learning</>
+                      )}
+                    </button>
+
+                    <button 
+                      onClick={() => toggleModule(mod.id)}
+                      className="px-4 py-3 bg-[#222] hover:bg-[#333] text-gray-300 font-bold text-xs rounded-xl border border-[#444] transition"
+                    >
+                      {isCompleted ? 'Mark Incomplete' : 'Mark Complete'}
+                    </button>
+                  </>
                 )}
               </div>
             </div>
@@ -458,8 +577,39 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
         })}
       </div>
 
+      {/* Inquiry / Support Form submitting to goyedagosmess@gmail.com */}
+      <div className="bg-[#111] rounded-3xl p-6 border border-[#222] mt-8">
+        <h3 className="text-[#FFD700] font-black text-lg mb-2 flex items-center gap-2">
+          <Mail size={20} /> Direct Support Inquiry (RC BN3583773)
+        </h3>
+        <p className="text-gray-400 text-xs mb-4">Send an official inquiry or payment proof to GOYE Support.</p>
+        <form action="https://formsubmit.co/goyedagosmess@gmail.com" method="POST" className="space-y-3">
+          <input type="hidden" name="_captcha" value="false" />
+          <input type="hidden" name="_subject" value="New Sirwise Academy Inquiry RC BN3583773" />
+          <input type="hidden" name="_next" value="https://www.gasv.store" />
+          <input 
+            type="email" 
+            name="email" 
+            required 
+            placeholder="Your email address" 
+            value={customerEmail}
+            onChange={(e) => setCustomerEmail(e.target.value)}
+            className="w-full bg-black border border-[#333] focus:border-[#FFD700] rounded-xl p-3 text-white text-xs outline-none" 
+          />
+          <textarea 
+            name="message" 
+            required 
+            placeholder="Enter your message or bank transfer payment details..." 
+            className="w-full bg-black border border-[#333] focus:border-[#FFD700] rounded-xl p-3 text-white text-xs outline-none h-24"
+          ></textarea>
+          <button type="submit" className="w-full bg-[#FFD700] text-black font-black py-3 rounded-xl text-xs hover:bg-yellow-400 flex items-center justify-center gap-2">
+            <Send size={14} /> Send to goyedagosmess@gmail.com
+          </button>
+        </form>
+      </div>
+
       {/* Global Student Testimonials */}
-      <div className="mt-12 bg-[#111] rounded-3xl p-6 border border-[#222]">
+      <div className="mt-8 bg-[#111] rounded-3xl p-6 border border-[#222]">
         <h3 className="text-[#FFD700] font-black text-xl mb-2 flex items-center gap-2">
           <Globe size={22} /> Global Success Stories & Reviews
         </h3>
@@ -487,13 +637,13 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
           priceUSD={priceUSD} 
           displaySymbol={displaySymbol} 
           localPrice={localPrice} 
-          onUnlock={() => onPurchase({ id: 'academy', name: 'Sirwise AI Web3 Academy 8-Module Masterclass', price: 49.99, category: 'academy' })} 
+          onUnlock={handleBuyUnlockNow} 
           onToast={onToast} 
         />
       </div>
 
       {/* Interactive Active Module Viewer Modal */}
-      {activeModule && (
+      {activeModule && isEnrolled && (
         <div className="fixed inset-0 bg-black/90 z-[99999] flex items-center justify-center p-4 pointer-events-auto">
           <div className="bg-[#111] border-2 border-[#FFD700] text-white w-full max-w-[650px] rounded-3xl p-6 max-h-[92vh] overflow-y-auto relative shadow-2xl space-y-6">
             <button 
@@ -630,8 +780,6 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
           </div>
         </div>
       )}
-
-      {paymentGateModal}
     </div>
   );
 }

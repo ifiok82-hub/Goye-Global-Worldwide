@@ -1,21 +1,21 @@
-// GOYE Support & Contact Helper (Server-side redirection secured)
-
+// GOYE Support & Contact Helper
 export const GOYE_WEBSITE_URL = 'https://www.gasv.store';
 
 /**
- * Primary Support: Redirects to secure server-side contact portal or posts message
+ * Primary Support: Email support to goyedagosmess@gmail.com
  */
-export function openGoyeEmailSupport(subject: string = 'Hello GOYE!', body: string = '') {
-  window.location.href = '/contact.html';
+export function openGoyeEmailSupport(subject: string = 'Hello GOYE Inquiry RC BN3583773', body: string = '') {
+  const mailtoUrl = `mailto:goyedagosmess@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  window.location.href = mailtoUrl;
 }
 
 /**
- * Secondary Support: Triggers WhatsApp via secure server-side redirect (/go/whatsapp)
- * completely hiding raw phone numbers from client-side source code.
+ * Secondary Support: Triggers WhatsApp support directly
  */
 export function openGoyeWhatsAppSupport(messageText: string = 'Hello GOYE! I need support.') {
   const encodedMsg = encodeURIComponent(messageText);
-  const redirectUrl = `/go/whatsapp?text=${encodedMsg}`;
-  window.open(redirectUrl, '_blank', 'noopener,noreferrer');
+  const whatsappUrl = `https://wa.me/2348033584736?text=${encodedMsg}`;
+  window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
 }
+
 
