@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { GraduationCap, CheckCircle, Circle, Play, Lock, ChevronRight, Globe, Award, ShieldCheck, DollarSign, Download, Sparkles, X, FileText, Video, BookOpen, ExternalLink, HelpCircle, CreditCard, Send, Mail } from 'lucide-react';
 import CertificateGenerator from './CertificateGenerator';
+import { cleanUserEmail } from '../lib/contact';
 
 const GLOBAL_MODULES = [
   { 
@@ -209,8 +210,12 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
         setProgress([]);
       }
 
-      const storedEmail = localStorage.getItem('user_email') || currentUser?.email || '';
-      if (storedEmail) setCustomerEmail(storedEmail);
+      const storedEmail = cleanUserEmail(localStorage.getItem('user_email') || currentUser?.email || '');
+      setCustomerEmail(storedEmail);
+      if (localStorage.getItem('user_email') && !storedEmail) {
+        localStorage.removeItem('user_email');
+        localStorage.removeItem('customer_email');
+      }
 
     } catch (e) {
       console.warn('LocalStorage initialization warning:', e);
@@ -220,16 +225,14 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
 
   const validateCustomerEmail = (emailStr: string): boolean => {
     const email = emailStr.trim();
-    if (!email || !email.includes('@') || !email.includes('.')) {
-      alert('Enter complete valid email e.g. you@gmail.com');
-      return false;
-    }
-    if (email.includes('goyedagos@') && !email.includes('.com')) {
-      alert('Incomplete email - Enter full .com email');
+    const clean = cleanUserEmail(email);
+    if (!clean) {
+      alert('Enter complete valid email e.g. name@gmail.com');
       return false;
     }
     try {
-      localStorage.setItem('user_email', email);
+      localStorage.setItem('user_email', clean);
+      localStorage.setItem('customer_email', clean);
     } catch (e) {}
     return true;
   };

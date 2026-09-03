@@ -25,6 +25,8 @@ import { db } from './lib/firebase';
 import { collection, onSnapshot, setDoc, doc, getDoc, updateDoc, increment, addDoc } from 'firebase/firestore';
 
 
+import { cleanUserEmail } from './lib/contact';
+
 // Dummy components for things that were in App.tsx
 const HeroSection = ({ onLogoTap, onPlayVideo, onOpenLeadMagnet }: any) => (
   <div className="bg-[#0a0a0a] border border-[#FFD700] rounded-[2rem] p-6 text-center mt-6 relative mx-4 pointer-events-auto">
@@ -263,6 +265,11 @@ export default function App() {
     localStorage.setItem('admin_device', 'true');
     if (localStorage.getItem('exclude_my_clicks') === null) {
       localStorage.setItem('exclude_my_clicks', 'true');
+    }
+    const savedEmail = localStorage.getItem('user_email');
+    if (savedEmail && !cleanUserEmail(savedEmail)) {
+      localStorage.removeItem('user_email');
+      localStorage.removeItem('customer_email');
     }
   }, []);
 

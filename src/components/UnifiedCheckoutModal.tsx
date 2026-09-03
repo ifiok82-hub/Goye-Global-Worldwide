@@ -1,12 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, ShieldCheck, Lock, Copy, CheckCircle, RefreshCw, ChevronRight, Zap, ExternalLink } from 'lucide-react';
 import { identifyUserSession, trackUserClick } from '../utils/analytics';
 import { db } from '../lib/firebase';
 import { doc, setDoc } from 'firebase/firestore';
+import { cleanUserEmail } from '../lib/contact';
 
 export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, onToast }: any) {
   const [activeGateway, setActiveGateway] = useState<string | null>(null);
   const [email, setEmail] = useState('');
+
+  useEffect(() => {
+    const stored = cleanUserEmail(localStorage.getItem('user_email') || localStorage.getItem('customer_email'));
+    if (stored) {
+      setEmail(stored);
+    } else {
+      setEmail('');
+      localStorage.removeItem('user_email');
+      localStorage.removeItem('customer_email');
+    }
+  }, []);
   const [cryptoTxHash, setCryptoTxHash] = useState('');
   const [bankRef, setBankRef] = useState('');
   const [cryptoVerifying, setCryptoVerifying] = useState(false);

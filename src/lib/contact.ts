@@ -2,6 +2,28 @@
 export const GOYE_WEBSITE_URL = 'https://www.gasv.store';
 
 /**
+ * Filter out blocked/invalid emails (ifiok82, godswill, gasv.store, null, ico, incomplete)
+ */
+export function cleanUserEmail(rawEmail?: string | null): string {
+  if (!rawEmail) return '';
+  const clean = rawEmail.trim().toLowerCase();
+  if (
+    clean.includes('ifiok82') ||
+    clean.includes('godswill') ||
+    clean.includes('gasv.store') ||
+    clean.includes('null') ||
+    clean.includes('undefined') ||
+    clean.includes('ico') ||
+    (clean.includes('goyedagos@') && !clean.endsWith('.com')) ||
+    !clean.includes('@') ||
+    !clean.includes('.')
+  ) {
+    return '';
+  }
+  return clean;
+}
+
+/**
  * Primary Support: Email support to goyedagosmess@gmail.com
  */
 export function openGoyeEmailSupport(subject: string = 'Hello GOYE Inquiry RC BN3583773', body: string = '') {
@@ -17,5 +39,6 @@ export function openGoyeWhatsAppSupport(messageText: string = 'Hello GOYE! I nee
   const whatsappUrl = `https://wa.me/2348033584736?text=${encodedMsg}`;
   window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
 }
+
 
 
