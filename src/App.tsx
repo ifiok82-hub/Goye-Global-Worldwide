@@ -1081,8 +1081,9 @@ export default function App() {
             <span className="bg-[#111] text-[#10B981] text-[10px] px-3 py-1 rounded-full border border-[#333] font-bold">Crypto USDC</span>
             <span className="bg-[#111] text-[#8b5cf6] text-[10px] px-3 py-1 rounded-full border border-[#333] font-bold">Pi GCV $314k</span>
           </div>
-          <p style={{color:'#666', fontSize:'11px', margin:0, lineHeight:'1.5'}}>
-            © 2026 Goyedagosmess Enterprise<br/>Sirwise AI Web3 Academy • Trusted Worldwide • RC BN3583773
+          <p style={{color:'#888', fontSize:'11px', margin:0, lineHeight:'1.6'}}>
+            © 2026 Goyedagosmess Enterprise RC BN3583773 Sirwise AI Web3 Academy Trusted Worldwide 190+ Countries www.gasv.store<br/>
+            Support: <a href="mailto:goyedagosmess@gmail.com" style={{color:'#FFD700', textDecoration:'underline'}}>goyedagosmess@gmail.com</a>
           </p>
         </div>
       </footer>

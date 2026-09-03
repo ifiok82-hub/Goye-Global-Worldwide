@@ -63,8 +63,9 @@ export default function CertificateGenerator({ isCompleted, isEnrolled, userProf
 
       // Badges
       doc.setTextColor(255, 215, 0);
-      doc.setFontSize(12);
-      doc.text('AI & Prompt Engineering   |   Digital Asset Creation   |   Web3 & Cyber Safety', 400, 420, { align: 'center' });
+      doc.setFontSize(10);
+      doc.text('AI Prompting | GenAI Business | No-Code Automation | Web3 Fundamentals', 400, 410, { align: 'center' });
+      doc.text('Cyber Security | Crypto & Pi GCV | Remote Income | Capstone Showcase', 400, 425, { align: 'center' });
 
       // Footer
       doc.setTextColor(255, 255, 255);
@@ -76,10 +77,10 @@ export default function CertificateGenerator({ isCompleted, isEnrolled, userProf
 
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(14);
-      doc.text('GOYE Global Worldwide RC BN3583773', 650, 500, { align: 'center' });
+      doc.text('Goyedagosmess Enterprise RC BN3583773', 650, 500, { align: 'center' });
       doc.setTextColor(150, 150, 150);
       doc.setFontSize(10);
-      doc.text('Verified by Blockchain', 650, 520, { align: 'center' });
+      doc.text('Verified by Blockchain • 190+ Countries', 650, 520, { align: 'center' });
       
       // QR simulation text
       doc.setTextColor(255, 215, 0);
