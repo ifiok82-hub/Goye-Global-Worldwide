@@ -145,6 +145,81 @@ export default function App() {
   const [showLeadMagnetModal, setShowLeadMagnetModal] = useState(false);
   const [showPostPurchaseUpsellModal, setShowPostPurchaseUpsellModal] = useState(false);
 
+  const goToAcademyPaywall = () => {
+    console.log('Upgrade clicked - Going to Academy');
+    setTab('academy');
+    if (window.location.hash !== '#academy') {
+      window.location.hash = '#academy';
+    }
+
+    try {
+      const excludeAdminClicks = localStorage.getItem('exclude_admin_clicks') === 'true' || localStorage.getItem('excludeAdminClicks') === 'true';
+      const isAdminUser = localStorage.getItem('is_admin_auth') === 'true' || localStorage.getItem('admin_logged_in') === 'true';
+      if (!(excludeAdminClicks && isAdminUser)) {
+        let clicks = parseInt(localStorage.getItem('total_clicks') || '0') + 1;
+        localStorage.setItem('total_clicks', clicks.toString());
+        let logs = JSON.parse(localStorage.getItem('live_traffic_activity') || '[]');
+        if (!Array.isArray(logs)) logs = [];
+        logs.unshift({
+          id: 'UPGRADE-' + Date.now(),
+          location: '🇳🇬 Nigeria',
+          customer_name: (localStorage.getItem('lead_name') || localStorage.getItem('user_name') || 'Guest') + ' - Upgrade Click',
+          status: 'Wants to Upgrade',
+          time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+          device: 'Mobile',
+          excluded: 'Customer',
+          product: 'Upgrade to Full Academy $49.99',
+          timestamp: new Date().toISOString()
+        });
+        localStorage.setItem('live_traffic_activity', JSON.stringify(logs.slice(0, 100)));
+      }
+    } catch (e) {}
+
+    setTimeout(() => {
+      const paywall = document.getElementById('paywall') || document.getElementById('usdcPaymentSection') || document.querySelector('[id*="paywall"]');
+      if (paywall) {
+        paywall.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        (paywall as HTMLElement).style.border = '4px solid #FFD700';
+        (paywall as HTMLElement).style.boxShadow = '0 0 30px #FFD700';
+        setTimeout(() => {
+          (paywall as HTMLElement).style.border = '';
+          (paywall as HTMLElement).style.boxShadow = '';
+        }, 3000);
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        alert('🎓 Sirwise AI Web3 Academy - 8 Modules - $49.99 = ₦74,985\n\nPaywall: BUY & UNLOCK NOW\n\nUSDC: 0xaeed4e48f2146aadd07e85219f209053616e4e71\nPaystack | Flutterwave | OPay 6113541882 | Pi GCV $314,159\n\nOfficial: goyedagosmess@gmail.com RC BN3583773');
+      }
+    }, 400);
+  };
+
+  const handleDownloadBlueprintClick = () => {
+    const email = (localStorage.getItem('user_email') || '').trim();
+    if (!email.includes('@') || !email.includes('.')) {
+      setShowLeadMagnetModal(true);
+      return;
+    }
+
+    try {
+      const a = document.createElement('a');
+      a.href = 'https://www.gasv.store/downloads/5-minute-ai-prompt-blueprint.pdf';
+      a.download = '5-Minute-AI-Prompt-Blueprint-Sirwise.pdf';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showToast('📁 Blueprint download started!');
+    } catch (e) {
+      window.open('https://www.gasv.store/downloads/5-minute-ai-prompt-blueprint.pdf', '_blank');
+    }
+
+    setTimeout(goToAcademyPaywall, 1000);
+  };
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).goToAcademyPaywall = goToAcademyPaywall;
+    }
+  }, []);
+
   // Auto-Trigger Lead Magnet (Timed or Exit Intent)
   useEffect(() => {
     const isCaptured = localStorage.getItem('sirwise_lead_captured') === 'true';
@@ -788,18 +863,19 @@ export default function App() {
 
               <div className="flex flex-col gap-3">
                 <button 
-                  onClick={() => setShowLeadMagnetModal(true)} 
-                  className="bg-[#10B981] text-black font-black py-3 px-6 rounded-xl flex items-center justify-center gap-2 text-sm hover:bg-[#0ea5e9] transition cursor-pointer"
+                  id="downloadBlueprintBtn"
+                  onClick={handleDownloadBlueprintClick} 
+                  style={{ width: '100%', height: '54px', background: '#10B981', color: 'black', borderRadius: '12px', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer', pointerEvents: 'auto', zIndex: 9999, position: 'relative', border: 'none' }}
+                  className="flex items-center justify-center gap-2 hover:brightness-110 transition active:scale-95"
                 >
                   <Download size={18}/> ⚡ Download Free AI Prompt Blueprint
                 </button>
 
                 <button 
-                  onClick={() => {
-                    setTab('academy');
-                    window.location.href = '#academy?from=downloads';
-                  }} 
-                  className="w-full bg-gradient-to-r from-[#FFD700] to-[#FFA500] text-black font-black py-3 px-4 rounded-xl text-xs sm:text-sm shadow-md hover:brightness-110 transition cursor-pointer"
+                  id="upgradeToAcademyBtn" 
+                  onClick={goToAcademyPaywall} 
+                  style={{ width: '100%', minHeight: '65px', background: '#FFD700', color: 'black', borderRadius: '16px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', pointerEvents: 'auto', zIndex: 9999, position: 'relative', border: '3px solid black' }}
+                  className="active:scale-95 transition shadow-lg flex items-center justify-center text-center px-3"
                 >
                   🎓 Upgrade to Full Academy $49.99 - 8 Modules Certificate
                 </button>

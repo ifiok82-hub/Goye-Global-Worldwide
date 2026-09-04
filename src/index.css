@@ -120,7 +120,18 @@ button {
   pointer-events: auto !important;
   cursor: pointer !important;
   position: relative !important;
-  z-index: 2 !important;
+  z-index: 10 !important;
+}
+
+#upgradeToAcademyBtn, #downloadBlueprintBtn, #buyUnlockBtn {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  position: relative !important;
+  z-index: 9999 !important;
+}
+
+nav button {
+  pointer-events: auto !important;
 }
 
 .bottom-nav {
