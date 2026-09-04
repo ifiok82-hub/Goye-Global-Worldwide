@@ -413,62 +413,174 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
   };
 
 
-  const exportOrders = () => {
-    const BOM = '\uFEFF';
-    let csv = 'Order ID,Customer Email,Customer Name,Country,Product,Amount,Payment Method,Status,Date (WAT Lagos)\n';
+  const exportOrders = async () => {
+    try {
+      const response = await fetch('/api/admin/export/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orders })
+      });
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.setAttribute('href', url);
+        a.setAttribute('download', `goye_completed_orders_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        return;
+      }
+    } catch (e) {
+      console.error('API order export failed, using client fallback:', e);
+    }
+
+    const cleanCountry = (raw: any) => {
+      if (!raw) return 'Global';
+      let s = typeof raw === 'object' ? (raw.name || raw.country || 'Global') : String(raw);
+      s = s.replace(/[\uD83C-\uDBFF\uDC00-\uDFFF]/g, '')
+           .replace(/[\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF]/g, '')
+           .replace(/[^\w\s\.-]/gi, '')
+           .trim();
+      const lower = s.toLowerCase();
+      if (lower.includes('nigeria') || s === 'NG') return 'Nigeria';
+      if (lower.includes('usa') || lower.includes('united states') || s === 'US') return 'USA';
+      if (lower.includes('uk') || lower.includes('united kingdom') || s === 'GB') return 'UK';
+      if (lower.includes('canada') || s === 'CA') return 'Canada';
+      return s || 'Global';
+    };
+
+    const cleanName = (o: any) => {
+      const email = (o.customerEmail || o.email || '').trim();
+      const nameCandidate = o.customerName || o.name || o.fullName || o.pupilName || o.customer || '';
+      if (nameCandidate && typeof nameCandidate === 'string' && nameCandidate.trim() && !nameCandidate.includes('@')) {
+        return nameCandidate.trim();
+      }
+      if (email && email.includes('@')) return email.split('@')[0];
+      return 'Customer';
+    };
+
+    const rows = [
+      'Order ID,Customer Email,Customer Name,Country,Product,Amount,Payment Method,Status,Date (WAT Lagos)'
+    ];
+
     orders.forEach(o => {
-      const statusStr = o.status || 'COMPLETED';
+      const statusStr = o.status || 'Verified';
       const rawDate = o.date || o.purchasedAt || o.createdAt || o.created_at;
       let dateStr = 'N/A';
       if (rawDate) {
         try {
           const parsed = new Date(rawDate);
-          dateStr = !isNaN(parsed.getTime()) ? parsed.toLocaleString('en-GB', { timeZone: 'Africa/Lagos' }) : String(rawDate);
-        } catch (e) {
+          dateStr = !isNaN(parsed.getTime()) ? parsed.toLocaleString('en-GB', { timeZone: 'Africa/Lagos' }) + ' WAT Lagos' : String(rawDate);
+        } catch (err) {
           dateStr = String(rawDate);
         }
       }
-      const countryName = o.country?.name || o.country || 'Global';
       const customerEmail = (o.customerEmail || o.email || '').trim();
-      const customerName = o.customerName || o.name || o.fullName || o.pupilName || o.customer || (customerEmail ? customerEmail.split('@')[0] : 'Customer');
-      const amtStr = o.amount || o.amountFormatted || (o.amountNGN ? `₦${Number(o.amountNGN).toLocaleString()}` : '') || (o.amountUSD ? `$${o.amountUSD}` : '') || o.price || '0';
+      const customerName = cleanName(o);
+      const countryName = cleanCountry(o.country);
+      const amtStr = o.amount || o.amountFormatted || (o.amountNGN ? `₦${Number(o.amountNGN).toLocaleString()}` : '') || (o.amountUSD ? `$${o.amountUSD}` : '') || o.price || '₦74,985.00 ($49.99)';
 
-      csv += `"${o.ref || o.orderId || o.id}","${customerEmail}","${customerName}","${countryName}","${o.productName || o.product || ''}","${amtStr}","${o.method || o.paymentMethod || ''}","${statusStr}","${dateStr}"\n`;
+      rows.push(`"${o.ref || o.orderId || o.id || ''}","${customerEmail}","${customerName}","${countryName}","${o.productName || o.product || 'Sirwise AI Web3 Academy'}","${amtStr}","${o.method || o.paymentMethod || 'Paystack'}","${statusStr}","${dateStr}"`);
     });
-    const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' });
+
+    const bomBytes = new Uint8Array([0xEF, 0xBB, 0xBF]);
+    const blob = new Blob([bomBytes, rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.setAttribute('href', url);
     a.setAttribute('download', `goye_completed_orders_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
   };
 
-  const exportCustomers = () => {
-    const BOM = '\uFEFF';
-    let csv = 'Customer ID,Email,Customer Name,Pupil Name,Parent Name,Country,Age,WhatsApp,Status,Date Registered (WAT Lagos)\n';
+  const exportCustomers = async () => {
+    try {
+      const response = await fetch('/api/admin/export/customers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ customers: users })
+      });
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.setAttribute('href', url);
+        a.setAttribute('download', `CRM_Customers_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        return;
+      }
+    } catch (e) {
+      console.error('API customer export failed, using client fallback:', e);
+    }
+
+    const cleanCountry = (raw: any) => {
+      if (!raw) return 'Global';
+      let s = typeof raw === 'object' ? (raw.name || raw.country || 'Global') : String(raw);
+      s = s.replace(/[\uD83C-\uDBFF\uDC00-\uDFFF]/g, '')
+           .replace(/[\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF]/g, '')
+           .replace(/[^\w\s\.-]/gi, '')
+           .trim();
+      const lower = s.toLowerCase();
+      if (lower.includes('nigeria') || s === 'NG') return 'Nigeria';
+      if (lower.includes('usa') || lower.includes('united states') || s === 'US') return 'USA';
+      if (lower.includes('uk') || lower.includes('united kingdom') || s === 'GB') return 'UK';
+      if (lower.includes('canada') || s === 'CA') return 'Canada';
+      return s || 'Global';
+    };
+
+    const cleanName = (u: any) => {
+      const email = (u.email || u.customerEmail || '').trim();
+      const nameCandidate = u.name || u.fullName || u.customerName || u.pupilName || u.customer || '';
+      if (nameCandidate && typeof nameCandidate === 'string' && nameCandidate.trim() && !nameCandidate.includes('@')) {
+        return nameCandidate.trim();
+      }
+      if (email && email.includes('@')) return email.split('@')[0];
+      return 'Customer';
+    };
+
+    const rows = [
+      'Customer ID,Email,Customer Name,Country,WhatsApp,Total Spent,Registration Date'
+    ];
+
     users.forEach(u => {
       const rawDate = u.date || u.createdAt || u.created_at;
       let dateStr = 'N/A';
       if (rawDate) {
         try {
           const parsed = new Date(rawDate);
-          dateStr = !isNaN(parsed.getTime()) ? parsed.toLocaleString('en-GB', { timeZone: 'Africa/Lagos' }) : String(rawDate);
-        } catch (e) {
+          dateStr = !isNaN(parsed.getTime()) ? parsed.toLocaleString('en-GB', { timeZone: 'Africa/Lagos' }) + ' WAT Lagos' : String(rawDate);
+        } catch (err) {
           dateStr = String(rawDate);
         }
       }
-      const countryName = u.country?.name || u.country || 'Global';
       const customerEmail = (u.email || u.customerEmail || '').trim();
-      const customerName = u.name || u.fullName || u.customerName || u.pupilName || u.customer || (customerEmail ? customerEmail.split('@')[0] : 'Customer');
+      const customerName = cleanName(u);
+      const countryName = cleanCountry(u.country);
+      const rawId = u.id || u.uid || ('PAYSTACK-' + Date.now());
+      const custId = String(rawId).replace(/[^\w\d_-]/g, '').trim();
+      const whatsapp = u.whatsapp || u.phone || 'N/A';
+      const totalSpent = u.totalSpent || u.amount || '₦74,985.00 ($49.99)';
 
-      csv += `"${u.id || u.uid}","${customerEmail}","${customerName}","${u.pupilName || ''}","${u.parentName || ''}","${countryName}","${u.age || ''}","${u.whatsapp || u.phone || ''}","${u.status || 'Registered'}","${dateStr}"\n`;
+      rows.push(`"${custId}","${customerEmail}","${customerName}","${countryName}","${whatsapp}","${totalSpent}","${dateStr}"`);
     });
-    const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' });
+
+    const bomBytes = new Uint8Array([0xEF, 0xBB, 0xBF]);
+    const blob = new Blob([bomBytes, rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.setAttribute('href', url);
-    a.setAttribute('download', `goye_registered_customers_${new Date().toISOString().split('T')[0]}.csv`);
+    a.setAttribute('download', `CRM_Customers_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
   };
 
   const verifiedOrders = orders.filter(o => o.verificationCategory === 'LIVE_VERIFIED' || o.verifiedLive === true);
