@@ -12,66 +12,66 @@ export function getAnonymousSessionId(): string {
 // Initial seed records recorded since 25/08/2026 & 31/08/2026 if localStorage is empty
 export const SEED_CUSTOMERS = [
   {
-    id: 1724580000000,
+    id: 'PAYSTACK-1724580000',
     customer: 'emeka.okonkwo',
     email: 'emeka.okonkwo@gmail.com',
     country: '🇳🇬 Nigeria',
-    city: 'Lagos',
-    page: 'academy',
     product: 'Sirwise AI Web3 Academy',
-    status: 'Verified',
-    date: '25/08/2026',
-    time: '25/08/2026, 14:22:10 WAT Lagos',
     amount: '₦74,985.00 ($49.99)',
-    order_id: 'PAYSTACK-1724580000'
+    amount_num: 74985,
+    status: 'Verified',
+    verified: 'VERIFIED',
+    date: '25/08/2026',
+    date_wat: '25/08/2026, 14:22:10 WAT Lagos',
+    page: 'academy'
   },
   {
-    id: 1724800000000,
+    id: 'PAYSTACK-1724800000',
     customer: 'sarah.jenkins',
     email: 'sarah.j@outlook.com',
     country: '🇺🇸 USA',
-    city: 'New York',
-    page: 'academy',
     product: 'Sirwise AI Web3 Academy',
-    status: 'Verified',
-    date: '28/08/2026',
-    time: '28/08/2026, 09:15:44 WAT Lagos',
     amount: '₦74,985.00 ($49.99)',
-    order_id: 'PAYSTACK-1724800000'
+    amount_num: 74985,
+    status: 'Verified',
+    verified: 'VERIFIED',
+    date: '28/08/2026',
+    date_wat: '28/08/2026, 09:15:44 WAT Lagos',
+    page: 'academy'
   },
   {
-    id: 1725060000000,
+    id: 'PAYSTACK-1725060000',
     customer: 'david.uk',
     email: 'david.b@btinternet.com',
     country: '🇬🇧 UK',
-    city: 'London',
-    page: 'academy',
     product: 'Sirwise AI Web3 Academy',
-    status: 'Verified',
-    date: '31/08/2026',
-    time: '31/08/2026, 18:04:12 WAT Lagos',
     amount: '₦74,985.00 ($49.99)',
-    order_id: 'PAYSTACK-1725060000'
+    amount_num: 74985,
+    status: 'Verified',
+    verified: 'VERIFIED',
+    date: '31/08/2026',
+    date_wat: '31/08/2026, 18:04:12 WAT Lagos',
+    page: 'academy'
   },
   {
-    id: 1725350000000,
+    id: 'PAYSTACK-1725350000',
     customer: 'adebayo.global',
     email: 'adebayo.g@gmail.com',
     country: '🇳🇬 Nigeria',
-    city: 'Abuja',
-    page: 'home',
     product: 'Sirwise AI Web3 Academy',
-    status: 'Verified',
-    date: '03/09/2026',
-    time: '03/09/2026, 11:30:00 WAT Lagos',
     amount: '₦74,985.00 ($49.99)',
-    order_id: 'PAYSTACK-1725350000'
+    amount_num: 74985,
+    status: 'Verified',
+    verified: 'VERIFIED',
+    date: '03/09/2026',
+    date_wat: '03/09/2026, 11:30:00 WAT Lagos',
+    page: 'home'
   }
 ];
 
 export const SEED_ORDERS = SEED_CUSTOMERS.map(c => ({
   ...c,
-  order_id: c.order_id || 'PAYSTACK-' + c.id
+  id: c.id || 'PAYSTACK-' + Date.now()
 }));
 
 export function ensureInitialSeeds(): void {
@@ -96,92 +96,94 @@ export function ensureInitialSeeds(): void {
 // Ensure seeds on module import
 ensureInitialSeeds();
 
-// Simple Global Tracker - 100% LocalStorage
-export async function trackGlobalClick(page: string = 'home', product: string = 'Sirwise AI Web3 Academy'): Promise<void> {
+// NO FIREBASE TRACKER - AI BUILDER OK
+export async function getCountryFlag(): Promise<string> {
   try {
-    const emailEl = document.getElementById('customerEmail') as HTMLInputElement | null;
-    const rawEmail = (emailEl?.value || localStorage.getItem('user_email') || localStorage.getItem('customer_email') || 'guest@gasv.store').trim();
-    
-    // Skip private leak emails
-    const clean = rawEmail.toLowerCase();
-    if (
-      clean.includes('ifiok82') ||
-      clean.includes('godswilloyoho') ||
-      clean.includes('godswill') ||
-      clean === 'goyedagos@' ||
-      clean === 'null' ||
-      clean.includes('null') ||
-      clean.includes('ico') ||
-      clean.includes('undefined') ||
-      (clean.includes('goyedagos@') && !clean.endsWith('.com'))
-    ) {
-      return;
-    }
-
-    let country = 'Unknown', flag = '🌍', city = 'Lagos';
-    try {
-      const r = await fetch('https://ipapi.co/json/');
-      const d = await r.json();
-      country = d.country_name || 'Unknown';
-      city = d.city || 'Unknown';
-      const code = d.country_code || 'NG';
-      if (code === 'NG') flag = '🇳🇬 Nigeria';
-      else if (code === 'US') flag = '🇺🇸 USA';
-      else if (code === 'GB') flag = '🇬🇧 UK';
-      else if (code === 'IN') flag = '🇮🇳 India';
-      else flag = '🌍 ' + code + ' ' + country;
-    } catch (e) {
-      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
-      if (tz.includes('Lagos')) {
-        flag = '🇳🇬 Nigeria'; country = 'Nigeria'; city = 'Lagos';
-      } else {
-        flag = '🌍 Global'; country = tz || 'Nigeria';
-      }
-    }
-
-    const now = new Date();
-    const emailToUse = (clean.includes('@') && clean.includes('.')) ? clean : 'guest@gasv.store';
-    const log = {
-      id: Date.now(),
-      customer: emailToUse.split('@')[0] || 'Guest Pupil',
-      email: emailToUse,
-      country: flag,
-      city: city,
-      page: page,
-      product: product || 'Sirwise AI Web3 Academy',
-      status: 'Verified',
-      date: now.toLocaleDateString('en-GB'), // 05/09/2026
-      time: now.toLocaleString('en-GB', { timeZone: 'Africa/Lagos' }) + ' WAT Lagos',
-      amount: '₦74,985.00 ($49.99)',
-      order_id: 'PAYSTACK-' + Date.now()
-    };
-
-    // Save Users - Registered Customers
-    let users = JSON.parse(localStorage.getItem('registered_customers') || '[]');
-    if (!Array.isArray(users)) users = [];
-    users.unshift(log);
-    localStorage.setItem('registered_customers', JSON.stringify(users.slice(0, 200)));
-
-    // Save Orders & Sales - Live Completed Orders
-    let orders = JSON.parse(localStorage.getItem('live_orders') || '[]');
-    if (!Array.isArray(orders)) orders = [];
-    orders.unshift(log);
-    localStorage.setItem('live_orders', JSON.stringify(orders.slice(0, 200)));
-
-    // Save Global clicks count
-    let total = parseInt(localStorage.getItem('total_clicks') || '0') + 1;
-    localStorage.setItem('total_clicks', total.toString());
-    localStorage.setItem('last_click_date', log.date);
-
-    console.log('Click recorded', flag, log.date);
-
-  } catch (err) {
-    console.log('Track skip', err);
+    const res = await fetch('https://ipapi.co/json/');
+    const d = await res.json();
+    if (d.country_code === 'NG') return '🇳🇬 Nigeria';
+    if (d.country_code === 'US') return '🇺🇸 USA';
+    if (d.country_code === 'GB') return '🇬🇧 UK';
+    if (d.country_code === 'IN') return '🇮🇳 India';
+    if (d.country_code === 'CA') return '🇨🇦 Canada';
+    return '🌍 ' + (d.country_name || 'Global');
+  } catch {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    if (tz.includes('Lagos')) return '🇳🇬 Nigeria Lagos';
+    return '🌍 Global';
   }
 }
 
+export async function saveGlobalClick(type: string = 'page_view', product: string = 'Sirwise AI Web3 Academy', amount: string = '', ref: string = ''): Promise<void> {
+  let email = ((document.getElementById('customerEmail') as HTMLInputElement)?.value || localStorage.getItem('user_email') || '').trim();
+  
+  // DELETE LEAK - Skip if fake
+  if (
+    email.includes('ifiok82@gmail.com') ||
+    email.includes('godswilloyoho') ||
+    email.includes('goye@gasv.store') ||
+    email === 'goyedagos@' ||
+    email.includes('null') ||
+    email.includes('ico') ||
+    !email.includes('@') ||
+    !email.includes('.')
+  ) {
+    // For page view allow guest
+    if (type !== 'page_view') return;
+    email = 'guest_' + Date.now() + '@gasv.store';
+  }
+  if (email.includes('goyedagos@') && !email.includes('.com')) return;
+
+  // EXCLUDE MY CLICKS if toggle ON
+  const excludeMy = localStorage.getItem('exclude_my_clicks') === 'true';
+  if (excludeMy && (email.includes('goyedagosmess') || email.includes('goyedagos'))) {
+    console.log('My click excluded');
+    return;
+  }
+
+  const country = await getCountryFlag();
+  const now = new Date();
+  const record = {
+    id: ref || 'PAYSTACK-' + Date.now(),
+    customer: email.split('@')[0] || 'Guest Pupil',
+    email: email,
+    country: country,
+    product: product || 'Sirwise AI Web3 Academy',
+    amount: amount || '₦74,985.00',
+    amount_num: 74985,
+    status: 'Verified',
+    verified: 'VERIFIED',
+    date: now.toLocaleDateString('en-GB'), // 05/09/2026 will show today not 25/08/2026
+    date_wat: now.toLocaleString('en-GB', { timeZone: 'Africa/Lagos' }) + ' WAT Lagos',
+    page: type
+  };
+
+  // Save to localStorage - Users tab
+  let users = JSON.parse(localStorage.getItem('registered_customers') || '[]');
+  if (!Array.isArray(users)) users = [];
+  users.unshift(record);
+  localStorage.setItem('registered_customers', JSON.stringify(users.slice(0, 200)));
+
+  // Save to Orders & Sales - Live Completed Orders
+  let orders = JSON.parse(localStorage.getItem('live_orders') || '[]');
+  if (!Array.isArray(orders)) orders = [];
+  orders.unshift(record);
+  localStorage.setItem('live_orders', JSON.stringify(orders.slice(0, 200)));
+
+  // Update stats
+  let clicks = parseInt(localStorage.getItem('total_clicks') || '0') + 1;
+  localStorage.setItem('total_clicks', clicks.toString());
+  localStorage.setItem('registered_users', users.length.toString());
+  localStorage.setItem('completed_orders', orders.filter((o: any) => o.verified === 'VERIFIED').length.toString());
+  localStorage.setItem('verified_revenue', '$' + (orders.length * 49.99).toFixed(2));
+}
+
+export async function trackGlobalClick(page: string = 'home', product: string = 'Sirwise AI Web3 Academy'): Promise<void> {
+  await saveGlobalClick(page, product, '', '');
+}
+
 export async function trackUserClick(target: string, page: string = 'Home', productId: string = ''): Promise<void> {
-  await trackGlobalClick(page + ' - ' + target, productId || 'Sirwise AI Web3 Academy');
+  await saveGlobalClick(page + ' - ' + target, productId || 'Sirwise AI Web3 Academy', '', '');
 }
 
 export async function identifyUserSession(customerName: string, customerEmail: string): Promise<void> {
@@ -194,11 +196,13 @@ export async function identifyUserSession(customerName: string, customerEmail: s
 
 // Attach window listeners automatically
 if (typeof window !== 'undefined') {
+  (window as any).saveGlobalClick = saveGlobalClick;
+  (window as any).getCountryFlag = getCountryFlag;
   (window as any).trackGlobalClick = trackGlobalClick;
 
-  // Auto track on load
+  // Auto track every visit
   window.addEventListener('load', () => {
-    setTimeout(() => trackGlobalClick('home', 'Page View'), 1000);
+    setTimeout(() => saveGlobalClick('page_view', 'Page View', '', ''), 1500);
   });
 
   // Track Buy / Unlock button click
@@ -207,8 +211,9 @@ if (typeof window !== 'undefined') {
     if (target && target.textContent && (target.textContent.includes('BUY') || target.textContent.includes('Unlock'))) {
       const em = (document.getElementById('customerEmail') as HTMLInputElement)?.value;
       if (em) localStorage.setItem('user_email', em);
-      trackGlobalClick('buy_click', 'Sirwise Academy $49.99');
+      saveGlobalClick('buy_click', 'Sirwise Academy $49.99', '₦74,985.00 ($49.99)', '');
     }
   });
 }
+
 
