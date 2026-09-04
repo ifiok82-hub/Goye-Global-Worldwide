@@ -125,7 +125,9 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
     contactEmail: 'goyedagosmess@gmail.com'
   });
 
-  const [excludeMyClicks, setExcludeMyClicks] = useState(localStorage.getItem('exclude_my_clicks') !== 'false');
+  const [excludeMyClicks, setExcludeMyClicks] = useState(
+    localStorage.getItem('excludeAdminClicks') === 'true' || localStorage.getItem('exclude_my_clicks') !== 'false'
+  );
 
   // Modals for full CRM
   const [showCustomersModal, setShowCustomersModal] = useState(false);
@@ -243,7 +245,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
     }
     if (!Array.isArray(logs)) logs = [];
 
-    const excludeOn = localStorage.getItem('exclude_my_clicks') !== 'false';
+    const excludeOn = localStorage.getItem('excludeAdminClicks') === 'true' || localStorage.getItem('exclude_my_clicks') !== 'false';
     if (excludeOn) {
       logs = logs.filter((entry: any) => !isAdminClick(entry.email) && entry.excluded !== 'EXCLUDED' && entry.is_admin !== true && entry.isAdmin !== true);
     }
@@ -295,6 +297,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
   const handleToggleExclude = () => {
     const newVal = !excludeMyClicks;
     setExcludeMyClicks(newVal);
+    localStorage.setItem('excludeAdminClicks', newVal.toString());
     localStorage.setItem('exclude_my_clicks', newVal.toString());
     loadLocalData();
     if (newVal) {
@@ -1100,7 +1103,18 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
                           <span className="px-2 py-1 bg-[#10B981]/20 text-[#10B981] rounded text-[10px] font-bold">Verified</span> : 
                           <span className="px-2 py-1 bg-yellow-500/20 text-yellow-500 rounded text-[10px] font-bold">Pending</span>}
                       </td>
-                      <td className="p-4 text-gray-500 text-xs">{new Date(u.date || u.createdAt || Date.now()).toLocaleDateString()}</td>
+                      <td className="p-4 text-gray-500 text-xs">
+                        {(() => {
+                          const rawDate = u.createdAt || u.created_at || u.date_wat || u.date;
+                          if (!rawDate) return 'N/A';
+                          try {
+                            const parsed = new Date(rawDate);
+                            return !isNaN(parsed.getTime()) ? parsed.toLocaleDateString() : String(rawDate);
+                          } catch (e) {
+                            return String(rawDate);
+                          }
+                        })()}
+                      </td>
                       <td className="p-4">
                         <button className="text-red-400 hover:text-red-300"><Trash2 size={16}/></button>
                       </td>
@@ -1375,7 +1389,18 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
                                     <td className="p-3 text-gray-400">{maskEmail(u.email)}</td>
                                     <td className="p-3 text-gray-400">{maskPhone(u.whatsapp || u.phone)}</td>
                                     <td className="p-3">{safeString(u.slot, '-')}</td>
-                                    <td className="p-3 text-xs">{new Date(u.date || u.createdAt || Date.now()).toLocaleString()}</td>
+                                    <td className="p-3 text-xs">
+                                        {(() => {
+                                          const rawDate = u.createdAt || u.created_at || u.date_wat || u.date;
+                                          if (!rawDate) return 'N/A';
+                                          try {
+                                            const parsed = new Date(rawDate);
+                                            return !isNaN(parsed.getTime()) ? parsed.toLocaleDateString() : String(rawDate);
+                                          } catch (e) {
+                                            return String(rawDate);
+                                          }
+                                        })()}
+                                    </td>
                                     <td className="p-3"><span className="text-green-500 text-xs">{safeString(u.status, 'Registered')}</span></td>
                                 </tr>
                             ))}

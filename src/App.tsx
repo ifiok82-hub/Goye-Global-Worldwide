@@ -298,7 +298,17 @@ export default function App() {
 
     const trackClickGlobal = (pageName: string) => {
       try {
-        const userEmail = localStorage.getItem('user_email') || localStorage.getItem('admin_email') || currentUser?.email || 'guest@gasv.store';
+        const userEmail = (localStorage.getItem('user_email') || localStorage.getItem('admin_email') || currentUser?.email || '').toLowerCase();
+        const isAdminUser = currentUser?.role === 'admin' || localStorage.getItem('is_admin') === 'true' || localStorage.getItem('is_owner') === 'true' || userEmail.includes('goyedagos') || userEmail.includes('ifiok82') || userEmail.includes('godswill');
+        const excludeAdminSetting = localStorage.getItem('excludeAdminClicks') === 'true';
+        const excludeMyClicksSetting = localStorage.getItem('exclude_my_clicks') !== 'false';
+        const isExcludeActive = excludeAdminSetting || excludeMyClicksSetting;
+
+        if (isExcludeActive && (isAdminUser || excludeAdminSetting)) {
+          console.log('Admin click tracking EXCLUDED in trackClickGlobal');
+          return;
+        }
+
         const loc = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
         let flag = '🌍';
         if (loc.includes('Lagos') || loc.includes('Africa/Lagos')) flag = '🇳🇬 NG (Lagos)';
@@ -312,9 +322,9 @@ export default function App() {
           page: pageName,
           date: new Date().toISOString(),
           timestamp: new Date().toISOString(),
-          email: userEmail,
-          customerName: userEmail.split('@')[0] || 'Guest',
-          is_admin: localStorage.getItem('is_admin') === 'true'
+          email: userEmail || 'guest@gasv.store',
+          customerName: userEmail ? userEmail.split('@')[0] : 'Guest',
+          is_admin: isAdminUser
         };
 
         let logs = JSON.parse(localStorage.getItem('global_traffic') || localStorage.getItem('traffic_log') || '[]');
@@ -337,12 +347,21 @@ export default function App() {
 
     const trackPageView = async () => {
       try {
-        const userEmail = localStorage.getItem('user_email') || localStorage.getItem('admin_email') || currentUser?.email || '';
-        const isAdminUser = localStorage.getItem('is_admin') === 'true' || localStorage.getItem('is_owner') === 'true' || userEmail === 'goyedagosmess@gmail.com' || userEmail.includes('goye');
+        const userEmail = (localStorage.getItem('user_email') || localStorage.getItem('admin_email') || currentUser?.email || '').toLowerCase();
+        const isAdminUser = currentUser?.role === 'admin' || localStorage.getItem('is_admin') === 'true' || localStorage.getItem('is_owner') === 'true' || userEmail.includes('goyedagos') || userEmail.includes('ifiok82') || userEmail.includes('godswill');
         if (isAdminUser) {
           localStorage.setItem('is_admin', 'true');
           localStorage.setItem('is_owner', 'true');
           localStorage.setItem('admin_device', 'true');
+        }
+
+        const excludeAdminSetting = localStorage.getItem('excludeAdminClicks') === 'true';
+        const excludeMyClicksSetting = localStorage.getItem('exclude_my_clicks') !== 'false';
+        const isExcludeActive = excludeAdminSetting || excludeMyClicksSetting;
+
+        if (isExcludeActive && (isAdminUser || excludeAdminSetting)) {
+          console.log('Admin page view tracking EXCLUDED in trackPageView');
+          return;
         }
 
         let total = parseInt(localStorage.getItem('total_clicks') || localStorage.getItem('total_clicks_global') || '0');

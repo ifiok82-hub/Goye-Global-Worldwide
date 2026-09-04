@@ -3565,16 +3565,53 @@ function parseDeviceType(ua: string = ''): string {
   return 'Desktop';
 }
 
+const sessionClickCache = new Map<string, number>();
+
 // 1. API: Visitor & Click Analytics Tracking
-app.post(['/api/analytics/track', '/api/analytics/log', '/api/traffic/log'], async (req: any, res: any) => {
+app.post(['/api/analytics/track', '/api/analytics/log', '/api/traffic/log', '/api/track/click'], async (req: any, res: any) => {
   try {
-    const { sessionId, page, target, productId, customerName, customerEmail, referrer } = req.body || {};
+    const { sessionId, page, target, productId, customerName, customerEmail, referrer, isAdmin: bodyIsAdmin, user_role, role } = req.body || {};
+    const emailLower = (customerEmail || '').toLowerCase();
+
+    // Check if request is from Admin / Excluded device
+    const isAdmin = Boolean(
+      req.headers['x-admin-token'] ||
+      req.headers['x-exclude-admin'] === 'true' ||
+      user_role === 'admin' ||
+      role === 'admin' ||
+      bodyIsAdmin === true ||
+      req.body?.is_admin === true ||
+      (emailLower && (
+        emailLower.includes('goyedagos') ||
+        emailLower.includes('ifiok82') ||
+        emailLower.includes('godswill') ||
+        emailLower.includes('goye@gasv.store')
+      ))
+    );
+
+    if (isAdmin) {
+      return res.status(200).json({ success: true, excluded: true, message: 'Admin click excluded from database' });
+    }
+
     const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1').toString().split(',')[0].trim();
+    const sid = sessionId || ('sess_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7));
+
+    // Deduplicate rapid repeat clicks from same IP or session within 30s
+    const sessionKey = `${sid}_${page || 'Home'}_${target || 'Page View'}`;
+    const ipKey = `${ip}_${page || 'Home'}_${target || 'Page View'}`;
+    const now = Date.now();
+    const lastLogged = sessionClickCache.get(sessionKey) || sessionClickCache.get(ipKey);
+
+    if (lastLogged && (now - lastLogged < 30000)) {
+      return res.status(200).json({ success: true, duplicate: true, sessionId: sid, message: 'Deduplicated click within session window' });
+    }
+    sessionClickCache.set(sessionKey, now);
+    sessionClickCache.set(ipKey, now);
+
     const country = (req.headers['cf-ipcountry'] || req.headers['x-appengine-country'] || 'Global').toString();
     const city = (req.headers['x-appengine-city'] || 'Unknown City').toString();
     const userAgent = (req.headers['user-agent'] || '').toString();
     const deviceType = parseDeviceType(userAgent);
-    const sid = sessionId || ('sess_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7));
 
     const logEntry: TrafficLog = {
       id: 'log_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
