@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { X, Copy, Share2, Users, MousePointerClick, DollarSign, Wallet, Facebook, Twitter, MessageCircle } from 'lucide-react';
-import { db } from '../lib/firebase';
-import { doc, getDoc, setDoc, collection, addDoc, serverTimestamp, onSnapshot } from 'firebase/firestore';
 
 export default function ReferralDashboardModal({ onClose, onToast, currentUser, userProfile }: any) {
   const [stats, setStats] = useState({ clicks: 0, signups: 0, usd: 0, ngn: 0, pi: 0 });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   // Withdrawal states
   const [showWithdraw, setShowWithdraw] = useState(false);
@@ -14,43 +12,17 @@ export default function ReferralDashboardModal({ onClose, onToast, currentUser, 
   const [submitting, setSubmitting] = useState(false);
   
   const referralCode = userProfile?.surname || userProfile?.username || 'PUPIL';
-  const referralLink = `https://gasv.store/?ref=\${referralCode}`;
+  const referralLink = `https://gasv.store/?ref=${referralCode}`;
 
   useEffect(() => {
-    // 1. DUAL-STORAGE ARCHITECTURE (LOCALSTORAGE + FIREBASE/CLOUD)
-    const localStats = localStorage.getItem(`goye_ref_stats_\${referralCode}`);
+    const localStats = localStorage.getItem(`goye_ref_stats_${referralCode}`);
     if (localStats) {
-      setStats(JSON.parse(localStats));
-      setLoading(false);
+      try {
+        setStats(JSON.parse(localStats));
+      } catch (e) {}
     }
-    
-    if (!currentUser) {
-      setLoading(false);
-      return;
-    }
+  }, [referralCode]);
 
-    const docRef = doc(db, 'affiliates', referralCode);
-    const unsub = onSnapshot(docRef, (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data() as any;
-        const newStats = {
-          clicks: data.clicks || 0,
-          signups: data.signups || 0,
-          usd: data.usd || 0,
-          ngn: data.ngn || 0,
-          pi: data.pi || 0
-        };
-        setStats(newStats);
-        localStorage.setItem(`goye_ref_stats_\${referralCode}`, JSON.stringify(newStats));
-      } else {
-        // Initialize if doesn't exist
-        setDoc(docRef, { clicks: 0, signups: 0, usd: 0, ngn: 0, pi: 0, owner: currentUser.uid, createdAt: serverTimestamp() }, { merge: true });
-      }
-      setLoading(false);
-    });
-
-    return () => unsub();
-  }, [currentUser, referralCode]);
 
   const handleShare = async (platform: string) => {
     const text = 'Join GOYE Global and access premium digital products & Web3 academy!\n';
@@ -84,15 +56,18 @@ export default function ReferralDashboardModal({ onClose, onToast, currentUser, 
     if (stats.usd < 10) return onToast('Minimum payout is $10');
     setSubmitting(true);
     try {
-      await addDoc(collection(db, 'payout_requests'), {
-        userId: currentUser.uid,
+      const payouts = JSON.parse(localStorage.getItem('payout_requests') || '[]');
+      payouts.unshift({
+        id: 'PAY-' + Date.now(),
+        userId: currentUser?.uid || 'guest',
         referralCode,
         method: withdrawMethod,
         details: withdrawDetails,
         amountUsd: stats.usd,
         status: 'pending',
-        timestamp: serverTimestamp()
+        timestamp: new Date().toISOString()
       });
+      localStorage.setItem('payout_requests', JSON.stringify(payouts));
       onToast('Withdrawal request submitted!');
       setShowWithdraw(false);
     } catch (e: any) {
@@ -100,6 +75,7 @@ export default function ReferralDashboardModal({ onClose, onToast, currentUser, 
     }
     setSubmitting(false);
   };
+
   
   if (!currentUser) {
     // 3. UNBLOCK GUEST ACCESS (Introduce the program)

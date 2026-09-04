@@ -1,7 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { auth, db } from '../lib/firebase';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification, reload } from 'firebase/auth';
-import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { Mail, Lock, User, Phone, Globe, ShieldCheck, ChevronRight, MessageCircle, RefreshCw } from 'lucide-react';
 
 export const COUNTRIES = [
@@ -1602,28 +1599,6 @@ export default function AuthScreen({ onAuthenticated, onClose }: { onAuthenticat
            
            onAuthenticated(user, foundUser);
         } else {
-           // Also check Firebase database just in case
-           try {
-             // In a real app we'd query by email/phone. For demo, we fallback to error if local fails.
-             // We can use signInWithEmailAndPassword to see if Firebase knows them.
-             const userCred = await signInWithEmailAndPassword(auth, emailToUse, password);
-             const user = userCred.user;
-             const profileSnap = await getDoc(doc(db, 'users', user.uid));
-             if (profileSnap.exists()) {
-               const profile = profileSnap.data();
-               localStorage.setItem('goye_auth_token', await user.getIdToken());
-               localStorage.setItem('goye_user_profile', JSON.stringify(profile));
-               localStorage.setItem('goye_active_user', JSON.stringify(profile));
-               
-               // Back them up locally
-               localUsers.push({...profile, password, uid: user.uid});
-               localStorage.setItem('goye_users', JSON.stringify(localUsers));
-               
-               onAuthenticated(user, profile);
-               return;
-             }
-           } catch(fbErr) {}
-           
            setError(
              <div className="flex flex-col items-center gap-2">
                <span>Account not found. Please click Register to create your account.</span>
@@ -1687,10 +1662,8 @@ export default function AuthScreen({ onAuthenticated, onClose }: { onAuthenticat
         localStorage.setItem('customers_list', JSON.stringify(customers));
         localStorage.setItem('registered_customers', (registeredCount + 1).toString());
 
-        // Sync to Firestore Users collection
-        try { await setDoc(doc(db, 'users', uid), profileData); } catch(e) { console.warn('Firestore sync delayed', e); }
-
         localStorage.setItem('goye_user_session', JSON.stringify(profileData));
+
         localStorage.setItem('goye_pending_uid', uid);
         localStorage.setItem('goye_pending_email', emailToUse);
         localStorage.setItem('goye_active_user', JSON.stringify(profileData));
@@ -1744,12 +1717,8 @@ export default function AuthScreen({ onAuthenticated, onClose }: { onAuthenticat
         localStorage.setItem('goye_active_user', JSON.stringify(profile));
         localStorage.setItem('goye_auth_token', 'mock_token');
         
-        // Sync verified status to DB
-        if (uid && uid !== 'UNKNOWN') {
-           try { await updateDoc(doc(db, 'users', uid), { is_verified: true }); } catch(e) {}
-        }
-        
         onAuthenticated(user, profile);
+
       } else {
         setError('Invalid verification code. Please try again.');
       }
@@ -1763,18 +1732,17 @@ export default function AuthScreen({ onAuthenticated, onClose }: { onAuthenticat
     if (resendCooldown > 0) return;
     setLoading(true);
     try {
-      if (auth.currentUser && authMethod === 'email') {
-        await sendEmailVerification(auth.currentUser);
-        setError('Verification email resent!');
-      } else {
-        setError('OTP sent via WhatsApp/SMS!');
-      }
+      const mockOtp = Math.floor(100000 + Math.random() * 900000).toString();
+      localStorage.setItem('goye_mock_otp', mockOtp);
+      alert("Your new verification code is: " + mockOtp);
+      setError('Verification code resent!');
       setResendCooldown(60);
     } catch (e) {
       setError('Failed to resend code');
     }
     setLoading(false);
   };
+
 
   if (needsVerification) {
     return (

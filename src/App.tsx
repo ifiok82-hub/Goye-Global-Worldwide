@@ -1,6 +1,4 @@
 import AuthScreen from './components/AuthScreen';
-import { auth } from './lib/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { X, Globe, Zap, Download, ShieldCheck, ChevronRight, Lock, BookOpen, Settings, List, Save, Mail, CreditCard, DollarSign, Wallet, Phone, Landmark, Home, ShoppingBag, ShoppingCart, GraduationCap, MessageCircle, Search, Edit, Trash2, Plus, FileText, Video, Eye, EyeOff, CheckCircle, RefreshCw, Users, Activity, UserCircle , Scan, QrCode, Smartphone, MoreVertical, Bot, LayoutDashboard, Camera, Mic, MoreHorizontal} from 'lucide-react';
 import { ALL_PRODUCTS } from './data';
@@ -21,11 +19,8 @@ import { Bell, User } from 'lucide-react';
 import { GoyeLogo } from './components/GoyeLogo';
 import SirwiseAITeacher from './components/SirwiseAITeacher';
 import { trackUserClick } from './utils/analytics';
-import { db } from './lib/firebase';
-import { collection, onSnapshot, setDoc, doc, getDoc, updateDoc, increment, addDoc } from 'firebase/firestore';
-
-
 import { cleanUserEmail } from './lib/contact';
+
 
 // Dummy components for things that were in App.tsx
 const HeroSection = ({ onLogoTap, onPlayVideo, onOpenLeadMagnet }: any) => (
@@ -113,28 +108,6 @@ export default function App() {
   const [adminTapCount, setAdminTapCount] = useState(0);
   const adminPressTimer = useRef<any>(null);
 
-  // Background Sync Effect
-  useEffect(() => {
-    const handleOnline = async () => {
-      if (currentUser?.uid) {
-        // Here we could sync offline stored purchases, academy progress, etc to Firebase
-        try {
-          const { doc, setDoc } = await import('firebase/firestore');
-          const { db } = await import('./lib/firebase');
-          const progress = localStorage.getItem(`goye_academy_progress_${currentUser.uid}`);
-          if (progress) {
-             const data = JSON.parse(progress);
-             await setDoc(doc(db, 'academy', currentUser.uid), data, { merge: true });
-          }
-        } catch (err) {
-          console.warn('Sync failed', err);
-        }
-        showToast('You are back online. Data synchronized.');
-      }
-    };
-    window.addEventListener('online', handleOnline);
-    return () => window.removeEventListener('online', handleOnline);
-  }, [currentUser]);
   const [paymentConfig, setPaymentConfig] = useState<any>({
     paystack: localStorage.getItem('paystack_public_key') || '',
     flutterwave: localStorage.getItem('flutterwave_public_key') || '',
@@ -149,21 +122,9 @@ export default function App() {
         setPaymentConfig(JSON.parse(stored));
       }
     } catch (e) {}
-
-    const unsub = onSnapshot(doc(db, 'settings', 'payments'), (doc) => {
-      if (doc.exists()) {
-        const data = doc.data();
-        setPaymentConfig(data);
-        localStorage.setItem('PAYMENT_CONFIG', JSON.stringify(data));
-        localStorage.setItem('paystack_public_key', data.paystack || '');
-        localStorage.setItem('flutterwave_public_key', data.flutterwave || '');
-        localStorage.setItem('crypto_wallet', data.crypto || '');
-        localStorage.setItem('pi_wallet', data.pi || '');
-      }
-    });
-
-    return () => unsub();
   }, []);
+
+
 
   const [products, setProducts] = useState(() => {
     const custom = JSON.parse(localStorage.getItem('CUSTOM_PRODUCTS') || '[]');
@@ -224,32 +185,14 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    const trackReferral = async () => {
+    const trackReferral = () => {
       const params = new URLSearchParams(window.location.search);
       const ref = params.get('ref');
       if (ref) {
-        // Set cookie for 30 days
         const d = new Date();
         d.setTime(d.getTime() + (30*24*60*60*1000));
         document.cookie = "referred_by=" + ref + ";expires=" + d.toUTCString() + ";path=/";
         localStorage.setItem('referred_by', ref);
-        
-        // Check if we already counted this IP/session click
-        if (!sessionStorage.getItem('ref_clicked_' + ref)) {
-          sessionStorage.setItem('ref_clicked_' + ref, 'true');
-          try {
-            
-            const refDoc = doc(db, 'referrals', ref);
-            const snap = await getDoc(refDoc);
-            if (snap.exists()) {
-              await updateDoc(refDoc, { clicks: increment(1) });
-            } else {
-              await setDoc(refDoc, { clicks: 1, signups: 0, usd: 0, ngn: 0, pi: 0, payouts: [] });
-            }
-          } catch (e) {
-            console.error("Failed to track referral click", e);
-          }
-        }
       }
     };
     trackReferral();
@@ -258,20 +201,14 @@ export default function App() {
   const [isAiTeacherOpen, setIsAiTeacherOpen] = useState(false);
   const userAccessStatus = purchasedItems.length > 0 ? 'paid' : 'free';
 
-  
   useEffect(() => {
-    localStorage.setItem('is_admin', 'true');
-    localStorage.setItem('is_owner', 'true');
-    localStorage.setItem('admin_device', 'true');
-    if (localStorage.getItem('exclude_my_clicks') === null) {
-      localStorage.setItem('exclude_my_clicks', 'true');
-    }
     const savedEmail = localStorage.getItem('user_email');
     if (savedEmail && !cleanUserEmail(savedEmail)) {
       localStorage.removeItem('user_email');
       localStorage.removeItem('customer_email');
     }
   }, []);
+
 
   useEffect(() => {
     // Analytics Page View Tracker
@@ -380,19 +317,8 @@ export default function App() {
           is_admin: localStorage.getItem('is_admin') === 'true'
         };
 
-        addDoc(collection(db, 'traffic_log_global'), {
-          ...log,
-          createdAt: new Date().toISOString()
-        }).catch(e => console.warn(e));
-
-        setDoc(doc(db, 'stats_global', 'global'), {
-          total_clicks: increment(1),
-          last_click: new Date().toISOString(),
-          last_location: flag,
-          last_customer: userEmail.split('@')[0] || 'Guest'
-        }, { merge: true }).catch(e => console.warn(e));
-
         let logs = JSON.parse(localStorage.getItem('global_traffic') || localStorage.getItem('traffic_log') || '[]');
+
         logs.unshift(log);
         localStorage.setItem('global_traffic', JSON.stringify(logs.slice(0, 100)));
         localStorage.setItem('traffic_log', JSON.stringify(logs.slice(0, 100)));
@@ -455,23 +381,6 @@ export default function App() {
           global: true
         };
 
-        try {
-          await addDoc(collection(db, 'traffic_log_global'), {
-            ...pageView,
-            createdAt: new Date().toISOString()
-          });
-
-          const statsRef = doc(db, 'stats_global', 'global');
-          await setDoc(statsRef, {
-            total_clicks: increment(1),
-            last_click: new Date().toISOString(),
-            last_location: locationStr,
-            last_customer: customerName
-          }, { merge: true });
-        } catch (fsErr) {
-          console.warn('Firestore global tracking write warning:', fsErr);
-        }
-
         let logs = JSON.parse(localStorage.getItem('traffic_log') || localStorage.getItem('global_traffic') || '[]');
         logs.unshift(pageView);
         if (logs.length > 100) logs = logs.slice(0, 100);
@@ -482,22 +391,8 @@ export default function App() {
       }
     };
     trackPageView();
-
-    // 1. Firebase Real-time listeners (onSnapshot)
-    const productsRef = collection(db, 'all_products');
-    const unsubProducts = onSnapshot(productsRef, (snapshot) => {
-      if (snapshot.empty) {
-        ALL_PRODUCTS.forEach(p => setDoc(doc(db, 'all_products', p.id), p));
-      } else {
-        setProducts(snapshot.docs.map(d => d.data() as typeof ALL_PRODUCTS[0]));
-      }
-    }, (error) => console.error("Firestore error all_products:", error));
-
-
-    return () => {
-      unsubProducts();
-    };
   }, []);
+
 
   useEffect(() => {
     window.addEventListener('beforeinstallprompt', (e) => {

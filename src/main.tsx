@@ -5,18 +5,12 @@ import { SpeedInsights } from '@vercel/speed-insights/react';
 import App from './App.tsx';
 import ErrorBoundary from './ErrorBoundary';
 import './index.css';
-import './lib/firebase.ts';
+import { ensureInitialSeeds } from './utils/analytics';
 
+const CURRENT_VERSION = '1.0.3'; // App version
 
-const CURRENT_VERSION = '1.0.2'; // App version for cache busting
-
-// 2. LocalStorage Cleanup & Versioning
-const storedVersion = localStorage.getItem('APP_VERSION');
-if (storedVersion !== CURRENT_VERSION) {
-  console.log('New deployment detected! Purging stale local state...');
-  localStorage.clear();
-  localStorage.setItem('APP_VERSION', CURRENT_VERSION);
-}
+// LocalStorage setup & seed preserve
+ensureInitialSeeds();
 
 // 3. Cache-Busting & Service Worker (Unregister stale Service Workers)
 if ('serviceWorker' in navigator) {
@@ -25,15 +19,8 @@ if ('serviceWorker' in navigator) {
     for (let registration of registrations) {
       unregPromises.push(registration.unregister());
     }
-    Promise.all(unregPromises).then(() => {
-      // Optional: force reload if we just unregistered a stale worker and version changed
-      if (storedVersion && storedVersion !== CURRENT_VERSION) {
-        window.location.reload();
-      }
-    });
   });
 }
-
 
 // 4. Client-Side Security & Anti-Tampering
 if (import.meta.env.PROD) {
@@ -49,10 +36,10 @@ if (import.meta.env.PROD) {
 }
 
 createRoot(document.getElementById('root')!).render(
-
   <StrictMode>
     <ErrorBoundary><App /></ErrorBoundary>
     <Analytics />
     <SpeedInsights />
   </StrictMode>
 );
+

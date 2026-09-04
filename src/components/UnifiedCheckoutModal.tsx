@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, ShieldCheck, Lock, Copy, CheckCircle, RefreshCw, ChevronRight, Zap, ExternalLink } from 'lucide-react';
 import { identifyUserSession, trackUserClick } from '../utils/analytics';
-import { db } from '../lib/firebase';
-import { doc, setDoc } from 'firebase/firestore';
 import { cleanUserEmail } from '../lib/contact';
+
 
 export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, onToast }: any) {
   const [activeGateway, setActiveGateway] = useState<string | null>(null);
@@ -97,44 +96,39 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
             is_verified: !isPending
         };
 
-        // Save locally
+        // Save locally in live_orders & orders_list
         orders.unshift(newOrder);
         localStorage.setItem('orders_list', JSON.stringify(orders));
+        localStorage.setItem('live_orders', JSON.stringify(orders));
 
-        // Save real-time to Firestore database
-        try {
-          await setDoc(doc(db, 'orders', orderDocId), newOrder, { merge: true });
-        } catch (fsErr) {
-          console.warn('Firestore real-time order write warning:', fsErr);
-        }
+        // Unlock Academy & Store products
+        localStorage.setItem('sirwise_paid', 'true');
+        localStorage.setItem('payment_verified', 'true');
+        localStorage.setItem('academy_unlocked', 'true');
 
-        // Save customer to Firestore registered users collection
+        // Save customer to registered_customers in localStorage
         if (email) {
-          try {
-            const custId = email.trim().toLowerCase();
-            const customerObj = {
-              id: custId,
-              email: custId,
-              pupilName: email.split('@')[0],
-              parentName: 'Parent of ' + email.split('@')[0],
-              country: country,
-              is_verified: true,
-              date: timestampStr,
-              createdAt: timestampStr,
-              lastOrderAt: timestampStr
-            };
-            await setDoc(doc(db, 'users', custId), customerObj, { merge: true });
+          const custId = email.trim().toLowerCase();
+          const customerObj = {
+            id: custId,
+            email: custId,
+            pupilName: email.split('@')[0],
+            parentName: 'Parent of ' + email.split('@')[0],
+            country: country,
+            is_verified: true,
+            date: timestampStr,
+            createdAt: timestampStr,
+            lastOrderAt: timestampStr
+          };
 
-            // Also update customers_list in localStorage
-            let custs = JSON.parse(localStorage.getItem('customers_list') || '[]');
-            if (!custs.some((c: any) => c.email === custId)) {
-              custs.unshift(customerObj);
-              localStorage.setItem('customers_list', JSON.stringify(custs));
-            }
-          } catch (custErr) {
-            console.warn('Firestore customer write warning:', custErr);
+          let custs = JSON.parse(localStorage.getItem('registered_customers') || localStorage.getItem('customers_list') || '[]');
+          if (!custs.some((c: any) => c.email === custId)) {
+            custs.unshift(customerObj);
+            localStorage.setItem('registered_customers', JSON.stringify(custs));
+            localStorage.setItem('customers_list', JSON.stringify(custs));
           }
         }
+
 
         // Trigger Postgres API save
         try {
