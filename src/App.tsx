@@ -773,6 +773,41 @@ export default function App() {
               </>
             )}
 
+            {/* Free Download Resource Section with Academy Upgrade Button */}
+            <div className="bg-[#111] border-2 border-[#FFD700] rounded-2xl p-6 mb-8 shadow-[0_0_30px_rgba(255,215,0,0.15)]">
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <span className="bg-[#FFD700]/20 text-[#FFD700] text-xs font-bold px-3 py-1 rounded-full border border-[#FFD700]/40">
+                  🎁 FREE BLUEPRINT ACCESS
+                </span>
+                <span className="text-gray-400 text-xs font-mono">RC BN3583773</span>
+              </div>
+              <h3 className="text-white font-bold text-lg mb-2">The 5-Minute AI Prompt Blueprint for Entrepreneurs</h3>
+              <p className="text-gray-300 text-xs mb-4">
+                4 battle-tested prompts for ChatGPT, Gemini & Claude. Save 15+ hours weekly automating copy, proposals & sales.
+              </p>
+
+              <div className="flex flex-col gap-3">
+                <button 
+                  onClick={() => setShowLeadMagnetModal(true)} 
+                  className="bg-[#10B981] text-black font-black py-3 px-6 rounded-xl flex items-center justify-center gap-2 text-sm hover:bg-[#0ea5e9] transition cursor-pointer"
+                >
+                  <Download size={18}/> ⚡ Download Free AI Prompt Blueprint
+                </button>
+
+                <button 
+                  onClick={() => {
+                    setTab('academy');
+                    window.location.href = '#academy?from=downloads';
+                  }} 
+                  className="w-full bg-gradient-to-r from-[#FFD700] to-[#FFA500] text-black font-black py-3 px-4 rounded-xl text-xs sm:text-sm shadow-md hover:brightness-110 transition cursor-pointer"
+                >
+                  🎓 Upgrade to Full Academy $49.99 - 8 Modules Certificate
+                </button>
+              </div>
+            </div>
+
+            <h3 className="text-white font-bold text-lg mb-4">Purchased Digital Goods</h3>
+
             {purchasedItems.length === 0 ? (
               <div className="bg-[#111] border border-[#333] rounded-2xl p-12 text-center">
                 <Download size={48} className="text-gray-600 mx-auto mb-4"/>

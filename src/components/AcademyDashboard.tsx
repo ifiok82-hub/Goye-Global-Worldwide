@@ -505,6 +505,58 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
         </div>
       </div>
 
+      {/* Course Reminder Banner for Leads */}
+      {(() => {
+        let urlParams: URLSearchParams | null = null;
+        try {
+          const hashQuery = window.location.hash.includes('?') ? window.location.hash.split('?')[1] : '';
+          urlParams = new URLSearchParams(hashQuery || window.location.search);
+        } catch (e) {}
+
+        const reminderFromUrl = urlParams ? urlParams.get('reminder') === 'true' : false;
+        const leadName = (urlParams?.get('name') || localStorage.getItem('lead_name') || localStorage.getItem('user_name') || '').trim();
+        const leadEmail = (urlParams?.get('free_lead') || localStorage.getItem('user_email') || '').trim();
+        const showReminder = !isEnrolled && (reminderFromUrl || (leadName && leadEmail));
+
+        if (!showReminder) return null;
+
+        return (
+          <div style={{ background: 'linear-gradient(135deg, #FFD700, #FFA500)', color: 'black', padding: '20px', borderRadius: '16px', margin: '0 0 20px 0', textAlign: 'center', border: '3px solid black', boxShadow: '0 10px 30px rgba(255, 215, 0, 0.4)' }}>
+            <h2 style={{ fontSize: '22px', fontWeight: '900', color: 'black', margin: '0 0 6px 0' }}>
+              🎉 Welcome {leadName || 'Student'}! Your Blueprint is Downloading...
+            </h2>
+            <p style={{ fontWeight: 'bold', fontSize: '14px', margin: '0 0 6px 0' }}>
+              You now have 4 Battle-Tested Prompts - Next: Unlock 8 Full Modules + Certificate
+            </p>
+            {leadEmail && (
+              <p style={{ fontSize: '12px', margin: '0 0 10px 0' }}>
+                Your email <strong style={{ textDecoration: 'underline' }}>{leadEmail}</strong> is saved for course reminder
+              </p>
+            )}
+            <div style={{ background: 'black', color: '#FFD700', padding: '12px', borderRadius: '12px', margin: '10px 0' }}>
+              <p style={{ fontWeight: 'bold', fontSize: '13px', margin: 0 }}>⏰ Special: Upgrade from Free to Full Academy in next 15 mins</p>
+              <p style={{ fontSize: '18px', fontWeight: '900', margin: '4px 0 0 0' }}>Sirwise AI Web3 Academy - 8 Modules - $49.99 = ₦74,985 Lifetime</p>
+            </div>
+            <button 
+              onClick={() => {
+                const paywall = document.getElementById('paywall');
+                if (paywall) {
+                  paywall.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                  handleBuyUnlockNow();
+                }
+              }} 
+              style={{ width: '100%', height: '56px', background: 'black', color: '#FFD700', borderRadius: '12px', fontWeight: 'bold', fontSize: '17px', cursor: 'pointer', border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.3)' }}
+            >
+              🚀 UPGRADE NOW - BUY & UNLOCK $49.99
+            </button>
+            <p style={{ fontSize: '11px', marginTop: '10px', fontWeight: 'bold', color: 'black' }}>
+              USDC: 0xaeed4e48f2146aadd07e85219f209053616e4e71 | OPay 6113541882 | Paystack Global
+            </p>
+          </div>
+        );
+      })()}
+
       {/* Paywall Banner at Top before Your Progress */}
       {!isEnrolled && (
         <div id="paywall" style={{ background: 'linear-gradient(135deg, #FFD700, #FFA500)', padding: '20px', borderRadius: '16px', textAlign: 'center', marginBottom: '20px', boxShadow: '0 10px 30px rgba(255, 215, 0, 0.3)' }}>

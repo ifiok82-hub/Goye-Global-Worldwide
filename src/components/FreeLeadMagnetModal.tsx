@@ -87,6 +87,7 @@ or explore our full online masterclasses at:
 ================================================================================`;
 
 export default function FreeLeadMagnetModal({ isOpen, onClose, onClaimTripwire, onToast }: FreeLeadMagnetModalProps) {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -96,19 +97,13 @@ export default function FreeLeadMagnetModal({ isOpen, onClose, onClaimTripwire, 
 
   if (!isOpen) return null;
 
-  const validateEmail = (val: string) => {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(val.trim());
-  };
-
   const triggerInstantDownload = () => {
     try {
-      // 1. Client-side Blob download (100% reliable, zero server dependency, never 404s)
       const blob = new Blob([BLUEPRINT_TEXT_CONTENT], { type: 'text/plain;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = '5-Minute-AI-Prompt-Blueprint.txt';
+      a.download = '5-Minute-AI-Prompt-Blueprint-Sirwise.pdf';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -117,8 +112,7 @@ export default function FreeLeadMagnetModal({ isOpen, onClose, onClaimTripwire, 
       if (onToast) onToast('📁 Blueprint downloaded to your device!');
     } catch (e) {
       console.warn('Blob download fallback:', e);
-      // Fallback relative route
-      window.open('/api/downloads/blueprint', '_blank');
+      window.open('https://www.gasv.store/downloads/5-minute-ai-prompt-blueprint.pdf', '_blank');
     }
   };
 
@@ -126,9 +120,25 @@ export default function FreeLeadMagnetModal({ isOpen, onClose, onClaimTripwire, 
     e.preventDefault();
     setErrorMessage('');
     
-    const cleanEmail = email.trim();
-    if (!validateEmail(cleanEmail)) {
-      setErrorMessage('Please enter a valid email address e.g. name@example.com');
+    const cleanName = name.trim();
+    const cleanEmail = email.trim().toLowerCase();
+
+    // Delete leak / invalid emails & validate name
+    if (!cleanName || cleanName.length < 2) {
+      alert('Enter your full name');
+      setErrorMessage('Enter your full name');
+      return;
+    }
+
+    if (!cleanEmail.includes('@') || !cleanEmail.includes('.') || cleanEmail.includes('ifiok82') || cleanEmail.includes('godswilloyoho') || cleanEmail === 'goyedagos@' || cleanEmail.includes('null') || cleanEmail.includes('ico')) {
+      alert('Enter valid complete email e.g. you@gmail.com');
+      setErrorMessage('Enter valid complete email e.g. you@gmail.com');
+      return;
+    }
+
+    if (cleanEmail.includes('goyedagos@') && !cleanEmail.includes('.com')) {
+      alert('Enter full email with .com');
+      setErrorMessage('Enter full email with .com');
       return;
     }
 
@@ -140,40 +150,96 @@ export default function FreeLeadMagnetModal({ isOpen, onClose, onClaimTripwire, 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          name: cleanName,
           email: cleanEmail,
-          source: 'lead_magnet',
+          source: 'Free 5-Minute AI Prompt Blueprint',
           sourceDomain: window.location.hostname || 'gasv.store'
         })
       });
+    } catch (e) {}
 
-      // 2. Persist locally
-      localStorage.setItem('sirwise_lead_captured', 'true');
-      localStorage.setItem('user_email', cleanEmail);
-      localStorage.setItem('customer_email', cleanEmail);
+    // CAPTURE TO ACADEMY FUNNEL - COURSE REMINDER
+    localStorage.setItem('user_email', cleanEmail);
+    localStorage.setItem('customer_email', cleanEmail);
+    localStorage.setItem('lead_name', cleanName);
+    localStorage.setItem('user_name', cleanName);
+    localStorage.setItem('lead_captured_date', new Date().toISOString());
+    localStorage.setItem('lead_source', 'Free 5-Minute AI Prompt Blueprint');
+    localStorage.setItem('sirwise_lead_captured', 'true');
 
-      try {
-        const existingLeads = JSON.parse(localStorage.getItem('captured_leads') || '[]');
-        if (Array.isArray(existingLeads) && !existingLeads.includes(cleanEmail)) {
-          existingLeads.push(cleanEmail);
-          localStorage.setItem('captured_leads', JSON.stringify(existingLeads));
-        } else if (!Array.isArray(existingLeads)) {
-          localStorage.setItem('captured_leads', JSON.stringify([cleanEmail]));
-        }
-      } catch (e) {}
+    // Determine location for lead record
+    let country = 'Nigeria';
+    try {
+      const r = await fetch('https://ipapi.co/json/');
+      const d = await r.json();
+      country = d.country_name || 'Nigeria';
+    } catch (e) {}
 
-      // 3. Trigger instant download & show success UI
-      triggerInstantDownload();
-      setIsSuccess(true);
-      if (onToast) onToast('🎉 Success! Your free blueprint is ready.');
-    } catch (err: any) {
-      console.warn('Lead subscription network fallback:', err);
-      localStorage.setItem('sirwise_lead_captured', 'true');
-      localStorage.setItem('user_email', cleanEmail);
-      triggerInstantDownload();
-      setIsSuccess(true);
-    } finally {
-      setIsSubmitting(false);
-    }
+    const lead = {
+      name: cleanName,
+      email: cleanEmail,
+      country: country,
+      product: 'Free Blueprint - Not Yet Paid',
+      status: 'Free Lead - Course Reminder',
+      date: new Date().toLocaleDateString('en-GB'),
+      date_wat: new Date().toLocaleString('en-GB', { timeZone: 'Africa/Lagos' }) + ' WAT Lagos',
+      source: '5-Minute Blueprint',
+      academy_reminder: true,
+      needs_payment: true
+    };
+
+    // Save to leads list for Academy reminder
+    let leads = JSON.parse(localStorage.getItem('academy_leads') || '[]');
+    if (!Array.isArray(leads)) leads = [];
+    leads.unshift(lead);
+    localStorage.setItem('academy_leads', JSON.stringify(leads.slice(0, 200)));
+
+    // Save to registered_customers
+    let users = JSON.parse(localStorage.getItem('registered_customers') || '[]');
+    if (!Array.isArray(users)) users = [];
+    users.unshift({ ...lead, customer_name: cleanName, id: 'FREE-' + Date.now() });
+    localStorage.setItem('registered_customers', JSON.stringify(users.slice(0, 200)));
+
+    // Save to live_traffic_activity
+    let traffic = JSON.parse(localStorage.getItem('live_traffic_activity') || '[]');
+    if (!Array.isArray(traffic)) traffic = [];
+    traffic.unshift({
+      id: 'LEAD-' + Date.now(),
+      location: country === 'Nigeria' ? '🇳🇬 NG (Lagos)' : '🌍 ' + country,
+      page: 'Free Blueprint Download',
+      customer_name: cleanName,
+      email: cleanEmail,
+      timestamp: new Date().toISOString()
+    });
+    localStorage.setItem('live_traffic_activity', JSON.stringify(traffic.slice(0, 200)));
+
+    // Send to goyedagosmess@gmail.com - Official
+    try {
+      await fetch('https://formsubmit.co/ajax/goyedagosmess@gmail.com', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject: 'New Free Lead - ' + cleanName + ' - ' + cleanEmail + ' - Needs Academy Reminder',
+          message: 'New Lead Captured\nName: ' + cleanName + '\nEmail: ' + cleanEmail + '\nCountry: ' + country + '\nSource: 5-Minute AI Prompt Blueprint\nDate: ' + lead.date_wat + '\nAction: Send Academy course reminder to enroll $49.99\nLink: www.gasv.store/academy?lead=' + cleanEmail
+        })
+      });
+    } catch (e) {}
+
+    setIsSubmitting(false);
+
+    // After capture - DO NOT just download and leave - REDIRECT TO ACADEMY WITH UPSELL
+    alert('✅ Success ' + cleanName + '! Blueprint sent to ' + cleanEmail + '\n\nOpening your FREE Academy preview + Course Reminder...');
+
+    // Close modal
+    onClose();
+
+    // Trigger download
+    triggerInstantDownload();
+
+    // Redirect to Academy with course reminder message
+    setTimeout(() => {
+      window.location.href = '#academy?free_lead=' + encodeURIComponent(cleanEmail) + '&name=' + encodeURIComponent(cleanName) + '&reminder=true';
+    }, 1200);
   };
 
   const copyPromptToClipboard = (text: string, index: number) => {
@@ -262,18 +328,34 @@ Structure the output into 4 clear sections: Executive Summary, Project Scope, Ti
             </div>
 
             {/* Lead Capture Form */}
-            <form onSubmit={handleLeadSubmit} className="space-y-4">
+            <form onSubmit={handleLeadSubmit} className="space-y-3">
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                  Your Full Name
+                </label>
+                <input 
+                  type="text" 
+                  id="leadName" 
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Your Full Name" 
+                  style={{ width: '100%', height: '50px', borderRadius: '12px', padding: '12px', background: '#222', color: 'white', border: '1px solid #333' }} 
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
                   Your Best Email Address
                 </label>
                 <input 
-                  type="email"
+                  type="email" 
+                  id="leadEmail" 
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your.email@example.com"
-                  className="w-full bg-black border border-[#333] p-4 rounded-xl text-white focus:border-[#FFD700] outline-none text-sm font-medium transition"
+                  placeholder="your.email@example.com - YOUR BEST EMAIL ADDRESS" 
+                  style={{ width: '100%', height: '50px', borderRadius: '12px', padding: '12px', background: '#222', color: 'white', border: '1px solid #333' }} 
                 />
               </div>
 
@@ -283,29 +365,18 @@ Structure the output into 4 clear sections: Executive Summary, Project Scope, Ti
                 </div>
               )}
 
-              <button
-                type="submit"
+              <button 
+                type="submit" 
                 disabled={isSubmitting}
-                className="w-full bg-gradient-to-r from-[#FFD700] to-[#FFA500] hover:from-[#ffe033] hover:to-[#ffb733] text-black font-black py-4 px-6 rounded-xl flex items-center justify-center gap-2 text-base shadow-lg transition-transform active:scale-95 disabled:opacity-50 cursor-pointer"
+                style={{ width: '100%', height: '60px', background: '#FFD700', color: 'black', borderRadius: '16px', fontWeight: 'bold', fontSize: '18px', cursor: 'pointer', border: 'none', marginTop: '10px' }}
               >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 size={20} className="animate-spin text-black" />
-                    <span>Unlocking your free guide...</span>
-                  </>
-                ) : (
-                  <>
-                    <Zap size={20} className="fill-black" />
-                    <span>Get Free Instant Access</span>
-                  </>
-                )}
+                {isSubmitting ? '⚡ Processing...' : '⚡ Get Free Instant Access + Academy Preview'}
               </button>
-            </form>
 
-            <div className="flex items-center justify-center gap-2 mt-4 text-gray-400 text-xs">
-              <ShieldCheck size={14} className="text-[#10B981]" />
-              <span>100% Privacy Guaranteed. Zero Spam.</span>
-            </div>
+              <p style={{ fontSize: '10px', color: '#888', textAlign: 'center', marginTop: '8px' }}>
+                100% Privacy Guaranteed. Zero Spam. Official: goyedagosmess@gmail.com RC BN3583773
+              </p>
+            </form>
           </div>
         ) : (
           /* Success Screen Modal & Interactive Blueprint Reader */
