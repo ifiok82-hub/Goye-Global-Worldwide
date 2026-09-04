@@ -1639,6 +1639,18 @@ app.post('/api/digital/buy', async (req, res) => {
 
 app.get('/api/download/:id', async (req, res) => {
   const { id } = req.params;
+  const userQuery = (req.query.email || req.query.userId || req.headers['x-user-email'] || '').toString();
+
+  // Enforce Product Access Verification (NO UNPAID ACCESS)
+  const accessCheck = await verifyProductAccess(userQuery, id);
+  if (!accessCheck.hasAccess) {
+    return res.status(403).json({
+      error: 'Payment Required',
+      message: 'Access Locked. Verified paid transaction required to download this product.',
+      redirect: '/#checkout'
+    });
+  }
+
   try {
     const database = await getDb();
     let product = null;
@@ -2355,6 +2367,123 @@ async function recordAndFulfillPurchase(params: {
 
   return orderRecord;
 }
+
+
+// 3. Security Access Verification Helper (NO UNPAID ACCESS)
+async function verifyProductAccess(customerEmailOrUid: string, productId?: string): Promise<{ hasAccess: boolean; order?: any; reason?: string }> {
+  if (!customerEmailOrUid) {
+    return { hasAccess: false, reason: 'Email or User ID is required' };
+  }
+
+  const cleanQuery = customerEmailOrUid.trim().toLowerCase();
+
+  // Admin bypass check for verified merchant emails
+  const ADMIN_EMAILS = ['goyedagosmess@gmail.com', 'ifiok82@gmail.com', 'godswilloyoho@gmail.com', 'goye@gasv.store'];
+  if (ADMIN_EMAILS.some(a => cleanQuery.includes(a.split('@')[0]))) {
+    return { hasAccess: true, reason: 'Admin Merchant Privilege Verified' };
+  }
+
+  try {
+    const database = await getDb();
+    if (database) {
+      const query: any = {
+        $or: [
+          { customerEmail: cleanQuery },
+          { email: cleanQuery },
+          { userUid: cleanQuery }
+        ],
+        $and: [
+          {
+            $or: [
+              { status: { $in: ['COMPLETED', 'Completed', 'paid', 'PAID', 'ACTIVE', 'Active', 'success', 'SUCCESS'] } },
+              { paymentStatus: { $in: ['VERIFIED_PAID', 'COMPLETED', 'PAID'] } },
+              { verificationCategory: 'LIVE_VERIFIED' },
+              { verifiedLive: true }
+            ]
+          }
+        ]
+      };
+
+      if (productId) {
+        query.productId = productId;
+      }
+
+      const dbOrder = await database.collection('orders').findOne(query);
+      if (dbOrder) {
+        return { hasAccess: true, order: dbOrder };
+      }
+
+      // If productId was provided, also check if user has a general verified access order
+      if (productId) {
+        const bundleOrder = await database.collection('orders').findOne({
+          $or: [
+            { customerEmail: cleanQuery },
+            { email: cleanQuery },
+            { userUid: cleanQuery }
+          ],
+          $and: [
+            {
+              $or: [
+                { status: { $in: ['COMPLETED', 'Completed', 'paid', 'PAID', 'ACTIVE', 'Active', 'success', 'SUCCESS'] } },
+                { paymentStatus: { $in: ['VERIFIED_PAID', 'COMPLETED', 'PAID'] } },
+                { verificationCategory: 'LIVE_VERIFIED' },
+                { verifiedLive: true }
+              ]
+            }
+          ]
+        });
+        if (bundleOrder) {
+          return { hasAccess: true, order: bundleOrder };
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('DB verifyProductAccess warning:', err);
+  }
+
+  // In-Memory Fallback Check
+  const foundInMemory = fallbackOrders.find(o => {
+    const orderEmail = (o.customerEmail || o.email || '').toLowerCase().trim();
+    const isPaid = ['COMPLETED', 'Completed', 'paid', 'PAID', 'ACTIVE', 'Active', 'success', 'SUCCESS'].includes(o.status) ||
+                   ['VERIFIED_PAID', 'COMPLETED', 'PAID'].includes(o.paymentStatus) ||
+                   o.verificationCategory === 'LIVE_VERIFIED' ||
+                   o.verifiedLive === true;
+    return (orderEmail === cleanQuery || o.userUid === cleanQuery) && isPaid;
+  });
+
+  if (foundInMemory) {
+    return { hasAccess: true, order: foundInMemory };
+  }
+
+  return { hasAccess: false, reason: 'Payment Required. No verified completed transaction found for this user.' };
+}
+
+// 4. API Endpoint: Product & Course Access Verification Gatekeeper
+app.post('/api/access/verify', async (req: any, res: any) => {
+  try {
+    const { email, userId, productId } = req.body || {};
+    const queryId = email || userId || req.query.email;
+    const accessResult = await verifyProductAccess(queryId, productId);
+
+    if (accessResult.hasAccess) {
+      return res.status(200).json({
+        success: true,
+        hasAccess: true,
+        message: 'Verified Paid Access Unlocked',
+        order: accessResult.order
+      });
+    } else {
+      return res.status(403).json({
+        success: false,
+        hasAccess: false,
+        message: accessResult.reason || 'Payment Required. Access Locked.',
+        redirect: '/#checkout'
+      });
+    }
+  } catch (err: any) {
+    return res.status(500).json({ success: false, hasAccess: false, error: err.message });
+  }
+});
 
 
 // -------------------------------------------------------------------------

@@ -248,6 +248,24 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
       logs = logs.filter((entry: any) => !isAdminClick(entry.email) && entry.excluded !== 'EXCLUDED' && entry.is_admin !== true && entry.isAdmin !== true);
     }
     setPageViews(logs);
+
+    // 5. Fetch Lead Submissions from Server API & LocalStorage Fallback
+    fetch('/api/leads')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.success && typeof data.totalCount === 'number') {
+          setLeadSubmissions(data.totalCount);
+        } else {
+          const capturedLeads = JSON.parse(localStorage.getItem('captured_leads') || '[]');
+          const count = Array.isArray(capturedLeads) ? capturedLeads.length : (localStorage.getItem('sirwise_lead_captured') ? 1 : 0);
+          setLeadSubmissions(count);
+        }
+      })
+      .catch(() => {
+        const capturedLeads = JSON.parse(localStorage.getItem('captured_leads') || '[]');
+        const count = Array.isArray(capturedLeads) ? capturedLeads.length : (localStorage.getItem('sirwise_lead_captured') ? 1 : 0);
+        setLeadSubmissions(count);
+      });
   };
 
   const refreshOrders = async () => {

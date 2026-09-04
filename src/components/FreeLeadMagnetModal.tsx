@@ -151,6 +151,16 @@ export default function FreeLeadMagnetModal({ isOpen, onClose, onClaimTripwire, 
       localStorage.setItem('user_email', cleanEmail);
       localStorage.setItem('customer_email', cleanEmail);
 
+      try {
+        const existingLeads = JSON.parse(localStorage.getItem('captured_leads') || '[]');
+        if (Array.isArray(existingLeads) && !existingLeads.includes(cleanEmail)) {
+          existingLeads.push(cleanEmail);
+          localStorage.setItem('captured_leads', JSON.stringify(existingLeads));
+        } else if (!Array.isArray(existingLeads)) {
+          localStorage.setItem('captured_leads', JSON.stringify([cleanEmail]));
+        }
+      } catch (e) {}
+
       // 3. Trigger instant download & show success UI
       triggerInstantDownload();
       setIsSuccess(true);
