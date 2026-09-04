@@ -175,19 +175,32 @@ export default function App() {
       }
     } catch (e) {}
 
+    localStorage.setItem('active_tab', 'academy');
+
+    // Try to click Academy bottom nav
+    try {
+      const navBtns = document.querySelectorAll('nav button, [class*="bottom"] button, button');
+      navBtns.forEach(b => {
+        if (b.textContent && b.textContent.toUpperCase().includes('ACADEMY')) {
+          (b as HTMLElement).click();
+        }
+      });
+    } catch (e) {}
+
     setTimeout(() => {
-      const paywall = document.getElementById('paywall') || document.getElementById('usdcPaymentSection') || document.querySelector('[id*="paywall"]');
+      const paywall = document.getElementById('paywall') || document.getElementById('usdcPaymentSection') || document.querySelector('[id*="buy"], [class*="paywall"]');
       if (paywall) {
         paywall.scrollIntoView({ behavior: 'smooth', block: 'start' });
         (paywall as HTMLElement).style.border = '4px solid #FFD700';
         (paywall as HTMLElement).style.boxShadow = '0 0 30px #FFD700';
+        const emailInput = document.getElementById('customerEmail');
+        if (emailInput) (emailInput as HTMLElement).focus();
         setTimeout(() => {
-          (paywall as HTMLElement).style.border = '';
+          (paywall as HTMLElement).style.border = '2px solid #FFD700';
           (paywall as HTMLElement).style.boxShadow = '';
         }, 3000);
       } else {
         window.scrollTo({ top: 0, behavior: 'smooth' });
-        alert('🎓 Sirwise AI Web3 Academy - 8 Modules - $49.99 = ₦74,985\n\nPaywall: BUY & UNLOCK NOW\n\nUSDC: 0xaeed4e48f2146aadd07e85219f209053616e4e71\nPaystack | Flutterwave | OPay 6113541882 | Pi GCV $314,159\n\nOfficial: goyedagosmess@gmail.com RC BN3583773');
       }
     }, 400);
   };

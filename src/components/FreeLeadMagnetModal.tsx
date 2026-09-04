@@ -227,8 +227,9 @@ export default function FreeLeadMagnetModal({ isOpen, onClose, onClaimTripwire, 
 
     setIsSubmitting(false);
 
-    // After capture - DO NOT just download and leave - REDIRECT TO ACADEMY WITH UPSELL
-    alert('✅ Success ' + cleanName + '! Blueprint sent to ' + cleanEmail + '\n\nOpening your FREE Academy preview + Course Reminder...');
+    if (onToast) {
+      onToast('✅ Success ' + cleanName + '! Blueprint sent to ' + cleanEmail + '. Opening Academy...');
+    }
 
     // Close modal
     onClose();
@@ -236,10 +237,13 @@ export default function FreeLeadMagnetModal({ isOpen, onClose, onClaimTripwire, 
     // Trigger download
     triggerInstantDownload();
 
-    // Redirect to Academy with course reminder message
+    // Redirect to Academy with course reminder message & auto scroll to paywall
     setTimeout(() => {
-      window.location.href = '#academy?free_lead=' + encodeURIComponent(cleanEmail) + '&name=' + encodeURIComponent(cleanName) + '&reminder=true';
-    }, 1200);
+      window.location.hash = '#academy?free_lead=' + encodeURIComponent(cleanEmail) + '&name=' + encodeURIComponent(cleanName) + '&reminder=true';
+      if ((window as any).goToAcademyPaywall) {
+        (window as any).goToAcademyPaywall();
+      }
+    }, 600);
   };
 
   const copyPromptToClipboard = (text: string, index: number) => {
