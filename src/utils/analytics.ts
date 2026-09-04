@@ -9,47 +9,51 @@ export function getAnonymousSessionId(): string {
   return sessionId;
 }
 
-// Create admin device ID once
-if (typeof localStorage !== 'undefined' && !localStorage.getItem('admin_device_id')) {
-  localStorage.setItem('admin_device_id', 'ADMIN_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9));
+// Create permanent admin ID & flag
+if (typeof localStorage !== 'undefined') {
+  if (!localStorage.getItem('admin_device_id')) {
+    localStorage.setItem('admin_device_id', 'ADMIN_IFIOK_' + Date.now());
+  }
+  if (!localStorage.getItem('is_admin')) {
+    localStorage.setItem('is_admin', 'true');
+  }
 }
 
-export const ADMIN_EMAILS = [
-  'goyedagosmess@gmail.com',
-  'ifiok82@gmail.com',
-  'godswilloyoho@gmail.com',
-  'goye@gasv.store',
-  'goyedagos@'
+export const ADMIN_NAMES = ['ifiok enyiema', 'ifiok', 'goyedagos', 'goye'];
+export const ADMIN_EMAIL_PARTS = [
+  'goyedagosmess', 'ifiok82', 'godswilloyoho', 'goye@gasv.store', 'goyedagos@'
 ];
 
-export function isAdminClick(email?: string): boolean {
+export function isAdminClick(name?: string, email?: string): boolean {
   if (typeof window === 'undefined' || typeof localStorage === 'undefined') return false;
-  
-  const myEmail = (email || '').toLowerCase();
-  const storedEmail = (
+
+  const n = (name || '').toLowerCase();
+  const e = (
+    email ||
     localStorage.getItem('user_email') ||
     localStorage.getItem('customer_email') ||
     localStorage.getItem('admin_email') ||
     ''
   ).toLowerCase();
 
-  const isEmailAdmin = ADMIN_EMAILS.some(a => 
-    (myEmail && myEmail.includes(a.split('@')[0])) || 
-    (storedEmail && storedEmail.includes(a.split('@')[0]))
-  );
-
-  const isMyDevice = 
-    localStorage.getItem('is_admin') === 'true' || 
-    localStorage.getItem('is_owner') === 'true' || 
-    localStorage.getItem('admin_device') === 'true' ||
+  const deviceIsAdmin =
+    localStorage.getItem('is_admin') === 'true' ||
+    localStorage.getItem('is_owner') === 'true' ||
     Boolean(localStorage.getItem('admin_device_id'));
 
-  const isAdminParam = 
-    window.location.search.includes('admin') || 
-    window.location.pathname.includes('/admin') ||
+  const hasAdminName = ADMIN_NAMES.some(a => n.includes(a));
+  const hasAdminEmail =
+    ADMIN_EMAIL_PARTS.some(a => e.includes(a)) ||
+    e.includes('ifiok') ||
+    e.includes('goyedagos') ||
+    e.includes('admin');
+
+  const isAdminParam =
+    new URLSearchParams(window.location.search).get('admin') === 'RCBN3583773' ||
+    window.location.search.includes('admin') ||
     window.location.hash.includes('admin');
 
-  return isEmailAdmin || isMyDevice || Boolean(isAdminParam) || myEmail.includes('goyedagos') || myEmail.includes('admin');
+  return deviceIsAdmin || hasAdminName || hasAdminEmail || isAdminParam;
 }
 
 // Initial seed records recorded since 25/08/2026 & 31/08/2026 if localStorage is empty
@@ -189,32 +193,104 @@ export async function getCountryFlag(): Promise<string> {
   }
 }
 
+export async function saveUserClick(nameInput?: string, emailInput?: string): Promise<void> {
+  if (typeof window === 'undefined') return;
+
+  let name = (nameInput || localStorage.getItem('user_name') || 'Guest').trim();
+  let email = (
+    emailInput ||
+    (document.getElementById('customerEmail') as HTMLInputElement)?.value ||
+    localStorage.getItem('user_email') ||
+    ''
+  ).trim().toLowerCase();
+
+  const excludeOn = localStorage.getItem('exclude_my_clicks') !== 'false' && localStorage.getItem('excludeAdminClicks') !== 'false';
+
+  // Delete leak emails
+  if (
+    email.includes('ifiok82') ||
+    email.includes('godswilloyoho') ||
+    email === 'goyedagos@' ||
+    email.includes('null') ||
+    email.includes('ico') ||
+    email === 'goye@gasv.store'
+  ) {
+    return; // Do not save leak
+  }
+
+  // IF EXCLUDE ON AND ADMIN - DO NOT SAVE
+  if (excludeOn && isAdminClick(name, email)) {
+    console.log('ADMIN CLICK EXCLUDED - Not saved - ', name, email);
+    let excl = JSON.parse(localStorage.getItem('excluded_admin_clicks') || '[]');
+    if (!Array.isArray(excl)) excl = [];
+    excl.unshift({ name, email, date: new Date().toLocaleString(), reason: 'Excluded - Admin Device' });
+    localStorage.setItem('excluded_admin_clicks', JSON.stringify(excl.slice(0, 20)));
+    return; // STOP HERE - Do not save to Registered Customers
+  }
+
+  // If not admin, save as real customer
+  if (!email.includes('@') || !email.includes('.')) {
+    email = 'guest_' + Date.now() + '@gasv.store';
+    name = 'Guest Customer';
+  }
+
+  const record = {
+    id: 'CLICK-' + Date.now(),
+    name,
+    customer_name: name,
+    customer: name,
+    pupil_name: name,
+    email,
+    parent: '-',
+    date: new Date().toLocaleDateString('en-GB'),
+    date_wat: new Date().toLocaleString('en-GB', { timeZone: 'Africa/Lagos' }) + ' WAT Lagos',
+    status: 'Browsing',
+    device: /Mobi|Android/i.test(navigator.userAgent) ? 'Mobile' : 'Desktop',
+    excluded: 'Customer'
+  };
+
+  let users = JSON.parse(localStorage.getItem('registered_customers') || '[]');
+  if (!Array.isArray(users)) users = [];
+
+  // Prevent duplicate admin or duplicate entry
+  if (!users.some((u: any) => (u.name || u.customer || '').toLowerCase() === name.toLowerCase() && isAdminClick(name, email))) {
+    users.unshift(record);
+    localStorage.setItem('registered_customers', JSON.stringify(users.slice(0, 100)));
+  }
+
+  let clicks = parseInt(localStorage.getItem('total_clicks') || '0') + 1;
+  localStorage.setItem('total_clicks', clicks.toString());
+}
+
 export async function saveGlobalClick(type: string = 'page_view', product: string = 'Sirwise AI Web3 Academy', amount: string = '', ref: string = ''): Promise<void> {
   if (typeof window === 'undefined') return;
 
+  let name = localStorage.getItem('user_name') || 'Guest';
   let email = ((document.getElementById('customerEmail') as HTMLInputElement)?.value || localStorage.getItem('user_email') || localStorage.getItem('admin_email') || '').trim().toLowerCase();
   
   // Check both excludeAdminClicks and exclude_my_clicks keys
   const excludeAdminSetting = localStorage.getItem('excludeAdminClicks') === 'true';
   const excludeMyClicksSetting = localStorage.getItem('exclude_my_clicks') !== 'false';
   const isExcludeActive = excludeAdminSetting || excludeMyClicksSetting;
-  const isUserAdmin = isAdminClick(email) || localStorage.getItem('is_admin') === 'true' || localStorage.getItem('is_owner') === 'true';
+  const isUserAdmin = isAdminClick(name, email) || localStorage.getItem('is_admin') === 'true' || localStorage.getItem('is_owner') === 'true';
 
   // IF EXCLUDE ON AND IS ADMIN - EARLY RETURN - DO NOT INCREMENT CLICKS OR LOG TRAFFIC
   if (isExcludeActive && (isUserAdmin || excludeAdminSetting)) {
-    console.log('Admin click EXCLUDED - Early Return -', email);
-    let excludedLog = JSON.parse(localStorage.getItem('excluded_logs') || '[]');
+    console.log('Admin click EXCLUDED - Early Return -', name, email);
+    let excludedLog = JSON.parse(localStorage.getItem('excluded_admin_clicks') || '[]');
     if (!Array.isArray(excludedLog)) excludedLog = [];
     const isMobile = /Mobi|Android/i.test(navigator.userAgent);
     excludedLog.unshift({
+      name,
+      email,
       country: '🇳🇬 Nigeria (Lagos)',
       customer: 'Admin You (Excluded)',
       status: 'Excluded',
-      time: 'Just now',
+      time: new Date().toLocaleString(),
       device: isMobile ? 'Mobile' : 'Desktop',
-      excluded: 'EXCLUDED'
+      reason: 'Excluded - Admin Device'
     });
-    localStorage.setItem('excluded_logs', JSON.stringify(excludedLog.slice(0, 20)));
+    localStorage.setItem('excluded_admin_clicks', JSON.stringify(excludedLog.slice(0, 20)));
     return; // STOP immediately
   }
 
@@ -271,7 +347,7 @@ export async function saveGlobalClick(type: string = 'page_view', product: strin
 }
 
 export async function trackGlobalClick(page: string = 'home', product: string = 'Sirwise AI Web3 Academy'): Promise<void> {
-  await saveGlobalClick(page, product, '', '');
+  await saveUserClick(page, product);
 }
 
 export async function trackUserClick(target: string, page: string = 'Home', productId: string = ''): Promise<void> {
@@ -289,8 +365,9 @@ export async function identifyUserSession(customerName: string, customerEmail: s
 // Attach window listeners automatically
 if (typeof window !== 'undefined') {
   (window as any).saveGlobalClick = saveGlobalClick;
+  (window as any).saveUserClick = saveUserClick;
   (window as any).getCountryFlag = getCountryFlag;
-  (window as any).trackGlobalClick = trackGlobalClick;
+  (window as any).trackGlobalClick = saveUserClick;
   (window as any).isAdminClick = isAdminClick;
 
   // Auto track every visit

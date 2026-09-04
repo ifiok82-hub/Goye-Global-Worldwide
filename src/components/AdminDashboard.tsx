@@ -208,17 +208,76 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
     });
   };
 
+  const refreshConversionRate = () => {
+    const excludeOn = localStorage.getItem('exclude_my_clicks') !== 'false' && localStorage.getItem('excludeAdminClicks') !== 'false';
+
+    let allUsers = JSON.parse(localStorage.getItem('registered_customers') || '[]');
+    if (!Array.isArray(allUsers) || allUsers.length === 0) allUsers = SEED_CUSTOMERS;
+
+    let allOrders = JSON.parse(localStorage.getItem('live_orders') || '[]');
+    if (!Array.isArray(allOrders) || allOrders.length === 0) allOrders = SEED_ORDERS;
+
+    let allLeads = JSON.parse(localStorage.getItem('academy_leads') || '[]');
+
+    const realUsers = excludeOn
+      ? allUsers.filter((u: any) => {
+          const name = u.name || u.pupilName || u.customer || '';
+          const e = (u.email || u.customerEmail || u.customer || '').toLowerCase();
+          if (e.includes('ifiok82') || e.includes('godswill') || e.includes('null') || e === 'goye@gasv.store') return false;
+          return !isAdminClick(name, e);
+        })
+      : allUsers;
+
+    const realOrders = excludeOn
+      ? allOrders.filter((o: any) => {
+          const name = o.customer || o.name || o.customerName || '';
+          const e = (o.email || o.customerEmail || o.customer || '').toLowerCase();
+          if (e.includes('ifiok82') || e.includes('godswill') || e.includes('null') || e === 'goye@gasv.store') return false;
+          return !isAdminClick(name, e);
+        })
+      : allOrders;
+
+    const realLeads = excludeOn
+      ? allLeads.filter((l: any) => !isAdminClick(l.name, l.email))
+      : allLeads;
+
+    const freeLeads = realLeads.length || realUsers.length;
+    const paid = realOrders.length;
+    const rate = freeLeads > 0 ? ((paid / freeLeads) * 100).toFixed(1) : '0.0';
+    const revenue = (paid * 49.99).toFixed(2);
+
+    let exclAdminLogs = JSON.parse(localStorage.getItem('excluded_admin_clicks') || '[]');
+    const excludedAdminCount = exclAdminLogs.length;
+
+    setUsers(realUsers);
+    setOrders(realOrders);
+    setTotalClicks(realUsers.length + paid);
+    setLeadSubmissions(freeLeads);
+
+    const textEl = document.getElementById('conversionStats');
+    if (textEl) {
+      textEl.innerHTML = `Free Leads: ${freeLeads} (109 tested originally) | Paid: ${paid} | Conversion Rate: ${rate}% — Goal: 10% = 11 sales $549.89`;
+    }
+
+    showToast(`🔄 Refreshed!\nFree Leads: ${freeLeads} | Paid: ${paid} | Conversion: ${rate}% | Revenue: $${revenue}`);
+  };
+
   const loadLocalData = () => {
+    const excludeOn = localStorage.getItem('excludeAdminClicks') === 'true' || localStorage.getItem('exclude_my_clicks') !== 'false';
+
     // 1. Registered Users / Customers
     let localUsers = JSON.parse(localStorage.getItem('registered_customers') || '[]');
     if (!Array.isArray(localUsers) || localUsers.length === 0) {
       localUsers = SEED_CUSTOMERS;
       localStorage.setItem('registered_customers', JSON.stringify(SEED_CUSTOMERS));
     }
-    // Skip leak emails
+    // Skip leak emails and admin users when excludeOn is true
     const cleanUsers = localUsers.filter((u: any) => {
+      const name = u.name || u.pupilName || u.customer || '';
       const e = (u.email || u.customerEmail || u.customer || '').toLowerCase();
-      return !e.includes('ifiok82') && !e.includes('godswill') && !e.includes('null');
+      if (e.includes('ifiok82') || e.includes('godswill') || e.includes('null') || e === 'goye@gasv.store') return false;
+      if (excludeOn && isAdminClick(name, e)) return false;
+      return true;
     });
     setUsers(cleanUsers);
 
@@ -229,8 +288,11 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
       localStorage.setItem('live_orders', JSON.stringify(SEED_ORDERS));
     }
     const cleanOrders = localOrders.filter((o: any) => {
+      const name = o.customer || o.name || o.customerName || '';
       const e = (o.email || o.customerEmail || o.customer || '').toLowerCase();
-      return !e.includes('ifiok82') && !e.includes('godswill') && !e.includes('null');
+      if (e.includes('ifiok82') || e.includes('godswill') || e.includes('null') || e === 'goye@gasv.store') return false;
+      if (excludeOn && isAdminClick(name, e)) return false;
+      return true;
     });
     setOrders(cleanOrders);
 
@@ -245,9 +307,8 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
     }
     if (!Array.isArray(logs)) logs = [];
 
-    const excludeOn = localStorage.getItem('excludeAdminClicks') === 'true' || localStorage.getItem('exclude_my_clicks') !== 'false';
     if (excludeOn) {
-      logs = logs.filter((entry: any) => !isAdminClick(entry.email) && entry.excluded !== 'EXCLUDED' && entry.is_admin !== true && entry.isAdmin !== true);
+      logs = logs.filter((entry: any) => !isAdminClick(entry.customer_name || entry.customer || entry.name, entry.email) && entry.excluded !== 'EXCLUDED' && entry.is_admin !== true && entry.isAdmin !== true);
     }
     setPageViews(logs);
 
@@ -286,13 +347,17 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
   useEffect(() => {
     loadLocalData();
 
+    if (typeof window !== 'undefined') {
+      (window as any).checkAcademyLeadsConversion = refreshConversionRate;
+      (window as any).refreshConversionRate = refreshConversionRate;
+    }
+
     const interval = setInterval(() => {
       loadLocalData();
     }, 3000);
 
     return () => clearInterval(interval);
   }, []);
-
 
   const handleToggleExclude = () => {
     const newVal = !excludeMyClicks;
@@ -301,7 +366,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
     localStorage.setItem('exclude_my_clicks', newVal.toString());
     loadLocalData();
     if (newVal) {
-      showToast('Admin clicks excluded! Only customer activity will record.');
+      showToast('✅ EXCLUDE ON - Your clicks (Ifiok Enyiema) will NOT be recorded - Only real customers');
     } else {
       showToast('Exclude My Clicks is now OFF');
     }
