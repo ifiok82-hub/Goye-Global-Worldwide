@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { CreditCard, Users, ShoppingCart, Package, DollarSign, Settings, Download, Edit, Trash2, CheckCircle, XCircle, Activity, Globe, Eye, UserPlus, RefreshCw, Mail, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { ALL_PRODUCTS } from '../data';
-import { SEED_CUSTOMERS, SEED_ORDERS } from '../utils/analytics';
+import { SEED_CUSTOMERS, SEED_ORDERS, isAdminClick } from '../utils/analytics';
 
 export default function AdminDashboard({ showToast }: { showToast: (m: string) => void }) {
   const [activeTab, setActiveTab] = useState('analytics');
@@ -125,7 +125,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
     contactEmail: 'goyedagosmess@gmail.com'
   });
 
-  const [excludeMyClicks, setExcludeMyClicks] = useState(localStorage.getItem('exclude_my_clicks') === 'true');
+  const [excludeMyClicks, setExcludeMyClicks] = useState(localStorage.getItem('exclude_my_clicks') !== 'false');
 
   // Modals for full CRM
   const [showCustomersModal, setShowCustomersModal] = useState(false);
@@ -208,7 +208,6 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
 
   const loadLocalData = () => {
     // 1. Registered Users / Customers
-
     let localUsers = JSON.parse(localStorage.getItem('registered_customers') || '[]');
     if (!Array.isArray(localUsers) || localUsers.length === 0) {
       localUsers = SEED_CUSTOMERS;
@@ -236,7 +235,19 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
     // 3. Clicks count
     const total = parseInt(localStorage.getItem('total_clicks') || '284');
     setTotalClicks(total);
-    setPageViews(cleanUsers);
+
+    // 4. Live Traffic Log
+    let logs = JSON.parse(localStorage.getItem('live_traffic_activity') || '[]');
+    if (!Array.isArray(logs) || logs.length === 0) {
+      logs = JSON.parse(localStorage.getItem('traffic_log') || '[]');
+    }
+    if (!Array.isArray(logs)) logs = [];
+
+    const excludeOn = localStorage.getItem('exclude_my_clicks') !== 'false';
+    if (excludeOn) {
+      logs = logs.filter((entry: any) => !isAdminClick(entry.email) && entry.excluded !== 'EXCLUDED' && entry.is_admin !== true && entry.isAdmin !== true);
+    }
+    setPageViews(logs);
   };
 
   const refreshOrders = async () => {
@@ -267,32 +278,27 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
     const newVal = !excludeMyClicks;
     setExcludeMyClicks(newVal);
     localStorage.setItem('exclude_my_clicks', newVal.toString());
+    loadLocalData();
     if (newVal) {
-      // When turning ON, remove admin clicks from count - Recalculate
-      const trafficLog = JSON.parse(localStorage.getItem('traffic_log') || '[]');
-      const filtered = trafficLog.filter((entry: any) => 
-        entry.is_admin !== true && 
-        entry.isAdmin !== true && 
-        entry.customerName !== 'Admin (Owner)' &&
-        entry.customer_name !== 'Admin (Owner)' &&
-        entry.location !== 'Admin'
-      );
-      localStorage.setItem('traffic_log', JSON.stringify(filtered));
-      localStorage.setItem('total_clicks', filtered.length.toString());
-      setTotalClicks(filtered.length);
-      setPageViews(filtered);
-      showToast('Admin clicks excluded! Count recalculated!');
+      showToast('Admin clicks excluded! Only customer activity will record.');
     } else {
       showToast('Exclude My Clicks is now OFF');
     }
   };
 
   const handleResetClicks = async () => {
+    localStorage.removeItem('live_traffic_activity');
+    localStorage.removeItem('registered_customers');
+    localStorage.removeItem('live_orders');
     localStorage.setItem('total_clicks', '0');
-    localStorage.setItem('traffic_log', '[]');
+    localStorage.removeItem('excluded_logs');
+    localStorage.removeItem('traffic_log');
     setTotalClicks(0);
     setPageViews([]);
-    showToast('✅ Clicks reset to 0 - Admin clicks excluded - True location will show Lagos for you when exclude OFF');
+    setUsers([]);
+    setOrders([]);
+    alert('All cleared - Now with Exclude ON, only customers will record');
+    showToast('All traffic and customer records cleared!');
   };
 
   const handleAdminTestingUnlock = () => {
@@ -300,6 +306,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
     localStorage.setItem('payment_verified', 'true');
     localStorage.setItem('academy_unlocked', 'true');
     localStorage.setItem('is_admin', 'true');
+    localStorage.setItem('admin_device', 'true');
     localStorage.setItem('goye_academy_progress_guest', JSON.stringify({ isEnrolled: true, progress: [1, 2, 3, 4] }));
     alert('🔓 Admin unlocked 100% testing - customers still need $49.99');
     console.log('Admin unlocked 100% testing mode');
@@ -307,14 +314,16 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
   };
 
   const handleResetRegistered = () => {
-    localStorage.setItem('registered_customers', '0');
-    localStorage.setItem('customers_list', '[]');
+    localStorage.removeItem('registered_customers');
+    localStorage.removeItem('customers_list');
     setUsers([]);
     showToast('Registered customers cleared');
   };
 
   const handleClearTraffic = () => {
-    localStorage.setItem('traffic_log', '[]');
+    localStorage.removeItem('live_traffic_activity');
+    localStorage.removeItem('traffic_log');
+    localStorage.removeItem('excluded_logs');
     setPageViews([]);
     showToast('Traffic log cleared');
   };
@@ -833,7 +842,9 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
                   })}
                   {pageViews.length === 0 && (
                     <tr>
-                      <td colSpan={7} className="p-6 text-center text-gray-500">No traffic data yet.</td>
+                      <td colSpan={7} className="p-8 text-center text-[#00FF88] font-bold bg-green-950/20 rounded-xl border border-green-500/20 my-2">
+                        ✅ Exclude ON - Your clicks excluded - Only real customer visits will show here - Share <a href="https://www.gasv.store" target="_blank" rel="noreferrer" className="underline text-yellow-400">www.gasv.store</a> to get real customers
+                      </td>
                     </tr>
                   )}
                 </tbody>
