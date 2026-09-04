@@ -414,15 +414,28 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
 
 
   const exportOrders = () => {
+    const BOM = '\uFEFF';
     let csv = 'Order ID,Customer Email,Customer Name,Country,Product,Amount,Payment Method,Status,Date (WAT Lagos)\n';
     orders.forEach(o => {
       const statusStr = o.status || 'COMPLETED';
-      const rawDate = o.date || o.purchasedAt || o.createdAt;
-      const dateStr = rawDate ? new Date(rawDate).toLocaleString('en-GB', { timeZone: 'Africa/Lagos' }) : 'N/A';
-      const countryName = o.country?.name || 'Global';
-      csv += `"${o.ref || o.orderId || o.id}","${o.customerEmail || o.email || ''}","${o.customerName || ''}","${countryName}","${o.productName || ''}","${o.amount || o.amountUSD || o.price || 0}","${o.method || o.paymentMethod || ''}","${statusStr}","${dateStr}"\n`;
+      const rawDate = o.date || o.purchasedAt || o.createdAt || o.created_at;
+      let dateStr = 'N/A';
+      if (rawDate) {
+        try {
+          const parsed = new Date(rawDate);
+          dateStr = !isNaN(parsed.getTime()) ? parsed.toLocaleString('en-GB', { timeZone: 'Africa/Lagos' }) : String(rawDate);
+        } catch (e) {
+          dateStr = String(rawDate);
+        }
+      }
+      const countryName = o.country?.name || o.country || 'Global';
+      const customerEmail = (o.customerEmail || o.email || '').trim();
+      const customerName = o.customerName || o.name || o.fullName || o.pupilName || o.customer || (customerEmail ? customerEmail.split('@')[0] : 'Customer');
+      const amtStr = o.amount || o.amountFormatted || (o.amountNGN ? `₦${Number(o.amountNGN).toLocaleString()}` : '') || (o.amountUSD ? `$${o.amountUSD}` : '') || o.price || '0';
+
+      csv += `"${o.ref || o.orderId || o.id}","${customerEmail}","${customerName}","${countryName}","${o.productName || o.product || ''}","${amtStr}","${o.method || o.paymentMethod || ''}","${statusStr}","${dateStr}"\n`;
     });
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.setAttribute('href', url);
@@ -431,14 +444,26 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
   };
 
   const exportCustomers = () => {
-    let csv = 'Customer ID,Email,Pupil Name,Parent Name,Country,Age,WhatsApp,Status,Date Registered (WAT Lagos)\n';
+    const BOM = '\uFEFF';
+    let csv = 'Customer ID,Email,Customer Name,Pupil Name,Parent Name,Country,Age,WhatsApp,Status,Date Registered (WAT Lagos)\n';
     users.forEach(u => {
-      const rawDate = u.date || u.createdAt;
-      const dateStr = rawDate ? new Date(rawDate).toLocaleString('en-GB', { timeZone: 'Africa/Lagos' }) : 'N/A';
-      const countryName = u.country?.name || 'Global';
-      csv += `"${u.id || u.uid}","${u.email || ''}","${u.pupilName || u.name || ''}","${u.parentName || ''}","${countryName}","${u.age || ''}","${u.whatsapp || u.phone || ''}","${u.status || 'Registered'}","${dateStr}"\n`;
+      const rawDate = u.date || u.createdAt || u.created_at;
+      let dateStr = 'N/A';
+      if (rawDate) {
+        try {
+          const parsed = new Date(rawDate);
+          dateStr = !isNaN(parsed.getTime()) ? parsed.toLocaleString('en-GB', { timeZone: 'Africa/Lagos' }) : String(rawDate);
+        } catch (e) {
+          dateStr = String(rawDate);
+        }
+      }
+      const countryName = u.country?.name || u.country || 'Global';
+      const customerEmail = (u.email || u.customerEmail || '').trim();
+      const customerName = u.name || u.fullName || u.customerName || u.pupilName || u.customer || (customerEmail ? customerEmail.split('@')[0] : 'Customer');
+
+      csv += `"${u.id || u.uid}","${customerEmail}","${customerName}","${u.pupilName || ''}","${u.parentName || ''}","${countryName}","${u.age || ''}","${u.whatsapp || u.phone || ''}","${u.status || 'Registered'}","${dateStr}"\n`;
     });
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.setAttribute('href', url);
