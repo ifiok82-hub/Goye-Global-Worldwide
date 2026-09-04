@@ -111,7 +111,7 @@ export default function App() {
   const [paymentConfig, setPaymentConfig] = useState<any>({
     paystack: localStorage.getItem('paystack_public_key') || '',
     flutterwave: localStorage.getItem('flutterwave_public_key') || '',
-    crypto: localStorage.getItem('crypto_wallet') || '0xaeed4e48f2146aadd07e85219f209053616e4',
+    crypto: localStorage.getItem('crypto_wallet') || '0xaeed4e48f2146aadd07e85219f209053616e4e71',
     pi: localStorage.getItem('pi_wallet') || 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ'
   });
 

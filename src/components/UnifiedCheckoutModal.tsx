@@ -628,26 +628,67 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
             </div>
           ) : activeGateway === 'crypto' ? (
             <div className="animate-in fade-in slide-in-from-right-4">
-              <h3 className="text-[#10B981] font-bold text-lg mb-4">Pay with Crypto USDC (Ethereum - MetaMask)</h3>
-              <p className="text-gray-300 text-xs mb-4">Send exactly <strong className="text-[#10B981]">${priceUSD} USDC</strong> (Ethereum ERC20 / EVM) to this address:</p>
-              <div className="bg-black p-3 rounded-xl border border-[#333] flex justify-between items-center mb-4">
-                <span className="text-white text-xs font-mono truncate">{paymentConfig?.crypto || localStorage.getItem('crypto_wallet') || '0xaeed4e48f2146aadd07e85219f209053616e4'}</span>
-                <button onClick={() => { navigator.clipboard.writeText(paymentConfig?.crypto || localStorage.getItem('crypto_wallet') || '0xaeed4e48f2146aadd07e85219f209053616e4'); if(onToast) onToast('Wallet address copied!'); else alert('Wallet address copied!'); }} className="text-gray-400 hover:text-white p-1 cursor-pointer"><Copy size={16}/></button>
+              <div id="usdcPaymentSection" className="bg-[#1A1A1A] border-2 border-[#2775CA] rounded-2xl p-5 my-3">
+                <h3 className="text-[#2775CA] text-center font-bold text-lg mb-1">💵 Pay with USDC - Ethereum</h3>
+                <p className="text-center text-gray-400 text-xs mb-3">Global Payment - 190+ Countries - Instant Verification</p>
+
+                <div className="bg-white p-3 rounded-xl w-[200px] h-[200px] mx-auto mb-3 flex items-center justify-center shadow-lg">
+                  <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=0xaeed4e48f2146aadd07e85219f209053616e4e71" alt="USDC Ethereum QR" className="w-[180px] h-[180px]" />
+                </div>
+
+                <p className="text-center font-bold text-white mb-1 text-sm">Ifiok Enyiema / Ethereum</p>
+                <p className="text-center text-[#00FF88] text-[11px] font-mono break-all bg-black p-2.5 rounded-lg mb-3">
+                  0xaeed4e48f2146aadd07e85219f209053616e4e71
+                </p>
+
+                <button 
+                  onClick={() => {
+                    const addr = '0xaeed4e48f2146aadd07e85219f209053616e4e71';
+                    navigator.clipboard.writeText(addr).then(() => {
+                      if (onToast) onToast('Copied Ethereum address!');
+                      else alert('✅ Copied: ' + addr + '\nSend $49.99 USDC ERC20 only');
+                    });
+                  }} 
+                  className="w-full h-[50px] bg-white text-black rounded-xl font-bold cursor-pointer mb-2 hover:bg-gray-100 transition border-none text-sm active:scale-[0.99]"
+                >
+                  📋 Copy Ethereum Address
+                </button>
+
+                <div className="bg-black rounded-xl p-3 my-2 text-left space-y-1">
+                  <p className="text-[#FFD700] text-xs font-bold">Amount: $49.99 USDC (ERC20) = ₦74,985</p>
+                  <p className="text-gray-400 text-[11px]">Network: Ethereum ERC20 Only - Do not send other networks</p>
+                  <p className="text-gray-400 text-[11px]">Asset: USDC - 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48</p>
+                </div>
+
+                <input 
+                  type="text"
+                  placeholder="Paste Transaction Hash after payment" 
+                  className="w-full bg-[#222] border border-[#333] p-3 rounded-xl text-white my-2 focus:border-[#2775CA] outline-none text-sm font-mono"
+                  value={cryptoTxHash}
+                  onChange={e => setCryptoTxHash(e.target.value)}
+                />
+
+                <button 
+                  onClick={submitCrypto} 
+                  disabled={cryptoVerifying} 
+                  className="w-full h-[55px] bg-[#2775CA] hover:bg-[#1f5fa5] text-white font-bold rounded-xl my-2 cursor-pointer transition disabled:opacity-50 text-base border-none active:scale-[0.99]"
+                >
+                  {cryptoVerifying ? 'Verifying on-chain...' : '✅ Verify USDC Payment & Unlock Academy'}
+                </button>
+
+                <a 
+                  href="https://etherscan.io/address/0xaeed4e48f2146aadd07e85219f209053616e4e71" 
+                  target="_blank" 
+                  rel="noreferrer" 
+                  className="block text-center text-[#2775CA] text-xs my-2 underline hover:text-blue-300"
+                >
+                  View on Etherscan - Ifiok Enyiema
+                </a>
+
+                <p className="text-center text-gray-500 text-[10px] mt-2">After sending USDC $49.99 to address above, paste Tx Hash and click Verify - Academy unlocks automatically</p>
               </div>
-              <button onClick={connectMetaMask} className="w-full bg-[#1e293b] text-[#38bdf8] border border-[#38bdf8]/40 font-bold py-2.5 rounded-xl mb-3 flex items-center justify-center gap-2 cursor-pointer pointer-events-auto hover:bg-[#334155] transition">
-                <span>🦊</span> Connect MetaMask Wallet (window.ethereum)
-              </button>
-              <input 
-                placeholder="Paste Tx Hash here" 
-                className="w-full bg-black border border-[#333] p-3 rounded-xl text-white mb-4 focus:border-[#10B981] outline-none text-sm"
-                value={cryptoTxHash}
-                onChange={e => setCryptoTxHash(e.target.value)}
-              />
-              <button onClick={submitCrypto} disabled={cryptoVerifying} className="w-full bg-[#10B981] text-black font-bold py-3.5 rounded-xl mb-4 disabled:opacity-50 cursor-pointer pointer-events-auto z-10 shadow-lg">
-                {cryptoVerifying ? 'Verifying on-chain...' : 'Submit Tx for Verification'}
-              </button>
-              <p className="text-gray-500 text-[10px] text-center">⚠️ Verified on-chain via EVM to confirm transaction before auto-unlocking.</p>
-              <button onClick={() => setActiveGateway(null)} className="mt-4 text-gray-400 text-xs underline block mx-auto cursor-pointer pointer-events-auto hover:text-white">Back to Methods</button>
+
+              <button onClick={() => setActiveGateway(null)} className="mt-3 text-gray-400 text-xs underline block mx-auto cursor-pointer pointer-events-auto hover:text-white">Back to Methods</button>
             </div>
           ) : activeGateway === 'bank' ? (
             <div className="animate-in fade-in slide-in-from-right-4">

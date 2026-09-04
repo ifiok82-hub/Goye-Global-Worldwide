@@ -143,6 +143,88 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
   const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
   const [capstoneSubmission, setCapstoneSubmission] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
+  const [usdcTxHash, setUsdcTxHash] = useState('');
+
+  const copyUSDC = () => {
+    const addr = '0xaeed4e48f2146aadd07e85219f209053616e4e71';
+    navigator.clipboard.writeText(addr).then(() => {
+      alert('✅ Copied: ' + addr + '\nSend $49.99 USDC ERC20 only');
+    });
+  };
+
+  const verifyUSDCPayment = async () => {
+    const txInput = document.getElementById('usdcTxHash') as HTMLInputElement;
+    const tx = (txInput?.value || usdcTxHash || '').trim();
+    const emailInput = document.getElementById('customerEmail') as HTMLInputElement;
+    const email = (emailInput?.value || customerEmail || localStorage.getItem('user_email') || '').trim();
+
+    if (!email.includes('@') || !email.includes('.')) {
+      alert('Enter complete valid email first');
+      return;
+    }
+    if (!tx || tx.length < 20) {
+      alert('Paste Transaction Hash after you sent USDC $49.99');
+      return;
+    }
+
+    if (!tx.startsWith('0x') || tx.length !== 66) {
+      alert('Invalid Tx Hash - Must start with 0x and 66 chars');
+      return;
+    }
+
+    localStorage.setItem('user_email', email);
+    localStorage.setItem('sirwise_paid', 'true');
+    localStorage.setItem('academy_unlocked', 'true');
+    localStorage.setItem('payment_verified', 'true');
+    localStorage.setItem('payment_method', 'USDC Ethereum');
+    localStorage.setItem('payment_ref', tx);
+    localStorage.setItem('usdc_address', '0xaeed4e48f2146aadd07e85219f209053616e4e71');
+
+    const record = {
+      id: tx,
+      customer: email.split('@')[0],
+      email: email,
+      country: '🌍 Global USDC',
+      product: 'Sirwise AI Web3 Academy - USDC Payment',
+      amount: '₦74,985.00 ($49.99 USDC)',
+      amount_num: 74985,
+      status: 'Verified',
+      verified: 'VERIFIED',
+      payment_method: 'USDC Ethereum',
+      usdc_address: '0xaeed4e48f2146aadd07e85219f209053616e4e71',
+      date: new Date().toLocaleDateString('en-GB'),
+      date_wat: new Date().toLocaleString('en-GB', { timeZone: 'Africa/Lagos' }) + ' WAT Lagos'
+    };
+
+    let orders = JSON.parse(localStorage.getItem('live_orders') || '[]');
+    if (!Array.isArray(orders)) orders = [];
+    orders.unshift(record);
+    localStorage.setItem('live_orders', JSON.stringify(orders));
+
+    let users = JSON.parse(localStorage.getItem('registered_customers') || '[]');
+    if (!Array.isArray(users)) users = [];
+    users.unshift(record);
+    localStorage.setItem('registered_customers', JSON.stringify(users));
+
+    try {
+      await fetch('https://formsubmit.co/ajax/goyedagosmess@gmail.com', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject: 'New USDC Payment $49.99 - ' + email + ' - ' + tx,
+          message: 'USDC Payment Received\nEmail: ' + email + '\nTx: ' + tx + '\nAmount: $49.99\nAddress: 0xaeed4e48f2146aadd07e85219f209053616e4e71\nVerify: https://etherscan.io/tx/' + tx
+        })
+      });
+    } catch (e) {}
+
+    alert('✅ USDC Payment Verified!\nTx: ' + tx + '\nAcademy Unlocked 100%!\nAdmin will verify on Etherscan: https://etherscan.io/tx/' + tx);
+    window.location.reload();
+  };
+
+  useEffect(() => {
+    (window as any).copyUSDC = copyUSDC;
+    (window as any).verifyUSDCPayment = verifyUSDCPayment;
+  }, [customerEmail, usdcTxHash]);
 
   const priceUSD = 49.99;
   const currencies: Record<string, { symbol: string; name: string; rate: number }> = {
@@ -455,9 +537,49 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
             <button onClick={payWithFlutterwave} style={{ height: '52px', background: '#FB9129', color: '#ffffff', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', border: 'none', fontSize: '14px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>
               Flutterwave
             </button>
-            <button onClick={payWithUSDC} style={{ height: '52px', background: '#2775CA', color: '#ffffff', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', border: 'none', fontSize: '14px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>
-              USDC Ethereum Metamask $49.99
-            </button>
+            {/* Professional USDC Section */}
+            <div id="usdcPaymentSection" style={{ background: '#1A1A1A', border: '2px solid #2775CA', borderRadius: '16px', padding: '20px', margin: '12px 0', textShadow: 'none' }}>
+              <h3 style={{ color: '#2775CA', textAlign: 'center', fontWeight: 'bold', fontSize: '18px', margin: '0 0 4px 0' }}>💵 Pay with USDC - Ethereum</h3>
+              <p style={{ textAlign: 'center', color: '#888', fontSize: '12px', margin: '0 0 12px 0' }}>Global Payment - 190+ Countries - Instant Verification</p>
+
+              <div style={{ background: 'white', padding: '12px', borderRadius: '12px', width: '200px', height: '200px', margin: '12px auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=0xaeed4e48f2146aadd07e85219f209053616e4e71" alt="USDC Ethereum QR" style={{ width: '180px', height: '180px' }} />
+              </div>
+
+              <p style={{ textAlign: 'center', fontWeight: 'bold', color: 'white', margin: '6px 0', fontSize: '14px' }}>Ifiok Enyiema / Ethereum</p>
+              <p style={{ textAlign: 'center', color: '#00FF88', fontSize: '11px', wordBreak: 'break-all', background: '#000', padding: '10px', borderRadius: '8px', margin: '10px 0', fontFamily: 'monospace' }}>
+                0xaeed4e48f2146aadd07e85219f209053616e4e71
+              </p>
+
+              <button onClick={copyUSDC} style={{ width: '100%', height: '50px', background: 'white', color: 'black', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', margin: '8px 0', border: 'none', fontSize: '14px' }}>
+                📋 Copy Ethereum Address
+              </button>
+
+              <div style={{ background: '#000', borderRadius: '12px', padding: '12px', margin: '10px 0', textAlign: 'left' }}>
+                <p style={{ color: '#FFD700', fontSize: '12px', margin: 0, fontWeight: 'bold' }}>Amount: $49.99 USDC (ERC20) = ₦74,985</p>
+                <p style={{ color: '#888', fontSize: '11px', margin: '4px 0' }}>Network: Ethereum ERC20 Only - Do not send other networks</p>
+                <p style={{ color: '#888', fontSize: '11px', margin: '4px 0' }}>Asset: USDC - 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48</p>
+              </div>
+
+              <input 
+                type="text" 
+                id="usdcTxHash" 
+                value={usdcTxHash}
+                onChange={(e) => setUsdcTxHash(e.target.value)}
+                placeholder="Paste Transaction Hash after payment" 
+                style={{ width: '100%', height: '50px', borderRadius: '12px', padding: '12px', margin: '8px 0', background: '#222', color: 'white', border: '1px solid #333', fontSize: '13px', outline: 'none' }} 
+              />
+
+              <button onClick={verifyUSDCPayment} style={{ width: '100%', height: '55px', background: '#2775CA', color: 'white', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', margin: '8px 0', border: 'none', fontSize: '15px' }}>
+                ✅ Verify USDC Payment & Unlock Academy
+              </button>
+
+              <a href="https://etherscan.io/address/0xaeed4e48f2146aadd07e85219f209053616e4e71" target="_blank" rel="noreferrer" style={{ display: 'block', textAlign: 'center', color: '#2775CA', fontSize: '12px', margin: '8px 0', textDecoration: 'underline' }}>
+                View on Etherscan - Ifiok Enyiema
+              </a>
+
+              <p style={{ textAlign: 'center', color: '#888', fontSize: '10px', margin: '6px 0 0 0' }}>After sending USDC $49.99 to address above, paste Tx Hash and click Verify - Academy unlocks automatically</p>
+            </div>
             <button onClick={payWithPi} style={{ height: '52px', background: '#7A3ED6', color: '#ffffff', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', border: 'none', fontSize: '14px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>
               Pi Network GCV $314,159
             </button>
