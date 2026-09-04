@@ -205,7 +205,66 @@ export default function App() {
     }, 400);
   };
 
-  const handleDownloadBlueprintClick = () => {
+  const showConversionPageOverlay = (name: string, email: string) => {
+    const existing = document.getElementById('conversionPage');
+    if (existing) existing.remove();
+
+    const conversionPage = document.createElement('div');
+    conversionPage.id = 'conversionPage';
+    conversionPage.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.96); z-index:999999; overflow-y:auto; padding:20px; font-family:sans-serif; backdrop-filter:blur(8px);';
+    conversionPage.innerHTML = `
+      <div style="max-width:520px; margin:20px auto; background:#111; border:2px solid #FFD700; border-radius:20px; padding:24px; box-shadow:0 0 40px rgba(255,215,0,0.3); text-align:left;">
+        <div style="text-align:center; margin-bottom:16px;">
+          <span style="background:#FFD700; color:black; font-weight:bold; font-size:11px; padding:4px 10px; border-radius:20px; text-transform:uppercase;">🎁 Free Blueprint Downloaded</span>
+          <h2 style="color:#FFD700; text-align:center; margin:10px 0 4px 0; font-size:22px;">🎉 ${name || 'Entrepreneur'}, Your Blueprint is Downloading!</h2>
+          <p style="color:#ccc; text-align:center; margin:0; font-size:13px;">You got <b>Teaser Prompt 1 of 50+</b> — Here is what 109 clients missed:</p>
+        </div>
+
+        <div style="background:#1A1A1A; padding:14px; border-radius:14px; margin:16px 0; border:1px solid #333;">
+          <p style="color:#00FF88; font-size:13px; font-weight:bold; margin:0 0 6px 0; display:flex; align-items:center; gap:6px;">✅ Free: 1 Teaser Prompt (you have)</p>
+          <p style="color:#FF6B6B; font-size:13px; font-weight:bold; margin:0; display:flex; align-items:center; gap:6px;">🔒 Locked: 49 More Prompts + Automation + Web3 Safety + Certificate (Academy Only)</p>
+        </div>
+
+        <div style="background:black; border:1px solid #FFD700; border-radius:14px; padding:14px; text-align:center; margin:16px 0;">
+          <p style="color:#FFD700; font-weight:bold; font-size:13px; margin:0 0 10px 0;">▶️ Watch 90 Sec: What Academy Students Get</p>
+          <div style="background:#222; height:170px; border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#aaa; border:1px dashed #444; position:relative; overflow:hidden;">
+            <div style="background:rgba(255,215,0,0.2); width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#FFD700; font-size:24px; margin-bottom:8px;">▶</div>
+            <p style="color:#FFD700; font-weight:bold; margin:0; font-size:13px;">Sirwise AI Web3 Academy Tour</p>
+            <p style="color:#888; margin:2px 0 0 0; font-size:11px;">8 Global Modules • Certificate • $49.99 = ₦74,985</p>
+          </div>
+        </div>
+
+        <div style="background:linear-gradient(135deg, #FFD700 0%, #FFA500 100%); padding:20px; border-radius:16px; text-align:center; color:black;">
+          <h3 style="color:black; margin:0; font-size:18px; font-weight:900;">Special For Blueprint Downloaders</h3>
+          <p style="color:black; font-weight:bold; margin:6px 0; font-size:14px;">Sirwise AI Web3 Academy - 8 Modules - Lifetime $49.99 = ₦74,985</p>
+          <p style="color:#222; font-size:11px; margin-bottom:12px;">109 tested free, top 10% upgraded — You are early</p>
+          <input type="email" id="conversionEmail" value="${email}" placeholder="Enter your email to unlock" style="width:100%; height:48px; border-radius:10px; padding:12px; margin:0 0 10px 0; border:2px solid black; background:white; color:black; font-weight:bold; font-size:14px;" />
+          <button id="unlockAcademyConversionBtn" onclick="window.goToPaywallFromConversion && window.goToPaywallFromConversion()" style="width:100%; height:56px; background:black; color:#FFD700; border-radius:12px; font-weight:bold; font-size:16px; cursor:pointer; border:none; transition:all 0.2s;">🚀 UNLOCK FULL ACADEMY NOW - $49.99</button>
+          <p style="color:#111; font-size:10px; margin:10px 0 0 0; font-weight:600;">USDC 0xaeed4e48f2146aadd07e85219f209053616e4e71 | OPay 6113541882 | Paystack | Flutterwave | Pi GCV $314,159</p>
+        </div>
+
+        <button onclick="document.getElementById('conversionPage')?.remove()" style="width:100%; margin-top:14px; background:#222; color:#ccc; height:44px; border-radius:12px; cursor:pointer; border:1px solid #333; font-size:13px; font-weight:bold;">Continue Browsing — I will upgrade later</button>
+        <p style="color:#666; font-size:10px; text-align:center; margin:12px 0 0 0;">Official goyedagosmess@gmail.com | RC BN3583773 | www.gasv.store</p>
+      </div>
+    `;
+    document.body.appendChild(conversionPage);
+  };
+
+  const goToPaywallFromConversion = () => {
+    const emailInput = document.getElementById('conversionEmail') as HTMLInputElement;
+    const email = emailInput?.value || localStorage.getItem('user_email') || '';
+    if (email) {
+      localStorage.setItem('user_email', email);
+      localStorage.setItem('customer_email', email);
+    }
+    const conversionPage = document.getElementById('conversionPage');
+    if (conversionPage) conversionPage.remove();
+
+    goToAcademyPaywall();
+  };
+
+  const handleDownloadBlueprintClick = async () => {
+    const name = localStorage.getItem('lead_name') || localStorage.getItem('user_name') || 'Entrepreneur';
     const email = (localStorage.getItem('user_email') || '').trim();
     if (!email.includes('@') || !email.includes('.')) {
       setShowLeadMagnetModal(true);
@@ -215,22 +274,44 @@ export default function App() {
     try {
       const a = document.createElement('a');
       a.href = 'https://www.gasv.store/downloads/5-minute-ai-prompt-blueprint.pdf';
-      a.download = '5-Minute-AI-Prompt-Blueprint-Sirwise.pdf';
+      a.download = '5-Minute-AI-Prompt-Blueprint-TEASER-Sirwise.pdf';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      showToast('📁 Blueprint download started!');
+      showToast('📁 Teaser Blueprint download started!');
     } catch (e) {
       window.open('https://www.gasv.store/downloads/5-minute-ai-prompt-blueprint.pdf', '_blank');
     }
 
-    setTimeout(goToAcademyPaywall, 1000);
+    showConversionPageOverlay(name, email);
+  };
+
+  const checkAcademyLeadsConversion = () => {
+    try {
+      const leads = JSON.parse(localStorage.getItem('academy_leads') || '[]');
+      const freeCount = leads.filter((l: any) => l.product && String(l.product).includes('Free')).length;
+      const paidOrders = JSON.parse(localStorage.getItem('live_orders') || '[]');
+      const paidCount = paidOrders.length;
+      const rate = freeCount > 0 ? ((paidCount / freeCount) * 100).toFixed(1) : '0.0';
+      console.log(`Conversion: Free ${freeCount} Paid ${paidCount} Rate ${rate}% - Currently 109 free 0 paid = 0% - Need funnel fix`);
+
+      const statsBanner = document.getElementById('conversionStats');
+      if (statsBanner) {
+        statsBanner.textContent = `Free Leads: ${freeCount} (109 tested) | Paid: ${paidCount} | Conversion Rate: ${rate}% — Goal: 10% = 11 sales $549.89`;
+      }
+    } catch (e) {}
   };
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       (window as any).goToAcademyPaywall = goToAcademyPaywall;
+      (window as any).goToPaywallFromConversion = goToPaywallFromConversion;
+      (window as any).getFreeBlueprintAfterDownload = handleDownloadBlueprintClick;
+      (window as any).checkAcademyLeadsConversion = checkAcademyLeadsConversion;
     }
+
+    const interval = setInterval(checkAcademyLeadsConversion, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   // Auto-Trigger Lead Magnet (Timed or Exit Intent)

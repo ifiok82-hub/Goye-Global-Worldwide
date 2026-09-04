@@ -10,80 +10,76 @@ interface FreeLeadMagnetModalProps {
 }
 
 const BLUEPRINT_TEXT_CONTENT = `================================================================================
-          THE 5-MINUTE AI PROMPT BLUEPRINT FOR ENTREPRENEURS
+          THE 5-MINUTE AI PROMPT BLUEPRINT FOR ENTREPRENEURS (TEASER)
         Save 15+ Hours/Week Automating Marketing, Sales & Operations
-                 Powered by Sirwise AI Web3 Academy
+                 Powered by Sirwise AI Web3 Academy (RC BN3583773)
+                            www.gasv.store
 ================================================================================
 
-WELCOME!
-Thank you for downloading the official AI Prompt Blueprint. This short guide 
-contains battle-tested prompt frameworks compatible with ChatGPT, Google Gemini, 
-and Claude. Use these exact copy-paste templates to cut your daily business 
-tasks down from hours to minutes.
+[PAGE 1: COVER]
+🎁 FREE BLUEPRINT ACCESS | RC BN3583773
+Title: The 5-Minute AI Prompt Blueprint for Entrepreneurs
+Publisher: Sirwise AI Web3 Academy
+Official Site: https://www.gasv.store | Contact: goyedagosmess@gmail.com
 
 --------------------------------------------------------------------------------
-PROMPT 1: THE HIGH-CONVERTING SOCIAL MEDIA COPY GENERATOR
+[PAGE 2: WHAT YOU WILL GET IN THE NEXT 5 MINUTES]
 --------------------------------------------------------------------------------
-Goal: Create 5 engaging social media posts for your business in 30 seconds.
+1. TEASER PROMPT 1: High-Converting Sales & Copy Generator (1 of 4 core prompts).
+2. REAL CASE STUDY: How a student built a ₦450,000/mo agency using AI automation.
+3. ACADEMY ROADMAP: What 109+ entrepreneurs unlock in the full 8-Module Masterclass.
+
+--------------------------------------------------------------------------------
+[PAGE 3: TEASER PROMPT 1 - COPY & PASTE SALES PROMPT]
+--------------------------------------------------------------------------------
+Goal: Create a high-converting offer post for Instagram, WhatsApp & Facebook in 30s.
 
 COPY & PASTE THIS PROMPT:
-"Act as a direct-response marketing expert. Write 5 short, high-converting 
-social media posts promoting [INSERT YOUR PRODUCT/SERVICE NAME]. 
-- Target Audience: [INSERT TARGET AUDIENCE, e.g., Small Business Owners / Creators]
-- Main Benefit: [INSERT MAIN BENEFIT, e.g., Saves 5 hours a week]
-- Tone: Professional, energetic, and persuasive.
-- Structure: Start each post with a strong hook, followed by 3 key bullet points 
-  showing the value, and end with a clear Call to Action (CTA) directing readers 
-  to visit [INSERT YOUR WEBSITE URL]."
+"Act as a direct-response marketing expert trained by Ogilvy. Write 3 short, 
+high-converting social media sales posts promoting [INSERT YOUR PRODUCT NAME].
+- Target Audience: [INSERT TARGET AUDIENCE, e.g. Small Business Owners / Freelancers]
+- Key Transformation: [INSERT MAIN BENEFIT, e.g. Saves 15 hours every week]
+- Tone: Energetic, authoritative, persuasive.
+- Include 3 bullet point benefits and end with a clear Call to Action (CTA) 
+  directing readers to message on WhatsApp or visit [INSERT YOUR WEBSITE]."
 
 --------------------------------------------------------------------------------
-PROMPT 2: THE 60-SECOND CLIENT PROPOSAL WRITER
+[PAGE 4: ⚠️ THIS IS ONLY PROMPT 1 OF 50+ INSIDE ACADEMY]
 --------------------------------------------------------------------------------
-Goal: Turn raw client requirements into a professional service proposal instantly.
-
-COPY & PASTE THIS PROMPT:
-"Act as a senior business consultant. Generate a structured, professional project 
-proposal based on these details:
-- Client Problem: [INSERT CLIENT PROBLEM]
-- Offered Solution: [INSERT YOUR SOLUTION]
-- Key Deliverables: [LIST 2-3 DELIVERABLES]
-- Timeline: [INSERT TIMELINE, e.g., 7 Days]
-Structure the output into 4 clear sections: Executive Summary, Project Scope, 
-Timeline & Milestones, and Next Steps. Keep the language concise and compelling."
+Here is what you are missing in the Free Version:
+🔒 Prompts 2-50: Proposal Generators, Upwork/Fiverr Bidding, TikTok Scripts (LOCKED)
+🔒 Module 3: No-Code AI Automation with Zapier & Make.com (LOCKED)
+🔒 Module 5: Web3 Wallet Setup + Pi Network GCV $314,159 + Cyber Safety (LOCKED)
+🔒 Module 8: Capstone Project + Blockchain-Verified Certificate + Portfolio (LOCKED)
 
 --------------------------------------------------------------------------------
-PROMPT 3: THE AUTOMATED CUSTOMER SUPPORT & FAQ ENGINE
+[PAGE 5: CASE STUDY - FROM FREE BLUEPRINT TO $300/WEEK]
 --------------------------------------------------------------------------------
-Goal: Generate clear answers for customer questions to use in emails or WhatsApp.
-
-COPY & PASTE THIS PROMPT:
-"Act as a helpful customer support representative for [INSERT YOUR COMPANY NAME]. 
-Write a polite, reassuring response to a customer asking: '[INSERT CUSTOMER QUESTION]'.
-- Ensure the answer addresses their main concern clearly.
-- Provide reassurance about security and instant delivery.
-- Keep the response under 100 words and end with an offer to help further."
+Student Story: Chinedu from Lagos, Nigeria
+"I downloaded the Free Blueprint and got my first client inquiry. But when they asked 
+for custom AI workflow automation, I was stuck. I enrolled in the Sirwise AI Web3 
+Academy $49.99 (₦74,985) full course. Within 14 days of completing Module 3 & 8, 
+I secured a $300 Fiverr automation contract!"
 
 --------------------------------------------------------------------------------
-PROMPT 4: THE VIRAL HEADLINE & HOOK GENERATOR
+[PAGE 6: NEXT STEPS - UPGRADE TO FULL ACADEMY $49.99]
 --------------------------------------------------------------------------------
-Goal: Generate attention-grabbing titles for emails, ads, or landing pages.
+Your Free Blueprint is only 10% of the puzzle. Unlock the remaining 90% today!
 
-COPY & PASTE THIS PROMPT:
-"Generate 10 magnetic headlines for a page selling [INSERT PRODUCT NAME]. 
-Use proven psychological triggers (curiosity, urgency, speed, and simplicity). 
-Avoid spammy words. Focus on the transformation the customer gets after using the product."
+🎓 SIRWISE AI WEB3 ACADEMY - 8 FULL GLOBAL MODULES
+- Price: $49.99 USD = ₦74,985 Lifetime Access (190+ Countries)
+- Special Link: https://www.gasv.store/#academy?from=blueprint
+- USDC ERC20 Address: 0xaeed4e48f2146aadd07e85219f209053616e4e71
+- OPay Bank Transfer: Account 6113541882 GOYEDAGOSMESS ENTERPRISE
+- Global Cards: Paystack & Flutterwave Supported
+- 100% Secure SSL | Official Contact: goyedagosmess@gmail.com | RC BN3583773
 
 --------------------------------------------------------------------------------
-WHAT IS NEXT?
+[PAGE 7: ACADEMY PAYWALL & VIDEO TOUR LINK]
 --------------------------------------------------------------------------------
-Ready to take your business to the next level? 
+Scan or click to watch the 2-minute Academy Tour video and unlock all 8 modules:
+👉 https://www.gasv.store/#academy
 
-Upgrade to our "Ultimate Web3 & AI Starter Toolkit" for just ₦2,500 ($3.00) 
-or explore our full online masterclasses at:
-- Learning Academy: https://sirwise.online
-- Digital Store & Checkout: https://gasv.store
-
-© Goyedagosmess Enterprise | Sirwise AI Web3 Academy
 ================================================================================`;
 
 export default function FreeLeadMagnetModal({ isOpen, onClose, onClaimTripwire, onToast }: FreeLeadMagnetModalProps) {
@@ -103,13 +99,13 @@ export default function FreeLeadMagnetModal({ isOpen, onClose, onClaimTripwire, 
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = '5-Minute-AI-Prompt-Blueprint-Sirwise.pdf';
+      a.download = '5-Minute-AI-Prompt-Blueprint-TEASER-Sirwise.pdf';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       setTimeout(() => URL.revokeObjectURL(url), 1000);
       
-      if (onToast) onToast('📁 Blueprint downloaded to your device!');
+      if (onToast) onToast('📁 Teaser Blueprint downloaded!');
     } catch (e) {
       console.warn('Blob download fallback:', e);
       window.open('https://www.gasv.store/downloads/5-minute-ai-prompt-blueprint.pdf', '_blank');
@@ -237,13 +233,14 @@ export default function FreeLeadMagnetModal({ isOpen, onClose, onClaimTripwire, 
     // Trigger download
     triggerInstantDownload();
 
-    // Redirect to Academy with course reminder message & auto scroll to paywall
+    // Trigger conversion overlay page (Video + Paywall)
     setTimeout(() => {
-      window.location.hash = '#academy?free_lead=' + encodeURIComponent(cleanEmail) + '&name=' + encodeURIComponent(cleanName) + '&reminder=true';
-      if ((window as any).goToAcademyPaywall) {
+      if ((window as any).getFreeBlueprintAfterDownload) {
+        (window as any).getFreeBlueprintAfterDownload();
+      } else if ((window as any).goToAcademyPaywall) {
         (window as any).goToAcademyPaywall();
       }
-    }, 600);
+    }, 400);
   };
 
   const copyPromptToClipboard = (text: string, index: number) => {

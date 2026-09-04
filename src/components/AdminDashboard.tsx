@@ -826,6 +826,29 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
             </div>
           </div>
 
+          {/* Conversion Stats Banner */}
+          <div className="bg-gradient-to-r from-yellow-950/60 via-[#111] to-black border-2 border-[#FFD700] rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">⚡</span>
+              <div>
+                <h4 className="text-[#FFD700] font-black text-sm uppercase tracking-wider">Master Funnel Conversion Tracker</h4>
+                <p id="conversionStats" className="text-white font-bold text-xs mt-0.5">
+                  Free Leads: 109 tested | Paid: {verifiedOrders.length} | Conversion Rate: {((verifiedOrders.length / (users.length || 109)) * 100).toFixed(1)}% — Goal: 10% = 11 sales $549.89
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                if (typeof window !== 'undefined' && (window as any).checkAcademyLeadsConversion) {
+                  (window as any).checkAcademyLeadsConversion();
+                }
+              }}
+              className="bg-[#FFD700] text-black font-black text-xs px-4 py-2 rounded-xl border border-black hover:bg-yellow-400 transition cursor-pointer shrink-0"
+            >
+              🔄 Refresh Conversion Rate
+            </button>
+          </div>
+
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             <div className="bg-[#111] border border-[#333] rounded-2xl p-4 cursor-pointer hover:border-[#FFD700] transition">
               <div className="flex items-center gap-2 text-gray-400 mb-2">
