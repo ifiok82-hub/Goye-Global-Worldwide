@@ -721,9 +721,24 @@ export default function App() {
     if (window.location.pathname === '/admin') {
       setShowAdminLogin(true);
     }
-    
 
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    const handlePiAuthSuccess = (e: any) => {
+      if (e && e.detail) {
+        const { username, email } = e.detail;
+        const piUser = { id: 'pi_' + username, email: email, name: username, role: 'student' };
+        const piProfile = { uid: piUser.id, email: email, displayName: username, country: 'Pi Network Pioneer' };
+        setIsAuthenticated(true);
+        setCurrentUser(piUser);
+        setUserProfile(piProfile);
+        setTab('academy');
+      }
+    };
+    window.addEventListener('piAuthSuccess', handlePiAuthSuccess);
+
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+      window.removeEventListener('piAuthSuccess', handlePiAuthSuccess);
+    };
   }, []);
 
   const handleAdminLogin = (e: any) => {
@@ -779,26 +794,34 @@ export default function App() {
       <header style={{ position: 'sticky', top: 0, zIndex: 50, width: '100%', background: '#FFD700', minHeight: '60px', padding: '10px 0', borderBottom: '1px solid #1e293b' }}>
         <div style={{ position: 'absolute', top: '8px', right: '8px', zIndex: 999 }} className="flex items-center gap-1.5">
             <button 
+              id="loginWithPiBtn"
               onClick={() => {
                 if (typeof (window as any).loginWithPi === 'function') {
-                  (window as any).loginWithPi().then((auth: any) => {
-                    if (auth && auth.user) {
-                      const piUser = { id: 'pi_' + auth.user.username, email: auth.user.username + '@pi.network', name: auth.user.username, role: 'student' };
-                      const piProfile = { uid: piUser.id, email: piUser.email, displayName: auth.user.username, country: 'Pi Network' };
-                      setIsAuthenticated(true);
-                      setCurrentUser(piUser);
-                      setUserProfile(piProfile);
-                      setTab('academy');
-                    }
-                  });
+                  (window as any).loginWithPi();
                 } else {
                   alert('Pi Network SDK loading... Open gasv.store in Pi Browser app!');
                 }
               }} 
-              style={{ background: '#7D2AE7', color: 'white' }}
-              className="px-2.5 py-1 text-xs font-black rounded-lg shadow-md border border-purple-400 hover:brightness-110 active:scale-95 cursor-pointer flex items-center gap-1"
+              style={{
+                height: '38px',
+                background: '#7D2AE7',
+                color: 'white',
+                borderRadius: '12px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                pointerEvents: 'auto',
+                zIndex: 99999,
+                position: 'relative',
+                padding: '0 12px',
+                border: '2px solid white',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '12px'
+              }}
+              className="hover:brightness-110 active:scale-95 shadow-md"
             >
-              <span>🟣</span> Login with Pi
+              <span style={{ width: '10px', height: '10px', background: '#FFD700', borderRadius: '50%', display: 'inline-block' }}></span> Login with Pi
             </button>
             {!isAuthenticated ? (
                 <button onClick={() => setTab('auth')} className="px-2.5 py-1 bg-white text-black text-xs font-bold rounded-lg shadow-md border border-gray-300 hover:bg-gray-100 cursor-pointer">Login / Register</button>

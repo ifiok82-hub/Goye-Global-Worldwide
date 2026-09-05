@@ -102,69 +102,153 @@
     <!-- Pi Network SDK v2 -->
     <script src="https://sdk.minepi.com/pi-sdk.js"></script>
     <script>
-      if (typeof Pi !== 'undefined') {
-        try {
-          Pi.init({ version: "2.0", sandbox: true });
-        } catch(e) {
-          console.warn("Pi SDK init notice:", e);
-        }
-      } else {
-        window.addEventListener('DOMContentLoaded', function() {
-          if (typeof Pi !== 'undefined') {
-            try {
-              Pi.init({ version: "2.0", sandbox: true });
-            } catch(e) {}
+      function initPiSDK() {
+        if (typeof Pi !== 'undefined') {
+          try {
+            Pi.init({ version: "2.0", sandbox: true });
+            console.log('✅ Pi SDK Initialized - Testnet sandbox:true - gasv.store');
+            const btn = document.getElementById('loginWithPiBtn');
+            if (btn) {
+              btn.style.opacity = '1';
+              btn.style.pointerEvents = 'auto';
+              btn.style.cursor = 'pointer';
+            }
+          } catch(e) {
+            console.warn('Pi init notice:', e);
           }
-        });
+        } else {
+          console.log('Pi SDK not loaded - Not in Pi Browser - Normal browser mode');
+        }
       }
 
+      setTimeout(initPiSDK, 1000);
+      window.addEventListener('load', function() {
+        setTimeout(initPiSDK, 1500);
+      });
+
       function onIncompletePaymentFound(payment) {
-        console.log('Incomplete Payment Found', payment);
+        console.log('Incomplete payment found:', payment);
         if (typeof Pi !== 'undefined' && Pi.completePayment) {
           return Pi.completePayment(payment.identifier);
         }
       }
 
-      // Pi Login Function - For Pi Ecosystem Listing
+      // MAIN LOGIN FUNCTION - For Pi Ecosystem Listing & Pioneers
       async function loginWithPi() {
+        console.log('Login with Pi clicked - gasv.store');
+
+        // Check if Pi SDK exists
         if (typeof Pi === 'undefined') {
-          alert('Pi Network SDK is loading... Please open gasv.store inside the Pi Browser app!');
+          // Not in Pi Browser - Show step-by-step Pi Browser guide modal
+          const existing = document.getElementById('piGuideModal');
+          if (existing) existing.remove();
+
+          const guideModal = document.createElement('div');
+          guideModal.id = 'piGuideModal';
+          guideModal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.92); z-index:9999999; display:flex; align-items:center; justify-content:center; padding:20px; box-sizing:border-box;';
+          guideModal.innerHTML = `
+            <div style="background:#111; border:3px solid #7D2AE7; border-radius:20px; padding:22px; max-width:420px; width:100%; text-align:center; box-shadow:0 0 40px rgba(125,42,231,0.5);">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <span style="color:#7D2AE7; font-weight:bold; font-size:18px;">🟣 Pi Browser Required</span>
+                <button onclick="document.getElementById('piGuideModal').remove()" style="background:#222; color:#fff; border:1px solid #444; border-radius:50%; width:30px; height:30px; font-weight:bold; cursor:pointer;">X</button>
+              </div>
+              <p style="color:white; font-size:13.5px; margin:0 0 14px 0; line-height:1.4;">
+                <strong>Login with Pi</strong> requires the official <strong>Pi Browser App</strong> with active Pi Network Wallet authentication.
+              </p>
+              <div style="background:#1a1a1a; border:1px solid #333; padding:14px; border-radius:14px; margin:12px 0; text-align:left;">
+                <p style="color:#FFD700; font-size:12.5px; margin:4px 0; font-weight:bold;">1️⃣ Open Pi Browser App on your phone</p>
+                <p style="color:#FFD700; font-size:12.5px; margin:4px 0; font-weight:bold;">2️⃣ Enter website URL: <span style="color:#00FF88;">https://www.gasv.store</span></p>
+                <p style="color:#FFD700; font-size:12.5px; margin:4px 0; font-weight:bold;">3️⃣ Tap top-right 🟣 Login with Pi button</p>
+                <p style="color:#00FF88; font-size:12px; margin:8px 0 0 0; font-weight:bold;">✅ Instant 1-click Pioneer login & $314,159 GCV Pi Payment!</p>
+              </div>
+              <div style="display:grid; gap:10px; margin-top:16px;">
+                <a href="https://minepi.com/pi-browser" target="_blank" style="height:50px; background:#7D2AE7; color:white; border-radius:12px; display:flex; align-items:center; justify-content:center; font-weight:bold; text-decoration:none; font-size:14px; border:2px solid #9d52f8;">
+                  📥 Download Pi Browser App
+                </a>
+                <button onclick="document.getElementById('piGuideModal').remove()" style="height:45px; background:#222; color:#ccc; border:1px solid #444; border-radius:12px; cursor:pointer; font-weight:bold; font-size:13px;">
+                  Continue in Standard Browser (Email Login)
+                </button>
+              </div>
+              <p style="color:#888; font-size:10px; margin-top:12px;">Official goyedagosmess@gmail.com | RC BN3583773 | www.gasv.store</p>
+            </div>
+          `;
+          guideModal.onclick = function(e) { if (e.target === guideModal) guideModal.remove(); };
+          document.body.appendChild(guideModal);
           return;
         }
+
+        // Inside Pi Browser App - Execute Real Pi SDK Authenticate
         try {
+          const btn = document.getElementById('loginWithPiBtn');
+          if (btn) { btn.innerHTML = '⏳ Connecting Pi...'; btn.disabled = true; }
+
           const scopes = ['username', 'payments'];
           const auth = await Pi.authenticate(scopes, onIncompletePaymentFound);
-          console.log('Pi Auth Success', auth);
+          
           const username = auth.user ? auth.user.username : ('pioneer_' + Date.now().toString().slice(-4));
+          const piUid = auth.user ? auth.user.uid : ('uid_' + Date.now());
           const email = username.includes('@') ? username : (username + '@pi.network');
-
+          
           localStorage.setItem('user_email', email);
           localStorage.setItem('customer_email', email);
           localStorage.setItem('pi_username', username);
+          localStorage.setItem('pi_uid', piUid);
           localStorage.setItem('pi_access_token', auth.accessToken || 'pi_token_active');
+          localStorage.setItem('is_pi_user', 'true');
+          localStorage.setItem('lead_name', username);
 
+          // Save to registered customers array
           let users = JSON.parse(localStorage.getItem('registered_customers') || '[]');
           if (!users.some(u => u.email === email)) {
             users.unshift({
               name: username,
               email: email,
-              country: 'Pi Network Pioneer',
-              status: 'Pi Authenticated',
-              date: new Date().toLocaleDateString()
+              pupil_name: username,
+              parent: 'Pi Network Pioneer',
+              date: new Date().toLocaleDateString('en-GB'),
+              date_wat: new Date().toLocaleString('en-GB', { timeZone: 'Africa/Lagos' }) + ' WAT Lagos',
+              country: 'Pi Network - GCV $314,159'
             });
             localStorage.setItem('registered_customers', JSON.stringify(users.slice(0, 200)));
+          }
+
+          if (btn) {
+            btn.innerHTML = '✅ @' + username;
+            btn.style.background = '#00AA00';
+            btn.disabled = false;
           }
 
           if (window.dispatchEvent) {
             window.dispatchEvent(new CustomEvent('piAuthSuccess', { detail: { username, email } }));
           }
 
-          alert('Welcome @' + username + '! Pi Login Success - Sirwise AI Web3 Academy Unlocked!');
-          window.location.hash = 'academy';
+          // Show floating success toast
+          const successModal = document.createElement('div');
+          successModal.style.cssText = 'position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#00AA00; color:white; padding:16px 24px; border-radius:14px; z-index:9999999; font-weight:bold; box-shadow:0 4px 25px rgba(0,0,0,0.6); text-align:center; font-size:14px;';
+          successModal.innerHTML = `✅ Welcome @${username}! Pi Login Success — Opening Sirwise Academy`;
+          document.body.appendChild(successModal);
+          setTimeout(() => successModal.remove(), 3500);
+
+          setTimeout(() => {
+            window.location.hash = 'academy';
+            const academyTabs = document.querySelectorAll('button, a');
+            academyTabs.forEach(b => {
+              if (b.textContent && b.textContent.toUpperCase().includes('ACADEMY')) {
+                (b as HTMLElement).click();
+              }
+            });
+          }, 800);
+
           return auth;
         } catch (e) {
           console.error('Pi Auth Failed', e);
-          alert('Pi Login Notice: Please open https://www.gasv.store in Pi Browser app to authenticate directly with your Pi wallet username!');
+          const btn = document.getElementById('loginWithPiBtn');
+          if (btn) { btn.innerHTML = '🟣 Login with Pi'; btn.disabled = false; btn.style.background = '#7D2AE7'; }
+          if (e && e.message && e.message.includes('cancelled')) {
+            alert('Pi Login notice: Authorization cancelled by user.');
+          } else {
+            alert('Pi Login Notice: Please open https://www.gasv.store in Pi Browser app (Testnet Sandbox Mode) to authenticate with Pi wallet.');
+          }
         }
       }
 
@@ -184,7 +268,7 @@
         }
 
         if (typeof Pi === 'undefined') {
-          alert('Please open https://www.gasv.store inside the Pi Browser app to complete 1-click Pi Payment!');
+          loginWithPi();
           return;
         }
 
@@ -256,8 +340,21 @@
       window.loginWithPi = loginWithPi;
       window.payWithPi = payWithPi;
 
-      // Pi Browser Detection & UX Optimization
+      // Global event listener to attach interactive behavior to all Pi login buttons
       window.addEventListener('load', function() {
+        setTimeout(function() {
+          document.querySelectorAll('button').forEach(function(b) {
+            if (b.textContent && b.textContent.includes('Login with Pi')) {
+              b.id = 'loginWithPiBtn';
+              b.onclick = loginWithPi;
+              b.style.pointerEvents = 'auto';
+              b.style.cursor = 'pointer';
+              b.style.zIndex = '99999';
+              b.style.position = 'relative';
+            }
+          });
+        }, 500);
+
         const isPiBrowser = navigator.userAgent.includes('PiBrowser') || (typeof Pi !== 'undefined' && window.location.search.includes('pi'));
         if (isPiBrowser) {
           console.log("⚡ Pi Browser Context Detected! Prioritizing Pi SDK Auth & Payment.");
@@ -265,6 +362,21 @@
         }
       });
     </script>
+    <!-- Google Pay API SDK -->
+    <script src="https://pay.google.com/gp/p/js/pay.js" async></script>
+    <style>
+      button, a, [role="button"] {
+        pointer-events: auto !important;
+        cursor: pointer !important;
+      }
+      #loginWithPiBtn {
+        pointer-events: auto !important;
+        cursor: pointer !important;
+        z-index: 99999 !important;
+        position: relative !important;
+        opacity: 1 !important;
+      }
+    </style>
     <!-- Google Pay API SDK -->
     <script src="https://pay.google.com/gp/p/js/pay.js" async></script>
     <style>
