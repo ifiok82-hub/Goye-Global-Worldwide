@@ -781,22 +781,61 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
             </div>
           ) : (
             <div className="animate-in fade-in slide-in-from-right-4">
-              <h3 className="text-[#8b5cf6] font-bold mb-4">Pay with Pi Network GCV $314,159</h3>
-              <p className="text-gray-400 text-xs mb-4">Send Pi payment to this wallet:</p>
+              <h3 className="text-[#8b5cf6] font-bold text-lg mb-1">🟣 Pay with Pi Network (GCV $314,159)</h3>
+              <p className="text-gray-300 text-xs mb-3">1-Click Pi SDK Payment — Rate: $49.99 = 0.000159 Pi</p>
+
+              {/* Native Pi SDK 1-Click Button */}
+              <button 
+                onClick={() => {
+                  const userEmail = email.trim();
+                  if (!userEmail || !userEmail.includes('@')) {
+                    alert('Please enter your email address first!');
+                    return;
+                  }
+                  if (typeof (window as any).payWithPi === 'function') {
+                    (window as any).payWithPi(userEmail);
+                  } else {
+                    alert('Please open https://www.gasv.store in the Pi Browser app to pay with Pi SDK!');
+                  }
+                }} 
+                style={{
+                  width: '100%',
+                  height: '60px',
+                  background: '#7D2AE7',
+                  color: 'white',
+                  borderRadius: '16px',
+                  fontWeight: 'bold',
+                  fontSize: '16px',
+                  cursor: 'pointer',
+                  marginTop: '10px',
+                  border: '3px solid black',
+                  boxShadow: '0 4px 15px rgba(125, 42, 231, 0.4)'
+                }}
+                className="flex items-center justify-center gap-2 hover:brightness-110 transition active:scale-[0.98] mb-4"
+              >
+                <span>🟣</span> Pay with Pi — GCV $314,159 (0.000159 Pi)
+              </button>
+
+              <div className="relative my-4 flex items-center justify-center">
+                <div className="border-t border-[#333] w-full"></div>
+                <span className="bg-[#111] px-3 text-[10px] text-gray-500 font-bold uppercase absolute">OR MANUAL TRANSFER</span>
+              </div>
+
+              <p className="text-gray-400 text-xs mb-2">Send Pi payment to official wallet:</p>
               <div className="bg-black p-3 rounded-xl border border-[#333] flex justify-between items-center mb-4">
-                <span className="text-white text-sm font-mono truncate">{paymentConfig?.pi || localStorage.getItem('pi_wallet') || 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ'}</span>
+                <span className="text-white text-xs font-mono truncate">{paymentConfig?.pi || localStorage.getItem('pi_wallet') || 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ'}</span>
                 <button onClick={() => { navigator.clipboard.writeText(paymentConfig?.pi || localStorage.getItem('pi_wallet') || 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ'); if(onToast) onToast('Wallet address copied!'); else alert('Wallet address copied!'); }} className="text-gray-400 hover:text-white p-1"><Copy size={16}/></button>
               </div>
               <input 
-                placeholder="Paste Pi Tx Hash or Memo" 
+                placeholder="Paste Pi Tx Hash or Memo after manual transfer" 
                 className="w-full bg-black border border-[#333] p-3 rounded-xl text-white mb-4 focus:border-[#8b5cf6] outline-none text-sm"
                 value={cryptoTxHash}
                 onChange={e => setCryptoTxHash(e.target.value)}
               />
-              <button onClick={submitCrypto} disabled={cryptoVerifying} className="w-full bg-[#8b5cf6] text-white font-bold py-3 rounded-xl mb-4 disabled:opacity-50 cursor-pointer pointer-events-auto z-10">
-                {cryptoVerifying ? 'Verifying...' : 'Submit Pi Tx for Verification'}
+              <button onClick={submitCrypto} disabled={cryptoVerifying} className="w-full bg-[#333] hover:bg-[#444] text-white font-bold py-3 rounded-xl mb-4 disabled:opacity-50 cursor-pointer pointer-events-auto z-10 text-xs">
+                {cryptoVerifying ? 'Verifying...' : 'Submit Manual Pi Tx Hash for Verification'}
               </button>
-              <button onClick={() => setActiveGateway(null)} className="mt-4 text-gray-400 text-xs underline block mx-auto cursor-pointer pointer-events-auto">Back to Methods</button>
+              <button onClick={() => setActiveGateway(null)} className="mt-2 text-gray-400 text-xs underline block mx-auto cursor-pointer pointer-events-auto hover:text-white">Back to Methods</button>
             </div>
           )}
 

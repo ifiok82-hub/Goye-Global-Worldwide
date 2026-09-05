@@ -101,6 +101,170 @@
     <script src="https://js.paystack.co/v1/inline.js"></script>
     <!-- Pi Network SDK v2 -->
     <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+    <script>
+      if (typeof Pi !== 'undefined') {
+        try {
+          Pi.init({ version: "2.0", sandbox: true });
+        } catch(e) {
+          console.warn("Pi SDK init notice:", e);
+        }
+      } else {
+        window.addEventListener('DOMContentLoaded', function() {
+          if (typeof Pi !== 'undefined') {
+            try {
+              Pi.init({ version: "2.0", sandbox: true });
+            } catch(e) {}
+          }
+        });
+      }
+
+      function onIncompletePaymentFound(payment) {
+        console.log('Incomplete Payment Found', payment);
+        if (typeof Pi !== 'undefined' && Pi.completePayment) {
+          return Pi.completePayment(payment.identifier);
+        }
+      }
+
+      // Pi Login Function - For Pi Ecosystem Listing
+      async function loginWithPi() {
+        if (typeof Pi === 'undefined') {
+          alert('Pi Network SDK is loading... Please open gasv.store inside the Pi Browser app!');
+          return;
+        }
+        try {
+          const scopes = ['username', 'payments'];
+          const auth = await Pi.authenticate(scopes, onIncompletePaymentFound);
+          console.log('Pi Auth Success', auth);
+          const username = auth.user ? auth.user.username : ('pioneer_' + Date.now().toString().slice(-4));
+          const email = username.includes('@') ? username : (username + '@pi.network');
+
+          localStorage.setItem('user_email', email);
+          localStorage.setItem('customer_email', email);
+          localStorage.setItem('pi_username', username);
+          localStorage.setItem('pi_access_token', auth.accessToken || 'pi_token_active');
+
+          let users = JSON.parse(localStorage.getItem('registered_customers') || '[]');
+          if (!users.some(u => u.email === email)) {
+            users.unshift({
+              name: username,
+              email: email,
+              country: 'Pi Network Pioneer',
+              status: 'Pi Authenticated',
+              date: new Date().toLocaleDateString()
+            });
+            localStorage.setItem('registered_customers', JSON.stringify(users.slice(0, 200)));
+          }
+
+          if (window.dispatchEvent) {
+            window.dispatchEvent(new CustomEvent('piAuthSuccess', { detail: { username, email } }));
+          }
+
+          alert('Welcome @' + username + '! Pi Login Success - Sirwise AI Web3 Academy Unlocked!');
+          window.location.hash = 'academy';
+          return auth;
+        } catch (e) {
+          console.error('Pi Auth Failed', e);
+          alert('Pi Login Notice: Please open https://www.gasv.store in Pi Browser app to authenticate directly with your Pi wallet username!');
+        }
+      }
+
+      // Pi Payment Function - GCV $314,159 - Academy $49.99 = 0.000159 Pi
+      async function payWithPi(overrideEmail) {
+        let email = overrideEmail || localStorage.getItem('user_email') || localStorage.getItem('customer_email');
+        if (!email || !email.includes('@')) {
+          const promptEmail = prompt('Enter your email address to register your Pi Academy license:', 'pioneer@pi.network');
+          if (promptEmail && promptEmail.includes('@')) {
+            email = promptEmail.trim();
+            localStorage.setItem('user_email', email);
+            localStorage.setItem('customer_email', email);
+          } else {
+            alert('A valid email address is required to generate your Blockchain Certificate!');
+            return;
+          }
+        }
+
+        if (typeof Pi === 'undefined') {
+          alert('Please open https://www.gasv.store inside the Pi Browser app to complete 1-click Pi Payment!');
+          return;
+        }
+
+        try {
+          const paymentData = {
+            amount: 0.000159, // $49.99 USD / $314,159 GCV rate
+            memo: "Sirwise AI Web3 Academy - 8 Modules - Global Certificate - RC BN3583773 - " + email,
+            metadata: { email: email, product: "Sirwise Academy", academy: "8 Modules", official: "goyedagosmess@gmail.com" }
+          };
+
+          const payment = await Pi.createPayment(paymentData, {
+            onReadyForServerApproval: function(paymentId) {
+              console.log('Ready for Server Approval', paymentId);
+              fetch('/api/pi/approve', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ paymentId, email })
+              }).catch(err => console.warn('Pi approval request notice', err));
+            },
+            onReadyForServerCompletion: function(paymentId, txid) {
+              console.log('Ready for Server Completion', paymentId, txid);
+              fetch('/api/pi/complete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ paymentId, txid, email })
+              }).catch(err => console.warn('Pi completion request notice', err));
+
+              localStorage.setItem('sirwise_paid', 'true');
+              localStorage.setItem('academy_unlocked', 'true');
+              localStorage.setItem('payment_verified', 'true');
+              localStorage.setItem('payment_method', 'Pi GCV $314,159');
+
+              let orders = JSON.parse(localStorage.getItem('live_orders') || '[]');
+              orders.unshift({
+                id: paymentId || 'PI-' + Date.now(),
+                customer: email.split('@')[0],
+                email: email,
+                country: 'Pi Network',
+                product: 'Sirwise Academy - Pi Payment',
+                amount: '0.000159 Pi ($49.99 GCV)',
+                status: 'VERIFIED',
+                verified: 'VERIFIED',
+                txid: txid,
+                date: new Date().toLocaleDateString()
+              });
+              localStorage.setItem('live_orders', JSON.stringify(orders));
+
+              if (window.unlockAcademy) window.unlockAcademy();
+
+              alert('✅ Pi Payment Verified! TxID: ' + txid + ' - Sirwise AI Academy Unlocked at GCV $314,159!');
+              window.location.hash = 'academy';
+              setTimeout(() => location.reload(), 1000);
+            },
+            onCancel: function(paymentId) {
+              console.log('Payment Cancelled', paymentId);
+              alert('Pi Payment Cancelled by User.');
+            },
+            onError: function(error, payment) {
+              console.error('Payment Error', error, payment);
+              alert('Pi Payment Notice: Ensure your Pi Browser is connected to Pi Testnet!');
+            }
+          });
+        } catch (e) {
+          console.error('Pi.createPayment error', e);
+          alert('Pay with Pi notice: Please open https://www.gasv.store in Pi Browser App - Pi Testnet mode!');
+        }
+      }
+
+      window.loginWithPi = loginWithPi;
+      window.payWithPi = payWithPi;
+
+      // Pi Browser Detection & UX Optimization
+      window.addEventListener('load', function() {
+        const isPiBrowser = navigator.userAgent.includes('PiBrowser') || (typeof Pi !== 'undefined' && window.location.search.includes('pi'));
+        if (isPiBrowser) {
+          console.log("⚡ Pi Browser Context Detected! Prioritizing Pi SDK Auth & Payment.");
+          document.body.classList.add('pi-browser-context');
+        }
+      });
+    </script>
     <!-- Google Pay API SDK -->
     <script src="https://pay.google.com/gp/p/js/pay.js" async></script>
     <style>

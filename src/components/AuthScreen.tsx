@@ -1954,6 +1954,37 @@ export default function AuthScreen({ onAuthenticated, onClose }: { onAuthenticat
 
           {error && <div className="p-3 bg-red-500/10 border border-red-500/50 rounded-lg text-red-500 text-xs font-bold text-center">{error}</div>}
 
+          {/* Pi Network Exclusive Pioneer Login */}
+          <button 
+            type="button" 
+            onClick={async () => {
+              if (typeof (window as any).loginWithPi === 'function') {
+                const auth = await (window as any).loginWithPi();
+                if (auth && auth.user) {
+                  const piUser = {
+                    id: 'pi_' + auth.user.username,
+                    email: auth.user.username + '@pi.network',
+                    name: auth.user.username,
+                    role: 'student'
+                  };
+                  const piProfile = {
+                    uid: piUser.id,
+                    email: piUser.email,
+                    displayName: auth.user.username,
+                    country: 'Pi Network'
+                  };
+                  onAuthenticated(piUser, piProfile);
+                }
+              } else {
+                alert('Pi SDK loading... Please open https://www.gasv.store in Pi Browser app to authenticate with Pi Network!');
+              }
+            }}
+            style={{ height: '52px', background: '#7D2AE7', color: 'white', borderRadius: '14px', fontWeight: 'bold', fontSize: '15px', width: '100%', cursor: 'pointer', border: '2px solid #9d52f8' }}
+            className="flex items-center justify-center gap-2 hover:brightness-110 transition active:scale-[0.98] shadow-lg mb-3"
+          >
+            <span>🟣</span> Login with Pi Network (Pioneer Exclusive)
+          </button>
+
           <button type="submit" disabled={loading} className="w-full bg-[#FFD700] hover:bg-yellow-400 text-black font-black py-4 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98]">
             {loading ? 'PROCESSING...' : isLogin ? 'SECURE LOGIN' : 'CREATE VERIFIED ACCOUNT'}
             {!loading && <ChevronRight size={18} />}
