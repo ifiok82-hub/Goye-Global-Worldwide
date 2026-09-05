@@ -4422,8 +4422,10 @@ async function startServer() {
   });
 }
 
-startServer().catch((err) => {
-  console.error('⚠️ Server start error:', err);
-});
+if (!process.env.VERCEL && !process.env.NOW_REGION) {
+  startServer().catch((err) => {
+    console.error('⚠️ Server start error:', err);
+  });
+}
 
 export default app;
