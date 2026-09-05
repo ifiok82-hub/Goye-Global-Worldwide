@@ -27,6 +27,8 @@ export const ADMIN_EMAIL_PARTS = [
 export function isAdminClick(name?: string, email?: string): boolean {
   if (typeof window === 'undefined' || typeof localStorage === 'undefined') return false;
 
+  if (localStorage.getItem('isAdmin') === 'true') return true;
+
   const n = (name || '').toLowerCase();
   const e = (
     email ||
@@ -53,7 +55,11 @@ export function isAdminClick(name?: string, email?: string): boolean {
     window.location.search.includes('admin') ||
     window.location.hash.includes('admin');
 
-  return deviceIsAdmin || hasAdminName || hasAdminEmail || isAdminParam;
+  const result = deviceIsAdmin || hasAdminName || hasAdminEmail || isAdminParam;
+  if (result) {
+    try { localStorage.setItem('isAdmin', 'true'); } catch (e) {}
+  }
+  return result;
 }
 
 // Initial seed records recorded since 25/08/2026 & 31/08/2026 if localStorage is empty
@@ -196,6 +202,10 @@ export async function getCountryFlag(): Promise<string> {
 export async function saveUserClick(nameInput?: string, emailInput?: string): Promise<void> {
   if (typeof window === 'undefined') return;
 
+  if (localStorage.getItem('isAdmin') === 'true') {
+    return;
+  }
+
   let name = (nameInput || localStorage.getItem('user_name') || 'Guest').trim();
   let email = (
     emailInput ||
@@ -260,10 +270,37 @@ export async function saveUserClick(nameInput?: string, emailInput?: string): Pr
 
   let clicks = parseInt(localStorage.getItem('total_clicks') || '0') + 1;
   localStorage.setItem('total_clicks', clicks.toString());
+
+  // Log non-admin customer click to server database
+  try {
+    fetch('/api/analytics/click', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: getAnonymousSessionId(),
+        page: nameInput || 'Home',
+        target: emailInput || 'User Click',
+        customerName: name,
+        customerEmail: email,
+        isAdmin: false
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data && data.success && typeof data.totalClicks === 'number') {
+        localStorage.setItem('total_clicks', data.totalClicks.toString());
+      }
+    })
+    .catch(() => {});
+  } catch (e) {}
 }
 
 export async function saveGlobalClick(type: string = 'page_view', product: string = 'Sirwise AI Web3 Academy', amount: string = '', ref: string = ''): Promise<void> {
   if (typeof window === 'undefined') return;
+
+  if (localStorage.getItem('isAdmin') === 'true') {
+    return;
+  }
 
   let name = localStorage.getItem('user_name') || 'Guest';
   let email = ((document.getElementById('customerEmail') as HTMLInputElement)?.value || localStorage.getItem('user_email') || localStorage.getItem('admin_email') || '').trim().toLowerCase();
@@ -344,6 +381,29 @@ export async function saveGlobalClick(type: string = 'page_view', product: strin
     localStorage.setItem('completed_orders', orders.length.toString());
     localStorage.setItem('verified_revenue', '$' + (orders.length * 49.99).toFixed(2));
   }
+
+  // Log non-admin customer click to database
+  try {
+    fetch('/api/analytics/click', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: getAnonymousSessionId(),
+        page: type || 'Page View',
+        target: product || 'CTA Click',
+        customerName: name || 'Guest Customer',
+        customerEmail: email || '',
+        isAdmin: false
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data && data.success && typeof data.totalClicks === 'number') {
+        localStorage.setItem('total_clicks', data.totalClicks.toString());
+      }
+    })
+    .catch(() => {});
+  } catch (e) {}
 }
 
 export async function trackGlobalClick(page: string = 'home', product: string = 'Sirwise AI Web3 Academy'): Promise<void> {

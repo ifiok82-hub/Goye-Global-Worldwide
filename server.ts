@@ -56,7 +56,7 @@ const app = express();
 const PORT = 3000;
 
 import { db as pgDb } from './src/db/index.ts';
-import { orders, academyAccess, contracts, esimOrders } from './src/db/schema.ts';
+import { orders, academyAccess, contracts, esimOrders, analyticsClicks } from './src/db/schema.ts';
 import { eq } from 'drizzle-orm';
 
 const SIMULATION_SECRET = crypto.randomUUID ? crypto.randomUUID() : crypto.randomBytes(32).toString('hex');
@@ -3566,6 +3566,151 @@ function parseDeviceType(ua: string = ''): string {
 }
 
 const sessionClickCache = new Map<string, number>();
+
+// In-memory collection for real-time customer click tracking
+const inMemoryAnalyticsClicks: any[] = [];
+
+// Real-Time Click Tracking API Endpoint with Admin Exclusion
+app.post('/api/analytics/click', async (req: any, res: any) => {
+  try {
+    const { sessionId, page, target, customerName, customerEmail, isAdmin: bodyIsAdmin, is_admin } = req.body || {};
+    const emailLower = (customerEmail || '').toLowerCase();
+
+    // Check if request is from Admin / Excluded device or email
+    const isAdmin = Boolean(
+      bodyIsAdmin === true ||
+      is_admin === true ||
+      req.headers['x-is-admin'] === 'true' ||
+      req.headers['x-admin-token'] ||
+      req.headers['x-exclude-admin'] === 'true' ||
+      (emailLower && (
+        emailLower.includes('goyedagos') ||
+        emailLower.includes('ifiok82') ||
+        emailLower.includes('godswill') ||
+        emailLower.includes('goye@gasv.store')
+      ))
+    );
+
+    if (isAdmin) {
+      return res.status(200).json({ success: true, excluded: true, message: 'Admin click excluded from database' });
+    }
+
+    const sid = sessionId || ('sess_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7));
+    const clickRecord = {
+      sessionId: sid,
+      page: page || 'Home',
+      target: target || 'Page View',
+      customerName: customerName || 'Guest Customer',
+      customerEmail: customerEmail || '',
+      isAdmin: false,
+      is_admin: false,
+      createdAt: new Date().toISOString()
+    };
+
+    inMemoryAnalyticsClicks.unshift(clickRecord);
+    if (inMemoryAnalyticsClicks.length > 5000) inMemoryAnalyticsClicks.pop();
+
+    // Store in Postgres analytics_clicks table
+    try {
+      if (pgDb) {
+        await pgDb.insert(analyticsClicks).values({
+          sessionId: clickRecord.sessionId,
+          page: clickRecord.page,
+          target: clickRecord.target,
+          customerName: clickRecord.customerName,
+          customerEmail: clickRecord.customerEmail,
+          isAdmin: false
+        });
+      }
+    } catch (e) {
+      console.warn('Postgres click insert notice:', e);
+    }
+
+    // Store in MongoDB analytics_clicks collection
+    try {
+      const database = await getDb();
+      if (database) {
+        await database.collection('analytics_clicks').insertOne({
+          ...clickRecord,
+          is_admin: false,
+          created_at: new Date()
+        });
+      }
+    } catch (e) {
+      console.warn('MongoDB click insert notice:', e);
+    }
+
+    // Retrieve total non-admin clicks count from database
+    let totalCount = 0;
+    try {
+      if (pgDb) {
+        const rows = await pgDb.select().from(analyticsClicks).where(eq(analyticsClicks.isAdmin, false));
+        if (rows) totalCount = rows.length;
+      }
+    } catch (e) {}
+
+    if (totalCount === 0) {
+      try {
+        const database = await getDb();
+        if (database) {
+          const dbCount = await database.collection('analytics_clicks').countDocuments({ is_admin: false });
+          if (dbCount > 0) totalCount = dbCount;
+        }
+      } catch (e) {}
+    }
+
+    if (totalCount === 0) {
+      totalCount = inMemoryAnalyticsClicks.filter(c => !c.isAdmin && !c.is_admin).length;
+    }
+
+    return res.status(200).json({
+      success: true,
+      totalClicks: totalCount,
+      count: totalCount,
+      click: clickRecord
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.get('/api/analytics/click', async (req: any, res: any) => {
+  try {
+    let totalCount = 0;
+    let clicksList: any[] = [];
+
+    try {
+      if (pgDb) {
+        clicksList = await pgDb.select().from(analyticsClicks).where(eq(analyticsClicks.isAdmin, false));
+        totalCount = clicksList.length;
+      }
+    } catch (e) {}
+
+    if (totalCount === 0) {
+      try {
+        const database = await getDb();
+        if (database) {
+          clicksList = await database.collection('analytics_clicks').find({ is_admin: false }).sort({ created_at: -1 }).toArray();
+          totalCount = clicksList.length;
+        }
+      } catch (e) {}
+    }
+
+    if (totalCount === 0) {
+      clicksList = inMemoryAnalyticsClicks.filter(c => !c.isAdmin && !c.is_admin);
+      totalCount = clicksList.length;
+    }
+
+    return res.status(200).json({
+      success: true,
+      totalClicks: totalCount,
+      count: totalCount,
+      clicks: clicksList.slice(0, 500)
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
 
 // 1. API: Visitor & Click Analytics Tracking
 app.post(['/api/analytics/track', '/api/analytics/log', '/api/traffic/log', '/api/track/click'], async (req: any, res: any) => {

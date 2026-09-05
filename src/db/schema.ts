@@ -55,3 +55,15 @@ export const leads = pgTable('leads', {
   convertedToBuyer: boolean('converted_to_buyer').default(false),
 });
 
+export const analyticsClicks = pgTable('analytics_clicks', {
+  id: serial('id').primaryKey(),
+  sessionId: text('session_id'),
+  page: text('page'),
+  target: text('target'),
+  customerName: text('customer_name'),
+  customerEmail: text('customer_email'),
+  isAdmin: boolean('is_admin').default(false),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+

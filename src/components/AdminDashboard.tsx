@@ -296,9 +296,22 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
     });
     setOrders(cleanOrders);
 
-    // 3. Clicks count
-    const total = parseInt(localStorage.getItem('total_clicks') || '284');
-    setTotalClicks(total);
+    // 3. Clicks count from database (where is_admin = false) with local fallback
+    fetch('/api/analytics/click')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.success && typeof data.totalClicks === 'number') {
+          setTotalClicks(data.totalClicks);
+          localStorage.setItem('total_clicks', data.totalClicks.toString());
+        } else {
+          const total = parseInt(localStorage.getItem('total_clicks') || '284');
+          setTotalClicks(total);
+        }
+      })
+      .catch(() => {
+        const total = parseInt(localStorage.getItem('total_clicks') || '284');
+        setTotalClicks(total);
+      });
 
     // 4. Live Traffic Log
     let logs = JSON.parse(localStorage.getItem('live_traffic_activity') || '[]');
@@ -345,6 +358,13 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
   };
 
   useEffect(() => {
+    try {
+      localStorage.setItem('isAdmin', 'true');
+      localStorage.setItem('is_admin', 'true');
+      localStorage.setItem('excludeAdminClicks', 'true');
+      localStorage.setItem('exclude_my_clicks', 'true');
+    } catch (e) {}
+
     loadLocalData();
 
     if (typeof window !== 'undefined') {
