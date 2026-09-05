@@ -227,10 +227,22 @@ export default function App() {
 
         <div style="background:black; border:1px solid #FFD700; border-radius:14px; padding:14px; text-align:center; margin:16px 0;">
           <p style="color:#FFD700; font-weight:bold; font-size:13px; margin:0 0 10px 0;">▶️ Watch 90 Sec: What Academy Students Get</p>
-          <div style="background:#222; height:170px; border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#aaa; border:1px dashed #444; position:relative; overflow:hidden;">
-            <div style="background:rgba(255,215,0,0.2); width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#FFD700; font-size:24px; margin-bottom:8px;">▶</div>
-            <p style="color:#FFD700; font-weight:bold; margin:0; font-size:13px;">Sirwise AI Web3 Academy Tour</p>
-            <p style="color:#888; margin:2px 0 0 0; font-size:11px;">8 Global Modules • Certificate • $49.99 = ₦74,985</p>
+          
+          <div id="academyVideoContainer" style="background:black; border:2px dashed #FFD700; border-radius:16px; padding:0; overflow:hidden; position:relative; cursor:pointer; height:220px;" onclick="window.playAcademyVideo && window.playAcademyVideo()">
+            <!-- Thumbnail + Play Button -->
+            <div id="videoThumbnail" style="width:100%; height:100%; background: linear-gradient(135deg, #111 0%, #222 100%); display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; cursor:pointer;">
+              <div style="width:70px; height:70px; background:#FFD700; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 0 20px #FFD700;">
+                <span style="font-size:32px; margin-left:4px;">▶️</span>
+              </div>
+              <p style="color:#FFD700; font-weight:bold; margin:12px 0 4px 0; text-align:center;">Sirwise AI Web3 Academy Tour</p>
+              <p style="color:#888; font-size:12px; text-align:center;">8 Global Modules • Certificate • $49.99 = ₦74,985</p>
+              <p style="color:#00FF88; font-size:11px; margin-top:6px; font-weight:bold;">▶️ Tap to Play 90 Sec Tour</p>
+            </div>
+            
+            <!-- Hidden Video Player - Shows on click -->
+            <div id="videoPlayer" style="display:none; width:100%; height:100%;">
+              <iframe id="academyVideoFrame" width="100%" height="100%" src="" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen style="border-radius:16px;"></iframe>
+            </div>
           </div>
         </div>
 
@@ -286,6 +298,51 @@ export default function App() {
     showConversionPageOverlay(name, email);
   };
 
+  const playAcademyVideoFullscreen = () => {
+    console.log('Play Academy Video clicked');
+    const youtubeId = 'dQw4w9WgXcQ';
+    const realVideoUrl = localStorage.getItem('academy_tour_video_url') || `https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0&showinfo=0`;
+
+    // Track video view
+    try {
+      let logs = JSON.parse(localStorage.getItem('live_traffic_activity') || '[]');
+      logs.unshift({
+        location: 'Video View',
+        customer_name: localStorage.getItem('lead_name') || 'Guest',
+        status: 'Watched 90 Sec Academy Tour',
+        time: 'Just now',
+        device: 'Mobile',
+        product: 'Video Tour - Hot Lead'
+      });
+      localStorage.setItem('live_traffic_activity', JSON.stringify(logs.slice(0, 100)));
+    } catch (e) {}
+
+    const existing = document.getElementById('videoModalFullscreen');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'videoModalFullscreen';
+    modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:9999999; display:flex; align-items:center; justify-content:center; padding:20px;';
+    modal.innerHTML = `
+      <div style="width:100%; max-width:600px; background:#111; border:2px solid #FFD700; border-radius:20px; overflow:hidden; box-shadow:0 0 50px rgba(255,215,0,0.4);">
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:#FFD700;">
+          <span style="color:black; font-weight:bold; font-size:14px;">Sirwise AI Web3 Academy Tour - 8 Modules</span>
+          <button onclick="document.getElementById('videoModalFullscreen').remove()" style="background:black; color:#FFD700; border-radius:50%; width:32px; height:32px; font-weight:bold; cursor:pointer; border:none;">X</button>
+        </div>
+        <div style="position:relative; width:100%; height:0; padding-bottom:56.25%; background:black;">
+          <iframe width="100%" height="100%" style="position:absolute; top:0; left:0;" src="${realVideoUrl}" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        </div>
+        <div style="padding:16px; text-align:center; background:#111;">
+          <p style="color:white; margin:0 0 12px 0; font-weight:bold; font-size:14px;">You watched 90 Sec — Unlock Full Academy Now?</p>
+          <button onclick="document.getElementById('videoModalFullscreen').remove(); if(window.goToPaywallFromConversion){ window.goToPaywallFromConversion(); } else if(window.goToAcademyPaywall){ window.goToAcademyPaywall(); }" style="width:100%; height:55px; background:#FFD700; color:black; border-radius:12px; font-weight:bold; font-size:16px; cursor:pointer; border:none;">🚀 UNLOCK FULL ACADEMY $49.99 - After Video</button>
+          <p style="color:#888; font-size:10px; margin-top:8px;">Official goyedagosmess@gmail.com RC BN3583773 USDC 0xaeed4e48f2146aadd07e85219f209053616e4e71</p>
+        </div>
+      </div>
+    `;
+    modal.onclick = function(e){ if (e.target === modal) modal.remove(); };
+    document.body.appendChild(modal);
+  };
+
   const checkAcademyLeadsConversion = () => {
     try {
       const leads = JSON.parse(localStorage.getItem('academy_leads') || '[]');
@@ -308,6 +365,8 @@ export default function App() {
       (window as any).goToPaywallFromConversion = goToPaywallFromConversion;
       (window as any).getFreeBlueprintAfterDownload = handleDownloadBlueprintClick;
       (window as any).checkAcademyLeadsConversion = checkAcademyLeadsConversion;
+      (window as any).playAcademyVideo = playAcademyVideoFullscreen;
+      (window as any).playAcademyVideoFullscreen = playAcademyVideoFullscreen;
     }
 
     const interval = setInterval(checkAcademyLeadsConversion, 5000);
