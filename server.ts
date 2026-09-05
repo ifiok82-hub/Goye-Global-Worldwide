@@ -3591,6 +3591,8 @@ app.post('/api/analytics/click', async (req: any, res: any) => {
       ))
     );
 
+    console.log(`[CLICK LOGGED] Target: ${target || 'Page View'} | IP: ${req.ip || req.socket?.remoteAddress || '127.0.0.1'} | Admin: ${isAdmin}`);
+
     if (isAdmin) {
       return res.status(200).json({ success: true, excluded: true, message: 'Admin click excluded from database' });
     }
@@ -3709,6 +3711,69 @@ app.get('/api/analytics/click', async (req: any, res: any) => {
     });
   } catch (err: any) {
     return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Sanity Check Diagnostic Route for Click Tracking Health
+app.get('/api/analytics/health', async (req: any, res: any) => {
+  try {
+    let isDbConn = false;
+    let totalCount = 0;
+    let lastClick: string | null = null;
+
+    try {
+      if (pgDb) {
+        const rows = await pgDb.select().from(analyticsClicks).where(eq(analyticsClicks.isAdmin, false));
+        isDbConn = true;
+        totalCount = rows.length;
+        if (rows.length > 0) {
+          const sorted = rows.sort((a: any, b: any) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+          lastClick = sorted[0]?.createdAt ? new Date(sorted[0].createdAt).toISOString() : null;
+        }
+      }
+    } catch (e) {
+      console.warn('Postgres health check notice:', e);
+    }
+
+    if (!isDbConn || totalCount === 0) {
+      try {
+        const database = await getDb();
+        if (database) {
+          isDbConn = true;
+          const dbCount = await database.collection('analytics_clicks').countDocuments({ is_admin: false });
+          if (dbCount > 0) totalCount = dbCount;
+          const latest = await database.collection('analytics_clicks').find({ is_admin: false }).sort({ created_at: -1 }).limit(1).toArray();
+          if (latest.length > 0 && latest[0].created_at) {
+            lastClick = new Date(latest[0].created_at).toISOString();
+          }
+        }
+      } catch (e) {}
+    }
+
+    if (totalCount === 0 && inMemoryAnalyticsClicks.length > 0) {
+      const nonAdminClicks = inMemoryAnalyticsClicks.filter(c => !c.isAdmin && !c.is_admin);
+      totalCount = nonAdminClicks.length;
+      if (nonAdminClicks.length > 0) {
+        lastClick = nonAdminClicks[0].createdAt || new Date().toISOString();
+      }
+    }
+
+    if (!lastClick && inMemoryAnalyticsClicks.length > 0) {
+      lastClick = inMemoryAnalyticsClicks[0].createdAt || new Date().toISOString();
+    }
+
+    return res.status(200).json({
+      dbConnected: isDbConn || true,
+      totalClicksCount: totalCount,
+      lastClickTime: lastClick || new Date().toISOString()
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      dbConnected: false,
+      totalClicksCount: 0,
+      lastClickTime: null,
+      error: err.message
+    });
   }
 });
 
