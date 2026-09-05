@@ -34,7 +34,7 @@ function checkBannedBrand(text: string): string | null {
   return null;
 }
 
-const app = express();
+export const app = express();
 
   // CORS and Compliance Headers
   app.use((req, res, next) => {
@@ -4425,3 +4425,5 @@ async function startServer() {
 startServer().catch((err) => {
   console.error('⚠️ Server start error:', err);
 });
+
+export default app;
