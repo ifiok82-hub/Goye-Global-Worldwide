@@ -1,4 +1,4 @@
-let totalClicks = 284;
+let totalClicks = 0;
 let lastClickTime: string | null = null;
 
 function isAdmin(body: Record<string, unknown>) {

@@ -538,6 +538,92 @@
       }
     }
     window.verifyPaystackPayment = verifyPaystackPayment;
+
+    // RESET ALL FAKE TRAFFIC TO 0
+    function resetAllFakeTraffic(){
+      if(!confirm('⚠️ RESET ALL FAKE TRAFFIC?\n\nThis will clear:\n• TOTAL LINK CLICKS 284 → 0\n• FREE LEADS 4 (109 tested) → 0\n• PAID 4 → 0\n• Conversion 100% → 0%\n• LEAD SUBMISSIONS 0 stays 0\n• Keep LIVE VERIFIED PAYMENTS $0.00 real\n\nStart fresh for real customers from today?\n\nTap OK to reset to 0 - Honest tracking for Pi!')) return;
+
+      const keysToClear = [
+        'total_link_clicks', 'total_clicks', 'link_clicks', 'page_clicks', 'funnel_clicks',
+        'free_leads', 'free_leads_count', '109_tested', 'tested_leads',
+        'paid_leads', 'paid_count', 'conversion_rate',
+        'lead_submissions', 'registered_users', 'registered_customers',
+        'completed_orders', 'completed_orders_count',
+        'live_traffic_activity', 'excluded_admin_clicks',
+        'master_funnel_stats', 'funnel_tracker', 'analytics_overview'
+      ];
+      
+      keysToClear.forEach(k=>{
+        try{ localStorage.removeItem(k); localStorage.setItem(k, '0'); }catch(e){}
+      });
+      
+      localStorage.setItem('total_link_clicks', '0');
+      localStorage.setItem('total_clicks', '0');
+      localStorage.setItem('free_leads', '0');
+      localStorage.setItem('free_leads_tested', '0');
+      localStorage.setItem('paid_leads', '0');
+      localStorage.setItem('lead_submissions', '0');
+      localStorage.setItem('registered_users', '0');
+      localStorage.setItem('registered_customers', JSON.stringify([]));
+      localStorage.setItem('live_orders', JSON.stringify([]));
+      localStorage.setItem('completed_orders', JSON.stringify([]));
+      localStorage.setItem('verified_live_orders', JSON.stringify([]));
+      localStorage.setItem('verified_revenue', '$0.00');
+      localStorage.setItem('live_verified_payments', '0');
+      localStorage.setItem('test_demo_data', '0');
+      localStorage.setItem('master_funnel_free', '0');
+      localStorage.setItem('master_funnel_paid', '0');
+      localStorage.setItem('master_funnel_conversion', '0.0%');
+      localStorage.setItem('fresh_start_date', new Date().toLocaleString('en-GB',{timeZone:'Africa/Lagos'})+' WAT Lagos - Fresh Tracking Started');
+      localStorage.setItem('analytics_fresh_start', 'true');
+      
+      alert('✅ ALL FAKE TRAFFIC RESET TO 0!\n\n• TOTAL LINK CLICKS: 284 → 0\n• FREE LEADS: 4 (109 tested) → 0\n• PAID: 4 → 0\n• COMPLETED ORDERS: 0\n• VERIFIED REVENUE: $0.00 REAL\n• LIVE VERIFIED: 0 $0.00\n\nFresh tracking started today - Only real customers will count now!\n\nShare gasv.store to get real clicks!');
+      
+      setTimeout(()=>location.reload(), 800);
+    }
+    window.resetAllFakeTraffic = resetAllFakeTraffic;
+
+    // Auto-add reset button in Master Funnel Tracker if not exists
+    setTimeout(()=>{
+      const tracker = document.querySelector('[class*="MASTER FUNNEL"]') || Array.from(document.querySelectorAll('div')).find(d=>d.textContent && d.textContent.includes('MASTER FUNNEL CONVERSION TRACKER'));
+      if(tracker){
+        const existing = document.getElementById('resetAllTrafficBtn');
+        if(!existing){
+          const btn = document.createElement('button');
+          btn.id='resetAllTrafficBtn';
+          btn.innerHTML='🗑️ Reset All Fake Traffic 284 → 0 Fresh Start';
+          btn.style.cssText='background:#FF4444; color:white; border-radius:10px; padding:10px 14px; font-weight:bold; font-size:12px; cursor:pointer; margin-top:10px; width:100%; border:2px solid white;';
+          btn.onclick=resetAllFakeTraffic;
+          const parent = tracker.parentElement || tracker;
+          parent.appendChild(btn);
+        }
+      }
+    }, 1500);
+
+    // Update UI to 0 after reset - Override display
+    function updateAllToZero(){
+      if(localStorage.getItem('analytics_fresh_start')==='true'){
+        document.querySelectorAll('div').forEach(el=>{
+          const txt = el.textContent ? el.textContent.trim() : '';
+          if(txt === '284' && el.previousElementSibling && el.previousElementSibling.textContent && el.previousElementSibling.textContent.includes('TOTAL LINK CLICKS')){
+            el.textContent = '0';
+          }
+          if(txt.includes('Free Leads: 4 (109 tested)')){
+            el.textContent = txt.replace('Free Leads: 4 (109 tested)', 'Free Leads: 0 (0 tested)');
+          }
+          if(txt.includes('Paid: 4')){
+            el.textContent = txt.replace('Paid: 4', 'Paid: 0');
+          }
+          if(txt.includes('Rate: 100.0%')){
+            el.textContent = txt.replace('Rate: 100.0%', 'Rate: 0.0%');
+          }
+        });
+      }
+    }
+    setTimeout(updateAllToZero, 2000);
+    setInterval(updateAllToZero, 3000);
+
+    if(localStorage.getItem('exclude_my_clicks')!=='false'){ localStorage.setItem('exclude_my_clicks','true'); }
     </script>
   </body>
 </html>

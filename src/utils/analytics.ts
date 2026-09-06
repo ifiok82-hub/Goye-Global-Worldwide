@@ -77,8 +77,8 @@ export function ensureInitialSeeds(): void {
       localStorage.setItem('live_orders', JSON.stringify([]));
     }
     if (!localStorage.getItem('total_clicks')) {
-      localStorage.setItem('total_clicks', '284');
-      localStorage.setItem('last_click_date', '03/09/2026');
+      localStorage.setItem('total_clicks', '0');
+      localStorage.setItem('last_click_date', new Date().toLocaleDateString('en-GB'));
     }
   } catch (e) {
     console.warn('Seed initialization error:', e);

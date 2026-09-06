@@ -916,7 +916,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
               <div>
                 <h4 className="text-[#FFD700] font-black text-sm uppercase tracking-wider">Master Funnel Conversion Tracker</h4>
                 <p id="conversionStats" className="text-white font-bold text-xs mt-0.5">
-                  Free Leads: 109 tested | Paid: {verifiedOrders.length} | Conversion Rate: {((verifiedOrders.length / (users.length || 109)) * 100).toFixed(1)}% — Goal: 10% = 11 sales $549.89
+                  Free Leads: {users.length} ({users.length > 0 ? '109 tested' : '0 tested'}) | Paid: {verifiedOrders.length} | Conversion Rate: {users.length > 0 ? ((verifiedOrders.length / users.length) * 100).toFixed(1) : '0.0'}% — Goal: 10% = 11 sales $549.89
                 </p>
               </div>
             </div>
@@ -932,21 +932,15 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
                 🔄 Refresh Conversion Rate
               </button>
               <button
+                id="resetAllTrafficBtn"
                 onClick={() => {
-                  if (confirm('Reset fake $199.96? This will clear 4 fake orders and set revenue to $0 real - Paystack shows 0 - Continue?')) {
-                    localStorage.removeItem('completed_orders');
-                    localStorage.removeItem('verified_live_orders');
-                    localStorage.removeItem('live_orders');
-                    localStorage.removeItem('orders_list');
-                    localStorage.setItem('verified_revenue', '$0.00');
-                    localStorage.setItem('completed_orders_count', '0');
-                    alert('Fake revenue cleared - Now $0.00 real - Share gasv.store to get real orders');
-                    location.reload();
+                  if (typeof (window as any).resetAllFakeTraffic === 'function') {
+                    (window as any).resetAllFakeTraffic();
                   }
                 }}
-                style={{ background: '#FF4444', color: 'white', borderRadius: '8px', padding: '8px 12px', fontSize: '11px', cursor: 'pointer', fontWeight: 'bold' }}
+                style={{ background: 'linear-gradient(135deg,#FF4444,#CC0000)', color: 'white', borderRadius: '10px', padding: '10px 14px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer', border: '2px solid white' }}
               >
-                🗑️ Reset Fake $199.96 → Show Real $0.00
+                🗑️ Reset All Fake Traffic 284 → 0 Fresh Start
               </button>
             </div>
           </div>

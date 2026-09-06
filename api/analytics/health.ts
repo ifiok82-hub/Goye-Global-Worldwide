@@ -1,6 +1,6 @@
 const fallbackHealth = {
   dbConnected: true,
-  totalClicksCount: 284,
+  totalClicksCount: 0,
   lastClickTime: null,
   status: 'online',
 };
