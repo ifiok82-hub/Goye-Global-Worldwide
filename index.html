@@ -234,7 +234,7 @@
             const academyTabs = document.querySelectorAll('button, a');
             academyTabs.forEach(b => {
               if (b.textContent && b.textContent.toUpperCase().includes('ACADEMY')) {
-                (b as HTMLElement).click();
+                b.click();
               }
             });
           }, 800);
