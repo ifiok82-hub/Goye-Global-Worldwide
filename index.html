@@ -28,6 +28,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="impact-site-verification" value="87dcb7aa-3d1f-4a4e-84f8-e70ce2632160" />
     
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#FFD700" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Goye Sirwise Academy" />
+    <link rel="apple-touch-icon" href="/goye-logo.svg" />
+    <link rel="icon" type="image/svg+xml" href="/goye-logo.svg" />
+    
     <meta property="og:title" content="Free 5-Minute AI Prompt Blueprint | Sirwise AI Web3 Academy" />
     <meta property="og:description" content="Save 15+ hours/week automating marketing, sales, and operations. Download free today." />
     <meta property="og:image" content="https://www.gasv.store/goye-logo.svg" />
@@ -97,288 +106,300 @@
         });
       };
     </script>
-    <!-- Paystack Inline Checkout SDK -->
-    <script src="https://js.paystack.co/v1/inline.js"></script>
+
     <!-- Pi Network SDK v2 -->
     <script src="https://sdk.minepi.com/pi-sdk.js"></script>
     <script>
-      function initPiSDK() {
+      function initPiSDK(){
         if (typeof Pi !== 'undefined') {
           try {
             Pi.init({ version: "2.0", sandbox: true });
-            console.log('✅ Pi SDK Initialized - Testnet sandbox:true - gasv.store');
+            console.log('✅ Pi SDK v2 Initialized - Testnet sandbox:true - gasv.store - Goye Global Sirwise');
             const btn = document.getElementById('loginWithPiBtn');
             if (btn) {
               btn.style.opacity = '1';
-              btn.style.pointerEvents = 'auto';
-              btn.style.cursor = 'pointer';
+              btn.style.background = '#7D2AE7';
+              btn.innerHTML = '<span style="width:12px; height:12px; background:#00FF88; border-radius:50%; display:inline-block; margin-right:4px;"></span> Login with Pi';
             }
           } catch(e) {
             console.warn('Pi init notice:', e);
           }
         } else {
-          console.log('Pi SDK not loaded - Not in Pi Browser - Normal browser mode');
+          const btn = document.getElementById('loginWithPiBtn');
+          if (btn) {
+            btn.style.background = '#555';
+            btn.innerHTML = '🟣 Pi Browser Only';
+          }
         }
       }
 
       setTimeout(initPiSDK, 1000);
-      window.addEventListener('load', function() {
-        setTimeout(initPiSDK, 1500);
-      });
+      window.addEventListener('load', () => setTimeout(initPiSDK, 1500));
 
-      function onIncompletePaymentFound(payment) {
-        console.log('Incomplete payment found:', payment);
-        if (typeof Pi !== 'undefined' && Pi.completePayment) {
-          return Pi.completePayment(payment.identifier);
-        }
+      function onIncompletePaymentFound(payment){
+        console.log('Incomplete payment', payment);
+        return typeof Pi !== 'undefined' && Pi.completePayment ? Pi.completePayment(payment.identifier) : null;
       }
 
-      // MAIN LOGIN FUNCTION - For Pi Ecosystem Listing & Pioneers
-      async function loginWithPi() {
-        console.log('Login with Pi clicked - gasv.store');
-
-        // Check if Pi SDK exists
+      // LOGIN WITH PI - Dead Button Fix & Guide
+      async function loginWithPi(){
+        console.log('Login with Pi clicked');
         if (typeof Pi === 'undefined') {
-          // Not in Pi Browser - Show step-by-step Pi Browser guide modal
           const existing = document.getElementById('piGuideModal');
           if (existing) existing.remove();
 
-          const guideModal = document.createElement('div');
-          guideModal.id = 'piGuideModal';
-          guideModal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.92); z-index:9999999; display:flex; align-items:center; justify-content:center; padding:20px; box-sizing:border-box;';
-          guideModal.innerHTML = `
-            <div style="background:#111; border:3px solid #7D2AE7; border-radius:20px; padding:22px; max-width:420px; width:100%; text-align:center; box-shadow:0 0 40px rgba(125,42,231,0.5);">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <span style="color:#7D2AE7; font-weight:bold; font-size:18px;">🟣 Pi Browser Required</span>
-                <button onclick="document.getElementById('piGuideModal').remove()" style="background:#222; color:#fff; border:1px solid #444; border-radius:50%; width:30px; height:30px; font-weight:bold; cursor:pointer;">X</button>
+          const modal = document.createElement('div');
+          modal.id = 'piGuideModal';
+          modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.92); z-index:9999999; display:flex; align-items:center; justify-content:center; padding:20px; box-sizing:border-box;';
+          modal.innerHTML = `
+            <div style="background:#111; border:3px solid #7D2AE7; border-radius:20px; padding:22px; max-width:400px; width:100%; text-align:center;">
+              <h2 style="color:#7D2AE7; margin-top:0;">🟣 Pi Browser Required</h2>
+              <p style="color:white; font-size:14px;">Login with Pi only works inside Pi Browser App — You are currently in Chrome/Safari.</p>
+              <div style="background:#222; padding:12px; border-radius:12px; margin:12px 0; text-align:left;">
+                <p style="color:#FFD700; font-size:13px; margin:4px 0;">1️⃣ Download Pi Browser App</p>
+                <p style="color:#FFD700; font-size:13px; margin:4px 0;">2️⃣ Open Pi Browser → Type: gasv.store</p>
+                <p style="color:#FFD700; font-size:13px; margin:4px 0;">3️⃣ Tap Login with Pi → Approve Authorization</p>
+                <p style="color:#00FF88; font-size:12px; margin-top:6px;">✅ Pay with Pi GCV $314,159 — 0.000159 Pi = $49.99</p>
               </div>
-              <p style="color:white; font-size:13.5px; margin:0 0 14px 0; line-height:1.4;">
-                <strong>Login with Pi</strong> requires the official <strong>Pi Browser App</strong> with active Pi Network Wallet authentication.
-              </p>
-              <div style="background:#1a1a1a; border:1px solid #333; padding:14px; border-radius:14px; margin:12px 0; text-align:left;">
-                <p style="color:#FFD700; font-size:12.5px; margin:4px 0; font-weight:bold;">1️⃣ Open Pi Browser App on your phone</p>
-                <p style="color:#FFD700; font-size:12.5px; margin:4px 0; font-weight:bold;">2️⃣ Enter website URL: <span style="color:#00FF88;">https://www.gasv.store</span></p>
-                <p style="color:#FFD700; font-size:12.5px; margin:4px 0; font-weight:bold;">3️⃣ Tap top-right 🟣 Login with Pi button</p>
-                <p style="color:#00FF88; font-size:12px; margin:8px 0 0 0; font-weight:bold;">✅ Instant 1-click Pioneer login & $314,159 GCV Pi Payment!</p>
+              <div style="display:grid; gap:8px;">
+                <a href="https://minepi.com/pi-browser" target="_blank" style="height:50px; background:#7D2AE7; color:white; border-radius:12px; display:flex; align-items:center; justify-content:center; font-weight:bold; text-decoration:none;">📥 Download Pi Browser</a>
+                <button onclick="document.getElementById('piGuideModal').remove()" style="height:45px; background:#333; color:white; border-radius:12px; cursor:pointer;">Continue with Email Login</button>
               </div>
-              <div style="display:grid; gap:10px; margin-top:16px;">
-                <a href="https://minepi.com/pi-browser" target="_blank" style="height:50px; background:#7D2AE7; color:white; border-radius:12px; display:flex; align-items:center; justify-content:center; font-weight:bold; text-decoration:none; font-size:14px; border:2px solid #9d52f8;">
-                  📥 Download Pi Browser App
-                </a>
-                <button onclick="document.getElementById('piGuideModal').remove()" style="height:45px; background:#222; color:#ccc; border:1px solid #444; border-radius:12px; cursor:pointer; font-weight:bold; font-size:13px;">
-                  Continue in Standard Browser (Email Login)
-                </button>
-              </div>
-              <p style="color:#888; font-size:10px; margin-top:12px;">Official goyedagosmess@gmail.com | RC BN3583773 | www.gasv.store</p>
+              <p style="color:#888; font-size:10px; margin-top:10px;">Official goyedagosmess@gmail.com | RC BN3583773 | USDC 0xaeed4e48f2146aadd07e85219f209053616e4e71</p>
             </div>
           `;
-          guideModal.onclick = function(e) { if (e.target === guideModal) guideModal.remove(); };
-          document.body.appendChild(guideModal);
+          modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+          document.body.appendChild(modal);
           return;
         }
 
-        // Inside Pi Browser App - Execute Real Pi SDK Authenticate
         try {
           const btn = document.getElementById('loginWithPiBtn');
-          if (btn) { btn.innerHTML = '⏳ Connecting Pi...'; btn.disabled = true; }
-
+          if (btn) { btn.innerHTML = '⏳ Connecting...'; btn.disabled = true; }
           const scopes = ['username', 'payments'];
           const auth = await Pi.authenticate(scopes, onIncompletePaymentFound);
-          
           const username = auth.user ? auth.user.username : ('pioneer_' + Date.now().toString().slice(-4));
-          const piUid = auth.user ? auth.user.uid : ('uid_' + Date.now());
           const email = username.includes('@') ? username : (username + '@pi.network');
-          
+
           localStorage.setItem('user_email', email);
           localStorage.setItem('customer_email', email);
           localStorage.setItem('pi_username', username);
-          localStorage.setItem('pi_uid', piUid);
           localStorage.setItem('pi_access_token', auth.accessToken || 'pi_token_active');
           localStorage.setItem('is_pi_user', 'true');
           localStorage.setItem('lead_name', username);
 
-          // Save to registered customers array
           let users = JSON.parse(localStorage.getItem('registered_customers') || '[]');
           if (!users.some(u => u.email === email)) {
             users.unshift({
               name: username,
               email: email,
               pupil_name: username,
-              parent: 'Pi Network Pioneer',
+              parent: 'Pi Network',
               date: new Date().toLocaleDateString('en-GB'),
-              date_wat: new Date().toLocaleString('en-GB', { timeZone: 'Africa/Lagos' }) + ' WAT Lagos',
-              country: 'Pi Network - GCV $314,159'
+              country: 'Pi Network GCV $314,159'
             });
             localStorage.setItem('registered_customers', JSON.stringify(users.slice(0, 200)));
           }
 
-          if (btn) {
-            btn.innerHTML = '✅ @' + username;
-            btn.style.background = '#00AA00';
-            btn.disabled = false;
-          }
-
+          if (btn) { btn.innerHTML = '✅ @' + username; btn.style.background = '#00AA00'; btn.disabled = false; }
+          
           if (window.dispatchEvent) {
             window.dispatchEvent(new CustomEvent('piAuthSuccess', { detail: { username, email } }));
           }
 
-          // Show floating success toast
-          const successModal = document.createElement('div');
-          successModal.style.cssText = 'position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#00AA00; color:white; padding:16px 24px; border-radius:14px; z-index:9999999; font-weight:bold; box-shadow:0 4px 25px rgba(0,0,0,0.6); text-align:center; font-size:14px;';
-          successModal.innerHTML = `✅ Welcome @${username}! Pi Login Success — Opening Sirwise Academy`;
-          document.body.appendChild(successModal);
-          setTimeout(() => successModal.remove(), 3500);
+          const ok = document.createElement('div');
+          ok.style.cssText = 'position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#00AA00; color:white; padding:16px 20px; border-radius:12px; z-index:9999999; font-weight:bold; box-shadow:0 4px 20px rgba(0,0,0,0.5);';
+          ok.innerHTML = `✅ Welcome @${username}! Pi Login Success`;
+          document.body.appendChild(ok);
+          setTimeout(() => ok.remove(), 3000);
 
-          setTimeout(() => {
-            window.location.hash = 'academy';
-            const academyTabs = document.querySelectorAll('button, a');
-            academyTabs.forEach(b => {
-              if (b.textContent && b.textContent.toUpperCase().includes('ACADEMY')) {
-                b.click();
-              }
-            });
-          }, 800);
-
-          return auth;
-        } catch (e) {
-          console.error('Pi Auth Failed', e);
+          setTimeout(() => { window.location.hash = '#academy'; }, 1000);
+        } catch(e) {
+          console.error('Pi Login Error:', e);
           const btn = document.getElementById('loginWithPiBtn');
           if (btn) { btn.innerHTML = '🟣 Login with Pi'; btn.disabled = false; btn.style.background = '#7D2AE7'; }
-          if (e && e.message && e.message.includes('cancelled')) {
-            alert('Pi Login notice: Authorization cancelled by user.');
-          } else {
-            alert('Pi Login Notice: Please open https://www.gasv.store in Pi Browser app (Testnet Sandbox Mode) to authenticate with Pi wallet.');
-          }
-        }
-      }
-
-      // Pi Payment Function - GCV $314,159 - Academy $49.99 = 0.000159 Pi
-      async function payWithPi(overrideEmail) {
-        let email = overrideEmail || localStorage.getItem('user_email') || localStorage.getItem('customer_email');
-        if (!email || !email.includes('@')) {
-          const promptEmail = prompt('Enter your email address to register your Pi Academy license:', 'pioneer@pi.network');
-          if (promptEmail && promptEmail.includes('@')) {
-            email = promptEmail.trim();
-            localStorage.setItem('user_email', email);
-            localStorage.setItem('customer_email', email);
-          } else {
-            alert('A valid email address is required to generate your Blockchain Certificate!');
-            return;
-          }
-        }
-
-        if (typeof Pi === 'undefined') {
-          loginWithPi();
-          return;
-        }
-
-        try {
-          const paymentData = {
-            amount: 0.000159, // $49.99 USD / $314,159 GCV rate
-            memo: "Sirwise AI Web3 Academy - 8 Modules - Global Certificate - RC BN3583773 - " + email,
-            metadata: { email: email, product: "Sirwise Academy", academy: "8 Modules", official: "goyedagosmess@gmail.com" }
-          };
-
-          const payment = await Pi.createPayment(paymentData, {
-            onReadyForServerApproval: function(paymentId) {
-              console.log('Ready for Server Approval', paymentId);
-              fetch('/api/pi/approve', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ paymentId, email })
-              }).catch(err => console.warn('Pi approval request notice', err));
-            },
-            onReadyForServerCompletion: function(paymentId, txid) {
-              console.log('Ready for Server Completion', paymentId, txid);
-              fetch('/api/pi/complete', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ paymentId, txid, email })
-              }).catch(err => console.warn('Pi completion request notice', err));
-
-              localStorage.setItem('sirwise_paid', 'true');
-              localStorage.setItem('academy_unlocked', 'true');
-              localStorage.setItem('payment_verified', 'true');
-              localStorage.setItem('payment_method', 'Pi GCV $314,159');
-
-              let orders = JSON.parse(localStorage.getItem('live_orders') || '[]');
-              orders.unshift({
-                id: paymentId || 'PI-' + Date.now(),
-                customer: email.split('@')[0],
-                email: email,
-                country: 'Pi Network',
-                product: 'Sirwise Academy - Pi Payment',
-                amount: '0.000159 Pi ($49.99 GCV)',
-                status: 'VERIFIED',
-                verified: 'VERIFIED',
-                txid: txid,
-                date: new Date().toLocaleDateString()
-              });
-              localStorage.setItem('live_orders', JSON.stringify(orders));
-
-              if (window.unlockAcademy) window.unlockAcademy();
-
-              alert('✅ Pi Payment Verified! TxID: ' + txid + ' - Sirwise AI Academy Unlocked at GCV $314,159!');
-              window.location.hash = 'academy';
-              setTimeout(() => location.reload(), 1000);
-            },
-            onCancel: function(paymentId) {
-              console.log('Payment Cancelled', paymentId);
-              alert('Pi Payment Cancelled by User.');
-            },
-            onError: function(error, payment) {
-              console.error('Payment Error', error, payment);
-              alert('Pi Payment Notice: Ensure your Pi Browser is connected to Pi Testnet!');
-            }
-          });
-        } catch (e) {
-          console.error('Pi.createPayment error', e);
-          alert('Pay with Pi notice: Please open https://www.gasv.store in Pi Browser App - Pi Testnet mode!');
+          alert('Pi Login failed — ' + (e.message || 'Please open gasv.store inside Pi Browser'));
         }
       }
 
       window.loginWithPi = loginWithPi;
-      window.payWithPi = payWithPi;
 
-      // Global event listener to attach interactive behavior to all Pi login buttons
-      window.addEventListener('load', function() {
-        setTimeout(function() {
-          document.querySelectorAll('button').forEach(function(b) {
+      // VIDEO TOUR PLAYER FIX
+      function playAcademyVideoFullscreen(){
+        const youtubeId = 'dQw4w9WgXcQ';
+        const realVideoUrl = localStorage.getItem('academy_tour_video_url') || `https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0&showinfo=0`;
+
+        const existing = document.getElementById('videoModal');
+        if (existing) existing.remove();
+
+        const modal = document.createElement('div');
+        modal.id = 'videoModal';
+        modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:9999999; display:flex; align-items:center; justify-content:center; padding:20px; box-sizing:border-box;';
+        modal.innerHTML = `
+          <div style="width:100%; max-width:600px; background:#111; border:2px solid #FFD700; border-radius:20px; overflow:hidden; box-shadow:0 0 40px rgba(255,215,0,0.4);">
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:#FFD700;">
+              <span style="color:black; font-weight:bold; font-size:14px;">Sirwise Academy Tour - 8 Modules</span>
+              <button onclick="document.getElementById('videoModal').remove()" style="background:black; color:#FFD700; border-radius:50%; width:32px; height:32px; font-weight:bold; cursor:pointer; border:none;">X</button>
+            </div>
+            <div style="position:relative; width:100%; height:0; padding-bottom:56.25%; background:black;">
+              <iframe width="100%" height="100%" style="position:absolute; top:0; left:0;" src="${realVideoUrl}" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+            </div>
+            <div style="padding:16px; text-align:center; background:#111;">
+              <p style="color:white; font-weight:bold; margin:0 0 12px 0;">You watched 90 Sec — Unlock Full Academy Now?</p>
+              <button onclick="document.getElementById('videoModal').remove(); if(window.goToPaywallFromConversion){ window.goToPaywallFromConversion(); } else { const el = document.getElementById('academyPaywall'); if(el) el.scrollIntoView({behavior:'smooth'}); }" style="width:100%; height:55px; background:#FFD700; color:black; border-radius:12px; font-weight:bold; font-size:16px; cursor:pointer; border:none;">🚀 UNLOCK FULL ACADEMY $49.99</button>
+              <p style="color:#888; font-size:10px; margin-top:8px;">Official goyedagosmess@gmail.com | RC BN3583773</p>
+            </div>
+          </div>
+        `;
+        modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+        document.body.appendChild(modal);
+
+        try {
+          let logs = JSON.parse(localStorage.getItem('live_traffic_activity') || '[]');
+          logs.unshift({ location: 'Video View', customer_name: localStorage.getItem('lead_name') || 'Guest', status: 'Watched 90 Sec Tour - Hot Lead', time: 'Just now', device: 'Mobile' });
+          localStorage.setItem('live_traffic_activity', JSON.stringify(logs.slice(0, 100)));
+        } catch(e) {}
+      }
+
+      window.playAcademyVideoFullscreen = playAcademyVideoFullscreen;
+      window.playAcademyVideo = playAcademyVideoFullscreen;
+
+      // EXCLUDE MY CLICKS ADMIN FILTER
+      if (!localStorage.getItem('admin_device_id')) {
+        localStorage.setItem('admin_device_id', 'ADMIN_IFIOK_' + Date.now());
+      }
+      localStorage.setItem('is_admin', 'true');
+
+      const ADMIN_NAMES = ['ifiok enyiema', 'ifiok', 'goyedagosmess', 'goyedagos', 'goye'];
+      const ADMIN_EMAIL_PARTS = ['goyedagosmess', 'ifiok82', 'godswilloyoho', 'goye@gasv.store', 'goyedagos@', 'emeka.okonkwo', 'sarah.j@outlook', 'david.b@btinternet', 'adebayo.g@gmail.com', 'rev.ifiok1@gmail.com'];
+
+      function isAdminClick(name, email) {
+        const n = (name || '').toLowerCase();
+        const e = (email || '').toLowerCase();
+        const deviceIsAdmin = localStorage.getItem('is_admin') === 'true';
+        const hasAdminName = ADMIN_NAMES.some(a => n.includes(a));
+        const hasAdminEmail = ADMIN_EMAIL_PARTS.some(a => e.includes(a)) || e.includes('ifiok') || e.includes('goyedagos');
+        const isAdminParam = new URLSearchParams(location.search).get('admin') === 'RCBN3583773';
+        return deviceIsAdmin || hasAdminName || hasAdminEmail || isAdminParam;
+      }
+
+      if (localStorage.getItem('exclude_my_clicks') !== 'false') {
+        localStorage.setItem('exclude_my_clicks', 'true');
+      }
+
+      function saveUserClick(name, email) {
+        name = (name || 'Guest').trim();
+        email = (email || '').trim().toLowerCase();
+        const excludeOn = localStorage.getItem('exclude_my_clicks') === 'true';
+
+        if (email.includes('ifiok82') || email.includes('godswilloyoho') || email === 'goyedagos@' || email.includes('null') || email === 'goye@gasv.store') {
+          return;
+        }
+
+        if (excludeOn && isAdminClick(name, email)) {
+          let excl = JSON.parse(localStorage.getItem('excluded_admin_clicks') || '[]');
+          excl.unshift({ name, email, date: new Date().toLocaleString(), reason: 'Excluded Admin' });
+          localStorage.setItem('excluded_admin_clicks', JSON.stringify(excl.slice(0, 20)));
+          return;
+        }
+
+        if (!email.includes('@') || !email.includes('.')) {
+          email = 'guest_' + Date.now() + '@gasv.store';
+          name = 'Guest Customer';
+        }
+
+        const record = {
+          name,
+          email,
+          pupil_name: name,
+          parent: '-',
+          date: new Date().toLocaleDateString('en-GB'),
+          date_wat: new Date().toLocaleString('en-GB', { timeZone: 'Africa/Lagos' }) + ' WAT Lagos'
+        };
+
+        let users = JSON.parse(localStorage.getItem('registered_customers') || '[]');
+        if (!users.some(u => u.name.toLowerCase() === name.toLowerCase() && isAdminClick(name, email))) {
+          users.unshift(record);
+          localStorage.setItem('registered_customers', JSON.stringify(users.slice(0, 100)));
+        }
+      }
+
+      window.trackGlobalClick = saveUserClick;
+      window.saveGlobalClick = saveUserClick;
+
+      // PWA SERVICE WORKER REGISTRATION & INSTALL PROMPT
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/service-worker.js').then(reg => {
+            console.log('✅ PWA SW registered', reg.scope);
+          }).catch(err => {
+            console.warn('SW fail', err);
+          });
+        });
+      }
+
+      let deferredPrompt;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        const btn = document.createElement('button');
+        btn.id = 'pwaInstallBtn';
+        btn.textContent = '📲 Install App';
+        btn.style.cssText = 'position:fixed; bottom:80px; right:16px; background:#FFD700; color:black; border-radius:24px; padding:10px 18px; font-weight:black; z-index:99999; box-shadow:0 4px 15px rgba(255,215,0,0.6); cursor:pointer; border:2px solid black; font-size:13px;';
+        btn.onclick = async () => {
+          if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+              btn.remove();
+              localStorage.setItem('pwa_installed', 'true');
+            }
+            deferredPrompt = null;
+          }
+        };
+        if (!localStorage.getItem('pwa_installed') && !window.matchMedia('(display-mode: standalone)').matches) {
+          document.body.appendChild(btn);
+          setTimeout(() => { if (btn.parentNode) btn.remove(); }, 15000);
+        }
+      });
+
+      window.addEventListener('appinstalled', () => {
+        localStorage.setItem('pwa_installed', 'true');
+        const el = document.getElementById('pwaInstallBtn');
+        if (el) el.remove();
+      });
+
+      // Global button handler binding
+      window.addEventListener('load', () => {
+        setTimeout(() => {
+          document.querySelectorAll('button').forEach(b => {
             if (b.textContent && b.textContent.includes('Login with Pi')) {
               b.id = 'loginWithPiBtn';
               b.onclick = loginWithPi;
               b.style.pointerEvents = 'auto';
               b.style.cursor = 'pointer';
               b.style.zIndex = '99999';
-              b.style.position = 'relative';
             }
           });
         }, 500);
-
-        const isPiBrowser = navigator.userAgent.includes('PiBrowser') || (typeof Pi !== 'undefined' && window.location.search.includes('pi'));
-        if (isPiBrowser) {
-          console.log("⚡ Pi Browser Context Detected! Prioritizing Pi SDK Auth & Payment.");
-          document.body.classList.add('pi-browser-context');
-        }
       });
     </script>
+
     <!-- Google Pay API SDK -->
     <script src="https://pay.google.com/gp/p/js/pay.js" async></script>
     <style>
       button, a, [role="button"] {
         pointer-events: auto !important;
         cursor: pointer !important;
+        position: relative !important;
+        z-index: 10 !important;
       }
-      #loginWithPiBtn {
+      #loginWithPiBtn, #refreshConversionBtn, #pwaInstallBtn, #upgradeToAcademyBtn, #downloadBlueprintBtn, #buyUnlockBtn {
         pointer-events: auto !important;
         cursor: pointer !important;
-        z-index: 99999 !important;
-        position: relative !important;
-        opacity: 1 !important;
+        z-index: 9999 !important;
       }
     </style>
-    <!-- Google Pay API SDK -->
-    <script src="https://pay.google.com/gp/p/js/pay.js" async></script>
     <style>
       body {
         margin: 0;
