@@ -11,7 +11,11 @@ export default function CertificateGenerator({ isCompleted, isEnrolled, userProf
       return;
     }
     if (!isCompleted) {
-      alert("Please complete all modules to unlock your certificate.");
+      if (onToast) {
+        onToast("Please complete all 4 modules to unlock your official Certificate.", "info");
+      } else if (typeof (window as any).showToast === 'function') {
+        (window as any).showToast("Please complete all 4 modules to unlock your official Certificate.", "info");
+      }
       return;
     }
 

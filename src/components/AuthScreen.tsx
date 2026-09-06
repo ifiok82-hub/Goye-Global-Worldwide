@@ -1975,7 +1975,9 @@ export default function AuthScreen({ onAuthenticated, onClose }: { onAuthenticat
                   onAuthenticated(piUser, piProfile);
                 }
               } else {
-                alert('Pi SDK loading... Please open https://www.gasv.store in Pi Browser app to authenticate with Pi Network!');
+                if (typeof (window as any).showToast === 'function') {
+                  (window as any).showToast('Pi SDK loading... Open gasv.store in Pi Browser app!');
+                }
               }
             }}
             style={{ height: '52px', background: '#7D2AE7', color: 'white', borderRadius: '14px', fontWeight: 'bold', fontSize: '15px', width: '100%', cursor: 'pointer', border: '2px solid #9d52f8' }}

@@ -4,7 +4,7 @@ import { ALL_PRODUCTS } from '../data';
 import { SEED_CUSTOMERS, SEED_ORDERS, isAdminClick } from '../utils/analytics';
 import { safeParse, safeGetNumber } from '../utils/safeParse';
 
-export default function AdminDashboard({ showToast }: { showToast: (m: string) => void }) {
+export default function AdminDashboard({ showToast }: { showToast: (m: string, t?: string) => void }) {
   const [activeTab, setActiveTab] = useState('analytics');
   
   // LocalStorage Data
@@ -403,8 +403,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
     setPageViews([]);
     setUsers([]);
     setOrders([]);
-    alert('All cleared - Now with Exclude ON, only customers will record');
-    showToast('All traffic and customer records cleared!');
+    showToast('All traffic and customer records cleared!', 'success');
   };
 
   const handleAdminTestingUnlock = () => {
@@ -414,7 +413,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
     localStorage.setItem('is_admin', 'true');
     localStorage.setItem('admin_device', 'true');
     localStorage.setItem('goye_academy_progress_guest', JSON.stringify({ isEnrolled: true, progress: [1, 2, 3, 4] }));
-    alert('🔓 Admin unlocked 100% testing - customers still need $49.99');
+    showToast('🔓 Admin testing unlocked! Full access enabled', 'success');
     console.log('Admin unlocked 100% testing mode');
     window.location.hash = '#academy';
   };

@@ -94,7 +94,10 @@ export default function App() {
   }, []);
 
   const [toastMsg, setToastMsg] = useState<string | null>(null);
-  const showToast = (msg: string) => { setToastMsg(msg); setTimeout(() => setToastMsg(null), 3000); };
+  const showToast = (msg: string, _type?: string) => { setToastMsg(msg); setTimeout(() => setToastMsg(null), 3000); };
+  useEffect(() => {
+    (window as any).showToast = showToast;
+  }, []);
 
   const [tab, setTab] = useState(window.location.hash.replace('#', '') || 'home');
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
@@ -748,7 +751,7 @@ export default function App() {
       setShowAdminLogin(false);
       setTab('admin');
     } else {
-      alert('Invalid admin password');
+      showToast('Invalid admin password', 'error');
     }
   };
 
@@ -845,7 +848,9 @@ export default function App() {
                 if (typeof (window as any).loginWithPi === 'function') {
                   (window as any).loginWithPi();
                 } else {
-                  alert('Pi Network SDK loading... Open gasv.store in Pi Browser app!');
+                  if (typeof (window as any).showToast === 'function') {
+                    (window as any).showToast('Pi Network SDK loading... Open gasv.store in Pi Browser app!');
+                  }
                 }
               }} 
               style={{ background: '#7D2AE7', color: 'white', padding: '8px 16px', borderRadius: '12px', fontSize: '13px', fontWeight: 'bold', border: '2px solid #fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
@@ -1390,7 +1395,7 @@ export default function App() {
       
       {showScanModal && (
         <div className="fixed inset-0 bg-black/90 z-[99999] flex items-center justify-center p-4 pointer-events-auto">
-          <ScanModal onClose={() => setShowScanModal(false)} onScanResult={(res) => { alert(res); setShowScanModal(false); }} />
+          <ScanModal onClose={() => setShowScanModal(false)} onScanResult={(res: string) => { showToast('Scanned: ' + res); setShowScanModal(false); }} />
         </div>
       )}
 

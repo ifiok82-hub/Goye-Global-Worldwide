@@ -19,7 +19,11 @@ export default function RealQRCode({ className = "", customTrigger }: { classNam
         a.click();
         window.URL.revokeObjectURL(url);
       })
-      .catch(() => alert('Failed to download QR code.'));
+      .catch(() => {
+        if (typeof (window as any).showToast === 'function') {
+          (window as any).showToast('Failed to download QR code.', 'error');
+        }
+      });
   };
 
   return (

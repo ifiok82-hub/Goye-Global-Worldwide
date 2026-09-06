@@ -3,6 +3,12 @@ import { GraduationCap, CheckCircle, Circle, Play, Lock, ChevronRight, Globe, Aw
 import CertificateGenerator from './CertificateGenerator';
 import { cleanUserEmail } from '../lib/contact';
 
+const showToast = (msg: string, type?: string) => {
+  if (typeof (window as any).showToast === 'function') {
+    (window as any).showToast(msg, type);
+  }
+};
+
 const GLOBAL_MODULES = [
   { 
     id: 1, 
@@ -217,8 +223,8 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
       });
     } catch (e) {}
 
-    alert('✅ USDC Payment Verified!\nTx: ' + tx + '\nAcademy Unlocked 100%!\nAdmin will verify on Etherscan: https://etherscan.io/tx/' + tx);
-    window.location.reload();
+    showToast('✅ USDC Payment Verified! Tx: ' + tx + '. Academy Unlocked!', 'success');
+    setTimeout(() => window.location.reload(), 1000);
   };
 
   useEffect(() => {
@@ -309,7 +315,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
     const email = emailStr.trim();
     const clean = cleanUserEmail(email);
     if (!clean) {
-      alert('Enter complete valid email e.g. name@gmail.com');
+      showToast('Enter complete valid email e.g. name@gmail.com', 'error');
       return false;
     }
     try {
@@ -324,7 +330,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
     const email = customerEmail.trim();
 
     if (typeof (window as any).PaystackPop === 'undefined') {
-      alert('Paystack SDK is loading... Check internet connection.');
+      showToast('Paystack SDK is loading... Check internet connection.', 'info');
       return;
     }
 
@@ -342,8 +348,8 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
             localStorage.setItem('payment_verified', 'true');
             localStorage.setItem('payment_ref', res.reference);
           } catch (e) {}
-          alert('Payment verified ' + res.reference + ' - Academy Unlocked 100%!');
-          window.location.reload();
+          showToast('Payment verified ' + res.reference + ' - Academy Unlocked!', 'success');
+          setTimeout(() => window.location.reload(), 1000);
         },
         onClose: function () {
           console.log('Paystack iframe closed');
@@ -352,7 +358,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
       handler.openIframe();
     } catch (err) {
       console.error('Paystack error:', err);
-      alert('Unable to initialize Paystack inline checkout. Please try again or use Bank Transfer.');
+      showToast('Unable to initialize Paystack. Please try Bank Transfer.', 'error');
     }
   };
 
@@ -361,7 +367,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
     const email = customerEmail.trim();
 
     if (typeof (window as any).FlutterwaveCheckout !== 'function') {
-      alert('Flutterwave SDK is loading... Check internet connection.');
+      showToast('Flutterwave SDK is loading... Check internet connection.', 'info');
       return;
     }
 
@@ -388,16 +394,16 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
               localStorage.setItem('academy_unlocked', 'true');
               localStorage.setItem('payment_verified', 'true');
             } catch (e) {}
-            alert('Flutterwave success - Academy Unlocked 100%!');
-            window.location.reload();
+            showToast('Flutterwave success - Academy Unlocked!', 'success');
+            setTimeout(() => window.location.reload(), 1000);
           } else {
-            alert('Payment not successful');
+            showToast('Payment not successful', 'error');
           }
         }
       });
     } catch (err) {
       console.error('Flutterwave error:', err);
-      alert('Unable to launch Flutterwave. Please try Paystack or Bank Transfer.');
+      showToast('Unable to launch Flutterwave. Please try Paystack or Bank Transfer.', 'error');
     }
   };
 

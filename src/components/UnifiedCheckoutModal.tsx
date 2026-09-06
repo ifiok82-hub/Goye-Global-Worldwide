@@ -4,6 +4,12 @@ import { identifyUserSession, trackUserClick } from '../utils/analytics';
 import { cleanUserEmail } from '../lib/contact';
 import { safeParse } from '../utils/safeParse';
 
+const showToast = (msg: string, type?: string) => {
+  if (typeof (window as any).showToast === 'function') {
+    (window as any).showToast(msg, type);
+  }
+};
+
 
 export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, onToast }: any) {
   const [activeGateway, setActiveGateway] = useState<string | null>(null);
@@ -216,18 +222,18 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
       } else if (data.simulation && data.reference) {
         window.location.href = `/payment/verify?reference=${encodeURIComponent(data.reference)}`;
       } else {
-        alert(data.error || 'Unable to initialize Paystack session. Please try Bank / OPay Transfer.');
+        showToast(data.error || 'Unable to initialize Paystack session. Please try Bank / OPay Transfer.', 'error');
       }
     } catch (err: any) {
       console.error('Paystack server init error', err);
-      alert('Network error initializing Paystack. Please try Bank / OPay Transfer.');
+      showToast('Network error initializing Paystack. Please try Bank / OPay Transfer.', 'error');
     }
   };
 
   const handlePaystackPayment = () => {
     const emailInput = getValidatedEmail();
     if (!emailInput) {
-      alert('Please enter your email address before proceeding with payment.');
+      showToast('Please enter your email address before proceeding with payment.', 'error');
       const inputEl = document.querySelector('input[type="email"]') as HTMLInputElement;
       if (inputEl) {
         inputEl.focus();
@@ -300,7 +306,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
   const payWithFlutterwave = () => {
     const emailInput = getValidatedEmail();
     if (!emailInput) {
-      alert('Enter complete valid email e.g. parent@gmail.com');
+      showToast('Enter complete valid email e.g. parent@gmail.com', 'error');
       const inputEl = document.querySelector('input[type="email"]') as HTMLInputElement;
       if (inputEl) {
         inputEl.focus();
@@ -341,7 +347,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
               }
               handleSuccess(ref, 'Flutterwave (Africa Cards)');
             } else {
-              alert('Payment not successful - Real money required - Amount must be ₦74,985');
+              showToast('Payment not successful - Amount must be ₦74,985', 'error');
             }
           },
           onclose: () => {
@@ -351,10 +357,10 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
         });
       } catch (e: any) {
         console.error('Flutterwave error', e);
-        alert('Flutterwave initialization notice: Please use Bank / OPay Transfer or Paystack.');
+        showToast('Flutterwave initialization notice: Please use Bank / OPay Transfer or Paystack.', 'info');
       }
     } else {
-      alert('Flutterwave SDK loading... Please try again or use Bank Transfer.');
+      showToast('Flutterwave SDK loading... Please try again or use Bank Transfer.', 'info');
     }
   };
 
@@ -366,20 +372,20 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
           const addr = accounts[0];
           setCryptoTxHash('EVM-' + addr.slice(0, 8) + '...' + addr.slice(-6));
           if (onToast) onToast(`MetaMask Connected: ${addr.slice(0, 6)}...${addr.slice(-4)}`);
-          else alert(`MetaMask Connected: ${addr}`);
+          else showToast(`MetaMask Connected: ${addr.slice(0, 6)}...${addr.slice(-4)}`, 'success');
         }
       } catch (e: any) {
-        alert('MetaMask notice: ' + (e.message || 'Could not connect wallet'));
+        showToast('MetaMask notice: ' + (e.message || 'Could not connect wallet'), 'error');
       }
     } else {
-      alert('MetaMask not detected in browser. Please copy the wallet address or open in MetaMask app browser.');
+      showToast('MetaMask not detected in browser. Please copy wallet address.', 'info');
     }
   };
 
   const selectGatewayWithEmailCheck = (gateway: string) => {
     const emailInput = getValidatedEmail();
     if (!emailInput) {
-      alert('Please enter your email address before selecting a payment method.');
+      showToast('Please enter your email address before selecting a payment method.', 'error');
       const inputEl = document.querySelector('input[type="email"]') as HTMLInputElement;
       if (inputEl) {
         inputEl.focus();
@@ -394,12 +400,12 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
   const submitCrypto = () => {
     const emailInput = getValidatedEmail();
     if (!emailInput) {
-      alert('Please enter your email address before submitting.');
+      showToast('Please enter your email address before submitting.', 'error');
       return;
     }
     if (!cryptoTxHash) {
       if (onToast) onToast('Please enter transaction hash or reference');
-      else alert('Please enter transaction hash or reference');
+      else showToast('Please enter transaction hash or reference', 'error');
       return;
     }
     setCryptoVerifying(true);
@@ -413,12 +419,12 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
   const submitBankTransfer = () => {
     const emailInput = getValidatedEmail();
     if (!emailInput) {
-      alert('Please enter your email address before submitting.');
+      showToast('Please enter your email address before submitting.', 'error');
       return;
     }
     if (!bankRef.trim()) {
       if (onToast) onToast('Please enter Reference / Sender Name');
-      else alert('Please enter Reference / Sender Name');
+      else showToast('Please enter Reference / Sender Name', 'error');
       return;
     }
     setBankVerifying(true);
@@ -435,7 +441,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
   const copyAccount = () => {
     navigator.clipboard.writeText('6113541882');
     if (onToast) onToast('Account number copied!');
-    else alert('Account number copied!');
+    else showToast('Account number copied!', 'success');
   };
 
   if (success) {
