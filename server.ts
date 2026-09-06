@@ -4523,7 +4523,12 @@ app.get('/success.html', (req, res) => {
 async function startServer() {
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: {
+        middlewareMode: true,
+        // The Express wrapper does not expose Vite's WebSocket upgrade handler
+        // in the preview runtime, so disable the client HMR socket there.
+        hmr: false,
+      },
       appType: 'spa'
     });
     app.use(vite.middlewares);
