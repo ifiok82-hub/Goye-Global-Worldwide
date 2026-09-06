@@ -143,83 +143,74 @@
 
       // LOGIN WITH PI - Dead Button Fix & Guide
       async function loginWithPi(){
-        console.log('Login with Pi clicked');
-        if (typeof Pi === 'undefined') {
-          const existing = document.getElementById('piGuideModal');
-          if (existing) existing.remove();
+        console.log('Login with Pi clicked - gasv.store - Fix stuck Connecting');
+        const btn = document.getElementById('loginWithPiBtn');
+        
+        // Step 1 - Show Connecting
+        if(btn){ btn.innerHTML='⏳ Connecting...'; btn.disabled=false; btn.style.background='#7D2AE7'; btn.style.pointerEvents='auto'; }
 
-          const modal = document.createElement('div');
-          modal.id = 'piGuideModal';
-          modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.92); z-index:9999999; display:flex; align-items:center; justify-content:center; padding:20px; box-sizing:border-box;';
-          modal.innerHTML = `
-            <div style="background:#111; border:3px solid #7D2AE7; border-radius:20px; padding:22px; max-width:400px; width:100%; text-align:center;">
-              <h2 style="color:#7D2AE7; margin-top:0;">🟣 Pi Browser Required</h2>
-              <p style="color:white; font-size:14px;">Login with Pi only works inside Pi Browser App — You are currently in Chrome/Safari.</p>
-              <div style="background:#222; padding:12px; border-radius:12px; margin:12px 0; text-align:left;">
-                <p style="color:#FFD700; font-size:13px; margin:4px 0;">1️⃣ Download Pi Browser App</p>
-                <p style="color:#FFD700; font-size:13px; margin:4px 0;">2️⃣ Open Pi Browser → Type: gasv.store</p>
-                <p style="color:#FFD700; font-size:13px; margin:4px 0;">3️⃣ Tap Login with Pi → Approve Authorization</p>
-                <p style="color:#00FF88; font-size:12px; margin-top:6px;">✅ Pay with Pi GCV $314,159 — 0.000159 Pi = $49.99</p>
-              </div>
-              <div style="display:grid; gap:8px;">
-                <a href="https://minepi.com/pi-browser" target="_blank" style="height:50px; background:#7D2AE7; color:white; border-radius:12px; display:flex; align-items:center; justify-content:center; font-weight:bold; text-decoration:none;">📥 Download Pi Browser</a>
-                <button onclick="document.getElementById('piGuideModal').remove()" style="height:45px; background:#333; color:white; border-radius:12px; cursor:pointer;">Continue with Email Login</button>
-              </div>
-              <p style="color:#888; font-size:10px; margin-top:10px;">Official goyedagosmess@gmail.com | RC BN3583773 | USDC 0xaeed4e48f2146aadd07e85219f209053616e4e71</p>
-            </div>
-          `;
-          modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
-          document.body.appendChild(modal);
-          return;
-        }
+        // Step 2 - If not in Pi Browser - Show guide IMMEDIATELY after 1.2 sec - Don't wait for Pi SDK hang
+        const isPiBrowser = navigator.userAgent.includes('PiBrowser') || window.location.href.includes('pi://') || (typeof Pi !== 'undefined' && Pi.nativeFeaturesList);
+        const piExists = typeof Pi !== 'undefined';
 
-        try {
-          const btn = document.getElementById('loginWithPiBtn');
-          if (btn) { btn.innerHTML = '⏳ Connecting...'; btn.disabled = true; }
-          const scopes = ['username', 'payments'];
-          const auth = await Pi.authenticate(scopes, onIncompletePaymentFound);
-          const username = auth.user ? auth.user.username : ('pioneer_' + Date.now().toString().slice(-4));
-          const email = username.includes('@') ? username : (username + '@pi.network');
-
-          localStorage.setItem('user_email', email);
-          localStorage.setItem('customer_email', email);
-          localStorage.setItem('pi_username', username);
-          localStorage.setItem('pi_access_token', auth.accessToken || 'pi_token_active');
-          localStorage.setItem('is_pi_user', 'true');
-          localStorage.setItem('lead_name', username);
-
-          let users = JSON.parse(localStorage.getItem('registered_customers') || '[]');
-          if (!users.some(u => u.email === email)) {
-            users.unshift({
-              name: username,
-              email: email,
-              pupil_name: username,
-              parent: 'Pi Network',
-              date: new Date().toLocaleDateString('en-GB'),
-              country: 'Pi Network GCV $314,159'
-            });
-            localStorage.setItem('registered_customers', JSON.stringify(users.slice(0, 200)));
-          }
-
-          if (btn) { btn.innerHTML = '✅ @' + username; btn.style.background = '#00AA00'; btn.disabled = false; }
+        if(!piExists || !isPiBrowser){
+          setTimeout(()=>{
+            if(btn && btn.innerHTML.includes('Connecting')){ btn.innerHTML='<span style="width:16px; height:16px; background:#FFD700; border-radius:50%; display:inline-block; margin-right:4px;"></span> Login with Pi'; btn.disabled=false; }
+            showPiGuideModal();
+          }, 1200);
           
-          if (window.dispatchEvent) {
-            window.dispatchEvent(new CustomEvent('piAuthSuccess', { detail: { username, email } }));
+          if(!piExists){
+            return;
           }
-
-          const ok = document.createElement('div');
-          ok.style.cssText = 'position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#00AA00; color:white; padding:16px 20px; border-radius:12px; z-index:9999999; font-weight:bold; box-shadow:0 4px 20px rgba(0,0,0,0.5);';
-          ok.innerHTML = `✅ Welcome @${username}! Pi Login Success`;
-          document.body.appendChild(ok);
-          setTimeout(() => ok.remove(), 3000);
-
-          setTimeout(() => { window.location.hash = '#academy'; }, 1000);
-        } catch(e) {
-          console.error('Pi Login Error:', e);
-          const btn = document.getElementById('loginWithPiBtn');
-          if (btn) { btn.innerHTML = '🟣 Login with Pi'; btn.disabled = false; btn.style.background = '#7D2AE7'; }
-          alert('Pi Login failed — ' + (e.message || 'Please open gasv.store inside Pi Browser'));
         }
+
+        // Step 3 - If in Pi Browser - Real auth with 4 sec timeout
+        if(piExists){
+          try{
+            const timeoutPromise = new Promise((_, reject)=> setTimeout(()=> reject(new Error('Pi auth timeout - Show guide')), 4000));
+            const authPromise = Pi.authenticate(['username','payments'], onIncompletePaymentFound);
+            const auth = await Promise.race([authPromise, timeoutPromise]);
+            
+            const username = auth.user ? auth.user.username : ('pioneer_' + Date.now().toString().slice(-4));
+            const email = username.includes('@') ? username : (username + '@pi.network');
+            localStorage.setItem('user_email', email);
+            localStorage.setItem('customer_email', email);
+            localStorage.setItem('pi_username', username);
+            localStorage.setItem('pi_access_token', auth.accessToken || 'pi_token_active');
+            localStorage.setItem('is_pi_user','true');
+            localStorage.setItem('lead_name', username);
+            let users = JSON.parse(localStorage.getItem('registered_customers')||'[]');
+            if(!users.some(u=>u.email===email)){
+              users.unshift({name: username, email, pupil_name: username, parent:'Pi Network', date:new Date().toLocaleDateString('en-GB'), country:'Pi Network GCV $314,159'});
+              localStorage.setItem('registered_customers', JSON.stringify(users.slice(0,200)));
+            }
+            if(btn){ btn.innerHTML='✅ @'+username; btn.style.background='#00AA00'; btn.disabled=false; }
+            const ok = document.createElement('div');
+            ok.style.cssText='position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#00AA00; color:white; padding:16px 20px; border-radius:12px; z-index:9999999; font-weight:bold; box-shadow:0 4px 20px rgba(0,0,0,0.5);';
+            ok.innerHTML=`✅ Welcome @${username}! Pi Login Success`; document.body.appendChild(ok); setTimeout(()=>ok.remove(),3000);
+            setTimeout(()=>{ window.location.hash='#academy'; }, 800);
+            return auth;
+          }catch(e){
+            console.error('Pi auth failed/timeout', e);
+            if(btn){ btn.innerHTML='<span style="width:16px; height:16px; background:#FFD700; border-radius:50%; display:inline-block; margin-right:4px;"></span> Login with Pi'; btn.disabled=false; btn.style.background='#7D2AE7'; }
+            if(e.message && e.message.includes('timeout')){
+              showPiGuideModal();
+            }else if(e.message && e.message.toLowerCase().includes('cancel')){
+              // User cancelled
+            }else{
+              showPiGuideModal();
+            }
+          }
+        }
+      }
+
+      function showPiGuideModal(){
+        if(document.getElementById('piGuideModal')) return;
+        const modal=document.createElement('div'); modal.id='piGuideModal';
+        modal.style.cssText='position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.92); z-index:9999999; display:flex; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(4px); box-sizing:border-box;';
+        modal.innerHTML=`<div style="background:#111; border:3px solid #7D2AE7; border-radius:20px; padding:20px; max-width:400px; width:100%; text-align:center; animation:slideUp 0.3s ease;"><h2 style="color:#7D2AE7; margin:0 0 12px 0; font-size:20px;">🟣 Pi Browser Required</h2><p style="color:white; font-size:14px; margin:0 0 12px 0;">You tapped Login with Pi in Chrome — It only works inside Pi Browser App.</p><div style="background:#222; padding:12px; border-radius:12px; margin:12px 0; text-align:left; border:1px solid #333;"><p style="color:#FFD700; font-size:13px; margin:6px 0;">1️⃣ Download Pi Browser (Play Store / App Store)</p><p style="color:#FFD700; font-size:13px; margin:6px 0;">2️⃣ Open Pi Browser → Type: <b>gasv.store</b></p><p style="color:#FFD700; font-size:13px; margin:6px 0;">3️⃣ Tap Login with Pi purple → Approve username</p><p style="color:#00FF88; font-size:12px; margin:10px 0 0 0; background:#003300; padding:8px; border-radius:8px;">✅ Then Pay with Pi GCV $314,159 — 0.000159 Pi = $49.99 Academy — No card needed!</p></div><div style="display:grid; gap:10px; margin-top:14px;"><a href="https://minepi.com/pi-browser" target="_blank" style="height:52px; background:#7D2AE7; color:white; border-radius:12px; display:flex; align-items:center; justify-content:center; font-weight:bold; text-decoration:none; font-size:15px;">📥 Download Pi Browser — Free</a><button onclick="document.getElementById('piGuideModal').remove()" style="height:48px; background:#333; color:white; border-radius:12px; cursor:pointer; font-weight:bold; border:1px solid #555;">Continue with Email Login — Chrome</button></div><p style="color:#888; font-size:10px; margin-top:12px;">Official goyedagosmess@gmail.com | RC BN3583773 | gasv.store | USDC 0xaeed4e48f2146aadd07e85219f209053616e4e71</p></div><style>@keyframes slideUp{ from{transform:translateY(20px); opacity:0;} to{transform:translateY(0); opacity:1;} }</style>`;
+        modal.onclick=(e)=>{ if(e.target===modal) modal.remove(); };
+        document.body.appendChild(modal);
       }
 
       window.loginWithPi = loginWithPi;
@@ -369,7 +360,7 @@
         if (el) el.remove();
       });
 
-      // Global button handler binding
+      // Global button handler binding & auto-reset for stuck Connecting status
       window.addEventListener('load', () => {
         setTimeout(() => {
           document.querySelectorAll('button').forEach(b => {
@@ -381,6 +372,19 @@
               b.style.zIndex = '99999';
             }
           });
+          const btn = document.getElementById('loginWithPiBtn');
+          if (btn) {
+            btn.style.pointerEvents = 'auto';
+            btn.style.cursor = 'pointer';
+            btn.disabled = false;
+            btn.onclick = loginWithPi;
+            setInterval(() => {
+              if (btn.innerHTML && btn.innerHTML.includes('Connecting')) {
+                btn.innerHTML = '<span style="width:12px; height:12px; background:#00FF88; border-radius:50%; display:inline-block; margin-right:4px;"></span> Login with Pi';
+                btn.disabled = false;
+              }
+            }, 3000);
+          }
         }, 500);
       });
     </script>
