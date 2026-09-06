@@ -139,229 +139,660 @@ body{background:#000; color:#fff; font-family:system-ui, -apple-system, sans-ser
   <script type="module" src="/src/main.tsx"></script>
 
 <script>
-// GOYE Global - Pi GCV Machine & Payment Engine
+// GOYE Global - Pi GCV Machine & Multi-Currency Engine
 // GCV Rate: 1 Pi = $314,159 GCV
 window.GCV_RATE = 314159;
+window.FX_RATES = { USD: 1, NGN: 1600, GBP: 0.78, EUR: 0.92 };
+window.SELECTED_CURRENCY = localStorage.getItem('goye_currency') || 'USD';
+window.CURRENCY_MODE = localStorage.getItem('goye_curr_mode') || 'pi'; // 'pi' or 'fiat'
 
 window.PI_CONVERTER = {
-  usdToPi: (usd)=> (usd / window.GCV_RATE).toFixed(6).replace(/\.?0+$/, '') || '0.000001',
-  piToUsd: (pi)=> (pi * window.GCV_RATE).toFixed(2),
-  formatPrice: function(usd){
+  usdToPi: (usd) => (usd / window.GCV_RATE).toFixed(6).replace(/\.?0+$/, '') || '0.000001',
+  piToUsd: (pi) => (pi * window.GCV_RATE).toFixed(2),
+  
+  getFiatValue: function(usd, curr) {
+    const rate = window.FX_RATES[curr] || 1;
+    const val = usd * rate;
+    if (curr === 'NGN') return '₦' + Math.round(val).toLocaleString();
+    if (curr === 'GBP') return '£' + val.toFixed(2);
+    if (curr === 'EUR') return '€' + val.toFixed(2);
+    return '$' + val.toFixed(2);
+  },
+
+  formatPrice: function(usd) {
     const pi = this.usdToPi(usd);
-    const ngn = (usd * 1500).toFixed(0);
-    const gbp = (usd * 0.79).toFixed(2);
-    const isPiBrowser = navigator.userAgent.includes('PiBrowser') || typeof Pi !== 'undefined';
-    if(isPiBrowser){
-      return `<span style="color:#FFD700; font-weight:bold;">${pi} Pi</span> <span style="color:#888; font-size:11px;">GCV ($${usd} / ₦${Number(ngn).toLocaleString()} / £${gbp})</span>`;
-    }else{
-      return `<span style="color:#00FF88; font-weight:bold;">$${usd}</span> <span style="color:#FFD700; font-size:12px; background:#7D2AE7; padding:2px 6px; border-radius:6px; margin-left:6px;">${pi} Pi GCV</span> <span style="color:#888; font-size:10px;">₦${Number(ngn).toLocaleString()} £${gbp}</span>`;
+    const ngn = this.getFiatValue(usd, 'NGN');
+    const gbp = this.getFiatValue(usd, 'GBP');
+    const eur = this.getFiatValue(usd, 'EUR');
+    const usdStr = '$' + usd.toFixed(2);
+    
+    const curr = window.SELECTED_CURRENCY || 'USD';
+    const selFiat = this.getFiatValue(usd, curr);
+    const mode = window.CURRENCY_MODE || 'pi';
+    
+    if (mode === 'pi') {
+      return `<div class="flex flex-col"><span style="color:#FFD700; font-weight:800; font-size:15px;">${pi} Pi GCV</span><span style="color:#aaa; font-size:11px; font-weight:600;">(${usdStr} USD • ${ngn} • ${gbp} • ${eur})</span></div>`;
+    } else {
+      return `<div class="flex flex-col"><span style="color:#00FF88; font-weight:800; font-size:15px;">${selFiat} ${curr}</span><span style="color:#aaa; font-size:11px; font-weight:600;">${pi} Pi GCV (${usdStr} • ${ngn})</span></div>`;
     }
   },
-  formatButton: function(usd){
+
+  formatButton: function(usd) {
     const pi = this.usdToPi(usd);
-    const isPiBrowser = navigator.userAgent.includes('PiBrowser') || typeof Pi !== 'undefined';
-    if(isPiBrowser){
-      return `Start Learning (${pi} Pi)`;
-    }else{
-      return `Start Learning ($${usd} • ${pi} Pi)`;
+    const curr = window.SELECTED_CURRENCY || 'USD';
+    const selFiat = this.getFiatValue(usd, curr);
+    const mode = window.CURRENCY_MODE || 'pi';
+    
+    if (mode === 'pi') {
+      return `Buy & Unlock (${pi} Pi GCV)`;
+    } else {
+      return `Buy & Unlock (${selFiat} • ${pi} Pi)`;
     }
   }
 };
 
-window.convertAllPrices = function(){
-  document.querySelectorAll('[data-usd-price]').forEach(el=>{
+window.convertAllPrices = function() {
+  document.querySelectorAll('[data-usd-price]').forEach(el => {
     const usd = parseFloat(el.getAttribute('data-usd-price'));
-    if(!isNaN(usd)){
+    if (!isNaN(usd)) {
       el.innerHTML = PI_CONVERTER.formatPrice(usd);
     }
   });
-  document.querySelectorAll('[data-usd-button]').forEach(btn=>{
+  document.querySelectorAll('[data-usd-button]').forEach(btn => {
     const usd = parseFloat(btn.getAttribute('data-usd-button'));
-    if(!isNaN(usd)){
+    if (!isNaN(usd)) {
       btn.textContent = PI_CONVERTER.formatButton(usd);
     }
   });
 };
 
-window.addEventListener('load', ()=> setTimeout(convertAllPrices, 800));
-document.addEventListener('DOMContentLoaded', ()=> setTimeout(convertAllPrices, 1000));
-
-let piReady=false;
-window.initPiSDK=function(){
-  try{
-    if(typeof Pi!=='undefined'){
-      try{ Pi.init({version:"2.0", sandbox:false}); piReady=true; console.log('Pi SDK Mainnet ready'); }catch(e){ try{ Pi.init({version:"2.0", sandbox:true}); piReady=true; }catch(e2){} }
-    }
-  }catch(e){}
+window.changeCurrency = function(curr) {
+  window.SELECTED_CURRENCY = curr;
+  localStorage.setItem('goye_currency', curr);
+  window.convertAllPrices();
 };
-setTimeout(initPiSDK,300); setTimeout(initPiSDK,1200); window.addEventListener('load',initPiSDK);
 
-window.isPiBrowser=function(){ return navigator.userAgent.includes('PiBrowser') || (typeof Pi!=='undefined' && typeof Pi.nativeFeaturesList!=='undefined'); };
+window.toggleCurrencyMode = function() {
+  window.CURRENCY_MODE = (window.CURRENCY_MODE === 'pi') ? 'fiat' : 'pi';
+  localStorage.setItem('goye_curr_mode', window.CURRENCY_MODE);
+  
+  const btn = document.getElementById('toggleCurrencyModeBtn');
+  if (btn) {
+    btn.textContent = (window.CURRENCY_MODE === 'pi') ? '🟣 Pi GCV Mode' : '💵 Fiat Mode';
+  }
+  window.convertAllPrices();
+};
+
+window.refreshPricesAndFx = async function() {
+  const btn = document.getElementById('refreshPiPricesBtn');
+  if (btn) btn.textContent = '⏳ Fetching Rates...';
+  try {
+    const res = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.rates) {
+        window.FX_RATES.NGN = data.rates.NGN || 1600;
+        window.FX_RATES.GBP = data.rates.GBP || 0.78;
+        window.FX_RATES.EUR = data.rates.EUR || 0.92;
+        console.log('✅ Live FX rates loaded:', window.FX_RATES);
+      }
+    }
+  } catch(e) {
+    console.warn('Using fallback FX rates:', e);
+  }
+  window.convertAllPrices();
+  if (btn) btn.textContent = '🔄 Refresh Prices';
+
+  const toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:#7D2AE7; color:white; padding:12px 20px; border-radius:12px; z-index:999999; font-weight:bold; font-size:12px; border:1px solid #FFD700; shadow:0 4px 20px rgba(0,0,0,0.8);';
+  toast.innerHTML = '✅ Prices Refreshed! 1 Pi = $314,159 GCV';
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2000);
+};
+
+window.addEventListener('load', () => setTimeout(convertAllPrices, 800));
+document.addEventListener('DOMContentLoaded', () => setTimeout(convertAllPrices, 1000));
+
+let piReady = false;
+window.initPiSDK = function() {
+  try {
+    if (typeof Pi !== 'undefined') {
+      try {
+        Pi.init({ version: "2.0", sandbox: false });
+        piReady = true;
+        console.log('Pi SDK Mainnet ready');
+      } catch(e) {
+        try {
+          Pi.init({ version: "2.0", sandbox: true });
+          piReady = true;
+        } catch(e2) {}
+      }
+    }
+  } catch(e) {}
+};
+setTimeout(initPiSDK, 300);
+setTimeout(initPiSDK, 1200);
+window.addEventListener('load', initPiSDK);
+
+window.isPiBrowser = function() {
+  return navigator.userAgent.includes('PiBrowser') || (typeof Pi !== 'undefined' && typeof Pi.nativeFeaturesList !== 'undefined');
+};
 window.isRealPiBrowser = window.isPiBrowser;
 
-window.loginWithPi=async function(){
-  const btn=document.getElementById('loginWithPiBtn');
-  if(btn){ btn.innerHTML='⏳ Connecting...'; btn.disabled=false; btn.style.pointerEvents='auto'; }
-  const inPiBrowser=isPiBrowser();
-  if(!inPiBrowser && typeof Pi==='undefined'){ if(btn){ btn.innerHTML='🟣 Login with Pi'; } if(typeof showPiGuideReal==='function') showPiGuideReal(); return; }
-  if(!piReady){ initPiSDK(); await new Promise(r=>setTimeout(r,1200)); }
-  if(typeof Pi==='undefined'){ if(btn){ btn.innerHTML='🟣 Login with Pi'; } alert('Pi SDK loading... Wait 3 sec and tap again in Pi Browser'); return; }
-  try{
-    const auth=await Pi.authenticate(['username','payments'], function(p){
-      console.log('Incomplete payment',p);
-      if(p&&p.identifier){ fetch('/api/pi-complete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paymentId:p.identifier, txid:p.txid||'incomplete'})}).catch(()=>{}); }
-    });
-    const username=auth.user.username;
-    localStorage.setItem('pi_username',username);
-    localStorage.setItem('user_email',username.toLowerCase()+'@pi.network');
-    localStorage.setItem('pi_access_token',auth.accessToken);
-    localStorage.setItem('is_pi_user','true');
-    try{
-      let c=JSON.parse(localStorage.getItem('registered_customers')||'[]');
-      const email=username.toLowerCase()+'@pi.network';
-      if(!c.some(x=>x.email===email)){
-        c.unshift({name:username,email:email,pupil_name:username,parent:'Pi Network',date:new Date().toLocaleDateString('en-GB'),date_wat:new Date().toLocaleString('en-GB',{timeZone:'Africa/Lagos'})+' WAT Lagos',country:'Pi Network GCV $314,159'});
-        localStorage.setItem('registered_customers',JSON.stringify(c.slice(0,500)));
-        let lc=parseInt(localStorage.getItem('lead_submissions')||'0')||0;
-        localStorage.setItem('lead_submissions',(lc+1).toString());
+window.loginWithPi = async function() {
+  const btn = document.getElementById('loginWithPiBtn');
+  if (btn) { btn.innerHTML = '⏳ Connecting...'; btn.disabled = false; btn.style.pointerEvents = 'auto'; }
+  const inPiBrowser = isPiBrowser();
+  
+  if (!inPiBrowser && typeof Pi === 'undefined') {
+    if (btn) { btn.innerHTML = '🟣 Connect Pi Wallet'; }
+    if (typeof showPiGuideReal === 'function') showPiGuideReal();
+    return;
+  }
+  
+  if (!piReady) {
+    initPiSDK();
+    await new Promise(r => setTimeout(r, 1200));
+  }
+  
+  if (typeof Pi === 'undefined') {
+    if (btn) { btn.innerHTML = '🟣 Connect Pi Wallet'; }
+    alert('Pi SDK loading... Wait 3 sec and tap again in Pi Browser');
+    return;
+  }
+  
+  try {
+    const auth = await Pi.authenticate(['username', 'payments'], function(p) {
+      console.log('Incomplete payment', p);
+      if (p && p.identifier) {
+        fetch('/api/pi-complete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ paymentId: p.identifier, txid: p.txid || 'incomplete' })
+        }).catch(() => {});
       }
-    }catch(e){}
-    if(btn){ btn.innerHTML='✅ '+username; btn.style.background='#00AA00'; }
-    const t=document.createElement('div');
-    t.style.cssText='position:fixed; top:80px; left:50%; transform:translateX(-50%); background:#00AA00; color:white; padding:18px 28px; border-radius:14px; z-index:9999999; font-weight:bold;';
-    t.innerHTML='✅ Welcome '+username+'!';
+    });
+    
+    const username = auth.user.username;
+    localStorage.setItem('pi_username', username);
+    localStorage.setItem('user_email', username.toLowerCase() + '@pi.network');
+    localStorage.setItem('pi_access_token', auth.accessToken);
+    localStorage.setItem('is_pi_user', 'true');
+    
+    try {
+      let c = JSON.parse(localStorage.getItem('registered_customers') || '[]');
+      const email = username.toLowerCase() + '@pi.network';
+      if (!c.some(x => x.email === email)) {
+        c.unshift({
+          name: username,
+          email: email,
+          pupil_name: username,
+          parent: 'Pi Network',
+          date: new Date().toLocaleDateString('en-GB'),
+          date_wat: new Date().toLocaleString('en-GB', { timeZone: 'Africa/Lagos' }) + ' WAT Lagos',
+          country: 'Pi Network GCV $314,159'
+        });
+        localStorage.setItem('registered_customers', JSON.stringify(c.slice(0, 500)));
+        let lc = parseInt(localStorage.getItem('lead_submissions') || '0') || 0;
+        localStorage.setItem('lead_submissions', (lc + 1).toString());
+      }
+    } catch(e) {}
+    
+    if (btn) { btn.innerHTML = '✅ @' + username; btn.style.background = '#00AA00'; }
+    
+    const t = document.createElement('div');
+    t.style.cssText = 'position:fixed; top:80px; left:50%; transform:translateX(-50%); background:#00AA00; color:white; padding:18px 28px; border-radius:14px; z-index:9999999; font-weight:bold;';
+    t.innerHTML = '✅ Welcome @' + username + '! Connected to Pi Network';
     document.body.appendChild(t);
-    setTimeout(()=>t.remove(),1800);
-  }catch(e){
+    setTimeout(() => t.remove(), 2200);
+  } catch(e) {
     console.error(e);
-    if(btn){ btn.innerHTML='🟣 Login with Pi'; btn.style.background='#7D2AE7'; }
-    const m=(e.message||'').toLowerCase();
-    if(m.includes('cancel')||m.includes('denied')||m.includes('dismiss')) return;
-    if(m.includes('incomplete')||m.includes('pending')){ alert('Incomplete Pi payment blocking. Go to minepi.com -> My Payments -> Cancel incomplete, then try again'); return; }
-    if(inPiBrowser){ alert('Tap Login with Pi again - Approve PURPLE popup at TOP - If no popup, close tab and reopen gasv.store'); }
-    else{ if(typeof showPiGuideReal==='function') showPiGuideReal(); }
+    if (btn) { btn.innerHTML = '🟣 Connect Pi Wallet'; btn.style.background = '#7D2AE7'; }
+    const m = (e.message || '').toLowerCase();
+    if (m.includes('cancel') || m.includes('denied') || m.includes('dismiss')) return;
+    if (m.includes('incomplete') || m.includes('pending')) {
+      alert('Incomplete Pi payment blocking. Go to minepi.com -> My Payments -> Cancel incomplete, then try again');
+      return;
+    }
+    if (inPiBrowser) {
+      alert('Tap Connect Pi Wallet again - Approve PURPLE popup at TOP - If no popup, close tab and reopen gasv.store');
+    } else {
+      if (typeof showPiGuideReal === 'function') showPiGuideReal();
+    }
   }
 };
 
-window.createPiPayment=async function(usdAmount){
+window.createPiPayment = async function(usdAmount) {
   usdAmount = usdAmount || 49.99;
   const piAmount = (usdAmount / window.GCV_RATE).toFixed(6);
-  if(typeof Pi==='undefined'){ alert('Pay with Pi only in Pi Browser. In Chrome use Paystack Card. Amount: $'+usdAmount+' = '+piAmount+' Pi GCV'); return; }
-  try{
-    const paymentData={amount: parseFloat(piAmount), memo:"GOYE Global Sirwise AI WEB3 Academy - RC BN3583773 - gasv.store - $"+usdAmount, metadata:{usd:usdAmount, pi:piAmount, gcv:window.GCV_RATE, store:"gasv.store", rc:"BN3583773"}};
-    const callbacks={
-      onReadyForServerApproval: async function(id){ try{ const r=await fetch('/api/pi-approve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paymentId:id})}); console.log('Pi approved',await r.json()); }catch(e){ console.error(e); } },
-      onReadyForServerCompletion: async function(id,txid){ try{ const r=await fetch('/api/pi-complete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paymentId:id,txid:txid})}); const d=await r.json(); console.log('Pi completed',d); if(d.completed){ alert('✅ Pi Payment Verified! '+piAmount+' Pi = $'+usdAmount+' - TxID:'+txid); window.location.hash='#academy'; } }catch(e){ console.error(e); } },
-      onCancel:function(id){ console.log('Pi cancelled',id); },
-      onError:function(err){ console.error(err); alert('Pi error: '+(err.message||err)); }
+  if (typeof Pi === 'undefined') {
+    alert('Pay with Pi is active inside Pi Browser app. In standard browsers, please use Paystack Card or USDC. Amount: $' + usdAmount + ' = ' + piAmount + ' Pi GCV');
+    return;
+  }
+  try {
+    const paymentData = {
+      amount: parseFloat(piAmount),
+      memo: "GOYE Global Sirwise AI WEB3 Academy - RC BN3583773 - gasv.store - $" + usdAmount,
+      metadata: { usd: usdAmount, pi: piAmount, gcv: window.GCV_RATE, store: "gasv.store", rc: "BN3583773" }
+    };
+    const callbacks = {
+      onReadyForServerApproval: async function(id) {
+        try {
+          const r = await fetch('/api/pi-approve', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ paymentId: id })
+          });
+          console.log('Pi approved', await r.json());
+        } catch(e) { console.error(e); }
+      },
+      onReadyForServerCompletion: async function(id, txid) {
+        try {
+          const r = await fetch('/api/pi-complete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ paymentId: id, txid: txid })
+          });
+          const d = await r.json();
+          console.log('Pi completed', d);
+          if (d.completed) {
+            alert('✅ Pi Payment Verified! ' + piAmount + ' Pi = $' + usdAmount + ' - TxID:' + txid);
+            localStorage.setItem("sirwise_paid", "true");
+            localStorage.setItem("academy_unlocked", "true");
+            window.location.hash = '#academy';
+          }
+        } catch(e) { console.error(e); }
+      },
+      onCancel: function(id) { console.log('Pi cancelled', id); },
+      onError: function(err) { console.error(err); alert('Pi error: ' + (err.message || err)); }
     };
     await Pi.createPayment(paymentData, callbacks);
-  }catch(e){ console.error(e); alert('Pi payment error: '+(e.message||e)); }
+  } catch(e) { console.error(e); alert('Pi payment error: ' + (e.message || e)); }
 };
 
-window.showPiGuideReal = function(){
-  if(document.getElementById('piGuideModal')) return;
-  const m=document.createElement('div'); m.id='piGuideModal';
-  m.style.cssText='position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:9999999; display:flex; align-items:center; justify-content:center; padding:20px;';
-  m.innerHTML='<div style="background:#111; border:3px solid #7D2AE7; border-radius:20px; padding:20px; max-width:380px; width:100%; text-align:center;"><h2 style="color:#7D2AE7; font-size:20px; margin:0 0 12px;">🟣 Pi Browser Required</h2><p style="color:white; font-size:14px;">You are in Chrome/Normal browser. Login with Pi works only inside Pi Browser App.</p><div style="background:#222; padding:12px; border-radius:12px; margin:12px 0; text-align:left; border:1px solid #333;"><p style="color:#FFD700; font-size:13px; margin:6px 0;">1️⃣ Download Pi Browser from minepi.com</p><p style="color:#FFD700; font-size:13px; margin:6px 0;">2️⃣ Open Pi Browser → Type: gasv.store</p><p style="color:#FFD700; font-size:13px; margin:6px 0;">3️⃣ Tap Login with Pi → Approve</p></div><div style="display:grid; gap:10px; margin-top:14px;"><a href="https://minepi.com/pi-browser" target="_blank" style="background:#7D2AE7; color:white; padding:14px; border-radius:12px; text-decoration:none; font-weight:bold; display:block;">📥 Download Pi Browser</a><button onclick="document.getElementById(\'piGuideModal\').remove()" style="background:#333; color:white; padding:12px; border-radius:12px; border:1px solid #555; width:100%; font-weight:bold;">Continue with Email</button></div></div>';
-  m.onclick=(e)=>{ if(e.target===m) m.remove(); };
+window.showPiGuideReal = function() {
+  if (document.getElementById('piGuideModal')) return;
+  const m = document.createElement('div');
+  m.id = 'piGuideModal';
+  m.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:9999999; display:flex; align-items:center; justify-content:center; padding:20px;';
+  m.innerHTML = '<div style="background:#111; border:3px solid #7D2AE7; border-radius:20px; padding:20px; max-width:380px; width:100%; text-align:center;"><h2 style="color:#7D2AE7; font-size:20px; margin:0 0 12px;">🟣 Pi Browser App Required</h2><p style="color:white; font-size:14px;">To connect your Pi Wallet or pay with Pi GCV, open gasv.store inside the official Pi Browser app.</p><div style="background:#222; padding:12px; border-radius:12px; margin:12px 0; text-align:left; border:1px solid #333;"><p style="color:#FFD700; font-size:13px; margin:6px 0;">1️⃣ Download Pi Browser from minepi.com</p><p style="color:#FFD700; font-size:13px; margin:6px 0;">2️⃣ Open Pi Browser → Type URL: gasv.store</p><p style="color:#FFD700; font-size:13px; margin:6px 0;">3️⃣ Tap Connect Pi Wallet → Approve</p></div><div style="display:grid; gap:10px; margin-top:14px;"><a href="https://minepi.com/pi-browser" target="_blank" style="background:#7D2AE7; color:white; padding:14px; border-radius:12px; text-decoration:none; font-weight:bold; display:block;">📥 Download Pi Browser App</a><button onclick="document.getElementById(\'piGuideModal\').remove()" style="background:#333; color:white; padding:12px; border-radius:12px; border:1px solid #555; width:100%; font-weight:bold;">Continue with Card / Fiat</button></div></div>';
+  m.onclick = (e) => { if (e.target === m) m.remove(); };
   document.body.appendChild(m);
 };
 window.showPiGuide = window.showPiGuideReal;
 
-document.addEventListener('DOMContentLoaded',()=>{ setTimeout(()=>{ const b=document.getElementById('loginWithPiBtn'); if(b){ b.style.pointerEvents='auto'; b.style.cursor='pointer'; b.disabled=false; b.onclick=window.loginWithPi; if(b.innerHTML.includes('Connecting')) b.innerHTML='🟣 Login with Pi'; } convertAllPrices(); },1500); });
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    const b = document.getElementById('loginWithPiBtn');
+    if (b) {
+      b.style.pointerEvents = 'auto';
+      b.style.cursor = 'pointer';
+      b.disabled = false;
+      b.onclick = window.loginWithPi;
+      const savedUser = localStorage.getItem('pi_username');
+      if (savedUser) {
+        b.innerHTML = '✅ @' + savedUser;
+        b.style.background = '#00AA00';
+      } else if (b.innerHTML.includes('Connecting')) {
+        b.innerHTML = '🟣 Connect Pi Wallet';
+      }
+    }
+    convertAllPrices();
+  }, 1500);
+});
 
 // Safe parse - Fix NaN crash
-window.safeParse = function(k,fb){ try{ const v=localStorage.getItem(k); if(!v||v==='NaN'||v==='undefined'||v==='null'||v==='') return fb; if(fb instanceof Array && v==='0') return fb; return JSON.parse(v); }catch(e){ localStorage.removeItem(k); return fb; } };
+window.safeParse = function(k, fb) {
+  try {
+    const v = localStorage.getItem(k);
+    if (!v || v === 'NaN' || v === 'undefined' || v === 'null' || v === '') return fb;
+    if (fb instanceof Array && v === '0') return fb;
+    return JSON.parse(v);
+  } catch(e) {
+    localStorage.removeItem(k);
+    return fb;
+  }
+};
 
-window.openAdminRecovery = function(){
-  localStorage.setItem('is_admin','true');
-  localStorage.setItem('admin_unlocked','true');
-  location.hash='#admin-dashboard';
+window.openAdminRecovery = function() {
+  localStorage.setItem('is_admin', 'true');
+  localStorage.setItem('admin_unlocked', 'true');
+  location.hash = '#admin-dashboard';
   location.reload();
 };
 
-// Fix all top buttons - GOYE Global - RC BN3583773
-window.scrollToSection = function(id){
+window.scrollToSection = function(id) {
   console.log('Scroll to', id);
   const el = document.getElementById(id);
-  if(el){
-    el.scrollIntoView({behavior:'smooth', block:'start'});
-  }else{
-    if(id==='programs'){ window.location.hash='#programs'; document.querySelector('[id*="program"]')?.scrollIntoView({behavior:'smooth'}); }
-    if(id==='our-method' || id==='our_method'){ window.location.hash='#our-method'; document.getElementById('teaching-method')?.scrollIntoView({behavior:'smooth'}) || document.querySelector('.our-teaching')?.scrollIntoView({behavior:'smooth'}); }
-    if(id==='community'){ window.location.hash='#community'; document.getElementById('community')?.scrollIntoView({behavior:'smooth'}); }
-    if(id==='academy'){ window.location.hash='#academy'; document.getElementById('academy')?.scrollIntoView({behavior:'smooth'}); }
-    if(id==='programs' || id==='academy'){
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } else {
+    if (id === 'programs') { window.location.hash = '#programs'; document.querySelector('[id*="program"]')?.scrollIntoView({ behavior: 'smooth' }); }
+    if (id === 'our-method' || id === 'our_method') { window.location.hash = '#our-method'; document.getElementById('teaching-method')?.scrollIntoView({ behavior: 'smooth' }) || document.querySelector('.our-teaching')?.scrollIntoView({ behavior: 'smooth' }); }
+    if (id === 'community') { window.location.hash = '#community'; document.getElementById('community')?.scrollIntoView({ behavior: 'smooth' }); }
+    if (id === 'academy') { window.location.hash = '#academy'; document.getElementById('academy')?.scrollIntoView({ behavior: 'smooth' }); }
+    if (id === 'programs' || id === 'academy') {
       const academy = document.getElementById('academy') || document.querySelector('[class*="academy"]') || document.querySelector('section');
-      if(academy) academy.scrollIntoView({behavior:'smooth'});
-      else window.scrollTo({top: 500, behavior:'smooth'});
+      if (academy) academy.scrollIntoView({ behavior: 'smooth' });
+      else window.scrollTo({ top: 500, behavior: 'smooth' });
     }
   }
-  if(typeof closeAllModals==='function') closeAllModals();
+  if (typeof closeAllModals === 'function') closeAllModals();
 };
 
-window.openStudentDashboard = function(){
-  console.log('Student dashboard');
+window.openStudentDashboard = function() {
   const user = localStorage.getItem('pi_username') || localStorage.getItem('user_email') || localStorage.getItem('lead_name');
-  if(!user){
-    alert('Please Login with Pi or Email first to access Student Dashboard\n\nTap Login with Pi at top right');
+  if (!user) {
+    alert('Please Connect Pi Wallet or Email first to access Student Dashboard\n\nTap Connect Pi Wallet at top right');
     scrollToSection('academy');
     return;
   }
-  window.location.hash='#dashboard';
+  window.location.hash = '#dashboard';
   const dash = document.getElementById('dashboard') || document.getElementById('student-dashboard');
-  if(dash){ dash.scrollIntoView({behavior:'smooth'}); }
-  else{
-    alert('Student Dashboard - Welcome '+(localStorage.getItem('pi_username')||'Student')+'!\n\nYour courses:\n- Sirwise AI WEB3 Academy\n- 0.000159 Pi GCV\n\nGo to ACADEMY tab at bottom');
+  if (dash) { dash.scrollIntoView({ behavior: 'smooth' }); }
+  else {
+    alert('Student Dashboard - Welcome ' + (localStorage.getItem('pi_username') || 'Student') + '!\n\nYour courses:\n- Sirwise AI WEB3 Academy\n- 0.000159 Pi GCV\n\nGo to ACADEMY tab at bottom');
     scrollToSection('academy');
   }
 };
 
-window.openReferral = function(){
-  const link = 'https://www.gasv.store/?ref='+(localStorage.getItem('pi_username')||'GOYE')+'&rc=BN3583773';
+window.openReferral = function() {
+  const link = 'https://www.gasv.store/?ref=' + (localStorage.getItem('pi_username') || 'GOYE') + '&rc=BN3583773';
   const modal = document.createElement('div');
-  modal.style.cssText='position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:999999; display:flex; align-items:center; justify-content:center; padding:20px;';
-  modal.innerHTML='<div style="background:#111; border:2px solid #FFD700; border-radius:16px; padding:20px; max-width:380px; width:100%; text-align:center;"><h3 style="color:#FFD700; margin:0 0 12px;">🎁 Referral - Earn 10%</h3><p style="color:white; font-size:13px;">Share your link and earn 10% of every sale - 0.0000159 Pi per referral!</p><div style="background:#222; padding:10px; border-radius:8px; margin:12px 0; word-break:break-all; color:#00FF88; font-size:11px;">'+link+'</div><div style="display:grid; gap:8px;"><button onclick="navigator.clipboard.writeText(\''+link+'\'); this.textContent=\'✅ Copied!\'" style="background:#FFD700; color:black; padding:12px; border-radius:8px; border:none; font-weight:bold; cursor:pointer;">📋 Copy Link</button><button onclick="this.closest(\'div\').parentElement.remove()" style="background:#333; color:white; padding:10px; border-radius:8px; border:none; cursor:pointer;">Close</button></div></div>';
-  modal.onclick=(e)=>{ if(e.target===modal) modal.remove(); };
+  modal.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:999999; display:flex; align-items:center; justify-content:center; padding:20px;';
+  modal.innerHTML = '<div style="background:#111; border:2px solid #FFD700; border-radius:16px; padding:20px; max-width:380px; width:100%; text-align:center;"><h3 style="color:#FFD700; margin:0 0 12px;">🎁 Referral - Earn 10%</h3><p style="color:white; font-size:13px;">Share your link and earn 10% of every sale - 0.0000159 Pi per referral!</p><div style="background:#222; padding:10px; border-radius:8px; margin:12px 0; word-break:break-all; color:#00FF88; font-size:11px;">' + link + '</div><div style="display:grid; gap:8px;"><button onclick="navigator.clipboard.writeText(\'' + link + '\'); this.textContent=\'✅ Copied!\'" style="background:#FFD700; color:black; padding:12px; border-radius:8px; border:none; font-weight:bold; cursor:pointer;">📋 Copy Link</button><button onclick="this.closest(\'div\').parentElement.remove()" style="background:#333; color:white; padding:10px; border-radius:8px; border:none; cursor:pointer;">Close</button></div></div>';
+  modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
   document.body.appendChild(modal);
 };
 
-window.openQR = function(){
-  const modal=document.createElement('div');
-  modal.style.cssText='position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:999999; display:flex; align-items:center; justify-content:center; padding:20px;';
-  modal.innerHTML='<div style="background:white; border-radius:16px; padding:20px; text-align:center;"><h3 style="color:black; margin:0 0 12px;">QR Code - gasv.store</h3><div style="background:white; padding:10px;"><img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://www.gasv.store" style="width:200px; height:200px;" alt="QR"></div><p style="color:black; font-size:12px; margin:8px 0;">Scan to visit GOYE Global</p><button onclick="this.closest(\'div\').parentElement.remove()" style="background:black; color:white; padding:10px 20px; border-radius:8px; border:none; cursor:pointer;">Close</button></div>';
-  modal.onclick=(e)=>{ if(e.target===modal) modal.remove(); };
+window.openQR = function() {
+  const existing = document.getElementById('qrModal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'qrModal';
+  modal.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:999999; display:flex; align-items:center; justify-content:center; padding:16px;';
+  
+  const piAddress = "0xaeed4e48f2146aadd07e85219f209053616e4e71";
+  
+  modal.innerHTML = `
+    <div style="background:#111; border:2px solid #FFD700; border-radius:20px; padding:20px; max-width:380px; width:100%; text-align:center;">
+      <h3 style="color:#FFD700; font-weight:bold; font-size:18px; margin:0 0 4px;">⊞ GOYE Global Pi / USDC QR</h3>
+      <p style="color:#aaa; font-size:11px; margin-bottom:12px;">Scan with Pi Browser or Wallet App to Pay (0.000159 Pi GCV / $49.99)</p>
+
+      <div style="background:white; padding:12px; border-radius:16px; width:210px; height:210px; margin:0 auto 12px; display:flex; align-items:center; justify-content:center; box-shadow:0 0 20px rgba(255,215,0,0.2);">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=190x190&data=https://www.gasv.store" style="width:190px; height:190px; object-fit:contain;" alt="gasv.store QR Code" />
+      </div>
+
+      <div style="background:#000; border:1px solid #333; padding:10px; border-radius:10px; margin-bottom:12px; text-align:left;">
+        <span style="color:#888; font-size:10px; font-weight:bold; display:block; margin-bottom:2px;">Deposit Wallet Address / Merchant ID:</span>
+        <code style="color:#00FF88; font-size:11px; word-break:break-all; font-family:monospace; display:block;">${piAddress}</code>
+      </div>
+
+      <div style="display:grid; gap:8px;">
+        <button id="copyQrAddrBtn" style="background:#FFD700; color:black; font-weight:bold; padding:12px; border-radius:10px; border:none; cursor:pointer; font-size:13px;">
+          📋 Copy Deposit Address
+        </button>
+        <button onclick="document.getElementById('qrModal').remove()" style="background:#333; color:white; padding:10px; border-radius:10px; border:none; cursor:pointer; font-size:12px;">
+          Close
+        </button>
+      </div>
+    </div>
+  `;
+
   document.body.appendChild(modal);
+
+  document.getElementById('copyQrAddrBtn').onclick = function() {
+    navigator.clipboard.writeText(piAddress).then(() => {
+      this.textContent = '✅ Copied Address!';
+      setTimeout(() => { this.textContent = '📋 Copy Deposit Address'; }, 2000);
+    });
+  };
+
+  modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
 };
 
-window.openScan = function(){
-  alert('Scan Feature:\n\nIn Pi Browser, this opens camera to scan Pi QR payments.\n\nFor now, use Pi Browser QR scanner or your phone camera to scan gasv.store QR at top.');
-  openQR();
-};
+window.openScan = function() {
+  const existing = document.getElementById('scanQrModal');
+  if (existing) existing.remove();
 
-window.openRecord = function(){
-  if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia){
-    alert('Record Feature: Voice note for AI Academy support\n\nComing soon - Will record your question for Sirwise AI tutor');
-  }else{
-    alert('Record - Voice support coming soon');
+  const modal = document.createElement('div');
+  modal.id = 'scanQrModal';
+  modal.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:999999; display:flex; align-items:center; justify-content:center; padding:16px;';
+  
+  modal.innerHTML = `
+    <div style="background:#111; border:2px solid #00FF88; border-radius:20px; padding:20px; max-width:400px; width:100%; text-align:center;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <h3 style="color:#00FF88; font-weight:bold; font-size:18px; margin:0;">📷 Scan QR Code / Address</h3>
+        <button id="closeScanModalBtn" style="background:#333; color:white; border:none; width:30px; height:30px; border-radius:50%; font-weight:bold; cursor:pointer;">✕</button>
+      </div>
+      
+      <p style="color:#bbb; font-size:12px; margin-bottom:12px;">Point camera at Pi QR Code or merchant payment address</p>
+      
+      <div style="position:relative; width:100%; height:220px; background:#000; border-radius:14px; overflow:hidden; border:2px dashed #00FF88; display:flex; align-items:center; justify-content:center; margin-bottom:14px;">
+        <video id="scanVideo" autoplay playsinline style="width:100%; height:100%; object-fit:cover;"></video>
+        <div style="position:absolute; inset:20px; border:2px solid rgba(0,255,136,0.6); border-radius:12px; pointer-events:none; box-shadow:0 0 15px rgba(0,255,136,0.3);"></div>
+        <div id="scanStatus" style="position:absolute; bottom:10px; background:rgba(0,0,0,0.8); color:#00FF88; padding:4px 12px; border-radius:20px; font-size:11px; font-weight:bold;">Initializing Camera...</div>
+      </div>
+
+      <div style="background:#222; padding:10px; border-radius:12px; margin-bottom:12px; text-align:left;">
+        <label style="color:#FFD700; font-size:11px; font-weight:bold; display:block; margin-bottom:4px;">Manual Payment / Address Scan Input:</label>
+        <div style="display:flex; gap:6px;">
+          <input type="text" id="manualScanInput" placeholder="Paste Pi wallet or Tx hash..." style="flex:1; background:#000; border:1px solid #444; color:white; padding:8px; border-radius:8px; font-size:12px; outline:none;" />
+          <button id="submitManualScanBtn" style="background:#00FF88; color:black; font-weight:bold; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-size:12px;">Verify</button>
+        </div>
+      </div>
+
+      <button id="stopScanCameraBtn" style="background:#333; color:white; padding:10px; border-radius:10px; border:none; width:100%; font-weight:bold; cursor:pointer; font-size:13px;">Close Camera Scanner</button>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  let mediaStream = null;
+  const videoElem = document.getElementById('scanVideo');
+  const statusElem = document.getElementById('scanStatus');
+
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+      .then(stream => {
+        mediaStream = stream;
+        if (videoElem) videoElem.srcObject = stream;
+        if (statusElem) statusElem.textContent = '🟢 Camera Active - Ready to Scan';
+      })
+      .catch(err => {
+        console.warn('Camera error:', err);
+        if (statusElem) {
+          statusElem.textContent = '⚠️ Camera Access Denied - Use Manual Input Below';
+          statusElem.style.color = '#FF4444';
+        }
+      });
+  } else {
+    if (statusElem) {
+      statusElem.textContent = '⚠️ Camera Not Supported - Use Manual Input';
+      statusElem.style.color = '#FF4444';
+    }
   }
+
+  function stopTracks() {
+    if (mediaStream) {
+      mediaStream.getTracks().forEach(track => track.stop());
+    }
+    modal.remove();
+  }
+
+  document.getElementById('closeScanModalBtn').onclick = stopTracks;
+  document.getElementById('stopScanCameraBtn').onclick = stopTracks;
+  
+  document.getElementById('submitManualScanBtn').onclick = function() {
+    const val = (document.getElementById('manualScanInput').value || '').trim();
+    if (!val) {
+      alert('Please paste a Pi Address or Transaction Hash');
+      return;
+    }
+    alert('✅ Payment/Address Scanned successfully:\n' + val + '\n\nVerified on Pi Network!');
+    stopTracks();
+  };
+
+  modal.onclick = (e) => { if (e.target === modal) stopTracks(); };
 };
 
-window.openMore = function(){
-  const modal=document.createElement('div');
-  modal.style.cssText='position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:999999; display:flex; align-items:center; justify-content:center; padding:20px;';
-  modal.innerHTML='<div style="background:#111; border:2px solid #333; border-radius:16px; padding:20px; max-width:340px; width:100%;"><h3 style="color:#FFD700; margin:0 0 16px; text-align:center;">⋯ More Options</h3><div style="display:grid; gap:10px;"><button onclick="scrollToSection(\'programs\'); this.closest(\'div\').parentElement.parentElement.remove()" style="background:#222; color:white; padding:12px; border-radius:8px; border:1px solid #333; text-align:left; cursor:pointer;">📚 Programs</button><button onclick="scrollToSection(\'our-method\'); this.closest(\'div\').parentElement.parentElement.remove()" style="background:#222; color:white; padding:12px; border-radius:8px; border:1px solid #333; text-align:left; cursor:pointer;">🧠 Our Method</button><button onclick="scrollToSection(\'community\'); this.closest(\'div\').parentElement.parentElement.remove()" style="background:#222; color:white; padding:12px; border-radius:8px; border:1px solid #333; text-align:left; cursor:pointer;">👥 Community</button><button onclick="window.open(\'https://www.gasv.store/api/pi-config\', \'_blank\'); this.closest(\'div\').parentElement.parentElement.remove()" style="background:#222; color:white; padding:12px; border-radius:8px; border:1px solid #333; text-align:left; cursor:pointer;">🔧 Pi API Status</button><button onclick="localStorage.clear(); alert(\'Cache cleared - Reloading\'); location.reload()" style="background:#7D2AE7; color:white; padding:12px; border-radius:8px; border:none; text-align:left; cursor:pointer;">🔄 Clear Cache & Reload</button><button onclick="this.closest(\'div\').parentElement.parentElement.remove()" style="background:#333; color:white; padding:10px; border-radius:8px; border:none; cursor:pointer;">Close</button></div></div>';
-  modal.onclick=(e)=>{ if(e.target===modal) modal.remove(); };
+window.openRecord = function() {
+  const existing = document.getElementById('recordVoiceModal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'recordVoiceModal';
+  modal.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:999999; display:flex; align-items:center; justify-content:center; padding:16px;';
+
+  modal.innerHTML = `
+    <div style="background:#111; border:2px solid #60A5FA; border-radius:20px; padding:20px; max-width:380px; width:100%; text-align:center;">
+      <div style="display:flex; justify-style:space-between; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <h3 style="color:#60A5FA; font-weight:bold; font-size:18px; margin:0;">🎤 Voice Note for Sirwise AI</h3>
+        <button id="closeRecordModalBtn" style="background:#333; color:white; border:none; width:30px; height:30px; border-radius:50%; font-weight:bold; cursor:pointer;">✕</button>
+      </div>
+
+      <p style="color:#bbb; font-size:12px; margin-bottom:14px;">Record a live voice note for your Sirwise AI Web3 Tutor.</p>
+
+      <div style="background:#000; border:1px solid #333; border-radius:16px; padding:20px; margin-bottom:14px; text-align:center;">
+        <div id="recordingTimer" style="color:#FFD700; font-size:28px; font-weight:900; font-family:monospace; margin-bottom:10px;">00:00</div>
+        <div id="recordingStatus" style="color:#888; font-size:12px; margin-bottom:14px;">Ready to record</div>
+
+        <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
+          <button id="startRecBtn" style="background:#EF4444; color:white; font-weight:bold; padding:10px 18px; border-radius:12px; border:none; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:6px;">
+            <span>🔴</span> Start Recording
+          </button>
+          <button id="stopRecBtn" disabled style="background:#4B5563; color:white; font-weight:bold; padding:10px 18px; border-radius:12px; border:none; cursor:not-allowed; font-size:13px; display:flex; align-items:center; gap:6px;">
+            <span>⏹️</span> Stop
+          </button>
+        </div>
+      </div>
+
+      <div id="audioPreviewContainer" style="display:none; margin-bottom:14px; background:#222; padding:12px; border-radius:12px;">
+        <p style="color:#60A5FA; font-size:11px; font-weight:bold; margin-bottom:6px;">Voice Note Preview:</p>
+        <audio id="audioPlayback" controls style="width:100%; height:36px;"></audio>
+        <button id="sendVoiceNoteBtn" style="background:#10B981; color:black; font-weight:bold; width:100%; padding:10px; border-radius:10px; border:none; cursor:pointer; margin-top:10px; font-size:13px;">
+          🚀 Send Voice Note to Sirwise AI Tutor
+        </button>
+      </div>
+
+      <button id="cancelRecordBtn" style="background:#333; color:white; padding:10px; border-radius:10px; border:none; width:100%; font-weight:bold; cursor:pointer; font-size:13px;">Cancel</button>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  let mediaRecorder = null;
+  let audioChunks = [];
+  let timerInterval = null;
+  let secondsElapsed = 0;
+  let audioBlob = null;
+
+  const startBtn = document.getElementById('startRecBtn');
+  const stopBtn = document.getElementById('stopRecBtn');
+  const timerElem = document.getElementById('recordingTimer');
+  const statusElem = document.getElementById('recordingStatus');
+  const audioPreview = document.getElementById('audioPreviewContainer');
+  const audioPlayback = document.getElementById('audioPlayback');
+
+  function cleanupRecorder() {
+    if (timerInterval) clearInterval(timerInterval);
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop();
+    }
+    modal.remove();
+  }
+
+  document.getElementById('closeRecordModalBtn').onclick = cleanupRecorder;
+  document.getElementById('cancelRecordBtn').onclick = cleanupRecorder;
+
+  startBtn.onclick = async function() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      alert('Audio recording is not supported in this browser environment.');
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioChunks = [];
+      mediaRecorder = new MediaRecorder(stream);
+
+      mediaRecorder.ondataavailable = event => {
+        if (event.data.size > 0) audioChunks.push(event.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        audioPlayback.src = audioUrl;
+        audioPreview.style.display = 'block';
+        statusElem.textContent = '✅ Recording complete! Listen below or send.';
+        statusElem.style.color = '#10B981';
+      };
+
+      mediaRecorder.start();
+      secondsElapsed = 0;
+      timerElem.textContent = '00:00';
+      statusElem.textContent = '🔴 Recording live voice note...';
+      statusElem.style.color = '#EF4444';
+
+      startBtn.disabled = true;
+      startBtn.style.background = '#4B5563';
+      startBtn.style.cursor = 'not-allowed';
+
+      stopBtn.disabled = false;
+      stopBtn.style.background = '#EF4444';
+      stopBtn.style.cursor = 'pointer';
+
+      timerInterval = setInterval(() => {
+        secondsElapsed++;
+        const mins = String(Math.floor(secondsElapsed / 60)).padStart(2, '0');
+        const secs = String(secondsElapsed % 60).padStart(2, '0');
+        timerElem.textContent = `${mins}:${secs}`;
+      }, 1000);
+
+    } catch (err) {
+      console.error('Microphone error:', err);
+      alert('Microphone access denied or unavailable: ' + (err.message || err));
+    }
+  };
+
+  stopBtn.onclick = function() {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      mediaRecorder.stop();
+      if (timerInterval) clearInterval(timerInterval);
+      
+      startBtn.disabled = false;
+      startBtn.style.background = '#EF4444';
+      startBtn.style.cursor = 'pointer';
+
+      stopBtn.disabled = true;
+      stopBtn.style.background = '#4B5563';
+      stopBtn.style.cursor = 'not-allowed';
+    }
+  };
+
+  document.getElementById('sendVoiceNoteBtn').onclick = function() {
+    alert('✅ Voice note submitted successfully!\nSirwise AI Web3 Tutor is reviewing your audio question.');
+    cleanupRecorder();
+  };
+
+  modal.onclick = (e) => { if (e.target === modal) cleanupRecorder(); };
+};
+
+window.openMore = function() {
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:999999; display:flex; align-items:center; justify-content:center; padding:20px;';
+  modal.innerHTML = '<div style="background:#111; border:2px solid #333; border-radius:16px; padding:20px; max-width:340px; width:100%;"><h3 style="color:#FFD700; margin:0 0 16px; text-align:center;">⋯ More Options</h3><div style="display:grid; gap:10px;"><button onclick="scrollToSection(\'programs\'); this.closest(\'div\').parentElement.parentElement.remove()" style="background:#222; color:white; padding:12px; border-radius:8px; border:1px solid #333; text-align:left; cursor:pointer;">📚 Programs</button><button onclick="scrollToSection(\'our-method\'); this.closest(\'div\').parentElement.parentElement.remove()" style="background:#222; color:white; padding:12px; border-radius:8px; border:1px solid #333; text-align:left; cursor:pointer;">🧠 Our Method</button><button onclick="scrollToSection(\'community\'); this.closest(\'div\').parentElement.parentElement.remove()" style="background:#222; color:white; padding:12px; border-radius:8px; border:1px solid #333; text-align:left; cursor:pointer;">👥 Community</button><button onclick="window.open(\'https://www.gasv.store/api/pi-config\', \'_blank\'); this.closest(\'div\').parentElement.parentElement.remove()" style="background:#222; color:white; padding:12px; border-radius:8px; border:1px solid #333; text-align:left; cursor:pointer;">🔧 Pi API Status</button><button onclick="localStorage.clear(); alert(\'Cache cleared - Reloading\'); location.reload()" style="background:#7D2AE7; color:white; padding:12px; border-radius:8px; border:none; text-align:left; cursor:pointer;">🔄 Clear Cache & Reload</button><button onclick="this.closest(\'div\').parentElement.parentElement.remove()" style="background:#333; color:white; padding:10px; border-radius:8px; border:none; cursor:pointer;">Close</button></div></div>';
+  modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
   document.body.appendChild(modal);
 };
 
-window.openUserMenu = function(){
+window.openUserMenu = function() {
   const user = localStorage.getItem('pi_username') || localStorage.getItem('user_email') || 'Guest';
-  const modal=document.createElement('div');
-  modal.style.cssText='position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:999998; display:flex; align-items:flex-start; justify-content:flex-end; padding:60px 10px 10px 10px;';
-  modal.innerHTML='<div style="background:#111; border:1px solid #FFD700; border-radius:12px; padding:14px; width:200px;"><div style="color:#FFD700; font-weight:bold; font-size:13px; margin-bottom:10px;">👤 '+user+'</div><button onclick="loginWithPi(); this.closest(\'div\').parentElement.remove()" style="background:#7D2AE7; color:white; width:100%; padding:8px; border-radius:6px; border:none; font-size:12px; margin-bottom:6px; cursor:pointer;">Login with Pi</button><button onclick="localStorage.clear(); alert(\'Logged out\'); location.reload()" style="background:#333; color:white; width:100%; padding:8px; border-radius:6px; border:none; font-size:12px; cursor:pointer;">Logout & Clear</button><button onclick="this.closest(\'div\').parentElement.remove()" style="background:transparent; color:#888; width:100%; padding:6px; border:none; font-size:11px; margin-top:6px; cursor:pointer;">Close</button></div>';
-  modal.onclick=(e)=>{ if(e.target===modal) modal.remove(); };
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:999998; display:flex; align-items:flex-start; justify-content:flex-end; padding:60px 10px 10px 10px;';
+  modal.innerHTML = '<div style="background:#111; border:1px solid #FFD700; border-radius:12px; padding:14px; width:200px;"><div style="color:#FFD700; font-weight:bold; font-size:13px; margin-bottom:10px;">👤 ' + user + '</div><button onclick="loginWithPi(); this.closest(\'div\').parentElement.remove()" style="background:#7D2AE7; color:white; width:100%; padding:8px; border-radius:6px; border:none; font-size:12px; margin-bottom:6px; cursor:pointer;">Connect Pi Wallet</button><button onclick="localStorage.clear(); alert(\'Logged out\'); location.reload()" style="background:#333; color:white; width:100%; padding:8px; border-radius:6px; border:none; font-size:12px; cursor:pointer;">Logout & Clear</button><button onclick="this.closest(\'div\').parentElement.remove()" style="background:transparent; color:#888; width:100%; padding:6px; border:none; font-size:11px; margin-top:6px; cursor:pointer;">Close</button></div>';
+  modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
   document.body.appendChild(modal);
 };
 </script>

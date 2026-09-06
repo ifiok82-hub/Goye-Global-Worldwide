@@ -792,16 +792,49 @@ export default function App() {
 
             
       <header style={{ position: 'sticky', top: 0, zIndex: 50, width: '100%', background: '#000', borderBottom: '1px solid #333' }}>
-        {/* Top Pi GCV Bar - Fixed no overlap */}
+        {/* Top Pi GCV Bar - Fixed no overlap with Currency Engine */}
         <div id="piGcvBar">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#FFD700', fontSize: '12px', fontWeight: 'bold' }}>
-            <span>💱 Prices in Pi GCV + Local</span>
-            <span style={{ color: 'white', fontSize: '11px' }}>GCV: 1 Pi $314,159</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#FFD700', fontSize: '12px', fontWeight: 'bold', flexWrap: 'wrap' }}>
+            <span>💱 GCV: 1 Pi = $314,159</span>
+            <select 
+              id="currencySelector" 
+              defaultValue={localStorage.getItem('goye_currency') || 'USD'}
+              onChange={(e) => {
+                if (typeof (window as any).changeCurrency === 'function') {
+                  (window as any).changeCurrency(e.target.value);
+                }
+              }}
+              style={{ background: '#111', color: '#FFD700', border: '1px solid #FFD700', borderRadius: '6px', padding: '2px 6px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}
+            >
+              <option value="USD">USD ($)</option>
+              <option value="NGN">NGN (₦)</option>
+              <option value="GBP">GBP (£)</option>
+              <option value="EUR">EUR (€)</option>
+            </select>
+
+            <button 
+              id="toggleCurrencyModeBtn"
+              onClick={() => {
+                if (typeof (window as any).toggleCurrencyMode === 'function') {
+                  (window as any).toggleCurrencyMode();
+                }
+              }}
+              style={{ background: '#222', color: '#00FF88', border: '1px solid #00FF88', borderRadius: '6px', padding: '2px 8px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}
+            >
+              {(localStorage.getItem('goye_curr_mode') || 'pi') === 'pi' ? '🟣 Pi GCV Mode' : '💵 Fiat Mode'}
+            </button>
           </div>
-          <div id="piLoginContainer" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+
+          <div id="piLoginContainer" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
             <button 
               id="refreshPiPricesBtn" 
-              onClick={() => { if (typeof (window as any).convertAllPrices === 'function') (window as any).convertAllPrices(); }} 
+              onClick={() => {
+                if (typeof (window as any).refreshPricesAndFx === 'function') {
+                  (window as any).refreshPricesAndFx();
+                } else if (typeof (window as any).convertAllPrices === 'function') {
+                  (window as any).convertAllPrices();
+                }
+              }} 
               style={{ background: '#7D2AE7', color: 'white', padding: '6px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}
             >
               🔄 Refresh Prices
@@ -817,7 +850,7 @@ export default function App() {
               }} 
               style={{ background: '#7D2AE7', color: 'white', padding: '8px 16px', borderRadius: '12px', fontSize: '13px', fontWeight: 'bold', border: '2px solid #fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
             >
-              <span style={{ width: '12px', height: '12px', background: '#FFD700', borderRadius: '50%', display: 'inline-block' }}></span> Login with Pi
+              <span style={{ width: '12px', height: '12px', background: '#FFD700', borderRadius: '50%', display: 'inline-block' }}></span> Connect Pi Wallet
             </button>
             <button 
               onClick={() => {
@@ -827,7 +860,7 @@ export default function App() {
                   setShowMoreMenu(!showMoreMenu);
                 }
               }} 
-              style={{ background: 'white', color: 'black', width: '36px', height: '36px', borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justify: 'center' }}
+              style={{ background: 'white', color: 'black', width: '36px', height: '36px', borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
               👤
             </button>
