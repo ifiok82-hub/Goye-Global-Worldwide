@@ -25,19 +25,16 @@ export default defineConfig(() => {
           enabled: true
         },
         manifest: {
-          name: 'GOYE Store Global',
-          short_name: 'GOYE',
-          description: '100% Digital Products Store',
-          theme_color: '#000000',
-          background_color: '#000000',
+          name: 'Goye Global Sirwise AI WEB3 Academy',
+          short_name: 'GOYE Store Global',
+          description: 'GOYE Global Worldwide RC BN3583773 - Sirwise AI WEB3 Academy - 100% Digital Products Store - 190+ Countries - GCV $314,159',
+          theme_color: '#FFD700',
+          background_color: '#FF00FF',
           display: 'standalone',
+          start_url: '/',
           icons: [
-            {
-              src: 'data:image/svg+xml;base64,' + btoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200"><circle cx="100" cy="100" r="96" fill="#000000" stroke="#FFD700" stroke-width="6"/></svg>`),
-              sizes: '192x192',
-              type: 'image/svg+xml',
-              purpose: 'any maskable'
-            }
+            { src: '/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+            { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
           ]
         }
       })

@@ -640,6 +640,40 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                 </button>
               </div>
             </div>
+          ) : activeGateway === 'pi' ? (
+            <div className="animate-in fade-in slide-in-from-right-4">
+              <div id="piPaymentSection" className="bg-[#1A1A1A] border-2 border-[#7D2AE7] rounded-2xl p-5 my-3 text-center">
+                <h3 className="text-[#FFD700] font-bold text-lg mb-1">🟣 Pay with Pi Network</h3>
+                <p className="text-gray-300 text-xs mb-3">Global Pi GCV Rate: 1 Pi = $314,159 GCV</p>
+                
+                <div className="bg-black p-4 rounded-xl border border-[#7D2AE7]/50 my-3">
+                  <div className="text-xs text-gray-400 font-bold mb-1">Amount Due</div>
+                  <div className="text-2xl font-black text-[#FFD700]">{(priceUSD / 314159).toFixed(6)} Pi GCV</div>
+                  <div className="text-xs text-gray-400 mt-1">(${priceUSD} USD / ₦{nairaAmount})</div>
+                </div>
+
+                <button 
+                  onClick={() => {
+                    if (typeof (window as any).createPiPayment === 'function') {
+                      (window as any).createPiPayment(priceUSD);
+                    } else {
+                      alert('Pi Network payment initializer loading...');
+                    }
+                  }} 
+                  className="w-full h-[56px] bg-[#7D2AE7] hover:bg-[#6821c6] text-white font-black rounded-xl my-3 cursor-pointer transition text-base shadow-lg active:scale-[0.98]"
+                >
+                  🟣 Pay {(priceUSD / 314159).toFixed(6)} Pi in Pi Browser
+                </button>
+
+                <div className="bg-black/60 rounded-xl p-3 my-2 text-left space-y-1 text-xs text-gray-300">
+                  <p className="text-[#FFD700] font-bold">⚠️ Pi Browser Required</p>
+                  <p>This payment requires the official Pi Browser app from minepi.com.</p>
+                  <p>If you are in standard Chrome/Safari, please switch to Pi Browser or select Paystack / Bank Transfer above.</p>
+                </div>
+
+                <button onClick={() => setActiveGateway(null)} className="mt-3 text-gray-400 text-xs underline block mx-auto cursor-pointer pointer-events-auto hover:text-white">Back to Methods</button>
+              </div>
+            </div>
           ) : activeGateway === 'crypto' ? (
             <div className="animate-in fade-in slide-in-from-right-4">
               <div id="usdcPaymentSection" className="bg-[#1A1A1A] border-2 border-[#2775CA] rounded-2xl p-5 my-3">

@@ -84,7 +84,7 @@ body{background:#000; color:#fff; font-family:system-ui, -apple-system, sans-ser
 <body class="bg-black text-white min-h-screen">
   <div id="root">
     <div class="app-loader" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; background-color: #0a0a0a; color: #FFC800; font-family: system-ui, sans-serif; text-align: center;">
-      <img src="/goye-logo.svg" alt="GOYE Logo" style="width: 120px; height: 120px; margin-bottom: 24px; border-radius: 50%; box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);" />
+      <img src="/logo.png" alt="GOYE Logo" style="width: 120px; height: 120px; margin-bottom: 24px; border-radius: 50%; box-shadow: 0 0 30px rgba(255, 0, 255, 0.4);" />
       <div style="font-weight: 800; font-size: 18px; letter-spacing: 1px; color: #ffffff;">GOYE STORE GLOBAL</div>
       <div style="font-size: 11px; color: #FFC800; margin-top: 4px; font-weight: 600;">190+ Countries Instant Delivery · RC: BN3583773</div>
     </div>
@@ -92,180 +92,124 @@ body{background:#000; color:#fff; font-family:system-ui, -apple-system, sans-ser
   <script type="module" src="/src/main.tsx"></script>
 
 <script>
-// GOYE Global - Final Pi SDK - No timeout race - Works in Pi Browser + Chrome
-// PI_API_KEY added server-side - sandbox:false Mainnet - GCV $314,159
+// GOYE Global - Pi GCV Machine & Payment Engine
+// GCV Rate: 1 Pi = $314,159 GCV
+window.GCV_RATE = 314159;
 
-const PI_CONFIG = {version: "2.0", sandbox: false, amount_pi: 0.000159, amount_usd: 49.99};
-
-let piReady = false;
-let piInitAttempts = 0;
-
-window.initPiSDK = function(){
-  if(piInitAttempts > 5) return;
-  piInitAttempts++;
-  try{
-    if(typeof Pi !== 'undefined' && typeof Pi.init === 'function'){
-      // Try Mainnet first - Matches your PI_API_KEY mainnet
-      try{
-        Pi.init({version: PI_CONFIG.version, sandbox: false});
-        piReady = true;
-        console.log('✅ Pi SDK v2.0 sandbox:false - Mainnet - Ready - Attempt', piInitAttempts);
-      }catch(e1){
-        // Fallback to sandbox true if false fails
-        try{
-          Pi.init({version: PI_CONFIG.version, sandbox: true});
-          piReady = true;
-          console.log('✅ Pi SDK v2.0 sandbox:true fallback - Ready');
-        }catch(e2){
-          console.log('Pi.init failed both', e1, e2);
-        }
-      }
+window.PI_CONVERTER = {
+  usdToPi: (usd)=> (usd / window.GCV_RATE).toFixed(6).replace(/\.?0+$/, '') || '0.000001',
+  piToUsd: (pi)=> (pi * window.GCV_RATE).toFixed(2),
+  formatPrice: function(usd){
+    const pi = this.usdToPi(usd);
+    const ngn = (usd * 1500).toFixed(0);
+    const gbp = (usd * 0.79).toFixed(2);
+    const isPiBrowser = navigator.userAgent.includes('PiBrowser') || typeof Pi !== 'undefined';
+    if(isPiBrowser){
+      return `<span style="color:#FFD700; font-weight:bold;">${pi} Pi</span> <span style="color:#888; font-size:11px;">GCV ($${usd} / ₦${Number(ngn).toLocaleString()} / £${gbp})</span>`;
     }else{
-      console.log('Pi SDK not found yet - Attempt', piInitAttempts, '- Retrying...');
-      setTimeout(initPiSDK, 1000);
+      return `<span style="color:#00FF88; font-weight:bold;">$${usd}</span> <span style="color:#FFD700; font-size:12px; background:#7D2AE7; padding:2px 6px; border-radius:6px; margin-left:6px;">${pi} Pi GCV</span> <span style="color:#888; font-size:10px;">₦${Number(ngn).toLocaleString()} £${gbp}</span>`;
     }
-  }catch(e){ console.log('initPiSDK error', e); }
+  },
+  formatButton: function(usd){
+    const pi = this.usdToPi(usd);
+    const isPiBrowser = navigator.userAgent.includes('PiBrowser') || typeof Pi !== 'undefined';
+    if(isPiBrowser){
+      return `Start Learning (${pi} Pi)`;
+    }else{
+      return `Start Learning ($${usd} • ${pi} Pi)`;
+    }
+  }
 };
 
-// Init Pi SDK multiple times - Ensures loaded in Pi Browser
-setTimeout(initPiSDK, 300);
-setTimeout(initPiSDK, 1000);
-setTimeout(initPiSDK, 2500);
-window.addEventListener('load', initPiSDK);
-document.addEventListener('DOMContentLoaded', initPiSDK);
-
-// Check if real Pi Browser
-window.isPiBrowser = function(){
-  const ua = navigator.userAgent || '';
-  return ua.includes('PiBrowser') || ua.toLowerCase().includes('pi browser') || (typeof Pi !== 'undefined' && typeof Pi.nativeFeaturesList !== 'undefined');
+window.convertAllPrices = function(){
+  document.querySelectorAll('[data-usd-price]').forEach(el=>{
+    const usd = parseFloat(el.getAttribute('data-usd-price'));
+    if(!isNaN(usd)){
+      el.innerHTML = PI_CONVERTER.formatPrice(usd);
+    }
+  });
+  document.querySelectorAll('[data-usd-button]').forEach(btn=>{
+    const usd = parseFloat(btn.getAttribute('data-usd-button'));
+    if(!isNaN(usd)){
+      btn.textContent = PI_CONVERTER.formatButton(usd);
+    }
+  });
 };
+
+window.addEventListener('load', ()=> setTimeout(convertAllPrices, 800));
+document.addEventListener('DOMContentLoaded', ()=> setTimeout(convertAllPrices, 1000));
+
+let piReady=false;
+window.initPiSDK=function(){
+  try{
+    if(typeof Pi!=='undefined'){
+      try{ Pi.init({version:"2.0", sandbox:false}); piReady=true; console.log('Pi SDK Mainnet ready'); }catch(e){ try{ Pi.init({version:"2.0", sandbox:true}); piReady=true; }catch(e2){} }
+    }
+  }catch(e){}
+};
+setTimeout(initPiSDK,300); setTimeout(initPiSDK,1200); window.addEventListener('load',initPiSDK);
+
+window.isPiBrowser=function(){ return navigator.userAgent.includes('PiBrowser') || (typeof Pi!=='undefined' && typeof Pi.nativeFeaturesList!=='undefined'); };
 window.isRealPiBrowser = window.isPiBrowser;
 
-// Final Login - NO TIMEOUT RACE - Fixes your screenshot timeout
-window.loginWithPi = async function(){
-  const btn = document.getElementById('loginWithPiBtn');
-  const inPiBrowser = isPiBrowser();
-  
-  if(btn){
-    btn.innerHTML = '⏳ Connecting...';
-    btn.disabled = false;
-    btn.style.pointerEvents = 'auto';
-    btn.style.opacity = '1';
-  }
-  
-  // CHROME / NORMAL BROWSER - Not Pi Browser - Show guide, NOT timeout
-  if(!inPiBrowser && typeof Pi === 'undefined'){
-    console.log('Not in Pi Browser - Showing guide');
-    if(btn){ btn.innerHTML = '🟣 Login with Pi'; }
-    showPiGuideReal();
-    return;
-  }
-  
-  // Ensure Pi SDK ready
-  if(!piReady){
-    initPiSDK();
-    await new Promise(r=>setTimeout(r, 1200));
-  }
-  
-  if(typeof Pi === 'undefined'){
-    console.log('Pi SDK still undefined after init');
-    if(btn){ btn.innerHTML = '🟣 Login with Pi'; }
-    if(inPiBrowser){
-      alert('Pi SDK loading... Please wait 3 seconds and tap Login with Pi again\n\nIn Pi Browser, Pi SDK loads slowly first time');
-    }else{
-      showPiGuideReal();
-    }
-    return;
-  }
-  
-  console.log('Pi SDK found - Calling Pi.authenticate - No timeout race - Will wait for user to approve purple popup');
-  
+window.loginWithPi=async function(){
+  const btn=document.getElementById('loginWithPiBtn');
+  if(btn){ btn.innerHTML='⏳ Connecting...'; btn.disabled=false; btn.style.pointerEvents='auto'; }
+  const inPiBrowser=isPiBrowser();
+  if(!inPiBrowser && typeof Pi==='undefined'){ if(btn){ btn.innerHTML='🟣 Login with Pi'; } if(typeof showPiGuideReal==='function') showPiGuideReal(); return; }
+  if(!piReady){ initPiSDK(); await new Promise(r=>setTimeout(r,1200)); }
+  if(typeof Pi==='undefined'){ if(btn){ btn.innerHTML='🟣 Login with Pi'; } alert('Pi SDK loading... Wait 3 sec and tap again in Pi Browser'); return; }
   try{
-    // IMPORTANT: No Promise.race timeout - Let Pi SDK wait for user approval
-    // Incomplete payment handler must be provided
-    const auth = await Pi.authenticate(['username', 'payments'], function onIncompletePayment(payment){
-      console.log('⚠️ Incomplete payment found - This blocks new auth:', payment);
-      if(payment && payment.identifier){
-        console.log('Trying to complete incomplete payment via backend:', payment.identifier);
-        fetch('/api/pi-complete', {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({paymentId: payment.identifier, txid: payment.txid || payment.transaction?.txid || 'incomplete_'+Date.now()})
-        }).then(r=>r.json()).then(d=>{ console.log('Incomplete completed', d); }).catch(e=>{ console.log('Incomplete complete failed', e); });
-      }
+    const auth=await Pi.authenticate(['username','payments'], function(p){
+      console.log('Incomplete payment',p);
+      if(p&&p.identifier){ fetch('/api/pi-complete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paymentId:p.identifier, txid:p.txid||'incomplete'})}).catch(()=>{}); }
     });
-    
-    console.log('✅ Pi.authenticate SUCCESS:', auth);
-    
-    const username = auth.user ? auth.user.username : 'Pi Pioneer';
-    const uid = auth.user ? auth.user.uid : 'pi_'+Date.now();
-    
-    localStorage.setItem('pi_username', username);
-    localStorage.setItem('pi_uid', uid);
-    localStorage.setItem('pi_access_token', auth.accessToken || '');
-    localStorage.setItem('user_email', username.toLowerCase()+'@pi.network');
-    localStorage.setItem('lead_name', username);
-    localStorage.setItem('is_pi_user', 'true');
-    
-    // Add to real leads - Fixes 0 count
+    const username=auth.user.username;
+    localStorage.setItem('pi_username',username);
+    localStorage.setItem('user_email',username.toLowerCase()+'@pi.network');
+    localStorage.setItem('pi_access_token',auth.accessToken);
+    localStorage.setItem('is_pi_user','true');
     try{
-      let customers = JSON.parse(localStorage.getItem('registered_customers')||'[]');
-      const email = username.toLowerCase()+'@pi.network';
-      if(!customers.some(c=>c.email===email)){
-        customers.unshift({
-          name: username,
-          email: email,
-          pupil_name: username,
-          parent: 'Pi Network',
-          date: new Date().toLocaleDateString('en-GB'),
-          date_wat: new Date().toLocaleString('en-GB',{timeZone:'Africa/Lagos'})+' WAT Lagos',
-          country: 'Pi Network GCV $314,159',
-          uid: uid
-        });
-        localStorage.setItem('registered_customers', JSON.stringify(customers.slice(0,500)));
-        let lc = parseInt(localStorage.getItem('lead_submissions')||'0')||0;
-        localStorage.setItem('lead_submissions', (lc+1).toString());
-        let tc = parseInt(localStorage.getItem('total_link_clicks')||'0')||0;
-        localStorage.setItem('total_link_clicks', (tc+1).toString());
+      let c=JSON.parse(localStorage.getItem('registered_customers')||'[]');
+      const email=username.toLowerCase()+'@pi.network';
+      if(!c.some(x=>x.email===email)){
+        c.unshift({name:username,email:email,pupil_name:username,parent:'Pi Network',date:new Date().toLocaleDateString('en-GB'),date_wat:new Date().toLocaleString('en-GB',{timeZone:'Africa/Lagos'})+' WAT Lagos',country:'Pi Network GCV $314,159'});
+        localStorage.setItem('registered_customers',JSON.stringify(c.slice(0,500)));
+        let lc=parseInt(localStorage.getItem('lead_submissions')||'0')||0;
+        localStorage.setItem('lead_submissions',(lc+1).toString());
       }
-    }catch(e){ console.log('Add customer error', e); }
-    
-    if(btn){
-      btn.innerHTML = '✅ '+username;
-      btn.style.background = '#00AA00';
-    }
-    
-    const toast = document.createElement('div');
-    toast.style.cssText = 'position:fixed; top:80px; left:50%; transform:translateX(-50%); background:#00AA00; color:white; padding:18px 28px; border-radius:14px; z-index:9999999; font-weight:bold; text-align:center;';
-    toast.innerHTML = '✅ Welcome '+username+'!<br>Pi Login Success';
-    document.body.appendChild(toast);
-    setTimeout(()=>toast.remove(), 2000);
-    
-  }catch(err){
-    console.error('Pi.authenticate error:', err);
-    if(btn){ btn.innerHTML = '🟣 Login with Pi'; btn.style.background = '#7D2AE7'; btn.disabled = false; btn.style.pointerEvents='auto'; }
-    
-    const errStr = (err && err.message ? err.message : JSON.stringify(err)).toLowerCase();
-    
-    // User cancelled - Don't show error
-    if(errStr.includes('cancel') || errStr.includes('denied') || errStr.includes('dismiss') || errStr.includes('closed') || errStr.includes('user')){
-      console.log('User cancelled Pi auth');
-      return;
-    }
-    
-    // Incomplete payment blocking
-    if(errStr.includes('incomplete') || errStr.includes('pending')){
-      alert('⚠️ You have incomplete Pi payment blocking login\n\n1. Open Pi Browser → minepi.com → My Payments\n2. Cancel incomplete payment\n3. Try Login with Pi again at gasv.store\n\nOr Continue with Email for now');
-      return;
-    }
-    
-    // Other error
-    if(inPiBrowser){
-      alert('Pi Login: '+(err.message||'Error')+'\n\nIn Pi Browser:\n1. Wait 3 sec\n2. Tap Login with Pi\n3. Approve PURPLE popup at TOP of screen\n4. If no popup, close gasv.store tab and reopen');
-    }else{
-      showPiGuideReal();
-    }
+    }catch(e){}
+    if(btn){ btn.innerHTML='✅ '+username; btn.style.background='#00AA00'; }
+    const t=document.createElement('div');
+    t.style.cssText='position:fixed; top:80px; left:50%; transform:translateX(-50%); background:#00AA00; color:white; padding:18px 28px; border-radius:14px; z-index:9999999; font-weight:bold;';
+    t.innerHTML='✅ Welcome '+username+'!';
+    document.body.appendChild(t);
+    setTimeout(()=>t.remove(),1800);
+  }catch(e){
+    console.error(e);
+    if(btn){ btn.innerHTML='🟣 Login with Pi'; btn.style.background='#7D2AE7'; }
+    const m=(e.message||'').toLowerCase();
+    if(m.includes('cancel')||m.includes('denied')||m.includes('dismiss')) return;
+    if(m.includes('incomplete')||m.includes('pending')){ alert('Incomplete Pi payment blocking. Go to minepi.com -> My Payments -> Cancel incomplete, then try again'); return; }
+    if(inPiBrowser){ alert('Tap Login with Pi again - Approve PURPLE popup at TOP - If no popup, close tab and reopen gasv.store'); }
+    else{ if(typeof showPiGuideReal==='function') showPiGuideReal(); }
   }
+};
+
+window.createPiPayment=async function(usdAmount){
+  usdAmount = usdAmount || 49.99;
+  const piAmount = (usdAmount / window.GCV_RATE).toFixed(6);
+  if(typeof Pi==='undefined'){ alert('Pay with Pi only in Pi Browser. In Chrome use Paystack Card. Amount: $'+usdAmount+' = '+piAmount+' Pi GCV'); return; }
+  try{
+    const paymentData={amount: parseFloat(piAmount), memo:"GOYE Global Sirwise AI WEB3 Academy - RC BN3583773 - gasv.store - $"+usdAmount, metadata:{usd:usdAmount, pi:piAmount, gcv:window.GCV_RATE, store:"gasv.store", rc:"BN3583773"}};
+    const callbacks={
+      onReadyForServerApproval: async function(id){ try{ const r=await fetch('/api/pi-approve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paymentId:id})}); console.log('Pi approved',await r.json()); }catch(e){ console.error(e); } },
+      onReadyForServerCompletion: async function(id,txid){ try{ const r=await fetch('/api/pi-complete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paymentId:id,txid:txid})}); const d=await r.json(); console.log('Pi completed',d); if(d.completed){ alert('✅ Pi Payment Verified! '+piAmount+' Pi = $'+usdAmount+' - TxID:'+txid); window.location.hash='#academy'; } }catch(e){ console.error(e); } },
+      onCancel:function(id){ console.log('Pi cancelled',id); },
+      onError:function(err){ console.error(err); alert('Pi error: '+(err.message||err)); }
+    };
+    await Pi.createPayment(paymentData, callbacks);
+  }catch(e){ console.error(e); alert('Pi payment error: '+(e.message||e)); }
 };
 
 window.showPiGuideReal = function(){
@@ -278,23 +222,7 @@ window.showPiGuideReal = function(){
 };
 window.showPiGuide = window.showPiGuideReal;
 
-// Fix button - No stuck Connecting
-document.addEventListener('DOMContentLoaded', ()=>{
-  setTimeout(()=>{
-    const btn=document.getElementById('loginWithPiBtn');
-    if(btn){
-      btn.style.pointerEvents='auto';
-      btn.style.cursor='pointer';
-      btn.disabled=false;
-      btn.style.opacity='1';
-      btn.onclick=window.loginWithPi;
-      // Ensure not stuck on Connecting from old code
-      if(btn.innerHTML.includes('Connecting')){
-        btn.innerHTML='🟣 Login with Pi';
-      }
-    }
-  }, 1500);
-});
+document.addEventListener('DOMContentLoaded',()=>{ setTimeout(()=>{ const b=document.getElementById('loginWithPiBtn'); if(b){ b.style.pointerEvents='auto'; b.style.cursor='pointer'; b.disabled=false; b.onclick=window.loginWithPi; if(b.innerHTML.includes('Connecting')) b.innerHTML='🟣 Login with Pi'; } convertAllPrices(); },1500); });
 
 // Safe parse - Fix NaN crash
 window.safeParse = function(k,fb){ try{ const v=localStorage.getItem(k); if(!v||v==='NaN'||v==='undefined'||v==='null'||v==='') return fb; if(fb instanceof Array && v==='0') return fb; return JSON.parse(v); }catch(e){ localStorage.removeItem(k); return fb; } };

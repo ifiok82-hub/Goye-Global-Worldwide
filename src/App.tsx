@@ -831,6 +831,12 @@ export default function App() {
                 </div>
             )}
         </div>
+        <div style={{ background: '#111', border: '1px solid #FFD700', borderRadius: '10px', padding: '8px 12px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px', margin: '10px auto', maxWidth: '500px' }}>
+          <span style={{ color: '#FFD700', fontSize: '12px' }}>💱 Prices in Pi GCV + Local</span>
+          <span style={{ color: 'white', fontSize: '11px' }}>GCV: 1 Pi = $314,159</span>
+          <button onClick={() => { if (typeof (window as any).convertAllPrices === 'function') (window as any).convertAllPrices(); }} style={{ background: '#7D2AE7', color: 'white', padding: '4px 10px', borderRadius: '6px', fontSize: '11px', cursor: 'pointer', border: 'none' }}>Refresh Prices</button>
+        </div>
+
         <div className="flex flex-col items-center justify-center text-center cursor-pointer" onClick={() => { const t = setTimeout(()=>setShowAdminLogin(true), 2000); adminPressTimer.current = t; }}>
             <GoyeLogo size={40} className="text-black mb-1" />
             <h1 className="text-black font-black text-sm leading-tight uppercase">GOYE Global Worldwide</h1>
@@ -917,33 +923,37 @@ export default function App() {
                       <div>
                         <div className="text-3xl mb-2">🤖</div>
                         <h3 className="text-white font-bold mb-1 text-base">Sirwise AI & Prompt Engineering</h3>
-                        <p className="text-gray-400 text-xs mb-4">Master AI prompts, homework assistance, research tools, and smart automation.</p>
+                        <p className="text-gray-400 text-xs mb-3">Master AI prompts, homework assistance, research tools, and smart automation.</p>
+                        <div className="mb-3 text-xs font-bold" data-usd-price="49.99">0.000159 Pi GCV ($49.99)</div>
                       </div>
-                      <button onClick={() => { setSelectedProduct({ id: "academy", name: "Sirwise AI Web3 Academy 4-Week", price: 49.99, category: "academy" }); setShowCheckoutModal(true); }} className="bg-[#FFD700] text-black text-xs font-bold w-full py-2.5 rounded-xl hover:bg-[#ffe033] cursor-pointer pointer-events-auto">Start Learning ($49.99)</button>
+                      <button data-usd-button="49.99" onClick={() => { setSelectedProduct({ id: "academy", name: "Sirwise AI Web3 Academy 4-Week", price: 49.99, category: "academy" }); setShowCheckoutModal(true); }} className="bg-[#FFD700] text-black text-xs font-bold w-full py-2.5 rounded-xl hover:bg-[#ffe033] cursor-pointer pointer-events-auto">Start Learning ($49.99)</button>
                     </div>
                     <div className="bg-[#111] p-5 rounded-2xl border border-[#333] hover:border-[#FFD700] transition flex flex-col justify-between">
                       <div>
                         <div className="text-3xl mb-2">🎨</div>
                         <h3 className="text-white font-bold mb-1 text-base">Digital Asset Creation</h3>
-                        <p className="text-gray-400 text-xs mb-4">Create digital art, storytelling, ebooks, and interactive multimedia projects.</p>
+                        <p className="text-gray-400 text-xs mb-3">Create digital art, storytelling, ebooks, and interactive multimedia projects.</p>
+                        <div className="mb-3 text-xs font-bold" data-usd-price="49.99">0.000159 Pi GCV ($49.99)</div>
                       </div>
-                      <button onClick={() => { setSelectedProduct({ id: "academy", name: "Sirwise AI Web3 Academy 4-Week", price: 49.99, category: "academy" }); setShowCheckoutModal(true); }} className="bg-[#FFD700] text-black text-xs font-bold w-full py-2.5 rounded-xl hover:bg-[#ffe033] cursor-pointer pointer-events-auto">Start Learning ($49.99)</button>
+                      <button data-usd-button="49.99" onClick={() => { setSelectedProduct({ id: "academy", name: "Sirwise AI Web3 Academy 4-Week", price: 49.99, category: "academy" }); setShowCheckoutModal(true); }} className="bg-[#FFD700] text-black text-xs font-bold w-full py-2.5 rounded-xl hover:bg-[#ffe033] cursor-pointer pointer-events-auto">Start Learning ($49.99)</button>
                     </div>
                     <div className="bg-[#111] p-5 rounded-2xl border border-[#333] hover:border-[#FFD700] transition flex flex-col justify-between">
                       <div>
                         <div className="text-3xl mb-2">🔐</div>
                         <h3 className="text-white font-bold mb-1 text-base">Web3 & Cyber Safety</h3>
-                        <p className="text-gray-400 text-xs mb-4">Blockchain basics, digital identity security, NFT credentials, and online privacy.</p>
+                        <p className="text-gray-400 text-xs mb-3">Blockchain basics, digital identity security, NFT credentials, and online privacy.</p>
+                        <div className="mb-3 text-xs font-bold" data-usd-price="49.99">0.000159 Pi GCV ($49.99)</div>
                       </div>
-                      <button onClick={() => { setSelectedProduct({ id: "academy", name: "Sirwise AI Web3 Academy 4-Week", price: 49.99, category: "academy" }); setShowCheckoutModal(true); }} className="bg-[#FFD700] text-black text-xs font-bold w-full py-2.5 rounded-xl hover:bg-[#ffe033] cursor-pointer pointer-events-auto">Start Learning ($49.99)</button>
+                      <button data-usd-button="49.99" onClick={() => { setSelectedProduct({ id: "academy", name: "Sirwise AI Web3 Academy 4-Week", price: 49.99, category: "academy" }); setShowCheckoutModal(true); }} className="bg-[#FFD700] text-black text-xs font-bold w-full py-2.5 rounded-xl hover:bg-[#ffe033] cursor-pointer pointer-events-auto">Start Learning ($49.99)</button>
                     </div>
                     <div className="bg-[#111] p-5 rounded-2xl border border-[#333] hover:border-[#FFD700] transition flex flex-col justify-between">
                       <div>
                         <div className="text-3xl mb-2">🎓</div>
                         <h3 className="text-white font-bold mb-1 text-base">Capstone & Certification</h3>
-                        <p className="text-gray-400 text-xs mb-4">Build your final project and receive an official blockchain-verified diploma.</p>
+                        <p className="text-gray-400 text-xs mb-3">Build your final project and receive an official blockchain-verified diploma.</p>
+                        <div className="mb-3 text-xs font-bold" data-usd-price="49.99">0.000159 Pi GCV ($49.99)</div>
                       </div>
-                      <button onClick={() => { setSelectedProduct({ id: "academy", name: "Sirwise AI Web3 Academy 4-Week", price: 49.99, category: "academy" }); setShowCheckoutModal(true); }} className="bg-[#FFD700] text-black text-xs font-bold w-full py-2.5 rounded-xl hover:bg-[#ffe033] cursor-pointer pointer-events-auto">Start Learning ($49.99)</button>
+                      <button data-usd-button="49.99" onClick={() => { setSelectedProduct({ id: "academy", name: "Sirwise AI Web3 Academy 4-Week", price: 49.99, category: "academy" }); setShowCheckoutModal(true); }} className="bg-[#FFD700] text-black text-xs font-bold w-full py-2.5 rounded-xl hover:bg-[#ffe033] cursor-pointer pointer-events-auto">Start Learning ($49.99)</button>
                     </div>
                   </div>
                 </div>
