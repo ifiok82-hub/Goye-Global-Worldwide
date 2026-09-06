@@ -15,6 +15,53 @@ body{background:#000; color:#fff; font-family:system-ui, -apple-system, sans-ser
 /* Fix admin jammed text */
 .admin-card{border:2px solid #333; border-radius:16px; padding:16px; margin:12px 0; background:#111;}
 .yellow-card{background:#FFD700; color:#000; border-radius:12px; padding:12px;}
+
+/* Fix top buttons not clickable - Remove overlap */
+#piGcvBar{
+  position: relative !important;
+  z-index: 10 !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 8px 12px !important;
+  background: #0a0a0a !important;
+  border: 1px solid #FFD700 !important;
+  border-radius: 12px !important;
+  margin: 6px !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+}
+#piLoginContainer{
+  position: relative !important;
+  z-index: 20 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+#loginWithPiBtn{
+  position: relative !important;
+  z-index: 25 !important;
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+#refreshPiPricesBtn{
+  position: relative !important;
+  z-index: 15 !important;
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+/* Make yellow header clickable */
+.yellow-header-nav{
+  position: relative !important;
+  z-index: 5 !important;
+  pointer-events: auto !important;
+}
+.yellow-header-nav button, .yellow-header-nav a{
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  position: relative !important;
+  z-index: 6 !important;
+}
 </style>
 
 <!-- Paystack Inline Checkout SDK & Flutterwave Inline Checkout SDK v3 & Google Pay -->
@@ -232,6 +279,90 @@ window.openAdminRecovery = function(){
   localStorage.setItem('admin_unlocked','true');
   location.hash='#admin-dashboard';
   location.reload();
+};
+
+// Fix all top buttons - GOYE Global - RC BN3583773
+window.scrollToSection = function(id){
+  console.log('Scroll to', id);
+  const el = document.getElementById(id);
+  if(el){
+    el.scrollIntoView({behavior:'smooth', block:'start'});
+  }else{
+    if(id==='programs'){ window.location.hash='#programs'; document.querySelector('[id*="program"]')?.scrollIntoView({behavior:'smooth'}); }
+    if(id==='our-method' || id==='our_method'){ window.location.hash='#our-method'; document.getElementById('teaching-method')?.scrollIntoView({behavior:'smooth'}) || document.querySelector('.our-teaching')?.scrollIntoView({behavior:'smooth'}); }
+    if(id==='community'){ window.location.hash='#community'; document.getElementById('community')?.scrollIntoView({behavior:'smooth'}); }
+    if(id==='academy'){ window.location.hash='#academy'; document.getElementById('academy')?.scrollIntoView({behavior:'smooth'}); }
+    if(id==='programs' || id==='academy'){
+      const academy = document.getElementById('academy') || document.querySelector('[class*="academy"]') || document.querySelector('section');
+      if(academy) academy.scrollIntoView({behavior:'smooth'});
+      else window.scrollTo({top: 500, behavior:'smooth'});
+    }
+  }
+  if(typeof closeAllModals==='function') closeAllModals();
+};
+
+window.openStudentDashboard = function(){
+  console.log('Student dashboard');
+  const user = localStorage.getItem('pi_username') || localStorage.getItem('user_email') || localStorage.getItem('lead_name');
+  if(!user){
+    alert('Please Login with Pi or Email first to access Student Dashboard\n\nTap Login with Pi at top right');
+    scrollToSection('academy');
+    return;
+  }
+  window.location.hash='#dashboard';
+  const dash = document.getElementById('dashboard') || document.getElementById('student-dashboard');
+  if(dash){ dash.scrollIntoView({behavior:'smooth'}); }
+  else{
+    alert('Student Dashboard - Welcome '+(localStorage.getItem('pi_username')||'Student')+'!\n\nYour courses:\n- Sirwise AI WEB3 Academy\n- 0.000159 Pi GCV\n\nGo to ACADEMY tab at bottom');
+    scrollToSection('academy');
+  }
+};
+
+window.openReferral = function(){
+  const link = 'https://www.gasv.store/?ref='+(localStorage.getItem('pi_username')||'GOYE')+'&rc=BN3583773';
+  const modal = document.createElement('div');
+  modal.style.cssText='position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:999999; display:flex; align-items:center; justify-content:center; padding:20px;';
+  modal.innerHTML='<div style="background:#111; border:2px solid #FFD700; border-radius:16px; padding:20px; max-width:380px; width:100%; text-align:center;"><h3 style="color:#FFD700; margin:0 0 12px;">🎁 Referral - Earn 10%</h3><p style="color:white; font-size:13px;">Share your link and earn 10% of every sale - 0.0000159 Pi per referral!</p><div style="background:#222; padding:10px; border-radius:8px; margin:12px 0; word-break:break-all; color:#00FF88; font-size:11px;">'+link+'</div><div style="display:grid; gap:8px;"><button onclick="navigator.clipboard.writeText(\''+link+'\'); this.textContent=\'✅ Copied!\'" style="background:#FFD700; color:black; padding:12px; border-radius:8px; border:none; font-weight:bold; cursor:pointer;">📋 Copy Link</button><button onclick="this.closest(\'div\').parentElement.remove()" style="background:#333; color:white; padding:10px; border-radius:8px; border:none; cursor:pointer;">Close</button></div></div>';
+  modal.onclick=(e)=>{ if(e.target===modal) modal.remove(); };
+  document.body.appendChild(modal);
+};
+
+window.openQR = function(){
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:999999; display:flex; align-items:center; justify-content:center; padding:20px;';
+  modal.innerHTML='<div style="background:white; border-radius:16px; padding:20px; text-align:center;"><h3 style="color:black; margin:0 0 12px;">QR Code - gasv.store</h3><div style="background:white; padding:10px;"><img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://www.gasv.store" style="width:200px; height:200px;" alt="QR"></div><p style="color:black; font-size:12px; margin:8px 0;">Scan to visit GOYE Global</p><button onclick="this.closest(\'div\').parentElement.remove()" style="background:black; color:white; padding:10px 20px; border-radius:8px; border:none; cursor:pointer;">Close</button></div>';
+  modal.onclick=(e)=>{ if(e.target===modal) modal.remove(); };
+  document.body.appendChild(modal);
+};
+
+window.openScan = function(){
+  alert('Scan Feature:\n\nIn Pi Browser, this opens camera to scan Pi QR payments.\n\nFor now, use Pi Browser QR scanner or your phone camera to scan gasv.store QR at top.');
+  openQR();
+};
+
+window.openRecord = function(){
+  if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia){
+    alert('Record Feature: Voice note for AI Academy support\n\nComing soon - Will record your question for Sirwise AI tutor');
+  }else{
+    alert('Record - Voice support coming soon');
+  }
+};
+
+window.openMore = function(){
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:999999; display:flex; align-items:center; justify-content:center; padding:20px;';
+  modal.innerHTML='<div style="background:#111; border:2px solid #333; border-radius:16px; padding:20px; max-width:340px; width:100%;"><h3 style="color:#FFD700; margin:0 0 16px; text-align:center;">⋯ More Options</h3><div style="display:grid; gap:10px;"><button onclick="scrollToSection(\'programs\'); this.closest(\'div\').parentElement.parentElement.remove()" style="background:#222; color:white; padding:12px; border-radius:8px; border:1px solid #333; text-align:left; cursor:pointer;">📚 Programs</button><button onclick="scrollToSection(\'our-method\'); this.closest(\'div\').parentElement.parentElement.remove()" style="background:#222; color:white; padding:12px; border-radius:8px; border:1px solid #333; text-align:left; cursor:pointer;">🧠 Our Method</button><button onclick="scrollToSection(\'community\'); this.closest(\'div\').parentElement.parentElement.remove()" style="background:#222; color:white; padding:12px; border-radius:8px; border:1px solid #333; text-align:left; cursor:pointer;">👥 Community</button><button onclick="window.open(\'https://www.gasv.store/api/pi-config\', \'_blank\'); this.closest(\'div\').parentElement.parentElement.remove()" style="background:#222; color:white; padding:12px; border-radius:8px; border:1px solid #333; text-align:left; cursor:pointer;">🔧 Pi API Status</button><button onclick="localStorage.clear(); alert(\'Cache cleared - Reloading\'); location.reload()" style="background:#7D2AE7; color:white; padding:12px; border-radius:8px; border:none; text-align:left; cursor:pointer;">🔄 Clear Cache & Reload</button><button onclick="this.closest(\'div\').parentElement.parentElement.remove()" style="background:#333; color:white; padding:10px; border-radius:8px; border:none; cursor:pointer;">Close</button></div></div>';
+  modal.onclick=(e)=>{ if(e.target===modal) modal.remove(); };
+  document.body.appendChild(modal);
+};
+
+window.openUserMenu = function(){
+  const user = localStorage.getItem('pi_username') || localStorage.getItem('user_email') || 'Guest';
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:999998; display:flex; align-items:flex-start; justify-content:flex-end; padding:60px 10px 10px 10px;';
+  modal.innerHTML='<div style="background:#111; border:1px solid #FFD700; border-radius:12px; padding:14px; width:200px;"><div style="color:#FFD700; font-weight:bold; font-size:13px; margin-bottom:10px;">👤 '+user+'</div><button onclick="loginWithPi(); this.closest(\'div\').parentElement.remove()" style="background:#7D2AE7; color:white; width:100%; padding:8px; border-radius:6px; border:none; font-size:12px; margin-bottom:6px; cursor:pointer;">Login with Pi</button><button onclick="localStorage.clear(); alert(\'Logged out\'); location.reload()" style="background:#333; color:white; width:100%; padding:8px; border-radius:6px; border:none; font-size:12px; cursor:pointer;">Logout & Clear</button><button onclick="this.closest(\'div\').parentElement.remove()" style="background:transparent; color:#888; width:100%; padding:6px; border:none; font-size:11px; margin-top:6px; cursor:pointer;">Close</button></div>';
+  modal.onclick=(e)=>{ if(e.target===modal) modal.remove(); };
+  document.body.appendChild(modal);
 };
 </script>
 </body>

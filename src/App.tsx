@@ -791,10 +791,23 @@ export default function App() {
       )}
 
             
-      <header style={{ position: 'sticky', top: 0, zIndex: 50, width: '100%', background: '#FFD700', minHeight: '60px', padding: '10px 0', borderBottom: '1px solid #1e293b' }}>
-        <div style={{ position: 'absolute', top: '8px', right: '8px', zIndex: 999 }} className="flex items-center gap-1.5">
+      <header style={{ position: 'sticky', top: 0, zIndex: 50, width: '100%', background: '#000', borderBottom: '1px solid #333' }}>
+        {/* Top Pi GCV Bar - Fixed no overlap */}
+        <div id="piGcvBar">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#FFD700', fontSize: '12px', fontWeight: 'bold' }}>
+            <span>💱 Prices in Pi GCV + Local</span>
+            <span style={{ color: 'white', fontSize: '11px' }}>GCV: 1 Pi $314,159</span>
+          </div>
+          <div id="piLoginContainer" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <button 
-              id="loginWithPiBtn"
+              id="refreshPiPricesBtn" 
+              onClick={() => { if (typeof (window as any).convertAllPrices === 'function') (window as any).convertAllPrices(); }} 
+              style={{ background: '#7D2AE7', color: 'white', padding: '6px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}
+            >
+              🔄 Refresh Prices
+            </button>
+            <button 
+              id="loginWithPiBtn" 
               onClick={() => {
                 if (typeof (window as any).loginWithPi === 'function') {
                   (window as any).loginWithPi();
@@ -802,65 +815,59 @@ export default function App() {
                   alert('Pi Network SDK loading... Open gasv.store in Pi Browser app!');
                 }
               }} 
-              style={{
-                height: '38px',
-                background: '#7D2AE7',
-                color: 'white',
-                borderRadius: '12px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                pointerEvents: 'auto',
-                zIndex: 99999,
-                position: 'relative',
-                padding: '0 12px',
-                border: '2px solid white',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                fontSize: '12px'
-              }}
-              className="hover:brightness-110 active:scale-95 shadow-md"
+              style={{ background: '#7D2AE7', color: 'white', padding: '8px 16px', borderRadius: '12px', fontSize: '13px', fontWeight: 'bold', border: '2px solid #fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
             >
-              <span style={{ width: '10px', height: '10px', background: '#FFD700', borderRadius: '50%', display: 'inline-block' }}></span> Login with Pi
+              <span style={{ width: '12px', height: '12px', background: '#FFD700', borderRadius: '50%', display: 'inline-block' }}></span> Login with Pi
             </button>
-            {!isAuthenticated ? (
-                <button onClick={() => setTab('auth')} className="px-2.5 py-1 bg-white text-black text-xs font-bold rounded-lg shadow-md border border-gray-300 hover:bg-gray-100 cursor-pointer">Login / Register</button>
-            ) : (
-                <div className="flex flex-col items-center justify-center bg-white border border-[#333] rounded-full w-[32px] h-[32px] cursor-pointer overflow-hidden shadow-md" onClick={() => { setShowMoreMenu(!showMoreMenu); }}>
-                    {userProfile?.photoURL ? <img src={userProfile.photoURL} alt="User" className="w-full h-full object-cover" /> : <User size={16} className="text-black" />}
-                </div>
-            )}
-        </div>
-        <div style={{ background: '#111', border: '1px solid #FFD700', borderRadius: '10px', padding: '8px 12px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px', margin: '10px auto', maxWidth: '500px' }}>
-          <span style={{ color: '#FFD700', fontSize: '12px' }}>💱 Prices in Pi GCV + Local</span>
-          <span style={{ color: 'white', fontSize: '11px' }}>GCV: 1 Pi = $314,159</span>
-          <button onClick={() => { if (typeof (window as any).convertAllPrices === 'function') (window as any).convertAllPrices(); }} style={{ background: '#7D2AE7', color: 'white', padding: '4px 10px', borderRadius: '6px', fontSize: '11px', cursor: 'pointer', border: 'none' }}>Refresh Prices</button>
+            <button 
+              onClick={() => {
+                if (typeof (window as any).openUserMenu === 'function') {
+                  (window as any).openUserMenu();
+                } else {
+                  setShowMoreMenu(!showMoreMenu);
+                }
+              }} 
+              style={{ background: 'white', color: 'black', width: '36px', height: '36px', borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justify: 'center' }}
+            >
+              👤
+            </button>
+          </div>
         </div>
 
-        <div className="flex flex-col items-center justify-center text-center cursor-pointer" onClick={() => { const t = setTimeout(()=>setShowAdminLogin(true), 2000); adminPressTimer.current = t; }}>
-            <GoyeLogo size={40} className="text-black mb-1" />
-            <h1 className="text-black font-black text-sm leading-tight uppercase">GOYE Global Worldwide</h1>
-            <div className="text-[10px] text-black font-bold">RC BN3583773</div>
-            <div className="text-[10px] text-black font-bold">www.gasv.store</div>
+        {/* Yellow Header - All buttons working */}
+        <div className="yellow-header-nav" style={{ background: '#FFD700', padding: '12px', textAlign: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '10px' }} className="cursor-pointer" onClick={() => { const t = setTimeout(()=>setShowAdminLogin(true), 2000); adminPressTimer.current = t; }}>
+            <img src="/icon-192.png" style={{ width: '40px', height: '40px', borderRadius: '50%' }} alt="GOYE" />
+            <div style={{ textAlign: 'left' }}>
+              <div style={{ fontWeight: 'bold', color: 'black', fontSize: '16px' }}>GOYE GLOBAL WORLDWIDE</div>
+              <div style={{ color: 'black', fontSize: '11px', fontWeight: 'bold' }}>RC BN3583773<br />www.gasv.store</div>
+            </div>
+          </div>
+          
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', flexWrap: 'wrap', margin: '10px 0' }}>
+            <button onClick={() => { if (typeof (window as any).scrollToSection === 'function') (window as any).scrollToSection('programs'); setTab("home"); setTimeout(() => { const el = document.getElementById("programs-section") || document.getElementById("programs"); if(el) el.scrollIntoView({behavior: "smooth"}); }, 100); }} style={{ background: 'transparent', border: 'none', color: 'black', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', padding: '6px 10px' }}>Programs</button>
+            <button onClick={() => { if (typeof (window as any).scrollToSection === 'function') (window as any).scrollToSection('our-method'); setTab("home"); setTimeout(() => { const el = document.getElementById("our-method-section") || document.getElementById("our-method"); if(el) el.scrollIntoView({behavior: "smooth"}); }, 100); }} style={{ background: 'transparent', border: 'none', color: 'black', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', padding: '6px 10px' }}>Our method</button>
+            <button onClick={() => { if (typeof (window as any).scrollToSection === 'function') (window as any).scrollToSection('community'); trackUserClick("Community", "Header"); window.open("/go/whatsapp?text=Join%20Sirwise%20Community", "_blank"); }} style={{ background: 'transparent', border: 'none', color: 'black', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', padding: '6px 10px' }}>Community</button>
+            <button onClick={() => { if (typeof (window as any).openStudentDashboard === 'function') (window as any).openStudentDashboard(); else if(!isAuthenticated) setTab("auth"); else { setTab("academy"); setTimeout(()=>document.getElementById("dashboard")?.scrollIntoView({behavior:"smooth"}), 100); } }} style={{ background: 'black', color: '#FFD700', padding: '8px 14px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>Student dashboard <span>›</span></button>
+          </div>
+          
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', flexWrap: 'wrap', margin: '10px 0' }}>
+            <button onClick={() => { if(localStorage.getItem("sirwise_paid") !== "true" || localStorage.getItem("academy_unlocked") !== "true") { setSelectedProduct({ id: "academy", name: "Sirwise AI Web3 Academy 4-Week Masterclass", price: 49.99, category: "academy" }); setShowCheckoutModal(true); } else { setTab("academy"); } }} style={{ background: '#1E3A8A', color: 'white', padding: '8px 16px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>Start learning <span>›</span></button>
+            <button onClick={() => { if (typeof (window as any).openReferral === 'function') (window as any).openReferral(); else setShowReferralModal(true); }} style={{ background: 'transparent', border: 'none', color: 'black', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', padding: '6px 10px' }}>Referral</button>
+          </div>
+          
+          <div style={{ textAlign: 'center', margin: '8px 0' }}>
+            <button onClick={() => { if (typeof (window as any).scrollToSection === 'function') (window as any).scrollToSection('programs'); setTab("home"); setTimeout(() => { const el = document.getElementById("programs-section") || document.getElementById("programs"); if(el) el.scrollIntoView({behavior: "smooth"}); }, 100); }} style={{ background: 'transparent', border: 'none', color: 'black', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>EXPLORE THE PROGRAMMES →</button>
+          </div>
+          
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', flexWrap: 'wrap', marginTop: '12px' }}>
+            <button onClick={() => { if (typeof (window as any).openQR === 'function') (window as any).openQR(); else setShowQRModal(true); }} style={{ background: 'black', color: '#FFD700', padding: '8px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}><span>⊞</span> QR</button>
+            <button onClick={() => { if (typeof (window as any).openScan === 'function') (window as any).openScan(); else setShowScanModal(true); }} style={{ background: 'black', color: '#00FF88', padding: '8px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}><span>◯</span> Scan</button>
+            <button onClick={() => { if (typeof (window as any).openRecord === 'function') (window as any).openRecord(); else setShowVoiceModal(true); }} style={{ background: 'black', color: '#60A5FA', padding: '8px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}><span>🎤</span> Record</button>
+            <button onClick={() => { if (typeof (window as any).openMore === 'function') (window as any).openMore(); else setShowMoreMenu(!showMoreMenu); }} style={{ background: 'black', color: 'white', padding: '8px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>⋯ More</button>
+          </div>
         </div>
-        <div className="flex flex-wrap justify-center gap-2 mt-3 px-2 z-[60] relative" style={{ pointerEvents: 'auto' }}>
-            <button onClick={() => { setTab("home"); setTimeout(() => { const el = document.getElementById("programs-section") || document.getElementById("programs"); if(el) el.scrollIntoView({behavior: "smooth"}); }, 100); }} className="text-black font-bold text-[10px] hover:bg-black/10 px-2 py-1 rounded cursor-pointer pointer-events-auto touch-manipulation z-[100] relative">Programs</button>
-            <button onClick={() => { setTab("home"); setTimeout(() => { const el = document.getElementById("our-method-section") || document.getElementById("our-method"); if(el) el.scrollIntoView({behavior: "smooth"}); }, 100); }} className="text-black font-bold text-[10px] hover:bg-black/10 px-2 py-1 rounded cursor-pointer pointer-events-auto touch-manipulation z-[100] relative">Our method</button>
-            <button onClick={() => { trackUserClick("Community", "Header"); window.open("/go/whatsapp?text=Join%20Sirwise%20Community", "_blank"); }} className="text-black font-bold text-[10px] hover:bg-black/10 px-2 py-1 rounded cursor-pointer pointer-events-auto touch-manipulation z-[100] relative">Community</button>
-            <button onClick={() => { if(!isAuthenticated) setTab("auth"); else { setTab("academy"); setTimeout(()=>document.getElementById("dashboard")?.scrollIntoView({behavior:"smooth"}), 100); } }} className="text-[#FFD700] bg-black font-bold text-[10px] hover:bg-black/80 px-2 py-1 rounded-full flex items-center gap-1 cursor-pointer pointer-events-auto touch-manipulation z-[100] relative">Student dashboard <ChevronRight size={10} /></button>
-            <button onClick={() => { if(localStorage.getItem("sirwise_paid") !== "true" || localStorage.getItem("academy_unlocked") !== "true") { setSelectedProduct({ id: "academy", name: "Sirwise AI Web3 Academy 4-Week Masterclass", price: 49.99, category: "academy" }); setShowCheckoutModal(true); } else { setTab("academy"); } }} className="text-white bg-blue-900 font-bold text-[10px] hover:bg-blue-800 px-2 py-1 rounded-full flex items-center gap-1 cursor-pointer pointer-events-auto touch-manipulation z-[100] relative">Start learning <ChevronRight size={10} /></button>
-            <button onClick={() => setShowReferralModal(true)} className="text-black font-bold text-[10px] hover:bg-black/10 px-2 py-1 rounded cursor-pointer pointer-events-auto touch-manipulation z-[100] relative">Referral</button>
-        </div>
-        <button onClick={() => { setTab("home"); setTimeout(() => { const el = document.getElementById("programs-section") || document.getElementById("programs"); if(el) el.scrollIntoView({behavior: "smooth"}); }, 100); }} className="w-full bg-[#FFD700] text-black text-center text-[10px] font-black py-1 cursor-pointer pointer-events-auto z-[100] relative block hover:bg-[#ffe033]">
-          EXPLORE THE PROGRAMMES →
-        </button>
-        <div className="flex justify-center gap-4 mt-2 z-[60] relative pointer-events-auto">
-            
-            <button onClick={() => setShowQRModal(true)} className="flex items-center gap-1 bg-black text-[#FFD700] px-2 py-1 rounded text-[10px] font-bold cursor-pointer pointer-events-auto z-[100]"><QrCode size={12} /> QR</button>
-            <button onClick={() => setShowScanModal(true)} className="flex items-center gap-1 bg-black text-[#10B981] px-2 py-1 rounded text-[10px] font-bold cursor-pointer pointer-events-auto z-[100]"><Search size={12} /> Scan</button>
-            <button onClick={() => setShowVoiceModal(true)} className="flex items-center gap-1 bg-black text-[#3b82f6] px-2 py-1 rounded text-[10px] font-bold cursor-pointer pointer-events-auto z-[100]"><Mic size={12} /> Record</button>
-            <button onClick={() => setShowMoreMenu(!showMoreMenu)} className="flex items-center gap-1 bg-black text-white px-2 py-1 rounded text-[10px] font-bold cursor-pointer pointer-events-auto z-[100]"><MoreHorizontal size={12} /> More</button>
-        </div>
+
         {showMoreMenu && (
             <div className="absolute top-[80px] right-[10px] bg-[#111] border border-[#FFD700] rounded-xl shadow-2xl z-[99999] w-[200px] overflow-hidden pointer-events-auto">
                 <button onClick={() => setShowMoreMenu(false)} className="absolute top-2 right-2 text-gray-500 hover:text-white pointer-events-auto z-10"><X size={16} /></button>
