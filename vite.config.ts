@@ -7,8 +7,17 @@ import { VitePWA } from 'vite-plugin-pwa';
 export default defineConfig(() => {
   return {
     plugins: [
-      react(), 
+      react(),
       tailwindcss(),
+      {
+        name: 'disable-preview-hmr-client',
+        enforce: 'post',
+        transformIndexHtml(html: string) {
+          return html
+            .replace(/<script[^>]+src=["']\/@vite\/client["'][^>]*><\/script>\s*/g, '')
+            .replace(/<script[^>]+type=["']module["'][^>]*>\s*import\s+\{\s*injectIntoGlobalHook[\s\S]*?<\/script>\s*/g, '')
+        },
+      },
       VitePWA({
         registerType: 'autoUpdate',
         workbox: { maximumFileSizeToCacheInBytes: 5000000 },
@@ -39,11 +48,10 @@ export default defineConfig(() => {
       },
     },
     server: {
-      // HMR is disabled in AI Studio via DISABLE_HMR env var.
-      // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
-      hmr: process.env.DISABLE_HMR !== 'true',
-      // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
-      watch: process.env.DISABLE_HMR === 'true' ? null : {},
+      // The preview server is mounted behind Express without Vite's WebSocket
+      // upgrade handler, so the injected HMR client cannot connect reliably.
+      hmr: false,
+      watch: null,
     },
   };
 });
