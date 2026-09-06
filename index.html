@@ -470,6 +470,75 @@
         100% { filter: drop-shadow(0 0 10px rgba(255,215,0,0.2)); }
       }
     </style>
+    <script>
+    // Fix fake $199.96 - Clear fake completed orders that are not verified by Paystack
+    function fixFakeRevenue(){
+      let orders = JSON.parse(localStorage.getItem('completed_orders')||'[]');
+      let verifiedOrders = JSON.parse(localStorage.getItem('verified_live_orders')||'[]');
+      
+      const isFake = orders.length === 4 && verifiedOrders.length === 0;
+      const totalFake = localStorage.getItem('verified_revenue') === '$199.96' || localStorage.getItem('verified_revenue') === '199.96';
+      
+      if(isFake || totalFake || (orders.length > 0 && verifiedOrders.length === 0)){
+        console.log('Clearing fake revenue $199.96 - Resetting to real $0.00 until real customer pays');
+        localStorage.removeItem('completed_orders');
+        localStorage.removeItem('verified_live_orders');
+        localStorage.removeItem('live_orders');
+        localStorage.removeItem('orders_list');
+        localStorage.setItem('verified_revenue', '$0.00');
+        localStorage.setItem('completed_orders_count', '0');
+        
+        const revEl = document.getElementById('verifiedRevenueText');
+        if(revEl) revEl.innerText = '$0.00 Real Sales';
+        
+        const orderEl = document.getElementById('completedOrdersCount');
+        if(orderEl) orderEl.innerText = '0 Completed';
+      }
+    }
+    
+    // Run on load
+    window.addEventListener('DOMContentLoaded', fixFakeRevenue);
+    setTimeout(fixFakeRevenue, 1000);
+    
+    // Function to verify payment with Paystack API before adding to completed orders
+    async function verifyPaystackPayment(reference){
+      console.log('Verifying Paystack payment reference:', reference);
+      try{
+        const res = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
+          headers: { 'Authorization': 'Bearer sk_live_9f7e06b21fa6dc4e3e94cc0' }
+        });
+        const data = await res.json();
+        
+        if(data.status && data.data && data.data.status === 'success' && data.data.amount === 7498500){
+          console.log('✅ REAL PAYMENT VERIFIED BY PAYSTACK!', data.data);
+          let verified = JSON.parse(localStorage.getItem('verified_live_orders')||'[]');
+          verified.push({
+            ref: reference,
+            amount: 74985,
+            usd: 49.99,
+            email: data.data.customer.email,
+            date: new Date().toISOString(),
+            status: 'VERIFIED_REAL_PAYMENT'
+          });
+          localStorage.setItem('verified_live_orders', JSON.stringify(verified));
+          
+          let totalRev = verified.reduce((sum, o) => sum + o.usd, 0);
+          localStorage.setItem('verified_revenue', `$${totalRev.toFixed(2)}`);
+          localStorage.setItem('completed_orders_count', verified.length.toString());
+          
+          alert(`✅ PAYMENT VERIFIED REAL! $${(data.data.amount/100/1500).toFixed(2)} received. Access unlocked!`);
+          return true;
+        }else{
+          alert('⚠️ Payment Verification Failed or Pending - Not real money yet!');
+          return false;
+        }
+      }catch(e){
+        console.warn('Paystack API check note:', e);
+        return false;
+      }
+    }
+    window.verifyPaystackPayment = verifyPaystackPayment;
+    </script>
   </body>
 </html>
 

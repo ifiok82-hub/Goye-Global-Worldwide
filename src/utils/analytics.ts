@@ -62,112 +62,19 @@ export function isAdminClick(name?: string, email?: string): boolean {
   return result;
 }
 
-// Initial seed records recorded since 25/08/2026 & 31/08/2026 if localStorage is empty
-export const SEED_CUSTOMERS = [
-  {
-    id: 'PAYSTACK-1724580000',
-    customer: 'Emeka Okonkwo',
-    name: 'Emeka Okonkwo',
-    fullName: 'Emeka Okonkwo',
-    customerName: 'Emeka Okonkwo',
-    pupilName: 'Emeka Okonkwo',
-    email: 'emeka.okonkwo@gmail.com',
-    customerEmail: 'emeka.okonkwo@gmail.com',
-    country: '🇳🇬 Nigeria',
-    product: 'Sirwise AI Web3 Academy',
-    productName: 'Sirwise AI Web3 Academy',
-    amount: '₦74,985.00 ($49.99)',
-    amount_num: 74985,
-    status: 'Verified',
-    verified: 'VERIFIED',
-    createdAt: '2026-08-25T14:22:10.000Z',
-    created_at: '2026-08-25T14:22:10.000Z',
-    date: '25/08/2026',
-    date_wat: '25/08/2026, 14:22:10 WAT Lagos',
-    page: 'academy'
-  },
-  {
-    id: 'PAYSTACK-1724800000',
-    customer: 'Sarah Jenkins',
-    name: 'Sarah Jenkins',
-    fullName: 'Sarah Jenkins',
-    customerName: 'Sarah Jenkins',
-    pupilName: 'Sarah Jenkins',
-    email: 'sarah.j@outlook.com',
-    customerEmail: 'sarah.j@outlook.com',
-    country: '🇺🇸 USA',
-    product: 'Sirwise AI Web3 Academy',
-    productName: 'Sirwise AI Web3 Academy',
-    amount: '₦74,985.00 ($49.99)',
-    amount_num: 74985,
-    status: 'Verified',
-    verified: 'VERIFIED',
-    createdAt: '2026-08-28T09:15:44.000Z',
-    created_at: '2026-08-28T09:15:44.000Z',
-    date: '28/08/2026',
-    date_wat: '28/08/2026, 09:15:44 WAT Lagos',
-    page: 'academy'
-  },
-  {
-    id: 'PAYSTACK-1725060000',
-    customer: 'David Brown',
-    name: 'David Brown',
-    fullName: 'David Brown',
-    customerName: 'David Brown',
-    pupilName: 'David Brown',
-    email: 'david.b@btinternet.com',
-    customerEmail: 'david.b@btinternet.com',
-    country: '🇬🇧 UK',
-    product: 'Sirwise AI Web3 Academy',
-    productName: 'Sirwise AI Web3 Academy',
-    amount: '₦74,985.00 ($49.99)',
-    amount_num: 74985,
-    status: 'Verified',
-    verified: 'VERIFIED',
-    createdAt: '2026-08-31T18:04:12.000Z',
-    created_at: '2026-08-31T18:04:12.000Z',
-    date: '31/08/2026',
-    date_wat: '31/08/2026, 18:04:12 WAT Lagos',
-    page: 'academy'
-  },
-  {
-    id: 'PAYSTACK-1725350000',
-    customer: 'Adebayo Global',
-    name: 'Adebayo Global',
-    fullName: 'Adebayo Global',
-    customerName: 'Adebayo Global',
-    pupilName: 'Adebayo Global',
-    email: 'adebayo.g@gmail.com',
-    customerEmail: 'adebayo.g@gmail.com',
-    country: '🇳🇬 Nigeria',
-    product: 'Sirwise AI Web3 Academy',
-    productName: 'Sirwise AI Web3 Academy',
-    amount: '₦74,985.00 ($49.99)',
-    amount_num: 74985,
-    status: 'Verified',
-    verified: 'VERIFIED',
-    createdAt: '2026-09-03T11:30:00.000Z',
-    created_at: '2026-09-03T11:30:00.000Z',
-    date: '03/09/2026',
-    date_wat: '03/09/2026, 11:30:00 WAT Lagos',
-    page: 'home'
-  }
-];
-
-export const SEED_ORDERS = SEED_CUSTOMERS.map(c => ({
-  ...c,
-  id: c.id || 'PAYSTACK-' + Date.now()
-}));
+// Initial seed records - Real verified orders only (empty by default until real Paystack transactions occur)
+export const SEED_CUSTOMERS: any[] = [];
+export const SEED_ORDERS: any[] = [];
 
 export function ensureInitialSeeds(): void {
   try {
     const existingUsers = JSON.parse(localStorage.getItem('registered_customers') || '[]');
-    if (!Array.isArray(existingUsers) || existingUsers.length === 0) {
-      localStorage.setItem('registered_customers', JSON.stringify(SEED_CUSTOMERS));
+    if (!Array.isArray(existingUsers)) {
+      localStorage.setItem('registered_customers', JSON.stringify([]));
     }
     const existingOrders = JSON.parse(localStorage.getItem('live_orders') || '[]');
-    if (!Array.isArray(existingOrders) || existingOrders.length === 0) {
-      localStorage.setItem('live_orders', JSON.stringify(SEED_ORDERS));
+    if (!Array.isArray(existingOrders)) {
+      localStorage.setItem('live_orders', JSON.stringify([]));
     }
     if (!localStorage.getItem('total_clicks')) {
       localStorage.setItem('total_clicks', '284');

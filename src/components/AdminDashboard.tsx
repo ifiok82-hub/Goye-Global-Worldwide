@@ -14,14 +14,14 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
 
   // Direct Server Payment Audit Summary State
   const [auditSummary, setAuditSummary] = useState({
-    liveVerifiedCount: 4,
-    liveVerifiedRevenue: 199.96,
+    liveVerifiedCount: 0,
+    liveVerifiedRevenue: 0,
     testCount: 0,
     testRevenue: 0,
     failedCount: 0,
     unverifiedCount: 0,
     unverifiedRevenue: 0,
-    totalRecordsAudited: 4,
+    totalRecordsAudited: 0,
     hasPaystackSecretKey: true
   });
   const [isAuditing, setIsAuditing] = useState(false);
@@ -212,10 +212,10 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
     const excludeOn = localStorage.getItem('exclude_my_clicks') !== 'false' && localStorage.getItem('excludeAdminClicks') !== 'false';
 
     let allUsers = JSON.parse(localStorage.getItem('registered_customers') || '[]');
-    if (!Array.isArray(allUsers) || allUsers.length === 0) allUsers = SEED_CUSTOMERS;
+    if (!Array.isArray(allUsers)) allUsers = [];
 
     let allOrders = JSON.parse(localStorage.getItem('live_orders') || '[]');
-    if (!Array.isArray(allOrders) || allOrders.length === 0) allOrders = SEED_ORDERS;
+    if (!Array.isArray(allOrders)) allOrders = [];
 
     let allLeads = JSON.parse(localStorage.getItem('academy_leads') || '[]');
 
@@ -267,9 +267,8 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
 
     // 1. Registered Users / Customers
     let localUsers = JSON.parse(localStorage.getItem('registered_customers') || '[]');
-    if (!Array.isArray(localUsers) || localUsers.length === 0) {
-      localUsers = SEED_CUSTOMERS;
-      localStorage.setItem('registered_customers', JSON.stringify(SEED_CUSTOMERS));
+    if (!Array.isArray(localUsers)) {
+      localUsers = [];
     }
     // Skip leak emails and admin users when excludeOn is true
     const cleanUsers = localUsers.filter((u: any) => {
@@ -283,9 +282,8 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
 
     // 2. Live Completed Orders
     let localOrders = JSON.parse(localStorage.getItem('live_orders') || '[]');
-    if (!Array.isArray(localOrders) || localOrders.length === 0) {
-      localOrders = SEED_ORDERS;
-      localStorage.setItem('live_orders', JSON.stringify(SEED_ORDERS));
+    if (!Array.isArray(localOrders)) {
+      localOrders = [];
     }
     const cleanOrders = localOrders.filter((o: any) => {
       const name = o.customer || o.name || o.customerName || '';
@@ -922,16 +920,35 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
                 </p>
               </div>
             </div>
-            <button
-              onClick={() => {
-                if (typeof window !== 'undefined' && (window as any).checkAcademyLeadsConversion) {
-                  (window as any).checkAcademyLeadsConversion();
-                }
-              }}
-              className="bg-[#FFD700] text-black font-black text-xs px-4 py-2 rounded-xl border border-black hover:bg-yellow-400 transition cursor-pointer shrink-0"
-            >
-              🔄 Refresh Conversion Rate
-            </button>
+            <div className="flex flex-col sm:flex-row gap-2 shrink-0">
+              <button
+                onClick={() => {
+                  if (typeof window !== 'undefined' && (window as any).checkAcademyLeadsConversion) {
+                    (window as any).checkAcademyLeadsConversion();
+                  }
+                }}
+                className="bg-[#FFD700] text-black font-black text-xs px-4 py-2 rounded-xl border border-black hover:bg-yellow-400 transition cursor-pointer"
+              >
+                🔄 Refresh Conversion Rate
+              </button>
+              <button
+                onClick={() => {
+                  if (confirm('Reset fake $199.96? This will clear 4 fake orders and set revenue to $0 real - Paystack shows 0 - Continue?')) {
+                    localStorage.removeItem('completed_orders');
+                    localStorage.removeItem('verified_live_orders');
+                    localStorage.removeItem('live_orders');
+                    localStorage.removeItem('orders_list');
+                    localStorage.setItem('verified_revenue', '$0.00');
+                    localStorage.setItem('completed_orders_count', '0');
+                    alert('Fake revenue cleared - Now $0.00 real - Share gasv.store to get real orders');
+                    location.reload();
+                  }
+                }}
+                style={{ background: '#FF4444', color: 'white', borderRadius: '8px', padding: '8px 12px', fontSize: '11px', cursor: 'pointer', fontWeight: 'bold' }}
+              >
+                🗑️ Reset Fake $199.96 → Show Real $0.00
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">

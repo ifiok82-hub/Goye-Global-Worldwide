@@ -264,14 +264,23 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
             ]
           },
           onClose: function() {
-            console.log('Window closed');
-            if (onToast) onToast('Paystack checkout window closed');
+            console.log('Paystack closed - Not counting');
+            if (onToast) onToast('Paystack checkout window closed - No order recorded');
+          },
+          onCancel: function() {
+            console.log('Paystack cancelled - Not counting');
+            if (onToast) onToast('Payment cancelled - No charge');
           },
           callback: function(response: any) {
+            console.log('Paystack success', response);
+            const ref = response?.reference || response?.trxref || ('PSK_' + Date.now());
+            if (typeof (window as any).verifyPaystackPayment === 'function') {
+              (window as any).verifyPaystackPayment(ref);
+            }
             if (response && response.reference) {
               window.location.href = `/payment/verify?reference=${encodeURIComponent(response.reference)}`;
             } else {
-              handleSuccess('GOYE_' + Date.now(), 'Paystack (Global Cards)');
+              handleSuccess(ref, 'Paystack (Global Cards)');
             }
           }
         });
@@ -326,12 +335,17 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
           },
           callback: (data: any) => {
             if (data && (data.status === 'successful' || data.status === 'completed' || data.transaction_id || data.tx_ref)) {
-              handleSuccess(data.transaction_id || data.tx_ref || ('FLW-' + Date.now()), 'Flutterwave (Africa Cards)');
+              const ref = data.tx_ref || data.transaction_id || ('FLW-' + Date.now());
+              if (typeof (window as any).verifyPaystackPayment === 'function') {
+                (window as any).verifyPaystackPayment(ref);
+              }
+              handleSuccess(ref, 'Flutterwave (Africa Cards)');
             } else {
               alert('Payment not successful - Real money required - Amount must be ₦74,985');
             }
           },
           onclose: () => {
+            console.log('Flutterwave closed - Not counting');
             if (onToast) onToast('Flutterwave payment closed');
           }
         });
