@@ -333,7 +333,7 @@ export default function App() {
           <button onclick="document.getElementById('videoModalFullscreen').remove()" style="background:black; color:#FFD700; border-radius:50%; width:32px; height:32px; font-weight:bold; cursor:pointer; border:none;">X</button>
         </div>
         <div style="position:relative; width:100%; height:0; padding-bottom:56.25%; background:black;">
-          <iframe width="100%" height="100%" style="position:absolute; top:0; left:0;" src="${realVideoUrl}" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+          <iframe width="100%" height="100%" style="position:absolute; top:0; left:0;" src="${realVideoUrl}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
         </div>
         <div style="padding:16px; text-align:center; background:#111;">
           <p style="color:white; margin:0 0 12px 0; font-weight:bold; font-size:14px;">You watched 90 Sec — Unlock Full Academy Now?</p>

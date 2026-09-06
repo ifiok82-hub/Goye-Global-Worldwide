@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { GraduationCap, CheckCircle, Circle, Play, Lock, ChevronRight, Globe, Award, ShieldCheck, DollarSign, Download, Sparkles, X, FileText, Video, BookOpen, ExternalLink, HelpCircle, CreditCard, Send, Mail } from 'lucide-react';
 import CertificateGenerator from './CertificateGenerator';
+import VideoModalPlayer from './VideoModalPlayer';
 import { cleanUserEmail } from '../lib/contact';
 
 const showToast = (msg: string, type?: string) => {
@@ -146,6 +147,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
   const [progress, setProgress] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeModule, setActiveModule] = useState<any>(null);
+  const [playingVideo, setPlayingVideo] = useState<{ url: string; title: string } | null>(null);
   const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
   const [capstoneSubmission, setCapstoneSubmission] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
@@ -154,7 +156,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
   const copyUSDC = () => {
     const addr = '0xaeed4e48f2146aadd07e85219f209053616e4e71';
     navigator.clipboard.writeText(addr).then(() => {
-      alert('✅ Copied: ' + addr + '\nSend $49.99 USDC ERC20 only');
+      showToast('✅ Copied: ' + addr + ' - Send $49.99 USDC ERC20 only', 'success');
     });
   };
 
@@ -165,16 +167,16 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
     const email = (emailInput?.value || customerEmail || localStorage.getItem('user_email') || '').trim();
 
     if (!email.includes('@') || !email.includes('.')) {
-      alert('Enter complete valid email first');
+      showToast('Enter complete valid email first', 'error');
       return;
     }
     if (!tx || tx.length < 20) {
-      alert('Paste Transaction Hash after you sent USDC $49.99');
+      showToast('Paste Transaction Hash after you sent USDC $49.99', 'error');
       return;
     }
 
     if (!tx.startsWith('0x') || tx.length !== 66) {
-      alert('Invalid Tx Hash - Must start with 0x and 66 chars');
+      showToast('Invalid Tx Hash - Must start with 0x and 66 chars', 'error');
       return;
     }
 
@@ -844,13 +846,22 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
               <p className="text-gray-400 text-xs mt-1">{activeModule.desc}</p>
             </div>
 
-            {/* Simulated Video Player */}
-            <div className="bg-black border border-[#333] rounded-2xl p-6 text-center aspect-video flex flex-col items-center justify-center relative overflow-hidden group">
-              <div className="w-16 h-16 bg-[#FFD700] text-black rounded-full flex items-center justify-center text-xl font-bold shadow-2xl group-hover:scale-110 transition cursor-pointer">
+            {/* Interactive Video Player Card */}
+            <div 
+              onClick={() => setPlayingVideo({
+                url: activeModule.videoUrl || 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+                title: `${activeModule.title} HD Video Class`
+              })}
+              className="bg-black border-2 border-[#FFD700]/50 hover:border-[#FFD700] rounded-2xl p-6 text-center aspect-video flex flex-col items-center justify-center relative overflow-hidden group cursor-pointer transition-all hover:scale-[1.01] shadow-[0_0_20px_rgba(255,215,0,0.2)] hover:shadow-[0_0_30px_rgba(255,215,0,0.4)]"
+            >
+              <div className="w-16 h-16 bg-[#FFD700] text-black rounded-full flex items-center justify-center text-xl font-bold shadow-2xl group-hover:scale-110 transition cursor-pointer border-2 border-yellow-300">
                 <Play size={28} fill="currentColor" className="ml-1" />
               </div>
-              <p className="text-white font-bold text-sm mt-4">{activeModule.title} HD Video Class</p>
-              <p className="text-gray-500 text-xs">{activeModule.duration} • International Standard Lesson</p>
+              <p className="text-white font-bold text-sm mt-4 group-hover:text-[#FFD700] transition-colors">{activeModule.title} HD Video Class</p>
+              <p className="text-gray-400 text-xs mt-1">{activeModule.duration} • International Standard Lesson</p>
+              <p className="text-[#00FF88] text-[11px] font-bold mt-2 flex items-center justify-center gap-1 bg-green-950/60 border border-green-800/60 px-3 py-1 rounded-full">
+                <Play size={12} fill="currentColor" /> Click to Watch HD Video Class
+              </p>
             </div>
 
             {/* Study PDF & Exercises */}
@@ -962,6 +973,14 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
             </div>
           </div>
         </div>
+      )}
+
+      {playingVideo && (
+        <VideoModalPlayer
+          videoUrl={playingVideo.url}
+          title={playingVideo.title}
+          onClose={() => setPlayingVideo(null)}
+        />
       )}
     </div>
   );
