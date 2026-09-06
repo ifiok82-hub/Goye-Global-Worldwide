@@ -26,6 +26,8 @@
 
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GOYE Global - Sirwise AI WEB3 Academy - gasv.store - RC BN3583773</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <meta name="impact-site-verification" value="87dcb7aa-3d1f-4a4e-84f8-e70ce2632160" />
     
     <!-- PWA Meta Tags -->
@@ -392,19 +394,11 @@
     <!-- Google Pay API SDK -->
     <script src="https://pay.google.com/gp/p/js/pay.js" async></script>
     <style>
-      button, a, [role="button"] {
-        pointer-events: auto !important;
-        cursor: pointer !important;
-        position: relative !important;
-        z-index: 10 !important;
-      }
       #loginWithPiBtn, #refreshConversionBtn, #pwaInstallBtn, #upgradeToAcademyBtn, #downloadBlueprintBtn, #buyUnlockBtn {
         pointer-events: auto !important;
         cursor: pointer !important;
         z-index: 9999 !important;
       }
-    </style>
-    <style>
       body {
         margin: 0;
         background-color: #0a0a0a;
@@ -430,6 +424,11 @@
         border-radius: 50%;
         animation: spin 0.8s linear infinite;
         margin-bottom: 16px;
+      }
+      @keyframes pulseGlow {
+        0% { filter: drop-shadow(0 0 10px rgba(255,215,0,0.2)); }
+        50% { filter: drop-shadow(0 0 30px rgba(255,215,0,0.6)); }
+        100% { filter: drop-shadow(0 0 10px rgba(255,215,0,0.2)); }
       }
       @keyframes pulse {
         0% { transform: scale(1); opacity: 1; }
@@ -463,13 +462,6 @@
       </div>
     </div>
     <script type="module" src="/src/main.tsx"></script>
-    <style>
-      @keyframes pulseGlow {
-        0% { filter: drop-shadow(0 0 10px rgba(255,215,0,0.2)); }
-        50% { filter: drop-shadow(0 0 30px rgba(255,215,0,0.6)); }
-        100% { filter: drop-shadow(0 0 10px rgba(255,215,0,0.2)); }
-      }
-    </style>
     <script>
     // Fix fake $199.96 - Clear fake completed orders that are not verified by Paystack
     function fixFakeRevenue(){
@@ -624,6 +616,68 @@
     setInterval(updateAllToZero, 3000);
 
     if(localStorage.getItem('exclude_my_clicks')!=='false'){ localStorage.setItem('exclude_my_clicks','true'); }
+    </script>
+
+    <!-- Emergency Admin Recovery & CSS Fix Script -->
+    <script>
+    (function(){
+      console.log('Emergency Admin Recovery - Fixing CSS jammed + Admin locked');
+      
+      // Restore admin token - Ifiok Enyiema admin
+      localStorage.setItem('is_admin', 'true');
+      localStorage.setItem('admin_unlocked', 'true');
+      localStorage.setItem('admin_email', 'goyedagosmess@gmail.com');
+      localStorage.setItem('admin_username', 'ifiok enyiema');
+      localStorage.setItem('exclude_my_clicks', 'true'); // Keep ON
+      
+      // Fix CSS jammed - Restore Tailwind if missing
+      function fixCSS(){
+        const hasTailwind = document.querySelector('script[src*="tailwind"]') || document.querySelector('link[href*="tailwind"]') || window.tailwind;
+        if(!hasTailwind){
+          console.log('Tailwind missing - Reloading');
+          const script = document.createElement('script');
+          script.src='https://cdn.tailwindcss.com';
+          document.head.appendChild(script);
+        }
+        document.body.style.display='block';
+        document.body.style.opacity='1';
+      }
+      fixCSS();
+      setTimeout(fixCSS, 1000);
+      
+      // Restore analytics values to 0 real - Don't go back to 284
+      if(!localStorage.getItem('total_link_clicks')) localStorage.setItem('total_link_clicks','0');
+      if(!localStorage.getItem('analytics_fresh_start')) localStorage.setItem('analytics_fresh_start','true');
+      
+      // Unlock Admin Dashboard - Remove lock
+      localStorage.removeItem('admin_locked');
+      localStorage.removeItem('admin_blocked');
+      localStorage.setItem('admin_access_granted', 'true');
+      localStorage.setItem('fresh_start_date', new Date().toLocaleString('en-GB',{timeZone:'Africa/Lagos'})+' WAT Lagos - Fresh Start After Recovery');
+      
+      console.log('Admin recovered - CSS fixed');
+    })();
+
+    // Direct function to open admin - Type in console: openAdmin()
+    window.openAdmin = function(){
+      localStorage.setItem('is_admin','true');
+      localStorage.setItem('admin_unlocked','true');
+      window.location.hash='#admin';
+      window.location.href='/admin.html?admin=goyedagosmess@gmail.com&recovery=true';
+      alert('Admin access restored - Redirecting to Admin Dashboard');
+    };
+
+    window.resetToZeroFresh = function(){
+      localStorage.setItem('total_link_clicks','0');
+      localStorage.setItem('free_leads','0');
+      localStorage.setItem('paid_leads','0');
+      localStorage.setItem('lead_submissions','0');
+      localStorage.setItem('registered_users','0');
+      localStorage.setItem('completed_orders','[]');
+      localStorage.setItem('verified_live_orders','[]');
+      localStorage.setItem('verified_revenue','$0.00');
+      location.reload();
+    };
     </script>
   </body>
 </html>
