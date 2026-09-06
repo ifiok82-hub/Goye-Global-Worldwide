@@ -52,6 +52,9 @@ export default defineConfig(() => {
       // upgrade handler, so the injected HMR client cannot connect reliably.
       hmr: false,
       watch: null,
+      proxy: {
+        '/api': 'http://localhost:3000'
+      }
     },
   };
 });
