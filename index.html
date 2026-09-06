@@ -1,684 +1,169 @@
-<!doctype html>
-<html lang="en" class="bg-[#0a0a0a] text-white">
-  <head>
-    <script>
-      const methods = ['log', 'warn', 'error'];
-      methods.forEach(method => {
-        const orig = console[method];
-        console[method] = function(...args) {
-          const str = args.map(a => String(a?.message || a)).join(' ');
-          if (str.includes('[vite]')) return;
-          orig.apply(console, args);
-        };
-      });
-      window.addEventListener('error', e => {
-        if (e.message && e.message.includes('[vite]')) e.preventDefault();
-      });
-    </script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GOYE Global - Sirwise AI WEB3 Academy - gasv.store - RC BN3583773 - 190+ Countries</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://sdk.minepi.com/pi-sdk.js"></script>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#FFD700">
+<link rel="icon" href="/icon-192.png">
+<meta name="impact-site-verification" value="87dcb7aa-3d1f-4a4e-84f8-e70ce2632160" />
+<style>
+body{background:#000; color:#fff; font-family:system-ui, -apple-system, sans-serif;}
+/* Fix admin jammed text */
+.admin-card{border:2px solid #333; border-radius:16px; padding:16px; margin:12px 0; background:#111;}
+.yellow-card{background:#FFD700; color:#000; border-radius:12px; padding:12px;}
+</style>
 
-    <script>
-      const originalError = console.error;
-      console.error = function(...args) {
-        if (typeof args[0] === 'string' && args[0].includes('[vite]')) return;
-        originalError.apply(console, args);
-      };
-    </script>
+<!-- Paystack Inline Checkout SDK & Flutterwave Inline Checkout SDK v3 & Google Pay -->
+<script src="https://js.paystack.co/v1/inline.js"></script>
+<script src="https://checkout.flutterwave.com/v3.js"></script>
+<script src="https://pay.google.com/gp/p/js/pay.js" async></script>
 
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>GOYE Global - Sirwise AI WEB3 Academy - gasv.store - RC BN3583773</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <meta name="impact-site-verification" value="87dcb7aa-3d1f-4a4e-84f8-e70ce2632160" />
-    
-    <!-- PWA Meta Tags -->
-    <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#FFD700" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Goye Sirwise Academy" />
-    <link rel="apple-touch-icon" href="/goye-logo.svg" />
-    <link rel="icon" type="image/svg+xml" href="/goye-logo.svg" />
-    
-    <meta property="og:title" content="Free 5-Minute AI Prompt Blueprint | Sirwise AI Web3 Academy" />
-    <meta property="og:description" content="Save 15+ hours/week automating marketing, sales, and operations. Download free today." />
-    <meta property="og:image" content="https://www.gasv.store/goye-logo.svg" />
-    <meta property="og:url" content="https://www.gasv.store" />
-    <meta property="og:type" content="website" />
-    <meta name="description" content="Save 15+ hours/week automating marketing, sales, and operations. Download free today." />
-    <title>Free 5-Minute AI Prompt Blueprint | Sirwise AI Web3 Academy</title>
+<script>
+  window.payWithFlutterwave = function(productName, usdPrice){
+    const customerEmail = prompt("Enter your email for instant delivery (e.g. parent@gmail.com):");
+    if(!customerEmail || customerEmail.length < 5 || !customerEmail.includes("@") || !customerEmail.includes(".") || customerEmail === "null" || customerEmail.includes("null")){
+      alert("Please enter a complete valid email address (e.g. parent@gmail.com)");
+      return;
+    }
 
-    <!-- Paystack Inline Checkout SDK & Flutterwave Inline Checkout SDK v3 -->
-    <script src="https://js.paystack.co/v1/inline.js"></script>
-    <script src="https://checkout.flutterwave.com/v3.js"></script>
-    <script>
-      window.payWithFlutterwave = function(productName, usdPrice){
-        const customerEmail = prompt("Enter your email for instant delivery (e.g. parent@gmail.com):");
-        if(!customerEmail || customerEmail.length < 5 || !customerEmail.includes("@") || !customerEmail.includes(".") || customerEmail === "null" || customerEmail.includes("null")){
-          alert("Please enter a complete valid email address (e.g. parent@gmail.com)");
-          return;
-        }
+    if (typeof FlutterwaveCheckout !== 'function') {
+      alert("Flutterwave SDK is loading... Please wait a moment and click again.");
+      return;
+    }
 
-        if (typeof FlutterwaveCheckout !== 'function') {
-          alert("Flutterwave SDK is loading... Please wait a moment and click again.");
-          return;
-        }
+    const validName = customerEmail.split('@')[0] || "GOYE Customer";
 
-        const validName = customerEmail.split('@')[0] || "GOYE Customer";
-
-        FlutterwaveCheckout({
-          public_key: "FLWPUBK-cbb518a9b8f74421e887f4a1ec911ea7-X",
-          tx_ref: "SIRWISE_FW_"+Date.now(),
-          amount: 74985,
-          currency: "NGN",
-          payment_options: "card,banktransfer,ussd",
-          customer: {
-            email: customerEmail,
-            name: validName,
-            phone_number: ''
-          },
-          customizations: {
-            title: "Sirwise AI Web3 Academy",
-            description: "Global $49.99 RC BN3583773",
-            logo: "https://www.gasv.store/logo.png",
-          },
-          callback: function(data){
-            console.log(data);
-            if(data && (data.status === "successful" || data.status === "completed" || data.transaction_id || data.tx_ref)){
-              const txId = data.transaction_id || data.tx_ref || ("GOYE-TX-" + Date.now());
-              const txRef = data.tx_ref || ("GOYE-FLW-" + Date.now());
-              alert("✅ Real payment verified ₦74,985 Success Ref: " + txRef);
-              localStorage.setItem("goye_order_"+txRef, JSON.stringify({email:customerEmail, product:productName, price:usdPrice, tx:txId, ref:txRef, status:"completed", date: new Date().toISOString()}));
-              localStorage.setItem("sirwise_paid", "true");
-              localStorage.setItem("academy_unlocked", "true");
-              try {
-                const stored = JSON.parse(localStorage.getItem('goye_unlocked_products') || '[]');
-                if (!stored.includes(productName)) {
-                  stored.push(productName);
-                  localStorage.setItem('goye_unlocked_products', JSON.stringify(stored));
-                }
-              } catch(e) {}
-              window.location.hash = "#academy";
-            } else {
-              alert("Payment not successful - Real money required - Amount must be ₦74,985");
-            }
-          },
-          onclose: function(){
-            console.log("Flutterwave closed");
-          }
-        });
-      };
-    </script>
-
-    <!-- Pi Network SDK v2 -->
-    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
-    <script>
-      function initPiSDK(){
-        if (typeof Pi !== 'undefined') {
+    FlutterwaveCheckout({
+      public_key: "FLWPUBK-cbb518a9b8f74421e887f4a1ec911ea7-X",
+      tx_ref: "SIRWISE_FW_"+Date.now(),
+      amount: 74985,
+      currency: "NGN",
+      payment_options: "card,banktransfer,ussd",
+      customer: {
+        email: customerEmail,
+        name: validName,
+        phone_number: ''
+      },
+      customizations: {
+        title: "Sirwise AI Web3 Academy",
+        description: "Global $49.99 RC BN3583773",
+        logo: "https://www.gasv.store/logo.png",
+      },
+      callback: function(data){
+        console.log(data);
+        if(data && (data.status === "successful" || data.status === "completed" || data.transaction_id || data.tx_ref)){
+          const txId = data.transaction_id || data.tx_ref || ("GOYE-TX-" + Date.now());
+          const txRef = data.tx_ref || ("GOYE-FLW-" + Date.now());
+          alert("✅ Real payment verified ₦74,985 Success Ref: " + txRef);
+          localStorage.setItem("goye_order_"+txRef, JSON.stringify({email:customerEmail, product:productName, price:usdPrice, tx:txId, ref:txRef, status:"completed", date: new Date().toISOString()}));
+          localStorage.setItem("sirwise_paid", "true");
+          localStorage.setItem("academy_unlocked", "true");
           try {
-            Pi.init({ version: "2.0", sandbox: true });
-            console.log('✅ Pi SDK v2 Initialized - Testnet sandbox:true - gasv.store - Goye Global Sirwise');
-            const btn = document.getElementById('loginWithPiBtn');
-            if (btn) {
-              btn.style.opacity = '1';
-              btn.style.background = '#7D2AE7';
-              btn.innerHTML = '<span style="width:12px; height:12px; background:#00FF88; border-radius:50%; display:inline-block; margin-right:4px;"></span> Login with Pi';
+            const stored = JSON.parse(localStorage.getItem('goye_unlocked_products') || '[]');
+            if (!stored.includes(productName)) {
+              stored.push(productName);
+              localStorage.setItem('goye_unlocked_products', JSON.stringify(stored));
             }
-          } catch(e) {
-            console.warn('Pi init notice:', e);
-          }
+          } catch(e) {}
+          window.location.hash = "#academy";
         } else {
-          const btn = document.getElementById('loginWithPiBtn');
-          if (btn) {
-            btn.style.background = '#555';
-            btn.innerHTML = '🟣 Pi Browser Only';
-          }
+          alert("Payment not successful - Real money required - Amount must be ₦74,985");
         }
+      },
+      onclose: function(){
+        console.log("Flutterwave closed");
       }
-
-      setTimeout(initPiSDK, 1000);
-      window.addEventListener('load', () => setTimeout(initPiSDK, 1500));
-
-      function onIncompletePaymentFound(payment){
-        console.log('Incomplete payment', payment);
-        return typeof Pi !== 'undefined' && Pi.completePayment ? Pi.completePayment(payment.identifier) : null;
-      }
-
-      // LOGIN WITH PI - Dead Button Fix & Guide
-      async function loginWithPi(){
-        console.log('Login with Pi clicked - gasv.store - Fix stuck Connecting');
-        const btn = document.getElementById('loginWithPiBtn');
-        
-        // Step 1 - Show Connecting
-        if(btn){ btn.innerHTML='⏳ Connecting...'; btn.disabled=false; btn.style.background='#7D2AE7'; btn.style.pointerEvents='auto'; }
-
-        // Step 2 - If not in Pi Browser - Show guide IMMEDIATELY after 1.2 sec - Don't wait for Pi SDK hang
-        const isPiBrowser = navigator.userAgent.includes('PiBrowser') || window.location.href.includes('pi://') || (typeof Pi !== 'undefined' && Pi.nativeFeaturesList);
-        const piExists = typeof Pi !== 'undefined';
-
-        if(!piExists || !isPiBrowser){
-          setTimeout(()=>{
-            if(btn && btn.innerHTML.includes('Connecting')){ btn.innerHTML='<span style="width:16px; height:16px; background:#FFD700; border-radius:50%; display:inline-block; margin-right:4px;"></span> Login with Pi'; btn.disabled=false; }
-            showPiGuideModal();
-          }, 1200);
-          
-          if(!piExists){
-            return;
-          }
-        }
-
-        // Step 3 - If in Pi Browser - Real auth with 4 sec timeout
-        if(piExists){
-          try{
-            const timeoutPromise = new Promise((_, reject)=> setTimeout(()=> reject(new Error('Pi auth timeout - Show guide')), 4000));
-            const authPromise = Pi.authenticate(['username','payments'], onIncompletePaymentFound);
-            const auth = await Promise.race([authPromise, timeoutPromise]);
-            
-            const username = auth.user ? auth.user.username : ('pioneer_' + Date.now().toString().slice(-4));
-            const email = username.includes('@') ? username : (username + '@pi.network');
-            localStorage.setItem('user_email', email);
-            localStorage.setItem('customer_email', email);
-            localStorage.setItem('pi_username', username);
-            localStorage.setItem('pi_access_token', auth.accessToken || 'pi_token_active');
-            localStorage.setItem('is_pi_user','true');
-            localStorage.setItem('lead_name', username);
-            let users = JSON.parse(localStorage.getItem('registered_customers')||'[]');
-            if(!users.some(u=>u.email===email)){
-              users.unshift({name: username, email, pupil_name: username, parent:'Pi Network', date:new Date().toLocaleDateString('en-GB'), country:'Pi Network GCV $314,159'});
-              localStorage.setItem('registered_customers', JSON.stringify(users.slice(0,200)));
-            }
-            if(btn){ btn.innerHTML='✅ @'+username; btn.style.background='#00AA00'; btn.disabled=false; }
-            const ok = document.createElement('div');
-            ok.style.cssText='position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#00AA00; color:white; padding:16px 20px; border-radius:12px; z-index:9999999; font-weight:bold; box-shadow:0 4px 20px rgba(0,0,0,0.5);';
-            ok.innerHTML=`✅ Welcome @${username}! Pi Login Success`; document.body.appendChild(ok); setTimeout(()=>ok.remove(),3000);
-            setTimeout(()=>{ window.location.hash='#academy'; }, 800);
-            return auth;
-          }catch(e){
-            console.error('Pi auth failed/timeout', e);
-            if(btn){ btn.innerHTML='<span style="width:16px; height:16px; background:#FFD700; border-radius:50%; display:inline-block; margin-right:4px;"></span> Login with Pi'; btn.disabled=false; btn.style.background='#7D2AE7'; }
-            if(e.message && e.message.includes('timeout')){
-              showPiGuideModal();
-            }else if(e.message && e.message.toLowerCase().includes('cancel')){
-              // User cancelled
-            }else{
-              showPiGuideModal();
-            }
-          }
-        }
-      }
-
-      function showPiGuideModal(){
-        if(document.getElementById('piGuideModal')) return;
-        const modal=document.createElement('div'); modal.id='piGuideModal';
-        modal.style.cssText='position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.92); z-index:9999999; display:flex; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(4px); box-sizing:border-box;';
-        modal.innerHTML=`<div style="background:#111; border:3px solid #7D2AE7; border-radius:20px; padding:20px; max-width:400px; width:100%; text-align:center; animation:slideUp 0.3s ease;"><h2 style="color:#7D2AE7; margin:0 0 12px 0; font-size:20px;">🟣 Pi Browser Required</h2><p style="color:white; font-size:14px; margin:0 0 12px 0;">You tapped Login with Pi in Chrome — It only works inside Pi Browser App.</p><div style="background:#222; padding:12px; border-radius:12px; margin:12px 0; text-align:left; border:1px solid #333;"><p style="color:#FFD700; font-size:13px; margin:6px 0;">1️⃣ Download Pi Browser (Play Store / App Store)</p><p style="color:#FFD700; font-size:13px; margin:6px 0;">2️⃣ Open Pi Browser → Type: <b>gasv.store</b></p><p style="color:#FFD700; font-size:13px; margin:6px 0;">3️⃣ Tap Login with Pi purple → Approve username</p><p style="color:#00FF88; font-size:12px; margin:10px 0 0 0; background:#003300; padding:8px; border-radius:8px;">✅ Then Pay with Pi GCV $314,159 — 0.000159 Pi = $49.99 Academy — No card needed!</p></div><div style="display:grid; gap:10px; margin-top:14px;"><a href="https://minepi.com/pi-browser" target="_blank" style="height:52px; background:#7D2AE7; color:white; border-radius:12px; display:flex; align-items:center; justify-content:center; font-weight:bold; text-decoration:none; font-size:15px;">📥 Download Pi Browser — Free</a><button onclick="document.getElementById('piGuideModal').remove()" style="height:48px; background:#333; color:white; border-radius:12px; cursor:pointer; font-weight:bold; border:1px solid #555;">Continue with Email Login — Chrome</button></div><p style="color:#888; font-size:10px; margin-top:12px;">Official goyedagosmess@gmail.com | RC BN3583773 | gasv.store | USDC 0xaeed4e48f2146aadd07e85219f209053616e4e71</p></div><style>@keyframes slideUp{ from{transform:translateY(20px); opacity:0;} to{transform:translateY(0); opacity:1;} }</style>`;
-        modal.onclick=(e)=>{ if(e.target===modal) modal.remove(); };
-        document.body.appendChild(modal);
-      }
-
-      window.loginWithPi = loginWithPi;
-
-      // VIDEO TOUR PLAYER FIX
-      function playAcademyVideoFullscreen(){
-        const youtubeId = 'dQw4w9WgXcQ';
-        const realVideoUrl = localStorage.getItem('academy_tour_video_url') || `https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0&showinfo=0`;
-
-        const existing = document.getElementById('videoModal');
-        if (existing) existing.remove();
-
-        const modal = document.createElement('div');
-        modal.id = 'videoModal';
-        modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:9999999; display:flex; align-items:center; justify-content:center; padding:20px; box-sizing:border-box;';
-        modal.innerHTML = `
-          <div style="width:100%; max-width:600px; background:#111; border:2px solid #FFD700; border-radius:20px; overflow:hidden; box-shadow:0 0 40px rgba(255,215,0,0.4);">
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:#FFD700;">
-              <span style="color:black; font-weight:bold; font-size:14px;">Sirwise Academy Tour - 8 Modules</span>
-              <button onclick="document.getElementById('videoModal').remove()" style="background:black; color:#FFD700; border-radius:50%; width:32px; height:32px; font-weight:bold; cursor:pointer; border:none;">X</button>
-            </div>
-            <div style="position:relative; width:100%; height:0; padding-bottom:56.25%; background:black;">
-              <iframe width="100%" height="100%" style="position:absolute; top:0; left:0;" src="${realVideoUrl}" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-            </div>
-            <div style="padding:16px; text-align:center; background:#111;">
-              <p style="color:white; font-weight:bold; margin:0 0 12px 0;">You watched 90 Sec — Unlock Full Academy Now?</p>
-              <button onclick="document.getElementById('videoModal').remove(); if(window.goToPaywallFromConversion){ window.goToPaywallFromConversion(); } else { const el = document.getElementById('academyPaywall'); if(el) el.scrollIntoView({behavior:'smooth'}); }" style="width:100%; height:55px; background:#FFD700; color:black; border-radius:12px; font-weight:bold; font-size:16px; cursor:pointer; border:none;">🚀 UNLOCK FULL ACADEMY $49.99</button>
-              <p style="color:#888; font-size:10px; margin-top:8px;">Official goyedagosmess@gmail.com | RC BN3583773</p>
-            </div>
-          </div>
-        `;
-        modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
-        document.body.appendChild(modal);
-
-        try {
-          let logs = JSON.parse(localStorage.getItem('live_traffic_activity') || '[]');
-          logs.unshift({ location: 'Video View', customer_name: localStorage.getItem('lead_name') || 'Guest', status: 'Watched 90 Sec Tour - Hot Lead', time: 'Just now', device: 'Mobile' });
-          localStorage.setItem('live_traffic_activity', JSON.stringify(logs.slice(0, 100)));
-        } catch(e) {}
-      }
-
-      window.playAcademyVideoFullscreen = playAcademyVideoFullscreen;
-      window.playAcademyVideo = playAcademyVideoFullscreen;
-
-      // EXCLUDE MY CLICKS ADMIN FILTER
-      if (!localStorage.getItem('admin_device_id')) {
-        localStorage.setItem('admin_device_id', 'ADMIN_IFIOK_' + Date.now());
-      }
-      localStorage.setItem('is_admin', 'true');
-
-      const ADMIN_NAMES = ['ifiok enyiema', 'ifiok', 'goyedagosmess', 'goyedagos', 'goye'];
-      const ADMIN_EMAIL_PARTS = ['goyedagosmess', 'ifiok82', 'godswilloyoho', 'goye@gasv.store', 'goyedagos@', 'emeka.okonkwo', 'sarah.j@outlook', 'david.b@btinternet', 'adebayo.g@gmail.com', 'rev.ifiok1@gmail.com'];
-
-      function isAdminClick(name, email) {
-        const n = (name || '').toLowerCase();
-        const e = (email || '').toLowerCase();
-        const deviceIsAdmin = localStorage.getItem('is_admin') === 'true';
-        const hasAdminName = ADMIN_NAMES.some(a => n.includes(a));
-        const hasAdminEmail = ADMIN_EMAIL_PARTS.some(a => e.includes(a)) || e.includes('ifiok') || e.includes('goyedagos');
-        const isAdminParam = new URLSearchParams(location.search).get('admin') === 'RCBN3583773';
-        return deviceIsAdmin || hasAdminName || hasAdminEmail || isAdminParam;
-      }
-
-      if (localStorage.getItem('exclude_my_clicks') !== 'false') {
-        localStorage.setItem('exclude_my_clicks', 'true');
-      }
-
-      function saveUserClick(name, email) {
-        name = (name || 'Guest').trim();
-        email = (email || '').trim().toLowerCase();
-        const excludeOn = localStorage.getItem('exclude_my_clicks') === 'true';
-
-        if (email.includes('ifiok82') || email.includes('godswilloyoho') || email === 'goyedagos@' || email.includes('null') || email === 'goye@gasv.store') {
-          return;
-        }
-
-        if (excludeOn && isAdminClick(name, email)) {
-          let excl = JSON.parse(localStorage.getItem('excluded_admin_clicks') || '[]');
-          excl.unshift({ name, email, date: new Date().toLocaleString(), reason: 'Excluded Admin' });
-          localStorage.setItem('excluded_admin_clicks', JSON.stringify(excl.slice(0, 20)));
-          return;
-        }
-
-        if (!email.includes('@') || !email.includes('.')) {
-          email = 'guest_' + Date.now() + '@gasv.store';
-          name = 'Guest Customer';
-        }
-
-        const record = {
-          name,
-          email,
-          pupil_name: name,
-          parent: '-',
-          date: new Date().toLocaleDateString('en-GB'),
-          date_wat: new Date().toLocaleString('en-GB', { timeZone: 'Africa/Lagos' }) + ' WAT Lagos'
-        };
-
-        let users = JSON.parse(localStorage.getItem('registered_customers') || '[]');
-        if (!users.some(u => u.name.toLowerCase() === name.toLowerCase() && isAdminClick(name, email))) {
-          users.unshift(record);
-          localStorage.setItem('registered_customers', JSON.stringify(users.slice(0, 100)));
-        }
-      }
-
-      window.trackGlobalClick = saveUserClick;
-      window.saveGlobalClick = saveUserClick;
-
-      // PWA SERVICE WORKER REGISTRATION & INSTALL PROMPT
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/service-worker.js').then(reg => {
-            console.log('✅ PWA SW registered', reg.scope);
-          }).catch(err => {
-            console.warn('SW fail', err);
-          });
-        });
-      }
-
-      let deferredPrompt;
-      window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        const btn = document.createElement('button');
-        btn.id = 'pwaInstallBtn';
-        btn.textContent = '📲 Install App';
-        btn.style.cssText = 'position:fixed; bottom:80px; right:16px; background:#FFD700; color:black; border-radius:24px; padding:10px 18px; font-weight:black; z-index:99999; box-shadow:0 4px 15px rgba(255,215,0,0.6); cursor:pointer; border:2px solid black; font-size:13px;';
-        btn.onclick = async () => {
-          if (deferredPrompt) {
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            if (outcome === 'accepted') {
-              btn.remove();
-              localStorage.setItem('pwa_installed', 'true');
-            }
-            deferredPrompt = null;
-          }
-        };
-        if (!localStorage.getItem('pwa_installed') && !window.matchMedia('(display-mode: standalone)').matches) {
-          document.body.appendChild(btn);
-          setTimeout(() => { if (btn.parentNode) btn.remove(); }, 15000);
-        }
-      });
-
-      window.addEventListener('appinstalled', () => {
-        localStorage.setItem('pwa_installed', 'true');
-        const el = document.getElementById('pwaInstallBtn');
-        if (el) el.remove();
-      });
-
-      // Global button handler binding & auto-reset for stuck Connecting status
-      window.addEventListener('load', () => {
-        setTimeout(() => {
-          document.querySelectorAll('button').forEach(b => {
-            if (b.textContent && b.textContent.includes('Login with Pi')) {
-              b.id = 'loginWithPiBtn';
-              b.onclick = loginWithPi;
-              b.style.pointerEvents = 'auto';
-              b.style.cursor = 'pointer';
-              b.style.zIndex = '99999';
-            }
-          });
-          const btn = document.getElementById('loginWithPiBtn');
-          if (btn) {
-            btn.style.pointerEvents = 'auto';
-            btn.style.cursor = 'pointer';
-            btn.disabled = false;
-            btn.onclick = loginWithPi;
-            setInterval(() => {
-              if (btn.innerHTML && btn.innerHTML.includes('Connecting')) {
-                btn.innerHTML = '<span style="width:12px; height:12px; background:#00FF88; border-radius:50%; display:inline-block; margin-right:4px;"></span> Login with Pi';
-                btn.disabled = false;
-              }
-            }, 3000);
-          }
-        }, 500);
-      });
-    </script>
-
-    <!-- Google Pay API SDK -->
-    <script src="https://pay.google.com/gp/p/js/pay.js" async></script>
-    <style>
-      #loginWithPiBtn, #refreshConversionBtn, #pwaInstallBtn, #upgradeToAcademyBtn, #downloadBlueprintBtn, #buyUnlockBtn {
-        pointer-events: auto !important;
-        cursor: pointer !important;
-        z-index: 9999 !important;
-      }
-      body {
-        margin: 0;
-        background-color: #0a0a0a;
-        color: #ffffff;
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      }
-      .app-loader {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 100vh;
-        background-color: #0a0a0a;
-        color: #FFC800;
-        font-family: system-ui, sans-serif;
-        text-align: center;
-      }
-      .spinner {
-        width: 40px;
-        height: 40px;
-        border: 4px solid rgba(255, 200, 0, 0.1);
-        border-top: 4px solid #FFC800;
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
-        margin-bottom: 16px;
-      }
-      @keyframes pulseGlow {
-        0% { filter: drop-shadow(0 0 10px rgba(255,215,0,0.2)); }
-        50% { filter: drop-shadow(0 0 30px rgba(255,215,0,0.6)); }
-        100% { filter: drop-shadow(0 0 10px rgba(255,215,0,0.2)); }
-      }
-      @keyframes pulse {
-        0% { transform: scale(1); opacity: 1; }
-        50% { transform: scale(1.05); opacity: 0.8; }
-        100% { transform: scale(1); opacity: 1; }
-      }
-      @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-    </style>
-  
-    <!-- Replace G-XXXX with your Google Analytics ID from analytics.google.com - Free! -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXX"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-XXXX');
-    </script>
-
-    <link rel="manifest" href="/manifest.json" />
-    <link rel="icon" href="/goye-logo.svg" type="image/svg+xml" />
-  </head>
-  <body>
-    <div id="root">
-      <div class="app-loader" style="animation: pulseGlow 2s infinite ease-in-out;">
-        <img src="/goye-logo.svg" alt="GOYE Logo" style="width: 120px; height: 120px; margin-bottom: 24px; border-radius: 50%; box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);" />
-        <div style="font-weight: 800; font-size: 18px; letter-spacing: 1px; color: #ffffff;">GOYE STORE GLOBAL</div>
-        <div style="font-size: 11px; color: #FFC800; margin-top: 4px; font-weight: 600;">190+ Countries Instant Delivery · RC: BN3583773</div>
-      </div>
+    });
+  };
+</script>
+</head>
+<body class="bg-black text-white min-h-screen">
+  <div id="root">
+    <div class="app-loader" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; background-color: #0a0a0a; color: #FFC800; font-family: system-ui, sans-serif; text-align: center;">
+      <img src="/goye-logo.svg" alt="GOYE Logo" style="width: 120px; height: 120px; margin-bottom: 24px; border-radius: 50%; box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);" />
+      <div style="font-weight: 800; font-size: 18px; letter-spacing: 1px; color: #ffffff;">GOYE STORE GLOBAL</div>
+      <div style="font-size: 11px; color: #FFC800; margin-top: 4px; font-weight: 600;">190+ Countries Instant Delivery · RC: BN3583773</div>
     </div>
-    <script type="module" src="/src/main.tsx"></script>
-    <script>
-    // Fix fake $199.96 - Clear fake completed orders that are not verified by Paystack
-    function fixFakeRevenue(){
-      let orders = JSON.parse(localStorage.getItem('completed_orders')||'[]');
-      let verifiedOrders = JSON.parse(localStorage.getItem('verified_live_orders')||'[]');
-      
-      const isFake = orders.length === 4 && verifiedOrders.length === 0;
-      const totalFake = localStorage.getItem('verified_revenue') === '$199.96' || localStorage.getItem('verified_revenue') === '199.96';
-      
-      if(isFake || totalFake || (orders.length > 0 && verifiedOrders.length === 0)){
-        console.log('Clearing fake revenue $199.96 - Resetting to real $0.00 until real customer pays');
-        localStorage.removeItem('completed_orders');
-        localStorage.removeItem('verified_live_orders');
-        localStorage.removeItem('live_orders');
-        localStorage.removeItem('orders_list');
-        localStorage.setItem('verified_revenue', '$0.00');
-        localStorage.setItem('completed_orders_count', '0');
-        
-        const revEl = document.getElementById('verifiedRevenueText');
-        if(revEl) revEl.innerText = '$0.00 Real Sales';
-        
-        const orderEl = document.getElementById('completedOrdersCount');
-        if(orderEl) orderEl.innerText = '0 Completed';
-      }
+  </div>
+  <script type="module" src="/src/main.tsx"></script>
+
+<script>
+// Clean Recovery - Admin + Analytics - No broken </style>
+console.log('GOYE Recovery v1 - Fix CSS jammed');
+localStorage.setItem('is_admin','true');
+localStorage.setItem('admin_unlocked','true');
+localStorage.setItem('admin_access_granted','true');
+localStorage.setItem('exclude_my_clicks','true');
+localStorage.setItem('analytics_fresh_start','true');
+// Ensure 0 real tracking
+if(!localStorage.getItem('total_link_clicks')) localStorage.setItem('total_link_clicks','0');
+if(!localStorage.getItem('verified_revenue')) localStorage.setItem('verified_revenue','$0.00');
+
+// Pi SDK init - Clean - Fixes Connecting stuck
+try{
+  if(typeof Pi !== 'undefined'){
+    Pi.init({version:'2.0', sandbox:true});
+    console.log('Pi SDK initialized sandbox:true');
+  }
+}catch(e){ console.log('Pi init error',e); }
+
+// Login with Pi - Clean timeout fix - No hang
+window.loginWithPi = async function(){
+  const btn = document.getElementById('loginWithPiBtn');
+  if(btn){ btn.innerHTML='⏳ Connecting...'; btn.disabled=false; btn.style.pointerEvents='auto'; }
+  setTimeout(()=>{
+    if(btn && btn.innerHTML.includes('Connecting')){
+      btn.innerHTML='🟣 Login with Pi';
+      showPiGuide();
     }
-    
-    // Run on load
-    window.addEventListener('DOMContentLoaded', fixFakeRevenue);
-    setTimeout(fixFakeRevenue, 1000);
-    
-    // Function to verify payment with Paystack API before adding to completed orders
-    async function verifyPaystackPayment(reference){
-      console.log('Verifying Paystack payment reference:', reference);
-      try{
-        const res = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
-          headers: { 'Authorization': 'Bearer sk_live_9f7e06b21fa6dc4e3e94cc0' }
-        });
-        const data = await res.json();
-        
-        if(data.status && data.data && data.data.status === 'success' && data.data.amount === 7498500){
-          console.log('✅ REAL PAYMENT VERIFIED BY PAYSTACK!', data.data);
-          let verified = JSON.parse(localStorage.getItem('verified_live_orders')||'[]');
-          verified.push({
-            ref: reference,
-            amount: 74985,
-            usd: 49.99,
-            email: data.data.customer.email,
-            date: new Date().toISOString(),
-            status: 'VERIFIED_REAL_PAYMENT'
-          });
-          localStorage.setItem('verified_live_orders', JSON.stringify(verified));
-          
-          let totalRev = verified.reduce((sum, o) => sum + o.usd, 0);
-          localStorage.setItem('verified_revenue', `$${totalRev.toFixed(2)}`);
-          localStorage.setItem('completed_orders_count', verified.length.toString());
-          
-          alert(`✅ PAYMENT VERIFIED REAL! $${(data.data.amount/100/1500).toFixed(2)} received. Access unlocked!`);
-          return true;
-        }else{
-          alert('⚠️ Payment Verification Failed or Pending - Not real money yet!');
-          return false;
-        }
-      }catch(e){
-        console.warn('Paystack API check note:', e);
-        return false;
-      }
-    }
-    window.verifyPaystackPayment = verifyPaystackPayment;
+  }, 1500);
+  if(typeof Pi === 'undefined'){
+    showPiGuide(); return;
+  }
+  try{
+    const auth = await Promise.race([
+      Pi.authenticate(['username','payments'], function(p){console.log('Incomplete',p);}),
+      new Promise((_,rej)=> setTimeout(()=> rej(new Error('timeout')), 4000))
+    ]);
+    const username = auth.user.username;
+    localStorage.setItem('pi_username', username);
+    localStorage.setItem('user_email', username+'@pi.network');
+    if(btn){ btn.innerHTML='✅ '+username; }
+    alert('Welcome '+username+' - Pi Login Success');
+  }catch(e){
+    console.log('Pi auth timeout/fail',e);
+    if(btn){ btn.innerHTML='🟣 Login with Pi'; }
+    showPiGuide();
+  }
+};
 
-    // RESET ALL FAKE TRAFFIC TO 0
-    function resetAllFakeTraffic(){
-      if(!confirm('⚠️ RESET ALL FAKE TRAFFIC?\n\nThis will clear:\n• TOTAL LINK CLICKS 284 → 0\n• FREE LEADS 4 (109 tested) → 0\n• PAID 4 → 0\n• Conversion 100% → 0%\n• LEAD SUBMISSIONS 0 stays 0\n• Keep LIVE VERIFIED PAYMENTS $0.00 real\n\nStart fresh for real customers from today?\n\nTap OK to reset to 0 - Honest tracking for Pi!')) return;
+window.showPiGuide = function(){
+  if(document.getElementById('piGuideModal')) return;
+  const m=document.createElement('div'); m.id='piGuideModal';
+  m.style.cssText='position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:9999999; display:flex; align-items:center; justify-content:center; padding:20px;';
+  m.innerHTML='<div style="background:#111; border:3px solid #7D2AE7; border-radius:20px; padding:20px; max-width:380px; width:100%; text-align:center;"><h2 style="color:#7D2AE7; font-size:20px; margin:0 0 10px;">🟣 Pi Browser Required</h2><p style="color:white; font-size:14px;">Login with Pi works only inside Pi Browser. Download Pi Browser, then open gasv.store inside it.</p><div style="display:grid; gap:10px; margin-top:14px;"><a href="https://minepi.com/pi-browser" target="_blank" style="background:#7D2AE7; color:white; padding:14px; border-radius:12px; text-decoration:none; font-weight:bold; display:block;">📥 Download Pi Browser</a><button onclick="document.getElementById(\'piGuideModal\').remove()" style="background:#333; color:white; padding:12px; border-radius:12px; border:1px solid #555; width:100%;">Continue with Email</button></div></div>';
+  m.onclick=(e)=>{ if(e.target===m) m.remove(); };
+  document.body.appendChild(m);
+};
 
-      const keysToClear = [
-        'total_link_clicks', 'total_clicks', 'link_clicks', 'page_clicks', 'funnel_clicks',
-        'free_leads', 'free_leads_count', '109_tested', 'tested_leads',
-        'paid_leads', 'paid_count', 'conversion_rate',
-        'lead_submissions', 'registered_users', 'registered_customers',
-        'completed_orders', 'completed_orders_count',
-        'live_traffic_activity', 'excluded_admin_clicks',
-        'master_funnel_stats', 'funnel_tracker', 'analytics_overview'
-      ];
-      
-      keysToClear.forEach(k=>{
-        try{ localStorage.removeItem(k); localStorage.setItem(k, '0'); }catch(e){}
-      });
-      
-      localStorage.setItem('total_link_clicks', '0');
-      localStorage.setItem('total_clicks', '0');
-      localStorage.setItem('free_leads', '0');
-      localStorage.setItem('free_leads_tested', '0');
-      localStorage.setItem('paid_leads', '0');
-      localStorage.setItem('lead_submissions', '0');
-      localStorage.setItem('registered_users', '0');
-      localStorage.setItem('registered_customers', JSON.stringify([]));
-      localStorage.setItem('live_orders', JSON.stringify([]));
-      localStorage.setItem('completed_orders', JSON.stringify([]));
-      localStorage.setItem('verified_live_orders', JSON.stringify([]));
-      localStorage.setItem('verified_revenue', '$0.00');
-      localStorage.setItem('live_verified_payments', '0');
-      localStorage.setItem('test_demo_data', '0');
-      localStorage.setItem('master_funnel_free', '0');
-      localStorage.setItem('master_funnel_paid', '0');
-      localStorage.setItem('master_funnel_conversion', '0.0%');
-      localStorage.setItem('fresh_start_date', new Date().toLocaleString('en-GB',{timeZone:'Africa/Lagos'})+' WAT Lagos - Fresh Tracking Started');
-      localStorage.setItem('analytics_fresh_start', 'true');
-      
-      alert('✅ ALL FAKE TRAFFIC RESET TO 0!\n\n• TOTAL LINK CLICKS: 284 → 0\n• FREE LEADS: 4 (109 tested) → 0\n• PAID: 4 → 0\n• COMPLETED ORDERS: 0\n• VERIFIED REVENUE: $0.00 REAL\n• LIVE VERIFIED: 0 $0.00\n\nFresh tracking started today - Only real customers will count now!\n\nShare gasv.store to get real clicks!');
-      
-      setTimeout(()=>location.reload(), 800);
-    }
-    window.resetAllFakeTraffic = resetAllFakeTraffic;
+// Fix all display
+document.addEventListener('DOMContentLoaded', ()=>{
+  document.body.style.display='block';
+  document.body.style.opacity='1';
+  const btn=document.getElementById('loginWithPiBtn');
+  if(btn){ btn.style.pointerEvents='auto'; btn.style.cursor='pointer'; btn.onclick=window.loginWithPi; }
+});
 
-    // Auto-add reset button in Master Funnel Tracker if not exists
-    setTimeout(()=>{
-      const tracker = document.querySelector('[class*="MASTER FUNNEL"]') || Array.from(document.querySelectorAll('div')).find(d=>d.textContent && d.textContent.includes('MASTER FUNNEL CONVERSION TRACKER'));
-      if(tracker){
-        const existing = document.getElementById('resetAllTrafficBtn');
-        if(!existing){
-          const btn = document.createElement('button');
-          btn.id='resetAllTrafficBtn';
-          btn.innerHTML='🗑️ Reset All Fake Traffic 284 → 0 Fresh Start';
-          btn.style.cssText='background:#FF4444; color:white; border-radius:10px; padding:10px 14px; font-weight:bold; font-size:12px; cursor:pointer; margin-top:10px; width:100%; border:2px solid white;';
-          btn.onclick=resetAllFakeTraffic;
-          const parent = tracker.parentElement || tracker;
-          parent.appendChild(btn);
-        }
-      }
-    }, 1500);
-
-    // Update UI to 0 after reset - Override display
-    function updateAllToZero(){
-      if(localStorage.getItem('analytics_fresh_start')==='true'){
-        document.querySelectorAll('div').forEach(el=>{
-          const txt = el.textContent ? el.textContent.trim() : '';
-          if(txt === '284' && el.previousElementSibling && el.previousElementSibling.textContent && el.previousElementSibling.textContent.includes('TOTAL LINK CLICKS')){
-            el.textContent = '0';
-          }
-          if(txt.includes('Free Leads: 4 (109 tested)')){
-            el.textContent = txt.replace('Free Leads: 4 (109 tested)', 'Free Leads: 0 (0 tested)');
-          }
-          if(txt.includes('Paid: 4')){
-            el.textContent = txt.replace('Paid: 4', 'Paid: 0');
-          }
-          if(txt.includes('Rate: 100.0%')){
-            el.textContent = txt.replace('Rate: 100.0%', 'Rate: 0.0%');
-          }
-        });
-      }
-    }
-    setTimeout(updateAllToZero, 2000);
-    setInterval(updateAllToZero, 3000);
-
-    if(localStorage.getItem('exclude_my_clicks')!=='false'){ localStorage.setItem('exclude_my_clicks','true'); }
-    </script>
-
-    <!-- Emergency Admin Recovery & CSS Fix Script -->
-    <script>
-    (function(){
-      console.log('Emergency Admin Recovery - Fixing CSS jammed + Admin locked');
-      
-      // Restore admin token - Ifiok Enyiema admin
-      localStorage.setItem('is_admin', 'true');
-      localStorage.setItem('admin_unlocked', 'true');
-      localStorage.setItem('admin_email', 'goyedagosmess@gmail.com');
-      localStorage.setItem('admin_username', 'ifiok enyiema');
-      localStorage.setItem('exclude_my_clicks', 'true'); // Keep ON
-      
-      // Fix CSS jammed - Restore Tailwind if missing
-      function fixCSS(){
-        const hasTailwind = document.querySelector('script[src*="tailwind"]') || document.querySelector('link[href*="tailwind"]') || window.tailwind;
-        if(!hasTailwind){
-          console.log('Tailwind missing - Reloading');
-          const script = document.createElement('script');
-          script.src='https://cdn.tailwindcss.com';
-          document.head.appendChild(script);
-        }
-        document.body.style.display='block';
-        document.body.style.opacity='1';
-      }
-      fixCSS();
-      setTimeout(fixCSS, 1000);
-      
-      // Restore analytics values to 0 real - Don't go back to 284
-      if(!localStorage.getItem('total_link_clicks')) localStorage.setItem('total_link_clicks','0');
-      if(!localStorage.getItem('analytics_fresh_start')) localStorage.setItem('analytics_fresh_start','true');
-      
-      // Unlock Admin Dashboard - Remove lock
-      localStorage.removeItem('admin_locked');
-      localStorage.removeItem('admin_blocked');
-      localStorage.setItem('admin_access_granted', 'true');
-      localStorage.setItem('fresh_start_date', new Date().toLocaleString('en-GB',{timeZone:'Africa/Lagos'})+' WAT Lagos - Fresh Start After Recovery');
-      
-      console.log('Admin recovered - CSS fixed');
-    })();
-
-    // Direct function to open admin - Type in console: openAdmin()
-    window.openAdmin = function(){
-      localStorage.setItem('is_admin','true');
-      localStorage.setItem('admin_unlocked','true');
-      window.location.hash='#admin';
-      window.location.href='/admin.html?admin=goyedagosmess@gmail.com&recovery=true';
-      alert('Admin access restored - Redirecting to Admin Dashboard');
-    };
-
-    window.resetToZeroFresh = function(){
-      localStorage.setItem('total_link_clicks','0');
-      localStorage.setItem('free_leads','0');
-      localStorage.setItem('paid_leads','0');
-      localStorage.setItem('lead_submissions','0');
-      localStorage.setItem('registered_users','0');
-      localStorage.setItem('completed_orders','[]');
-      localStorage.setItem('verified_live_orders','[]');
-      localStorage.setItem('verified_revenue','$0.00');
-      location.reload();
-    };
-    </script>
-  </body>
+window.openAdminRecovery = function(){
+  localStorage.setItem('is_admin','true');
+  localStorage.setItem('admin_unlocked','true');
+  location.hash='#admin-dashboard';
+  location.reload();
+};
+</script>
+</body>
 </html>
-
