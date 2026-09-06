@@ -355,6 +355,18 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
 
     loadLocalData();
 
+    // Check Pi API Config
+    fetch('/api/pi-config')
+      .then(r => r.json())
+      .then(c => {
+        const el = document.getElementById('piApiStatus');
+        if (el) {
+          el.textContent = c.apiKeyConfigured ? '✅ Pi API Key: CONFIGURED - Real Pi enabled' : '⚠️ Add PI_API_KEY in Environment Variables';
+          el.style.color = c.apiKeyConfigured ? '#00AA00' : '#FFAA00';
+        }
+      })
+      .catch(() => {});
+
     if (typeof window !== 'undefined') {
       (window as any).checkAcademyLeadsConversion = refreshConversionRate;
       (window as any).refreshConversionRate = refreshConversionRate;
@@ -794,6 +806,17 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
                   <RefreshCw size={13} className={isAuditing ? 'animate-spin' : ''} />
                   {isAuditing ? 'Verifying Paystack...' : 'Re-verify All Transactions'}
                 </button>
+              </div>
+            </div>
+
+            {/* Pi Network API Status Badge */}
+            <div style={{ marginTop: '10px', padding: '10px', background: '#0a0a0a', borderRadius: '12px', border: '1px solid #333' }}>
+              <div style={{ color: '#888', fontSize: '11px' }}>PI NETWORK API</div>
+              <div id="piApiStatus" style={{ color: '#FFAA00', fontSize: '12px', fontWeight: 'bold' }}>
+                Checking Pi API Key...
+              </div>
+              <div style={{ color: '#888', fontSize: '10px', marginTop: '4px' }}>
+                GCV $314,159 = 0.000159 Pi = $49.99 - RC BN3583773
               </div>
             </div>
 

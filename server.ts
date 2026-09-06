@@ -1187,6 +1187,84 @@ app.post('/api/payments/payoneer/verify', async (req, res) => {
 });
 
 // -------------------------------------------------------------------------
+// PI NETWORK BACKEND API ENDPOINTS (API KEY SECURE - DEVELOP.PI)
+// -------------------------------------------------------------------------
+
+app.get('/api/pi-config', (req, res) => {
+  const apiKey = process.env.PI_API_KEY;
+  const sandbox = process.env.PI_SANDBOX === 'true';
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.json({
+    apiKeyConfigured: !!apiKey,
+    sandbox: sandbox,
+    app: process.env.PI_APP_NAME || 'Goye Global Sirwise AI WEB3 Academy',
+    domain: 'www.gasv.store',
+    rc: 'BN3583773',
+    gcv: 314159,
+    amount_pi: 0.000159,
+    amount_usd: 49.99,
+    status: apiKey ? '✅ Pi API Key configured - Real Pi payments enabled' : '⚠️ Add PI_API_KEY in Environment Variables from develop.pi'
+  });
+});
+
+app.post('/api/pi-approve', async (req, res) => {
+  const { paymentId } = req.body || {};
+  const apiKey = process.env.PI_API_KEY;
+  if (!apiKey) return res.status(500).json({ error: 'PI_API_KEY not configured - Add in Environment Variables from develop.pi - Goye Global' });
+  if (!paymentId) return res.status(400).json({ error: 'paymentId required' });
+  try {
+    console.log('Approving Pi payment:', paymentId);
+    const piRes = await fetch(`https://api.minepi.com/v2/payments/${paymentId}/approve`, {
+      method: 'POST',
+      headers: { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' }
+    });
+    const data = await piRes.json();
+    console.log('Pi approve result:', data);
+    res.json(data);
+  } catch (e: any) {
+    console.error('Pi approve error', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/pi-complete', async (req, res) => {
+  const { paymentId, txid } = req.body || {};
+  const apiKey = process.env.PI_API_KEY;
+  if (!apiKey) return res.status(500).json({ error: 'PI_API_KEY not configured' });
+  if (!paymentId || !txid) return res.status(400).json({ error: 'paymentId and txid required' });
+  try {
+    console.log('Completing Pi payment:', paymentId, txid);
+    const piRes = await fetch(`https://api.minepi.com/v2/payments/${paymentId}/complete`, {
+      method: 'POST',
+      headers: { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ txid: txid })
+    });
+    const data = await piRes.json();
+    console.log('Pi complete result:', data);
+    res.json({ completed: true, piData: data, amount_usd: 49.99, amount_pi: 0.000159, gcv: 314159, store: 'gasv.store', rc: 'BN3583773' });
+  } catch (e: any) {
+    console.error('Pi complete error', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/pi-cancel', async (req, res) => {
+  const { paymentId } = req.body || {};
+  const apiKey = process.env.PI_API_KEY;
+  if (!apiKey) return res.status(500).json({ error: 'PI_API_KEY not configured' });
+  try {
+    const piRes = await fetch(`https://api.minepi.com/v2/payments/${paymentId}/cancel`, {
+      method: 'POST',
+      headers: { 'Authorization': `Key ${apiKey}` }
+    });
+    const data = await piRes.json();
+    res.json(data);
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// -------------------------------------------------------------------------
 // REAL AIRTIME DELIVERY SERVICES & ENDPOINTS (CLUBKONNECT / NELLOBYTE)
 // -------------------------------------------------------------------------
 
