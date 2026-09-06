@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Mail, Lock, User, Phone, Globe, ShieldCheck, ChevronRight, MessageCircle, RefreshCw } from 'lucide-react';
+import { safeParse } from '../utils/safeParse';
 
 export const COUNTRIES = [
   {
@@ -1585,8 +1586,7 @@ export default function AuthScreen({ onAuthenticated, onClose }: { onAuthenticat
       const contactValue = authMethod === 'email' ? contact : `${countryCode}${contact}`;
       
       if (isLogin) {
-        const usersStr = localStorage.getItem('goye_users');
-        const localUsers = usersStr ? JSON.parse(usersStr) : [];
+        const localUsers = safeParse('goye_users', []);
         
         let foundUser = localUsers.find((u: any) => u.contact === contact || u.contact === emailToUse || u.contact === contactValue);
         
@@ -1632,8 +1632,7 @@ export default function AuthScreen({ onAuthenticated, onClose }: { onAuthenticat
           uid: uid
         };
 
-        const usersStr = localStorage.getItem('goye_users');
-        const users = usersStr ? JSON.parse(usersStr) : [];
+        const users = safeParse('goye_users', []);
         
         // Prevent duplicate registration
         if(users.some((u: any) => u.contact === contactValue || u.contact === emailToUse)) {
@@ -1643,10 +1642,10 @@ export default function AuthScreen({ onAuthenticated, onClose }: { onAuthenticat
         users.push(profileData);
         localStorage.setItem('goye_users', JSON.stringify(users));
 
-        // Add to CRM customers_list
-        let customers = JSON.parse(localStorage.getItem('customers_list') || '[]');
-        let registeredCount = parseInt(localStorage.getItem('registered_customers') || '0');
-        customers.unshift({
+        // Add to CRM customers_list and registered_customers
+        let customers = safeParse('customers_list', []);
+        let regCustomers = safeParse('registered_customers', []);
+        const newCust = {
             id: uid,
             pupilName: firstName + ' ' + surname,
             parentName: '',
@@ -1658,9 +1657,13 @@ export default function AuthScreen({ onAuthenticated, onClose }: { onAuthenticat
             date: new Date().toISOString(),
             status: 'Registered',
             is_verified: false
-        });
+        };
+        customers.unshift(newCust);
+        if (!regCustomers.some((c: any) => c.email === emailToUse)) {
+          regCustomers.unshift(newCust);
+        }
         localStorage.setItem('customers_list', JSON.stringify(customers));
-        localStorage.setItem('registered_customers', (registeredCount + 1).toString());
+        localStorage.setItem('registered_customers', JSON.stringify(regCustomers));
 
         localStorage.setItem('goye_user_session', JSON.stringify(profileData));
 
@@ -1698,19 +1701,15 @@ export default function AuthScreen({ onAuthenticated, onClose }: { onAuthenticat
         const emailToUse = localStorage.getItem('goye_pending_email') || '';
         const user = { uid, email: emailToUse, getIdToken: async () => 'mock_token' };
         
-        const profileStr = localStorage.getItem('goye_user_session');
-        const profile = profileStr ? JSON.parse(profileStr) : { is_verified: true, uid };
+        const profile = safeParse('goye_user_session', { is_verified: true, uid });
         profile.is_verified = true;
         
         // Update local storage
-        const usersStr = localStorage.getItem('goye_users');
-        if (usersStr) {
-          const users = JSON.parse(usersStr);
-          const idx = users.findIndex((u: any) => u.uid === uid);
-          if (idx !== -1) {
-            users[idx].is_verified = true;
-            localStorage.setItem('goye_users', JSON.stringify(users));
-          }
+        const users = safeParse('goye_users', []);
+        const idx = users.findIndex((u: any) => u.uid === uid);
+        if (idx !== -1) {
+          users[idx].is_verified = true;
+          localStorage.setItem('goye_users', JSON.stringify(users));
         }
         
         localStorage.setItem('goye_user_profile', JSON.stringify(profile));

@@ -25,6 +25,19 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   private handleReset = () => {
+    try {
+      localStorage.removeItem('total_link_clicks');
+      localStorage.removeItem('analytics_cache');
+      localStorage.setItem('total_link_clicks', '0');
+      localStorage.setItem('completed_orders', '[]');
+      localStorage.setItem('verified_live_orders', '[]');
+      localStorage.setItem('registered_customers', '[]');
+      if (typeof (window as any).cleanupBadLocalStorage === 'function') {
+        (window as any).cleanupBadLocalStorage();
+      }
+    } catch (e) {
+      console.warn('Reset error handling:', e);
+    }
     this.setState({ hasError: false, error: null });
     window.location.reload();
   };

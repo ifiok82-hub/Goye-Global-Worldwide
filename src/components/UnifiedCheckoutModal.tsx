@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, ShieldCheck, Lock, Copy, CheckCircle, RefreshCw, ChevronRight, Zap, ExternalLink } from 'lucide-react';
 import { identifyUserSession, trackUserClick } from '../utils/analytics';
 import { cleanUserEmail } from '../lib/contact';
+import { safeParse } from '../utils/safeParse';
 
 
 export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, onToast }: any) {
@@ -63,9 +64,8 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
   
   const handleSuccess = async (ref: string, method: string, isPending: boolean = false) => {
     try {
-        let orders = JSON.parse(localStorage.getItem('orders_list') || '[]');
-        const countryJSON = localStorage.getItem('goye_selected_country');
-        const country = countryJSON ? JSON.parse(countryJSON) : { flag: '🌍', name: 'Unknown' };
+        let orders = safeParse('orders_list', []);
+        const country = safeParse('goye_selected_country', { flag: '🌍', name: 'Unknown' });
         
         const orderDocId = ref || ('ORD-' + Date.now());
         const timestampStr = new Date().toISOString();
@@ -121,7 +121,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
             lastOrderAt: timestampStr
           };
 
-          let custs = JSON.parse(localStorage.getItem('registered_customers') || localStorage.getItem('customers_list') || '[]');
+          let custs = safeParse('registered_customers', safeParse('customers_list', []));
           if (!custs.some((c: any) => c.email === custId)) {
             custs.unshift(customerObj);
             localStorage.setItem('registered_customers', JSON.stringify(custs));
@@ -172,7 +172,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                 Tx_Ref: ref,
                 Account: '6113541882 OPay',
                 Status: isPending ? 'Pending Verification' : 'Completed',
-                Country: typeof country === 'object' && country ? (country.name || country.country || 'Unknown') : String(country || 'Unknown')
+                Country: typeof country === 'object' && country ? ((country as any).name || (country as any).country || 'Unknown') : String(country || 'Unknown')
             })
         }).catch(err => console.log('FormSubmit notify silent fail', err));
 

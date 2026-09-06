@@ -1,4 +1,5 @@
 // Visitor & Click Analytics Tracking Client Helper (100% LocalStorage - No Firebase)
+import { safeParse, safeGetNumber } from './safeParse';
 
 export function getAnonymousSessionId(): string {
   let sessionId = localStorage.getItem('goye_session_id');
@@ -68,11 +69,11 @@ export const SEED_ORDERS: any[] = [];
 
 export function ensureInitialSeeds(): void {
   try {
-    const existingUsers = JSON.parse(localStorage.getItem('registered_customers') || '[]');
+    const existingUsers = safeParse('registered_customers', []);
     if (!Array.isArray(existingUsers)) {
       localStorage.setItem('registered_customers', JSON.stringify([]));
     }
-    const existingOrders = JSON.parse(localStorage.getItem('live_orders') || '[]');
+    const existingOrders = safeParse('live_orders', []);
     if (!Array.isArray(existingOrders)) {
       localStorage.setItem('live_orders', JSON.stringify([]));
     }
@@ -138,8 +139,7 @@ export async function saveUserClick(nameInput?: string, emailInput?: string): Pr
   // IF EXCLUDE ON AND ADMIN - DO NOT SAVE
   if (excludeOn && isAdminClick(name, email)) {
     console.log('ADMIN CLICK EXCLUDED - Not saved - ', name, email);
-    let excl = JSON.parse(localStorage.getItem('excluded_admin_clicks') || '[]');
-    if (!Array.isArray(excl)) excl = [];
+    let excl = safeParse('excluded_admin_clicks', []);
     excl.unshift({ name, email, date: new Date().toLocaleString(), reason: 'Excluded - Admin Device' });
     localStorage.setItem('excluded_admin_clicks', JSON.stringify(excl.slice(0, 20)));
     return; // STOP HERE - Do not save to Registered Customers
@@ -166,8 +166,7 @@ export async function saveUserClick(nameInput?: string, emailInput?: string): Pr
     excluded: 'Customer'
   };
 
-  let users = JSON.parse(localStorage.getItem('registered_customers') || '[]');
-  if (!Array.isArray(users)) users = [];
+  let users = safeParse('registered_customers', []);
 
   // Prevent duplicate admin or duplicate entry
   if (!users.some((u: any) => (u.name || u.customer || '').toLowerCase() === name.toLowerCase() && isAdminClick(name, email))) {
@@ -175,7 +174,7 @@ export async function saveUserClick(nameInput?: string, emailInput?: string): Pr
     localStorage.setItem('registered_customers', JSON.stringify(users.slice(0, 100)));
   }
 
-  let clicks = parseInt(localStorage.getItem('total_clicks') || '0') + 1;
+  let clicks = safeGetNumber('total_clicks', 0) + 1;
   localStorage.setItem('total_clicks', clicks.toString());
 
   // Log non-admin customer click to server database
@@ -221,8 +220,7 @@ export async function saveGlobalClick(type: string = 'page_view', product: strin
   // IF EXCLUDE ON AND IS ADMIN - EARLY RETURN - DO NOT INCREMENT CLICKS OR LOG TRAFFIC
   if (isExcludeActive && (isUserAdmin || excludeAdminSetting)) {
     console.log('Admin click EXCLUDED - Early Return -', name, email);
-    let excludedLog = JSON.parse(localStorage.getItem('excluded_admin_clicks') || '[]');
-    if (!Array.isArray(excludedLog)) excludedLog = [];
+    let excludedLog = safeParse('excluded_admin_clicks', []);
     const isMobile = /Mobi|Android/i.test(navigator.userAgent);
     excludedLog.unshift({
       name,
@@ -265,27 +263,23 @@ export async function saveGlobalClick(type: string = 'page_view', product: strin
   };
 
   // Save only customers - Not admin when exclude ON
-  let logs = JSON.parse(localStorage.getItem('live_traffic_activity') || '[]');
-  if (!Array.isArray(logs)) logs = [];
+  let logs = safeParse('live_traffic_activity', []);
   logs.unshift(record);
   localStorage.setItem('live_traffic_activity', JSON.stringify(logs.slice(0, 100)));
 
   // Update total clicks
-  let clicks = parseInt(localStorage.getItem('total_clicks') || '0') + 1;
+  let clicks = safeGetNumber('total_clicks', 0) + 1;
   localStorage.setItem('total_clicks', clicks.toString());
 
   if (type === 'payment') {
-    let orders = JSON.parse(localStorage.getItem('live_orders') || '[]');
-    if (!Array.isArray(orders)) orders = [];
+    let orders = safeParse('live_orders', []);
     orders.unshift(record);
     localStorage.setItem('live_orders', JSON.stringify(orders.slice(0, 100)));
 
-    let users = JSON.parse(localStorage.getItem('registered_customers') || '[]');
-    if (!Array.isArray(users)) users = [];
+    let users = safeParse('registered_customers', []);
     users.unshift(record);
     localStorage.setItem('registered_customers', JSON.stringify(users.slice(0, 100)));
 
-    localStorage.setItem('completed_orders', orders.length.toString());
     localStorage.setItem('verified_revenue', '$' + (orders.length * 49.99).toFixed(2));
   }
 

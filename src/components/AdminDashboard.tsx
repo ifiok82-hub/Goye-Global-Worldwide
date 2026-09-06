@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { CreditCard, Users, ShoppingCart, Package, DollarSign, Settings, Download, Edit, Trash2, CheckCircle, XCircle, Activity, Globe, Eye, UserPlus, RefreshCw, Mail, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { ALL_PRODUCTS } from '../data';
 import { SEED_CUSTOMERS, SEED_ORDERS, isAdminClick } from '../utils/analytics';
+import { safeParse, safeGetNumber } from '../utils/safeParse';
 
 export default function AdminDashboard({ showToast }: { showToast: (m: string) => void }) {
   const [activeTab, setActiveTab] = useState('analytics');
@@ -100,7 +101,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
   const [payouts, setPayouts] = useState<any[]>([]);
   
   const [products, setProducts] = useState(() => {
-    const custom = JSON.parse(localStorage.getItem('CUSTOM_PRODUCTS') || '[]');
+    const custom = safeParse('CUSTOM_PRODUCTS', []);
     return [...ALL_PRODUCTS, ...custom];
   });
   
@@ -211,13 +212,9 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
   const refreshConversionRate = () => {
     const excludeOn = localStorage.getItem('exclude_my_clicks') !== 'false' && localStorage.getItem('excludeAdminClicks') !== 'false';
 
-    let allUsers = JSON.parse(localStorage.getItem('registered_customers') || '[]');
-    if (!Array.isArray(allUsers)) allUsers = [];
-
-    let allOrders = JSON.parse(localStorage.getItem('live_orders') || '[]');
-    if (!Array.isArray(allOrders)) allOrders = [];
-
-    let allLeads = JSON.parse(localStorage.getItem('academy_leads') || '[]');
+    let allUsers = safeParse('registered_customers', []);
+    let allOrders = safeParse('live_orders', []);
+    let allLeads = safeParse('academy_leads', []);
 
     const realUsers = excludeOn
       ? allUsers.filter((u: any) => {
@@ -246,7 +243,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
     const rate = freeLeads > 0 ? ((paid / freeLeads) * 100).toFixed(1) : '0.0';
     const revenue = (paid * 49.99).toFixed(2);
 
-    let exclAdminLogs = JSON.parse(localStorage.getItem('excluded_admin_clicks') || '[]');
+    let exclAdminLogs = safeParse('excluded_admin_clicks', []);
     const excludedAdminCount = exclAdminLogs.length;
 
     setUsers(realUsers);
@@ -266,10 +263,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
     const excludeOn = localStorage.getItem('excludeAdminClicks') === 'true' || localStorage.getItem('exclude_my_clicks') !== 'false';
 
     // 1. Registered Users / Customers
-    let localUsers = JSON.parse(localStorage.getItem('registered_customers') || '[]');
-    if (!Array.isArray(localUsers)) {
-      localUsers = [];
-    }
+    let localUsers = safeParse('registered_customers', []);
     // Skip leak emails and admin users when excludeOn is true
     const cleanUsers = localUsers.filter((u: any) => {
       const name = u.name || u.pupilName || u.customer || '';
@@ -281,10 +275,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
     setUsers(cleanUsers);
 
     // 2. Live Completed Orders
-    let localOrders = JSON.parse(localStorage.getItem('live_orders') || '[]');
-    if (!Array.isArray(localOrders)) {
-      localOrders = [];
-    }
+    let localOrders = safeParse('live_orders', []);
     const cleanOrders = localOrders.filter((o: any) => {
       const name = o.customer || o.name || o.customerName || '';
       const e = (o.email || o.customerEmail || o.customer || '').toLowerCase();
@@ -302,21 +293,20 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
           setTotalClicks(data.totalClicks);
           localStorage.setItem('total_clicks', data.totalClicks.toString());
         } else {
-          const total = parseInt(localStorage.getItem('total_clicks') || '284');
+          const total = safeGetNumber('total_clicks', 284);
           setTotalClicks(total);
         }
       })
       .catch(() => {
-        const total = parseInt(localStorage.getItem('total_clicks') || '284');
+        const total = safeGetNumber('total_clicks', 284);
         setTotalClicks(total);
       });
 
     // 4. Live Traffic Log
-    let logs = JSON.parse(localStorage.getItem('live_traffic_activity') || '[]');
+    let logs = safeParse('live_traffic_activity', []);
     if (!Array.isArray(logs) || logs.length === 0) {
-      logs = JSON.parse(localStorage.getItem('traffic_log') || '[]');
+      logs = safeParse('traffic_log', []);
     }
-    if (!Array.isArray(logs)) logs = [];
 
     if (excludeOn) {
       logs = logs.filter((entry: any) => !isAdminClick(entry.customer_name || entry.customer || entry.name, entry.email) && entry.excluded !== 'EXCLUDED' && entry.is_admin !== true && entry.isAdmin !== true);
@@ -330,14 +320,14 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string) =
         if (data && data.success && typeof data.totalCount === 'number') {
           setLeadSubmissions(data.totalCount);
         } else {
-          const capturedLeads = JSON.parse(localStorage.getItem('captured_leads') || '[]');
-          const count = Array.isArray(capturedLeads) ? capturedLeads.length : (localStorage.getItem('sirwise_lead_captured') ? 1 : 0);
+          const capturedLeads = safeParse('captured_leads', []);
+          const count = capturedLeads.length > 0 ? capturedLeads.length : (localStorage.getItem('sirwise_lead_captured') ? 1 : 0);
           setLeadSubmissions(count);
         }
       })
       .catch(() => {
-        const capturedLeads = JSON.parse(localStorage.getItem('captured_leads') || '[]');
-        const count = Array.isArray(capturedLeads) ? capturedLeads.length : (localStorage.getItem('sirwise_lead_captured') ? 1 : 0);
+        const capturedLeads = safeParse('captured_leads', []);
+        const count = capturedLeads.length > 0 ? capturedLeads.length : (localStorage.getItem('sirwise_lead_captured') ? 1 : 0);
         setLeadSubmissions(count);
       });
   };

@@ -1,5 +1,6 @@
 import AuthScreen from './components/AuthScreen';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { safeParse, safeGetNumber } from './utils/safeParse';
 import { X, Globe, Zap, Download, ShieldCheck, ChevronRight, Lock, BookOpen, Settings, List, Save, Mail, CreditCard, DollarSign, Wallet, Phone, Landmark, Home, ShoppingBag, ShoppingCart, GraduationCap, MessageCircle, Search, Edit, Trash2, Plus, FileText, Video, Eye, EyeOff, CheckCircle, RefreshCw, Users, Activity, UserCircle , Scan, QrCode, Smartphone, MoreVertical, Bot, LayoutDashboard, Camera, Mic, MoreHorizontal} from 'lucide-react';
 import { ALL_PRODUCTS } from './data';
 import UnifiedCheckoutModal from './components/UnifiedCheckoutModal';
@@ -119,7 +120,7 @@ export default function App() {
     try {
       const stored = localStorage.getItem('PAYMENT_CONFIG');
       if (stored) {
-        setPaymentConfig(JSON.parse(stored));
+        setPaymentConfig(safeParse('PAYMENT_CONFIG', {}));
       }
     } catch (e) {}
   }, []);
@@ -127,7 +128,7 @@ export default function App() {
 
 
   const [products, setProducts] = useState(() => {
-    const custom = JSON.parse(localStorage.getItem('CUSTOM_PRODUCTS') || '[]');
+    const custom = safeParse('CUSTOM_PRODUCTS', []);
     return [...ALL_PRODUCTS, ...custom];
   });
   
@@ -156,10 +157,9 @@ export default function App() {
       const excludeAdminClicks = localStorage.getItem('exclude_admin_clicks') === 'true' || localStorage.getItem('excludeAdminClicks') === 'true';
       const isAdminUser = localStorage.getItem('is_admin_auth') === 'true' || localStorage.getItem('admin_logged_in') === 'true';
       if (!(excludeAdminClicks && isAdminUser)) {
-        let clicks = parseInt(localStorage.getItem('total_clicks') || '0') + 1;
+        let clicks = safeGetNumber('total_clicks', 0) + 1;
         localStorage.setItem('total_clicks', clicks.toString());
-        let logs = JSON.parse(localStorage.getItem('live_traffic_activity') || '[]');
-        if (!Array.isArray(logs)) logs = [];
+        let logs = safeParse('live_traffic_activity', []);
         logs.unshift({
           id: 'UPGRADE-' + Date.now(),
           location: '🇳🇬 Nigeria',
@@ -305,7 +305,7 @@ export default function App() {
 
     // Track video view
     try {
-      let logs = JSON.parse(localStorage.getItem('live_traffic_activity') || '[]');
+      let logs = safeParse('live_traffic_activity', []);
       logs.unshift({
         location: 'Video View',
         customer_name: localStorage.getItem('lead_name') || 'Guest',
@@ -345,9 +345,9 @@ export default function App() {
 
   const checkAcademyLeadsConversion = () => {
     try {
-      const leads = JSON.parse(localStorage.getItem('academy_leads') || '[]');
+      const leads = safeParse('academy_leads', []);
       const freeCount = leads.filter((l: any) => l.product && String(l.product).includes('Free')).length;
-      const paidOrders = JSON.parse(localStorage.getItem('live_orders') || '[]');
+      const paidOrders = safeParse('live_orders', []);
       const paidCount = paidOrders.length;
       const rate = freeCount > 0 ? ((paidCount / freeCount) * 100).toFixed(1) : '0.0';
       console.log(`Conversion: Free ${freeCount} Paid ${paidCount} Rate ${rate}% - Currently 109 free 0 paid = 0% - Need funnel fix`);
@@ -555,13 +555,13 @@ export default function App() {
           is_admin: isAdminUser
         };
 
-        let logs = JSON.parse(localStorage.getItem('global_traffic') || localStorage.getItem('traffic_log') || '[]');
+        let logs = safeParse('global_traffic', safeParse('traffic_log', []));
 
         logs.unshift(log);
         localStorage.setItem('global_traffic', JSON.stringify(logs.slice(0, 100)));
         localStorage.setItem('traffic_log', JSON.stringify(logs.slice(0, 100)));
 
-        let clicks = parseInt(localStorage.getItem('total_clicks_global') || localStorage.getItem('total_clicks') || '0') + 1;
+        let clicks = safeGetNumber('total_clicks_global', safeGetNumber('total_clicks', 0)) + 1;
         localStorage.setItem('total_clicks_global', clicks.toString());
         localStorage.setItem('total_clicks', clicks.toString());
 
@@ -592,7 +592,7 @@ export default function App() {
           return;
         }
 
-        let total = parseInt(localStorage.getItem('total_clicks') || localStorage.getItem('total_clicks_global') || '0');
+        let total = safeGetNumber('total_clicks', safeGetNumber('total_clicks_global', 0));
         localStorage.setItem('total_clicks', (total + 1).toString());
         localStorage.setItem('total_clicks_global', (total + 1).toString());
 
@@ -628,7 +628,7 @@ export default function App() {
           global: true
         };
 
-        let logs = JSON.parse(localStorage.getItem('traffic_log') || localStorage.getItem('global_traffic') || '[]');
+        let logs = safeParse('traffic_log', safeParse('global_traffic', []));
         logs.unshift(pageView);
         if (logs.length > 100) logs = logs.slice(0, 100);
         localStorage.setItem('traffic_log', JSON.stringify(logs));
@@ -714,7 +714,7 @@ export default function App() {
     setTimeout(() => setShowSplash(false), 2000);
     
     // Load downloads
-    const items = JSON.parse(localStorage.getItem('my_downloads') || '[]');
+    const items = safeParse('my_downloads', []);
     setPurchasedItems(Array.isArray(items) ? items : []);
     
     // Check if URL is /admin
@@ -1137,7 +1137,7 @@ export default function App() {
         <UnifiedCheckoutModal product={selectedProduct} paymentConfig={paymentConfig} onClose={() => {
           const wasStarter = selectedProduct.id === 'web3-starter-toolkit' || selectedProduct.price <= 5.0;
           setSelectedProduct(null);
-          const items = JSON.parse(localStorage.getItem('my_downloads') || '[]');
+          const items = safeParse('my_downloads', []);
           setPurchasedItems(Array.isArray(items) ? items : []);
           if (wasStarter && localStorage.getItem('sirwise_paid') === 'true') {
             setShowPostPurchaseUpsellModal(true);
