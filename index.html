@@ -92,8 +92,8 @@ body{background:#000; color:#fff; font-family:system-ui, -apple-system, sans-ser
   <script type="module" src="/src/main.tsx"></script>
 
 <script>
-// Clean Recovery - Admin + Analytics - No broken </style>
-console.log('GOYE Recovery v1 - Fix CSS jammed');
+// Clean Recovery - Admin + Analytics
+console.log('GOYE Recovery v1 - Pi Browser Detection Fix');
 localStorage.setItem('is_admin','true');
 localStorage.setItem('admin_unlocked','true');
 localStorage.setItem('admin_access_granted','true');
@@ -103,59 +103,154 @@ localStorage.setItem('analytics_fresh_start','true');
 if(!localStorage.getItem('total_link_clicks')) localStorage.setItem('total_link_clicks','0');
 if(!localStorage.getItem('verified_revenue')) localStorage.setItem('verified_revenue','$0.00');
 
-// Pi SDK init - Clean - Fixes Connecting stuck
-try{
-  if(typeof Pi !== 'undefined'){
-    Pi.init({version:'2.0', sandbox:true});
-    console.log('Pi SDK initialized sandbox:true');
-  }
-}catch(e){ console.log('Pi init error',e); }
+// Fix Pi Browser detection - Real check for Pi Browser
+window.isRealPiBrowser = function(){
+  const ua = navigator.userAgent || '';
+  const hasPiBrowserUA = ua.includes('PiBrowser') || ua.includes('Pi Browser');
+  const hasPiSDK = typeof Pi !== 'undefined' && Pi !== null;
+  const isPiHost = window.location.protocol === 'https:' && (window.location.hostname.includes('pi.') || window.location.hostname === 'gasv.store');
+  // In Pi Browser, window.Pi exists after sdk loads - Also check for Pi native
+  const hasPiNative = hasPiSDK && (typeof Pi.nativeFeaturesList !== 'undefined' || typeof Pi.authenticate === 'function');
+  console.log('Pi Browser Check:', {ua, hasPiBrowserUA, hasPiSDK, hasPiNative});
+  return hasPiBrowserUA || hasPiNative;
+};
 
-// Login with Pi - Clean timeout fix - No hang
+// Clean Login with Pi - Fixes false Pi Browser Required inside Pi Browser
 window.loginWithPi = async function(){
   const btn = document.getElementById('loginWithPiBtn');
-  if(btn){ btn.innerHTML='⏳ Connecting...'; btn.disabled=false; btn.style.pointerEvents='auto'; }
-  setTimeout(()=>{
-    if(btn && btn.innerHTML.includes('Connecting')){
-      btn.innerHTML='🟣 Login with Pi';
-      showPiGuide();
-    }
-  }, 1500);
-  if(typeof Pi === 'undefined'){
-    showPiGuide(); return;
+  if(btn){ 
+    btn.innerHTML='⏳ Connecting...'; 
+    btn.disabled=false; 
+    btn.style.pointerEvents='auto';
+    btn.style.background='#7D2AE7';
   }
+  
+  // Wait 1.5 sec for Pi SDK to load in Pi Browser
+  let retries = 0;
+  while(typeof Pi === 'undefined' && retries < 10){
+    console.log('Waiting for Pi SDK...', retries);
+    await new Promise(r=> setTimeout(r, 300));
+    retries++;
+  }
+  
+  const inPiBrowser = isRealPiBrowser();
+  const piExists = typeof Pi !== 'undefined';
+  
+  console.log('Login attempt - In Pi Browser?', inPiBrowser, 'Pi exists?', piExists);
+  
+  if(!piExists){
+    // Not in Pi Browser at all - Show guide
+    if(btn){ btn.innerHTML='🟣 Login with Pi'; btn.disabled=false; }
+    showPiGuideReal();
+    return;
+  }
+  
+  // Pi exists - Try real auth - Inside Pi Browser
   try{
-    const auth = await Promise.race([
-      Pi.authenticate(['username','payments'], function(p){console.log('Incomplete',p);}),
-      new Promise((_,rej)=> setTimeout(()=> rej(new Error('timeout')), 4000))
-    ]);
-    const username = auth.user.username;
+    if(typeof Pi.init === 'function'){
+      try{ Pi.init({version:'2.0', sandbox:true}); }catch(e){ console.log('Pi.init already'); }
+    }
+    
+    const authPromise = Pi.authenticate(['username','payments'], function(incomplete){
+      console.log('Incomplete payment found:', incomplete);
+    });
+    
+    const timeoutPromise = new Promise((_,reject)=> setTimeout(()=> reject(new Error('Pi auth timeout')), 8000));
+    
+    const auth = await Promise.race([authPromise, timeoutPromise]);
+    
+    const username = auth.user ? auth.user.username : 'Pioneer';
+    const email = username + '@pi.network';
     localStorage.setItem('pi_username', username);
-    localStorage.setItem('user_email', username+'@pi.network');
-    if(btn){ btn.innerHTML='✅ '+username; }
-    alert('Welcome '+username+' - Pi Login Success');
+    localStorage.setItem('user_email', email);
+    localStorage.setItem('pi_access_token', auth.accessToken || 'pi_token_'+Date.now());
+    localStorage.setItem('is_pi_user','true');
+    localStorage.setItem('lead_name', username);
+    
+    // Add to registered
+    let users = [];
+    try{ users = JSON.parse(localStorage.getItem('registered_customers')||'[]'); }catch(e){ users=[]; }
+    if(!users.some(u=>u.email===email)){
+      users.unshift({name: username, email: email, pupil_name: username, parent:'Pi Network Pi', date:new Date().toLocaleDateString('en-GB'), date_wat:new Date().toLocaleString('en-GB',{timeZone:'Africa/Lagos'})+' WAT Lagos', country:'Pi Network GCV $314,159'});
+      localStorage.setItem('registered_customers', JSON.stringify(users.slice(0,200)));
+      // Also increment lead submissions real
+      let leads = parseInt(localStorage.getItem('lead_submissions')||'0')||0;
+      localStorage.setItem('lead_submissions', (leads+1).toString());
+      let totalClicks = parseInt(localStorage.getItem('total_link_clicks')||'0')||0;
+      if(totalClicks===0) localStorage.setItem('total_link_clicks','1');
+    }
+    
+    if(btn){ btn.innerHTML='✅ '+username; btn.style.background='#00AA00'; }
+    
+    const ok = document.createElement('div');
+    ok.style.cssText='position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#00AA00; color:white; padding:16px 24px; border-radius:12px; z-index:9999999; font-weight:bold; box-shadow:0 4px 20px rgba(0,0,0,0.5);';
+    ok.innerHTML='✅ Welcome '+username+'! Pi Login Success - Academy Unlocked!';
+    document.body.appendChild(ok);
+    setTimeout(()=>{ ok.remove(); window.location.hash='#academy'; }, 1500);
+    
+    return auth;
+    
   }catch(e){
-    console.log('Pi auth timeout/fail',e);
-    if(btn){ btn.innerHTML='🟣 Login with Pi'; }
-    showPiGuide();
+    console.error('Pi auth error', e);
+    if(btn){ btn.innerHTML='🟣 Login with Pi'; btn.style.background='#7D2AE7'; btn.disabled=false; }
+    if(e.message && e.message.toLowerCase().includes('timeout')){
+      alert('Pi auth timed out - Please tap Login with Pi again - Make sure you approve in Pi popup');
+    }else if(e.message && e.message.toLowerCase().includes('cancel') || e.message && e.message.toLowerCase().includes('closed')){
+      console.log('User cancelled Pi auth');
+    }else{
+      // Only show guide if definitely NOT in Pi Browser
+      if(!isRealPiBrowser()){
+        showPiGuideReal();
+      }else{
+        alert('Pi Login error: '+(e.message||'Unknown')+' - Please try again - If persists, continue with Email');
+      }
+    }
   }
 };
 
-window.showPiGuide = function(){
+window.showPiGuideReal = function(){
+  // Double check - Don't show if actually in Pi Browser
+  if(isRealPiBrowser() && typeof Pi !== 'undefined'){
+    console.log('Already in Pi Browser - Not showing guide');
+    return;
+  }
   if(document.getElementById('piGuideModal')) return;
   const m=document.createElement('div'); m.id='piGuideModal';
-  m.style.cssText='position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:9999999; display:flex; align-items:center; justify-content:center; padding:20px;';
-  m.innerHTML='<div style="background:#111; border:3px solid #7D2AE7; border-radius:20px; padding:20px; max-width:380px; width:100%; text-align:center;"><h2 style="color:#7D2AE7; font-size:20px; margin:0 0 10px;">🟣 Pi Browser Required</h2><p style="color:white; font-size:14px;">Login with Pi works only inside Pi Browser. Download Pi Browser, then open gasv.store inside it.</p><div style="display:grid; gap:10px; margin-top:14px;"><a href="https://minepi.com/pi-browser" target="_blank" style="background:#7D2AE7; color:white; padding:14px; border-radius:12px; text-decoration:none; font-weight:bold; display:block;">📥 Download Pi Browser</a><button onclick="document.getElementById(\'piGuideModal\').remove()" style="background:#333; color:white; padding:12px; border-radius:12px; border:1px solid #555; width:100%;">Continue with Email</button></div></div>';
+  m.style.cssText='position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:9999999; display:flex; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(6px);';
+  m.innerHTML='<div style="background:#111; border:3px solid #7D2AE7; border-radius:20px; padding:20px; max-width:380px; width:100%; text-align:center;"><h2 style="color:#7D2AE7; font-size:20px; margin:0 0 12px;">🟣 Pi Browser Required</h2><p style="color:white; font-size:14px; line-height:1.5;">Login with Pi works only inside Pi Browser App. You are currently in Chrome/Normal browser.</p><div style="background:#222; padding:12px; border-radius:12px; margin:12px 0; text-align:left; border:1px solid #333;"><p style="color:#FFD700; font-size:13px; margin:6px 0;">1️⃣ Download Pi Browser</p><p style="color:#FFD700; font-size:13px; margin:6px 0;">2️⃣ Open Pi Browser → Type: gasv.store</p><p style="color:#FFD700; font-size:13px; margin:6px 0;">3️⃣ Tap Login with Pi → Approve</p></div><div style="display:grid; gap:10px; margin-top:14px;"><a href="https://minepi.com/pi-browser" target="_blank" style="background:#7D2AE7; color:white; padding:14px; border-radius:12px; text-decoration:none; font-weight:bold; display:block; text-align:center;">📥 Download Pi Browser - Free</a><button onclick="document.getElementById(\'piGuideModal\').remove()" style="background:#333; color:white; padding:12px; border-radius:12px; border:1px solid #555; width:100%; font-weight:bold; cursor:pointer;">Continue with Email Login</button></div><p style="color:#666; font-size:10px; margin-top:12px;">RC BN3583773 • goyedagosmess@gmail.com • gasv.store</p></div>';
   m.onclick=(e)=>{ if(e.target===m) m.remove(); };
   document.body.appendChild(m);
 };
 
-// Fix all display
-document.addEventListener('DOMContentLoaded', ()=>{
-  document.body.style.display='block';
-  document.body.style.opacity='1';
-  const btn=document.getElementById('loginWithPiBtn');
-  if(btn){ btn.style.pointerEvents='auto'; btn.style.cursor='pointer'; btn.onclick=window.loginWithPi; }
+window.showPiGuide = window.showPiGuideReal;
+
+// Safe parse - Fixes NaN crash - Keep from previous fix
+window.safeParse = window.safeParse || function(key, fallback){
+  try{
+    const val = localStorage.getItem(key);
+    if(!val || val==='NaN' || val==='undefined' || val==='null' || val==='') return fallback;
+    if(fallback instanceof Array && val==='0') return fallback;
+    return JSON.parse(val);
+  }catch(e){ localStorage.removeItem(key); return fallback; }
+};
+
+// Init Pi SDK on load - Important for Pi Browser
+window.addEventListener('load', ()=>{
+  setTimeout(()=>{
+    try{
+      if(typeof Pi !== 'undefined' && typeof Pi.init === 'function'){
+        Pi.init({version:'2.0', sandbox:true});
+        console.log('Pi SDK initialized in Pi Browser - sandbox:true');
+      }
+    }catch(e){ console.log('Pi init error', e); }
+    const btn=document.getElementById('loginWithPiBtn');
+    if(btn){ 
+      btn.style.pointerEvents='auto'; 
+      btn.style.cursor='pointer'; 
+      btn.onclick=window.loginWithPi;
+      btn.disabled=false;
+    }
+  }, 800);
 });
 
 window.openAdminRecovery = function(){
