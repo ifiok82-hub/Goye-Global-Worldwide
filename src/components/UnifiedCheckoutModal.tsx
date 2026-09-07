@@ -3,6 +3,7 @@ import { X, ShieldCheck, Lock, Copy, CheckCircle, RefreshCw, ChevronRight, Zap, 
 import { identifyUserSession, trackUserClick } from '../utils/analytics';
 import { cleanUserEmail } from '../lib/contact';
 import { safeParse } from '../utils/safeParse';
+import { PI_GCV_USD } from '../data';
 
 const showToast = (msg: string, type?: string) => {
   if (typeof (window as any).showToast === 'function') {
@@ -654,7 +655,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                 
                 <div className="bg-black p-4 rounded-xl border border-[#7D2AE7]/50 my-3">
                   <div className="text-xs text-gray-400 font-bold mb-1">Amount Due</div>
-                  <div className="text-2xl font-black text-[#FFD700]">{(priceUSD / 314159).toFixed(6)} Pi GCV</div>
+                  <div className="text-2xl font-black text-[#FFD700]">{(priceUSD / PI_GCV_USD).toFixed(9)} Pi GCV</div>
                   <div className="text-xs text-gray-400 mt-1">(${priceUSD} USD / ₦{nairaAmount})</div>
                 </div>
 
@@ -668,7 +669,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                   }} 
                   className="w-full h-[56px] bg-[#7D2AE7] hover:bg-[#6821c6] text-white font-black rounded-xl my-3 cursor-pointer transition text-base shadow-lg active:scale-[0.98]"
                 >
-                  🟣 Pay {(priceUSD / 314159).toFixed(6)} Pi in Pi Browser
+                  🟣 Pay {(priceUSD / PI_GCV_USD).toFixed(9)} Pi in Pi Browser
                 </button>
 
                 <div className="bg-black/60 rounded-xl p-3 my-2 text-left space-y-1 text-xs text-gray-300">
@@ -836,7 +837,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
           ) : (
             <div className="animate-in fade-in slide-in-from-right-4">
               <h3 className="text-[#8b5cf6] font-bold text-lg mb-1">🟣 Pay with Pi Network (GCV $314,159)</h3>
-              <p className="text-gray-300 text-xs mb-3">1-Click Pi SDK Payment — Rate: $49.99 = 0.000159 Pi</p>
+              <p className="text-gray-300 text-xs mb-3">1-Click Pi SDK Payment — Rate: 1 Pi = $314,159</p>
 
               {/* Native Pi SDK 1-Click Button */}
               <button 
@@ -867,7 +868,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                 }}
                 className="flex items-center justify-center gap-2 hover:brightness-110 transition active:scale-[0.98] mb-4"
               >
-                <span>🟣</span> Pay with Pi — GCV $314,159 (0.000159 Pi)
+                <span>🟣</span> Pay with Pi — GCV $314,159 ({(priceUSD / PI_GCV_USD).toFixed(9)} Pi)
               </button>
 
               <div className="relative my-4 flex items-center justify-center">

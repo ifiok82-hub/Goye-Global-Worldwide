@@ -99,7 +99,7 @@ app.get('/api/pi-config', (req, res) => {
     domain: 'www.gasv.store',
     rc: 'BN3583773',
     gcv: 314159,
-    amount_pi: 0.000159,
+    amount_pi: 49.99 / 314159,
     amount_usd: 49.99,
     amount_ngn: 74985,
     status: apiKey ? '✅ Pi API Key configured - Real Pi payments enabled - ' + apiKey.substring(0, 6) + '...' : '⚠️ PI_API_KEY not configured - Add in Environment Variables from develop.pi',
@@ -119,8 +119,8 @@ app.post('/api/pi-approve', async (req, res) => {
       headers: { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' }
     });
     const data = await piRes.json();
-    console.log('Pi approve:', paymentId, data);
-    res.json(data);
+    console.log('Pi approve:', paymentId, { ok: piRes.ok, status: piRes.status });
+    res.status(piRes.ok ? 200 : piRes.status).json(data);
   } catch (e: any) {
     console.error('Pi approve error', e);
     res.status(500).json({ error: e.message });
@@ -139,8 +139,8 @@ app.post('/api/pi-complete', async (req, res) => {
       body: JSON.stringify({ txid })
     });
     const data = await piRes.json();
-    console.log('Pi complete:', paymentId, txid, data);
-    res.json({ completed: true, piData: data, amount_usd: 49.99, amount_pi: 0.000159, gcv: 314159, store: 'gasv.store', rc: 'BN3583773' });
+    console.log('Pi complete:', paymentId, txid, { ok: piRes.ok, status: piRes.status });
+    res.status(piRes.ok ? 200 : piRes.status).json({ completed: piRes.ok, piData: data, amount_usd: 49.99, amount_pi: 49.99 / 314159, gcv: 314159, store: 'gasv.store', rc: 'BN3583773' });
   } catch (e: any) {
     console.error('Pi complete error', e);
     res.status(500).json({ error: e.message });
