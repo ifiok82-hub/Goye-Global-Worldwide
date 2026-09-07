@@ -421,6 +421,10 @@ window.createPiPayment = async function(usdAmount) {
   } catch(e) { console.error(e); showToast('Pi payment error: ' + (e.message || e), 'error'); }
 };
 
+window.payWithPi = function(email, usdAmount) {
+  window.createPiPayment(usdAmount || 49.99);
+};
+
 window.showPiGuideReal = function() {
   if (document.getElementById('piGuideModal')) return;
   const m = document.createElement('div');

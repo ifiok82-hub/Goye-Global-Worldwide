@@ -4607,33 +4607,14 @@ app.get('/success.html', (req, res) => {
 // Boot and mount Vite in Dev, serve static dist folder in Prod
 async function startServer() {
   if (process.env.NODE_ENV !== 'production') {
-  const vite = await createViteServer({
-    server: {
-      middlewareMode: true,
-      // The Express wrapper does not expose Vite's WebSocket upgrade handler
-      // in the preview runtime, so disable the client HMR socket there.
-      hmr: false,
-    },
-    // Handle the SPA shell explicitly so Vite does not inject its HMR client.
-    appType: 'custom'
-  });
-  // The preview host does not provide Vite's WebSocket upgrade path. Return
-  // no HMR client and strip any injected Vite bootstrap from the SPA shell.
-  app.get('/@vite/client', (_req, res) => {
-    res.status(404).end();
-  });
-  app.get('/', async (_req, res, next) => {
-    try {
-      const source = fs.readFileSync(path.join(process.cwd(), 'index.html'), 'utf8');
-      const html = (await vite.transformIndexHtml('/', source))
-        .replace(/<script[^>]+src=["']\/@vite\/client["'][^>]*><\/script>\s*/g, '')
-        .replace(/<script[^>]*>\s*import\s+\{\s*injectIntoGlobalHook[\s\S]*?<\/script>\s*/g, '');
-      res.status(200).setHeader('Content-Type', 'text/html').send(html);
-    } catch (error) {
-      next(error);
-    }
-  });
-  app.use(vite.middlewares);
+    const vite = await createViteServer({
+      server: {
+        middlewareMode: true,
+        hmr: false,
+      },
+      appType: 'spa',
+    });
+    app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));

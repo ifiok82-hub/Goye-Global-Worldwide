@@ -3,7 +3,6 @@ import { X, ShieldCheck, Lock, Copy, CheckCircle, RefreshCw, ChevronRight, Zap, 
 import { identifyUserSession, trackUserClick } from '../utils/analytics';
 import { cleanUserEmail } from '../lib/contact';
 import { safeParse } from '../utils/safeParse';
-import { PI_GCV_USD } from '../data';
 
 const showToast = (msg: string, type?: string) => {
   if (typeof (window as any).showToast === 'function') {
@@ -37,11 +36,11 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
   const priceUSD = (product?.price && typeof product.price === 'number' && product.price > 0) ? product.price : 49.99;
   const rawProductName = product?.name || 'Sirwise AI Web3 Academy 4-Week Masterclass';
   const cleanProductName = rawProductName.includes('Micro-SaaS') ? 'Sirwise AI Web3 Academy Global' : rawProductName;
-  const userCurrency = localStorage.getItem('goye_currency') || localStorage.getItem('goye_preferred_currency') || localStorage.getItem('currency') || 'USD';
+  const userCurrency = localStorage.getItem('goye_currency') || localStorage.getItem('currency') || 'USD';
   
   const currencies: Record<string, { symbol: string; name: string; rate: number }> = {
     USD: { symbol: '$', name: 'US Dollar', rate: 1 },
-    NGN: { symbol: '₦', name: 'Naira', rate: 1600 },
+    NGN: { symbol: '₦', name: 'Naira', rate: 1500 },
     GBP: { symbol: '£', name: 'Pound', rate: 0.79 },
     EUR: { symbol: '€', name: 'Euro', rate: 0.92 },
     CAD: { symbol: 'C$', name: 'Canadian', rate: 1.35 },
@@ -57,7 +56,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
   const displaySymbol = currentCurrency.symbol || '$';
   const displayPrice = (priceUSD * currentCurrency.rate).toFixed(2);
   const localPrice = displayPrice;
-  const priceNGN = priceUSD * 1600;
+  const priceNGN = (priceUSD === 3.00 || product?.id === 'web3-starter-toolkit') ? 2500 : (priceUSD === 19.99 ? 29900 : (priceUSD === 49.99 ? 74985 : priceUSD * 1500));
   const nairaAmount = priceNGN.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   
   const formSubmitId = 'b5ff137904e20ed9fbad829a69fc150b';
@@ -655,7 +654,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                 
                 <div className="bg-black p-4 rounded-xl border border-[#7D2AE7]/50 my-3">
                   <div className="text-xs text-gray-400 font-bold mb-1">Amount Due</div>
-                  <div className="text-2xl font-black text-[#FFD700]">{(priceUSD / PI_GCV_USD).toFixed(6)} Pi GCV</div>
+                  <div className="text-2xl font-black text-[#FFD700]">{(priceUSD / 314159).toFixed(6)} Pi GCV</div>
                   <div className="text-xs text-gray-400 mt-1">(${priceUSD} USD / ₦{nairaAmount})</div>
                 </div>
 
@@ -669,7 +668,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                   }} 
                   className="w-full h-[56px] bg-[#7D2AE7] hover:bg-[#6821c6] text-white font-black rounded-xl my-3 cursor-pointer transition text-base shadow-lg active:scale-[0.98]"
                 >
-                  🟣 Pay {(priceUSD / PI_GCV_USD).toFixed(6)} Pi in Pi Browser
+                  🟣 Pay {(priceUSD / 314159).toFixed(6)} Pi in Pi Browser
                 </button>
 
                 <div className="bg-black/60 rounded-xl p-3 my-2 text-left space-y-1 text-xs text-gray-300">
@@ -837,7 +836,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
           ) : (
             <div className="animate-in fade-in slide-in-from-right-4">
               <h3 className="text-[#8b5cf6] font-bold text-lg mb-1">🟣 Pay with Pi Network (GCV $314,159)</h3>
-              <p className="text-gray-300 text-xs mb-3">1-Click Pi SDK Payment — Rate: 1 Pi = $314,159</p>
+              <p className="text-gray-300 text-xs mb-3">1-Click Pi SDK Payment — Rate: ${priceUSD.toFixed(2)} = {(priceUSD / 314159).toFixed(6)} Pi</p>
 
               {/* Native Pi SDK 1-Click Button */}
               <button 
@@ -847,8 +846,10 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                     alert('Please enter your email address first!');
                     return;
                   }
-                  if (typeof (window as any).payWithPi === 'function') {
-                    (window as any).payWithPi(userEmail);
+                  if (typeof (window as any).createPiPayment === 'function') {
+                    (window as any).createPiPayment(priceUSD);
+                  } else if (typeof (window as any).payWithPi === 'function') {
+                    (window as any).payWithPi(userEmail, priceUSD);
                   } else {
                     alert('Please open https://www.gasv.store in the Pi Browser app to pay with Pi SDK!');
                   }
@@ -868,7 +869,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                 }}
                 className="flex items-center justify-center gap-2 hover:brightness-110 transition active:scale-[0.98] mb-4"
               >
-                <span>🟣</span> Pay with Pi — GCV $314,159 ({(priceUSD / PI_GCV_USD).toFixed(6)} Pi)
+                <span>🟣</span> Pay with Pi — GCV $314,159 ({(priceUSD / 314159).toFixed(6)} Pi)
               </button>
 
               <div className="relative my-4 flex items-center justify-center">

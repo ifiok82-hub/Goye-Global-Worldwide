@@ -2,7 +2,8 @@ import AuthScreen from './components/AuthScreen';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { safeParse, safeGetNumber } from './utils/safeParse';
 import { X, Globe, Zap, Download, ShieldCheck, ChevronRight, Lock, BookOpen, Settings, List, Save, Mail, CreditCard, DollarSign, Wallet, Phone, Landmark, Home, ShoppingBag, ShoppingCart, GraduationCap, MessageCircle, Search, Edit, Trash2, Plus, FileText, Video, Eye, EyeOff, CheckCircle, RefreshCw, Users, Activity, UserCircle , Scan, QrCode, Smartphone, MoreVertical, Bot, LayoutDashboard, Camera, Mic, MoreHorizontal} from 'lucide-react';
-import { ALL_PRODUCTS, PI_GCV_USD } from './data';
+import { ALL_PRODUCTS } from './data';
+import { formatPriceDisplay } from './utils/currency';
 import UnifiedCheckoutModal from './components/UnifiedCheckoutModal';
 import AcademyDashboard from './components/AcademyDashboard';
 import EsimVideoModal from './components/EsimVideoModal';
@@ -400,8 +401,20 @@ export default function App() {
       };
     }
   }, []);
-  const [currentCurrency, setCurrentCurrency] = useState(localStorage.getItem('goye_preferred_currency') || 'USD');
+  const [currentCurrency, setCurrentCurrency] = useState(() => localStorage.getItem('goye_currency') || localStorage.getItem('goye_preferred_currency') || 'USD');
+  const [currencyMode, setCurrencyMode] = useState(() => localStorage.getItem('goye_curr_mode') || 'pi');
   const [exchangeRates, setExchangeRates] = useState(CURRENCIES);
+
+  useEffect(() => {
+    const syncCurrency = () => {
+      const c = localStorage.getItem('goye_currency') || 'USD';
+      const m = localStorage.getItem('goye_curr_mode') || 'pi';
+      setCurrentCurrency(c);
+      setCurrencyMode(m);
+    };
+    window.addEventListener('storage', syncCurrency);
+    return () => window.removeEventListener('storage', syncCurrency);
+  }, []);
 
   useEffect(() => {
     fetch('https://open.er-api.com/v6/latest/USD')
@@ -687,17 +700,11 @@ export default function App() {
   };
 
   const formatPrice = (usdPrice: number) => {
-  const curr = exchangeRates.find(c => c.code === currentCurrency) || CURRENCIES[0];
-  if (curr.code === 'PI') return `${(usdPrice / PI_GCV_USD).toFixed(6)} Pi GCV`;
-  if (curr.code === 'USD' || curr.code === 'USDC') return `${curr.symbol}${usdPrice.toFixed(2)}`;
-  if (curr.code === 'NGN') return `₦${(usdPrice * 1600).toLocaleString('en-NG', { maximumFractionDigits: 0 })}`;
-  return `${curr.symbol}${(usdPrice * curr.rate).toFixed(2)}`;
-  };
-
-  const secondaryPrice = (usdPrice: number) => {
-  if (currentCurrency === 'PI') return `≈ $${usdPrice.toFixed(2)} USD`;
-  if (currentCurrency === 'USD' || currentCurrency === 'USDC') return `≈ ${(usdPrice / PI_GCV_USD).toFixed(6)} Pi GCV`;
-  return `≈ $${usdPrice.toFixed(2)} USD`;
+    const curr = exchangeRates.find(c => c.code === currentCurrency) || CURRENCIES[0];
+    if (curr.code === 'USD' || curr.code === 'USDC') return `${curr.symbol}${usdPrice.toFixed(2)}`;
+    const converted = usdPrice * curr.rate;
+    if (curr.code === 'PI') return `${usdPrice.toFixed(2)} (~${converted.toFixed(6)} ${curr.symbol})`;
+    return `${usdPrice.toFixed(2)} (~${curr.symbol}${converted.toFixed(0)})`;
   };
 
   const handleInstallClick = () => {
@@ -717,36 +724,63 @@ export default function App() {
 
 
   useEffect(() => {
-    const handleHashChange = () => setTab(window.location.hash.replace('#', '') || 'home');
-    window.addEventListener('hashchange', handleHashChange);
-    
-    setTimeout(() => setShowSplash(false), 2000);
+    // Strict fallback timer to automatically hide splash screen & auth loading after 1.5s max
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+      setAuthLoading(false);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      try {
+        setTab(window.location.hash.replace('#', '') || 'home');
+      } catch (e) {}
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('hashchange', handleHashChange);
+    }
     
     // Load downloads
-    const items = safeParse('my_downloads', []);
-    setPurchasedItems(Array.isArray(items) ? items : []);
+    try {
+      const items = safeParse('my_downloads', []);
+      setPurchasedItems(Array.isArray(items) ? items : []);
+    } catch (e) {}
     
     // Check if URL is /admin
-    if (window.location.pathname === '/admin') {
-      setShowAdminLogin(true);
-    }
+    try {
+      if (typeof window !== 'undefined' && window.location.pathname === '/admin') {
+        setShowAdminLogin(true);
+      }
+    } catch (e) {}
 
     const handlePiAuthSuccess = (e: any) => {
-      if (e && e.detail) {
-        const { username, email } = e.detail;
-        const piUser = { id: 'pi_' + username, email: email, name: username, role: 'student' };
-        const piProfile = { uid: piUser.id, email: email, displayName: username, country: 'Pi Network Pioneer' };
-        setIsAuthenticated(true);
-        setCurrentUser(piUser);
-        setUserProfile(piProfile);
-        setTab('academy');
+      try {
+        if (e && e.detail) {
+          const { username, email } = e.detail;
+          const piUser = { id: 'pi_' + username, email: email, name: username, role: 'student' };
+          const piProfile = { uid: piUser.id, email: email, displayName: username, country: 'Pi Network Pioneer' };
+          setIsAuthenticated(true);
+          setCurrentUser(piUser);
+          setUserProfile(piProfile);
+          setTab('academy');
+        }
+      } catch (err) {
+        console.warn('Pi auth error:', err);
       }
     };
-    window.addEventListener('piAuthSuccess', handlePiAuthSuccess);
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('piAuthSuccess', handlePiAuthSuccess);
+    }
 
     return () => {
-      window.removeEventListener('hashchange', handleHashChange);
-      window.removeEventListener('piAuthSuccess', handlePiAuthSuccess);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('hashchange', handleHashChange);
+        window.removeEventListener('piAuthSuccess', handlePiAuthSuccess);
+      }
     };
   }, []);
 
@@ -807,10 +841,15 @@ export default function App() {
             <span>💱 GCV: 1 Pi = $314,159</span>
             <select 
               id="currencySelector" 
-              defaultValue={localStorage.getItem('goye_currency') || 'USD'}
+              value={currentCurrency}
               onChange={(e) => {
+                const val = e.target.value;
+                setCurrentCurrency(val);
+                localStorage.setItem('goye_currency', val);
+                localStorage.setItem('goye_preferred_currency', val);
+                (window as any).SELECTED_CURRENCY = val;
                 if (typeof (window as any).changeCurrency === 'function') {
-                  (window as any).changeCurrency(e.target.value);
+                  (window as any).changeCurrency(val);
                 }
               }}
               style={{ background: '#111', color: '#FFD700', border: '1px solid #FFD700', borderRadius: '6px', padding: '2px 6px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}
@@ -819,18 +858,27 @@ export default function App() {
               <option value="NGN">NGN (₦)</option>
               <option value="GBP">GBP (£)</option>
               <option value="EUR">EUR (€)</option>
+              <option value="CAD">CAD (C$)</option>
+              <option value="AUD">AUD (A$)</option>
+              <option value="INR">INR (₹)</option>
+              <option value="ZAR">ZAR (R)</option>
+              <option value="PI">Pi (π)</option>
             </select>
 
             <button 
               id="toggleCurrencyModeBtn"
               onClick={() => {
+                const newMode = currencyMode === 'pi' ? 'fiat' : 'pi';
+                setCurrencyMode(newMode);
+                localStorage.setItem('goye_curr_mode', newMode);
+                (window as any).CURRENCY_MODE = newMode;
                 if (typeof (window as any).toggleCurrencyMode === 'function') {
                   (window as any).toggleCurrencyMode();
                 }
               }}
               style={{ background: '#222', color: '#00FF88', border: '1px solid #00FF88', borderRadius: '6px', padding: '2px 8px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}
             >
-              {(localStorage.getItem('goye_curr_mode') || 'pi') === 'pi' ? '🟣 Pi GCV Mode' : '💵 Fiat Mode'}
+              {currencyMode === 'pi' ? '🟣 Pi GCV Mode' : '💵 Fiat Mode'}
             </button>
           </div>
 
@@ -975,36 +1023,36 @@ export default function App() {
                         <div className="text-3xl mb-2">🤖</div>
                         <h3 className="text-white font-bold mb-1 text-base">Sirwise AI & Prompt Engineering</h3>
                         <p className="text-gray-400 text-xs mb-3">Master AI prompts, homework assistance, research tools, and smart automation.</p>
-                        <div className="mb-3 text-xs font-bold" data-usd-price="49.99"><span>{formatPrice(49.99)}</span><span className="block text-gray-400 font-normal mt-1">{secondaryPrice(49.99)}</span></div>
+                        <div className="mb-3 text-xs font-bold" data-usd-price="49.99">0.000159 Pi GCV ($49.99)</div>
                       </div>
-                      <button data-usd-button="49.99" onClick={() => { setSelectedProduct({ id: "academy", name: "Sirwise AI Web3 Academy 4-Week", price: 49.99, category: "academy" }); setShowCheckoutModal(true); }} className="bg-[#FFD700] text-black text-xs font-bold w-full py-2.5 rounded-xl hover:bg-[#ffe033] cursor-pointer pointer-events-auto">Start Learning ({formatPrice(49.99)})</button>
+                      <button data-usd-button="49.99" onClick={() => { setSelectedProduct({ id: "academy", name: "Sirwise AI Web3 Academy 4-Week", price: 49.99, category: "academy" }); setShowCheckoutModal(true); }} className="bg-[#FFD700] text-black text-xs font-bold w-full py-2.5 rounded-xl hover:bg-[#ffe033] cursor-pointer pointer-events-auto">Start Learning ($49.99)</button>
                     </div>
                     <div className="bg-[#111] p-5 rounded-2xl border border-[#333] hover:border-[#FFD700] transition flex flex-col justify-between">
                       <div>
                         <div className="text-3xl mb-2">🎨</div>
                         <h3 className="text-white font-bold mb-1 text-base">Digital Asset Creation</h3>
                         <p className="text-gray-400 text-xs mb-3">Create digital art, storytelling, ebooks, and interactive multimedia projects.</p>
-                        <div className="mb-3 text-xs font-bold" data-usd-price="49.99"><span>{formatPrice(49.99)}</span><span className="block text-gray-400 font-normal mt-1">{secondaryPrice(49.99)}</span></div>
+                        <div className="mb-3 text-xs font-bold" data-usd-price="49.99">0.000159 Pi GCV ($49.99)</div>
                       </div>
-                      <button data-usd-button="49.99" onClick={() => { setSelectedProduct({ id: "academy", name: "Sirwise AI Web3 Academy 4-Week", price: 49.99, category: "academy" }); setShowCheckoutModal(true); }} className="bg-[#FFD700] text-black text-xs font-bold w-full py-2.5 rounded-xl hover:bg-[#ffe033] cursor-pointer pointer-events-auto">Start Learning ({formatPrice(49.99)})</button>
+                      <button data-usd-button="49.99" onClick={() => { setSelectedProduct({ id: "academy", name: "Sirwise AI Web3 Academy 4-Week", price: 49.99, category: "academy" }); setShowCheckoutModal(true); }} className="bg-[#FFD700] text-black text-xs font-bold w-full py-2.5 rounded-xl hover:bg-[#ffe033] cursor-pointer pointer-events-auto">Start Learning ($49.99)</button>
                     </div>
                     <div className="bg-[#111] p-5 rounded-2xl border border-[#333] hover:border-[#FFD700] transition flex flex-col justify-between">
                       <div>
                         <div className="text-3xl mb-2">🔐</div>
                         <h3 className="text-white font-bold mb-1 text-base">Web3 & Cyber Safety</h3>
                         <p className="text-gray-400 text-xs mb-3">Blockchain basics, digital identity security, NFT credentials, and online privacy.</p>
-                        <div className="mb-3 text-xs font-bold" data-usd-price="49.99"><span>{formatPrice(49.99)}</span><span className="block text-gray-400 font-normal mt-1">{secondaryPrice(49.99)}</span></div>
+                        <div className="mb-3 text-xs font-bold" data-usd-price="49.99">0.000159 Pi GCV ($49.99)</div>
                       </div>
-                      <button data-usd-button="49.99" onClick={() => { setSelectedProduct({ id: "academy", name: "Sirwise AI Web3 Academy 4-Week", price: 49.99, category: "academy" }); setShowCheckoutModal(true); }} className="bg-[#FFD700] text-black text-xs font-bold w-full py-2.5 rounded-xl hover:bg-[#ffe033] cursor-pointer pointer-events-auto">Start Learning ({formatPrice(49.99)})</button>
+                      <button data-usd-button="49.99" onClick={() => { setSelectedProduct({ id: "academy", name: "Sirwise AI Web3 Academy 4-Week", price: 49.99, category: "academy" }); setShowCheckoutModal(true); }} className="bg-[#FFD700] text-black text-xs font-bold w-full py-2.5 rounded-xl hover:bg-[#ffe033] cursor-pointer pointer-events-auto">Start Learning ($49.99)</button>
                     </div>
                     <div className="bg-[#111] p-5 rounded-2xl border border-[#333] hover:border-[#FFD700] transition flex flex-col justify-between">
                       <div>
                         <div className="text-3xl mb-2">🎓</div>
                         <h3 className="text-white font-bold mb-1 text-base">Capstone & Certification</h3>
                         <p className="text-gray-400 text-xs mb-3">Build your final project and receive an official blockchain-verified diploma.</p>
-                        <div className="mb-3 text-xs font-bold" data-usd-price="49.99"><span>{formatPrice(49.99)}</span><span className="block text-gray-400 font-normal mt-1">{secondaryPrice(49.99)}</span></div>
+                        <div className="mb-3 text-xs font-bold" data-usd-price="49.99">0.000159 Pi GCV ($49.99)</div>
                       </div>
-                      <button data-usd-button="49.99" onClick={() => { setSelectedProduct({ id: "academy", name: "Sirwise AI Web3 Academy 4-Week", price: 49.99, category: "academy" }); setShowCheckoutModal(true); }} className="bg-[#FFD700] text-black text-xs font-bold w-full py-2.5 rounded-xl hover:bg-[#ffe033] cursor-pointer pointer-events-auto">Start Learning ({formatPrice(49.99)})</button>
+                      <button data-usd-button="49.99" onClick={() => { setSelectedProduct({ id: "academy", name: "Sirwise AI Web3 Academy 4-Week", price: 49.99, category: "academy" }); setShowCheckoutModal(true); }} className="bg-[#FFD700] text-black text-xs font-bold w-full py-2.5 rounded-xl hover:bg-[#ffe033] cursor-pointer pointer-events-auto">Start Learning ($49.99)</button>
                     </div>
                   </div>
                 </div>
@@ -1063,46 +1111,61 @@ export default function App() {
                 </h2>
                 
                 <div className="grid grid-cols-1 gap-6">
-                  {products.filter((p: any) => tab === 'shop' || tab === 'home' || p.category === tab).map((product: any) => (
-                    <div key={product.id} className="bg-[#111] border border-[#333] rounded-2xl p-6 flex flex-col justify-between hover:border-[#FFD700] transition relative overflow-hidden">
-                      {product.badge && <div className="absolute top-0 right-0 bg-[#FFD700] text-black text-[10px] font-black px-3 py-1 rounded-bl-xl">{product.badge}</div>}
-                      <div>
-                        <div className="text-4xl mb-4">{product.icon}</div>
-                        <h3 className="text-white font-bold text-lg mb-2 leading-tight">{product.name}</h3>
-                        {product.description && <p className="text-gray-400 text-sm mb-4">{product.description}</p>}
-                        {product.data && (
-                          <div className="flex gap-2 mb-3">
-                            <span className="bg-[#222] text-gray-300 text-xs px-2 py-1 rounded-lg border border-[#444]">{product.data}</span>
-                            <span className="bg-[#222] text-gray-300 text-xs px-2 py-1 rounded-lg border border-[#444]">{product.days}</span>
+                  {products.filter((p: any) => tab === 'shop' || tab === 'home' || p.category === tab).map((product: any) => {
+                    const priceDisplay = formatPriceDisplay(product.price, currentCurrency, currencyMode);
+                    return (
+                      <div key={product.id} className="bg-[#111] border border-[#333] rounded-2xl p-6 flex flex-col justify-between hover:border-[#FFD700] transition relative overflow-hidden">
+                        {product.badge && <div className="absolute top-0 right-0 bg-[#FFD700] text-black text-[10px] font-black px-3 py-1 rounded-bl-xl">{product.badge}</div>}
+                        <div>
+                          <div className="text-4xl mb-4">{product.icon}</div>
+                          <h3 className="text-white font-bold text-lg mb-2 leading-tight">{product.name}</h3>
+                          {product.description && <p className="text-gray-400 text-sm mb-4">{product.description}</p>}
+                          {product.data && (
+                            <div className="flex gap-2 mb-3">
+                              <span className="bg-[#222] text-gray-300 text-xs px-2 py-1 rounded-lg border border-[#444]">{product.data}</span>
+                              <span className="bg-[#222] text-gray-300 text-xs px-2 py-1 rounded-lg border border-[#444]">{product.days}</span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="mt-auto pt-4 border-t border-[#222]">
+                          <div className="mb-4">
+                            <div className="text-[#10B981] font-black text-2xl flex items-baseline gap-2" data-usd-price={product.price}>
+                              {priceDisplay.main}
+                            </div>
+                            <div className="text-gray-400 text-xs font-semibold mt-1">
+                              {priceDisplay.sub}
+                            </div>
                           </div>
-                        )}
+
+                          {hasAccess(product.id) ? (
+                            <button onClick={() => {
+                              showToast('Access granted! Downloading...');
+                              if (product.category === 'academy') {
+                                const m = document.getElementById('videoModal');
+                                if(m) m.style.display = 'flex';
+                              } else {
+                                const a = document.createElement('a');
+                                a.href = 'data:text/plain;charset=utf-8,Access%20granted!%20This%20is%20your%20digital%20product%20content.';
+                                a.download = `${product.name}.txt`;
+                                a.click();
+                              }
+                            }} className="w-full bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/50 font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-[#10B981]/30 cursor-pointer pointer-events-auto z-10 touch-manipulation">
+                              <Download size={18}/> Access Content
+                            </button>
+                          ) : (
+                            <button 
+                              data-usd-button={product.price}
+                              onClick={() => { setSelectedProduct(product); setShowCheckoutModal(true); }} 
+                              className="w-full bg-[#FFD700] text-black font-black py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-yellow-400 cursor-pointer pointer-events-auto z-10 touch-manipulation shadow-lg transition active:scale-95"
+                            >
+                              <ShoppingCart size={18}/> Buy & Unlock ({priceDisplay.main})
+                            </button>
+                          )}
+                        </div>
                       </div>
-                      
-                      <div className="mt-auto pt-4 border-t border-[#222]">
-                        <div className="text-[#10B981] font-black text-2xl mb-4"><span>{formatPrice(Number(product.price))}</span><span className="block text-gray-400 text-xs font-normal mt-1">{secondaryPrice(Number(product.price))}</span></div>
-                        {hasAccess(product.id) ? (
-                          <button onClick={() => {
-                            showToast('Access granted! Downloading...');
-                            if (product.category === 'academy') {
-                              const m = document.getElementById('videoModal');
-                              if(m) m.style.display = 'flex';
-                            } else {
-                              const a = document.createElement('a');
-                              a.href = 'data:text/plain;charset=utf-8,Access%20granted!%20This%20is%20your%20digital%20product%20content.';
-                              a.download = `${product.name}.txt`;
-                              a.click();
-                            }
-                          }} className="w-full bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/50 font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-[#10B981]/30 cursor-pointer pointer-events-auto z-10 touch-manipulation">
-                            <Download size={18}/> Access Content
-                          </button>
-                        ) : (
-                          <button onClick={() => { setSelectedProduct(product); }} className="w-full bg-[#FFD700] text-black font-black py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-yellow-400 cursor-pointer pointer-events-auto z-10 touch-manipulation">
-                            <ShoppingCart size={18}/> Buy & Unlock
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </>
             )}
@@ -1463,15 +1526,22 @@ export default function App() {
       )}
 
       {showCurrencyModal && (
-        <div className="fixed inset-0 bg-black/90 z-[99999] flex items-center justify-center p-4 pointer-events-auto">
-          <div className="bg-[#111] border border-[#333] p-6 rounded-3xl w-[90%] max-w-[300px] flex flex-col items-center relative max-h-[80vh] overflow-y-auto">
-            <button onClick={() => setShowCurrencyModal(false)} className="absolute top-2 right-2 text-gray-500 font-bold cursor-pointer pointer-events-auto z-[100]">X</button>
-            <h3 className="font-black text-white mb-4">Select Currency</h3>
-  {['USD', 'NGN', 'PI', 'GBP', 'EUR', 'CAD', 'AUD', 'INR', 'ZAR'].map(curr => (
-  <button key={curr} onClick={() => { localStorage.setItem('goye_currency', curr); localStorage.setItem('goye_preferred_currency', curr); setCurrentCurrency(curr); showToast('Currency set to ' + curr); setShowCurrencyModal(false); }} className="w-full text-left p-3 border-b border-[#222] text-white hover:bg-[#222] font-bold cursor-pointer pointer-events-auto z-[100]">{curr}</button>
-  ))}
-          </div>
-        </div>
+        <CurrencyModal
+          onClose={() => setShowCurrencyModal(false)}
+          currentCurrency={currentCurrency}
+          onSelectCurrency={(code: string) => {
+            setCurrentCurrency(code);
+            localStorage.setItem('goye_currency', code);
+            localStorage.setItem('goye_preferred_currency', code);
+            (window as any).SELECTED_CURRENCY = code;
+            if (typeof (window as any).changeCurrency === 'function') {
+              (window as any).changeCurrency(code);
+            }
+            showToast('Currency set to ' + code, 'success');
+            setShowCurrencyModal(false);
+          }}
+          rates={exchangeRates}
+        />
       )}
 
       {/* Fixed Bottom Nav */}
