@@ -160,7 +160,11 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
             if (email) {
                 identifyUserSession(email.split('@')[0], email);
             }
-            if ((window as any).unlockAcademy) (window as any).unlockAcademy();
+            if ((window as any).unlockAcademyAccess) {
+                (window as any).unlockAcademyAccess(method, email, orderDocId);
+            } else if ((window as any).unlockAcademy) {
+                (window as any).unlockAcademy(method, email, orderDocId);
+            }
         }
 
         const currentRevenue = parseFloat(localStorage.getItem('goye_total_revenue') || '0');

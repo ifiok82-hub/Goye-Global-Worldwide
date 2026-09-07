@@ -1,7 +1,21 @@
 import React, { useState, useEffect, useRef } from "react";
-import { X, Send, Bot, Sparkles, Globe, DollarSign, Award, CheckCircle } from "lucide-react";
+import { X, Send, Bot, Sparkles, Globe, DollarSign, Award, CheckCircle, Lock } from "lucide-react";
 
 export default function SirwiseAITeacher({ isOpen, onClose }: any) {
+  const checkEnrolledStatus = (): boolean => {
+    try {
+      const isPaid = localStorage.getItem("sirwise_paid") === "true";
+      const isVerified = localStorage.getItem("payment_verified") === "true";
+      const isUnlocked = localStorage.getItem("academy_unlocked") === "true";
+      const isEnrolled = localStorage.getItem("is_enrolled") === "true";
+      const isAdmin = localStorage.getItem("is_admin") === "true";
+      return isPaid || isVerified || isUnlocked || isEnrolled || isAdmin;
+    } catch (e) {
+      return false;
+    }
+  };
+
+  const [isEnrolled, setIsEnrolled] = useState<boolean>(checkEnrolledStatus());
   const [messages, setMessages] = useState<{role: "user" | "ai", content: string}[]>([
     { 
       role: "ai", 
@@ -11,6 +25,13 @@ export default function SirwiseAITeacher({ isOpen, onClose }: any) {
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setIsEnrolled(checkEnrolledStatus());
+    const handleUnlocked = () => setIsEnrolled(true);
+    window.addEventListener("academyUnlocked", handleUnlocked);
+    return () => window.removeEventListener("academyUnlocked", handleUnlocked);
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -42,6 +63,39 @@ export default function SirwiseAITeacher({ isOpen, onClose }: any) {
     if (lower.includes("pidgin")) return sirwiseKnowledge["pidgin"];
     if (lower.includes("francais") || lower.includes("french") || lower.includes("bonjour")) return sirwiseKnowledge["francais"];
     if (lower.includes("espanol") || lower.includes("spanish") || lower.includes("hola")) return sirwiseKnowledge["espanol"];
+
+    // Gating check for guest / unpaid users on deep lesson requests
+    const isDeepLessonQuery = 
+      lower.includes("module") || 
+      lower.includes("prompt") || 
+      lower.includes("chatgpt") || 
+      lower.includes("generative") || 
+      lower.includes("fiverr") || 
+      lower.includes("automation") || 
+      lower.includes("no-code") || 
+      lower.includes("blockchain") || 
+      lower.includes("metamask") || 
+      lower.includes("cyber") || 
+      lower.includes("security") || 
+      lower.includes("pi") || 
+      lower.includes("gcv") || 
+      lower.includes("crypto") || 
+      lower.includes("defi") || 
+      lower.includes("marketing") || 
+      lower.includes("remote") || 
+      lower.includes("earn") || 
+      lower.includes("usd") || 
+      lower.includes("income") || 
+      lower.includes("capstone") || 
+      lower.includes("certificate") ||
+      lower.includes("lesson") ||
+      lower.includes("teach") ||
+      lower.includes("exercise") ||
+      lower.includes("how to");
+
+    if (!isEnrolled && isDeepLessonQuery) {
+      return "To unlock full interactive step-by-step tutoring across all 8 modules, please complete your Academy enrollment above.";
+    }
 
     if (lower.includes("module 1") || lower.includes("prompt") || lower.includes("chatgpt")) return sirwiseKnowledge["m1"];
     if (lower.includes("module 2") || lower.includes("generative") || lower.includes("fiverr")) return sirwiseKnowledge["m2"];
@@ -79,7 +133,13 @@ export default function SirwiseAITeacher({ isOpen, onClose }: any) {
           </div>
           <div>
             <span className="font-black text-black text-sm block leading-tight">Sirwise AI Global Tutor 🌍</span>
-            <span className="text-[10px] text-black font-bold flex items-center gap-1"><Sparkles size={10}/> 8 Modules • Multilingual 24/7</span>
+            <span className="text-[10px] text-black font-bold flex items-center gap-1">
+              {isEnrolled ? (
+                <><CheckCircle size={10} className="text-emerald-800" /> Verified Enrolled Student</>
+              ) : (
+                <><Lock size={10} className="text-amber-800" /> Guest Mode • Enrollment Required</>
+              )}
+            </span>
           </div>
         </div>
         <button onClick={onClose} className="text-black hover:bg-black/10 p-1.5 rounded-full cursor-pointer pointer-events-auto z-10"><X size={20}/></button>
@@ -89,6 +149,21 @@ export default function SirwiseAITeacher({ isOpen, onClose }: any) {
         {messages.map((msg, i) => (
           <div key={i} className={"max-w-[88%] rounded-2xl p-3.5 text-xs leading-relaxed whitespace-pre-wrap " + (msg.role === "ai" ? "bg-[#222] text-white self-start rounded-tl-sm border border-[#333]" : "bg-[#FFD700] text-black font-bold self-end rounded-tr-sm")}>
             {msg.content}
+            {msg.role === "ai" && msg.content.includes("To unlock full interactive step-by-step tutoring") && (
+              <button 
+                onClick={() => {
+                  onClose();
+                  if ((window as any).goToAcademyPaywall) {
+                    (window as any).goToAcademyPaywall();
+                  } else {
+                    window.location.hash = "#academy";
+                  }
+                }}
+                className="mt-3 w-full bg-[#FFD700] hover:bg-[#ffe033] text-black font-extrabold py-2 px-3 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md transition cursor-pointer pointer-events-auto"
+              >
+                <Sparkles size={14} /> 🚀 Complete Enrollment $49.99 Now
+              </button>
+            )}
           </div>
         ))}
         {isTyping && (

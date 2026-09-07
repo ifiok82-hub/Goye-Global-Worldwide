@@ -304,8 +304,8 @@ export default function App() {
 
   const playAcademyVideoFullscreen = () => {
     console.log('Play Academy Video clicked');
-    const youtubeId = 'dQw4w9WgXcQ';
-    const realVideoUrl = localStorage.getItem('academy_tour_video_url') || `https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0&showinfo=0`;
+    const youtubeId = 'aircAruvnKk';
+    const realVideoUrl = localStorage.getItem('academy_tour_video_url') || `https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0&showinfo=0&playsinline=1`;
 
     // Track video view
     try {
@@ -347,6 +347,40 @@ export default function App() {
     document.body.appendChild(modal);
   };
 
+  const unlockAcademyAccess = (method = 'Payment Verification', customerEmail = '', ref = '') => {
+    try {
+      localStorage.setItem('sirwise_paid', 'true');
+      localStorage.setItem('payment_verified', 'true');
+      localStorage.setItem('academy_unlocked', 'true');
+      localStorage.setItem('is_enrolled', 'true');
+      localStorage.setItem('payment_date', new Date().toISOString());
+
+      const userEmail = customerEmail || localStorage.getItem('user_email') || localStorage.getItem('lead_email') || 'student@gasv.store';
+      localStorage.setItem('user_email', userEmail);
+
+      const localKey = `goye_academy_progress_${userEmail}`;
+      localStorage.setItem(localKey, JSON.stringify({ isEnrolled: true, progress: [1, 2, 3, 4, 5, 6, 7, 8] }));
+
+      // Close all sales modals / overlays
+      const vidModal = document.getElementById('videoModalFullscreen');
+      if (vidModal) vidModal.remove();
+
+      const convModal = document.getElementById('conversionPageOverlay');
+      if (convModal) convModal.remove();
+
+      setShowLeadMagnetModal(false);
+
+      // Dispatch custom event for real-time reactivity
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('academyUnlocked', { detail: { method, email: userEmail, ref } }));
+      }
+
+      showToast('✅ Payment Verified! Full Academy Access Unlocked.', 'success');
+    } catch (e) {
+      console.error('Error unlocking academy:', e);
+    }
+  };
+
   const checkAcademyLeadsConversion = () => {
     try {
       const leads = safeParse('academy_leads', []);
@@ -371,6 +405,8 @@ export default function App() {
       (window as any).checkAcademyLeadsConversion = checkAcademyLeadsConversion;
       (window as any).playAcademyVideo = playAcademyVideoFullscreen;
       (window as any).playAcademyVideoFullscreen = playAcademyVideoFullscreen;
+      (window as any).unlockAcademyAccess = unlockAcademyAccess;
+      (window as any).unlockAcademy = unlockAcademyAccess;
     }
 
     const interval = setInterval(checkAcademyLeadsConversion, 5000);

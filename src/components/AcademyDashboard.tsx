@@ -17,7 +17,7 @@ const GLOBAL_MODULES = [
     shortTitle: 'AI & Prompt Engineering',
     desc: 'Master ChatGPT, Claude, Gemini prompts - Homework assistance, smart research, prompt building for business worldwide. 50+ viral prompts.',
     duration: '30-45 mins',
-    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    videoUrl: 'https://www.youtube.com/embed/aircAruvnKk',
     pdfTitle: '50+ Viral AI Prompts Cheat Sheet (PDF)',
     exercise: 'Build 5 high-converting prompts for your personal business or niche.',
     quiz: [
@@ -32,7 +32,7 @@ const GLOBAL_MODULES = [
     shortTitle: 'Generative AI & Content',
     desc: 'Create logos, videos, websites, social media content with AI - No coding - Sell services on Fiverr, Upwork globally $500-$2000/month',
     duration: '35-45 mins',
-    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    videoUrl: 'https://www.youtube.com/embed/aircAruvnKk',
     pdfTitle: 'Fiverr & Upwork AI Freelance Client Script (PDF)',
     exercise: 'Generate a full brand visual suite (logo concept + video script + website copy) using AI tools.',
     quiz: [
@@ -47,7 +47,7 @@ const GLOBAL_MODULES = [
     shortTitle: 'No-Code AI Automation',
     desc: 'Build AI bots, Notion dashboards, automate business - Create digital products to sell worldwide',
     duration: '40-45 mins',
-    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    videoUrl: 'https://www.youtube.com/embed/aircAruvnKk',
     pdfTitle: 'Zapier & Make.com Automation Blueprint (PDF)',
     exercise: 'Design an automated lead magnet capture workflow connected to Google Sheets or Notion.',
     quiz: [
@@ -62,7 +62,7 @@ const GLOBAL_MODULES = [
     shortTitle: 'Web3 & Blockchain Basics',
     desc: 'Understand blockchain, wallets, Metamask, smart contracts simplified for beginners worldwide - No technical jargon',
     duration: '30-40 mins',
-    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    videoUrl: 'https://www.youtube.com/embed/aircAruvnKk',
     pdfTitle: 'Web3 Starter & Wallet Setup Security Guide (PDF)',
     exercise: 'Create a testnet Metamask wallet and practice signing a secure digital transaction.',
     quiz: [
@@ -77,7 +77,7 @@ const GLOBAL_MODULES = [
     shortTitle: 'Web3 & Cyber Safety',
     desc: 'Online security, digital identity, scam protection, Web3 basics - Protect your assets globally - International cybersecurity standard',
     duration: '35-45 mins',
-    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    videoUrl: 'https://www.youtube.com/embed/aircAruvnKk',
     pdfTitle: 'CISSP & Global Cybersecurity Checklist (PDF)',
     exercise: 'Audit your accounts for 2-factor authentication, anti-phishing, and hardware security.',
     quiz: [
@@ -92,7 +92,7 @@ const GLOBAL_MODULES = [
     shortTitle: 'Crypto, DeFi & Pi GCV',
     desc: 'Understanding Pi Network at Global Consensus Value $314,159, DeFi, USDC Ethereum, How to earn globally',
     duration: '40-45 mins',
-    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    videoUrl: 'https://www.youtube.com/embed/aircAruvnKk',
     pdfTitle: 'Pi Network GCV $314k & DeFi Staking Manual (PDF)',
     exercise: 'Calculate your global Pi GCV portfolio value and set up a USDC settlement address.',
     quiz: [
@@ -107,7 +107,7 @@ const GLOBAL_MODULES = [
     shortTitle: 'Digital Marketing & Remote Income',
     desc: 'How to sell Sirwise skills globally - Fiverr, Upwork, LinkedIn, TikTok marketing - Earn in USD from Nigeria, India, etc',
     duration: '40-50 mins',
-    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    videoUrl: 'https://www.youtube.com/embed/aircAruvnKk',
     pdfTitle: '$49.99 Client Pitching Templates & Proposal Kit (PDF)',
     exercise: 'Draft a killer Upwork proposal pitching an AI Content Creation service for $200.',
     quiz: [
@@ -122,7 +122,7 @@ const GLOBAL_MODULES = [
     shortTitle: 'Capstone Showcase & Certificate',
     desc: 'Final interactive project submission - Build your portfolio - Get blockchain verified certificate RC BN3583773 recognized in 190+ countries',
     duration: '45-60 mins',
-    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    videoUrl: 'https://www.youtube.com/embed/aircAruvnKk',
     pdfTitle: 'Capstone Portfolio Submission Template & Verification Guide',
     exercise: 'Submit your capstone summary project to unlock your official downloadable E-Certificate with QR verification!',
     quiz: [
@@ -273,6 +273,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
 
       if (hasAccess) {
         setIsEnrolled(true);
+        setShowPaymentModal(false);
         const savedCompleted: number[] = [];
         GLOBAL_MODULES.forEach(m => {
           if (localStorage.getItem(`module_${m.id}_completed`) === 'true') {
@@ -311,6 +312,14 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
       console.warn('LocalStorage initialization warning:', e);
     }
     setLoading(false);
+
+    const handleUnlocked = () => {
+      setIsEnrolled(true);
+      setShowPaymentModal(false);
+      setProgress([1, 2, 3, 4, 5, 6, 7, 8]);
+    };
+    window.addEventListener('academyUnlocked', handleUnlocked);
+    return () => window.removeEventListener('academyUnlocked', handleUnlocked);
   }, [currentUser, userProfile]);
 
   const validateCustomerEmail = (emailStr: string): boolean => {
@@ -344,14 +353,15 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
         currency: 'NGN',
         ref: 'SIRWISE_' + Date.now(),
         callback: function (res: any) {
-          try {
+          if ((window as any).unlockAcademyAccess) {
+            (window as any).unlockAcademyAccess('Paystack', email, res.reference);
+          } else {
             localStorage.setItem('sirwise_paid', 'true');
             localStorage.setItem('academy_unlocked', 'true');
             localStorage.setItem('payment_verified', 'true');
-            localStorage.setItem('payment_ref', res.reference);
-          } catch (e) {}
-          showToast('Payment verified ' + res.reference + ' - Academy Unlocked!', 'success');
-          setTimeout(() => window.location.reload(), 1000);
+            showToast('Payment verified ' + res.reference + ' - Academy Unlocked!', 'success');
+            setTimeout(() => window.location.reload(), 1000);
+          }
         },
         onClose: function () {
           console.log('Paystack iframe closed');
@@ -391,13 +401,15 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
         },
         callback: function (data: any) {
           if (data && (data.status === 'successful' || data.status === 'completed')) {
-            try {
+            if ((window as any).unlockAcademyAccess) {
+              (window as any).unlockAcademyAccess('Flutterwave', email, data.tx_ref || 'FW_SUCCESS');
+            } else {
               localStorage.setItem('sirwise_paid', 'true');
               localStorage.setItem('academy_unlocked', 'true');
               localStorage.setItem('payment_verified', 'true');
-            } catch (e) {}
-            showToast('Flutterwave success - Academy Unlocked!', 'success');
-            setTimeout(() => window.location.reload(), 1000);
+              showToast('Flutterwave success - Academy Unlocked!', 'success');
+              setTimeout(() => window.location.reload(), 1000);
+            }
           } else {
             showToast('Payment not successful', 'error');
           }
@@ -411,35 +423,39 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
 
   const payWithUSDC = () => {
     if (!validateCustomerEmail(customerEmail)) return;
+    const email = customerEmail.trim();
     const txHash = prompt('Send $49.99 USDC (ERC20/TRC20) to address:\n0x9E7e59F295B0CD80bdfF2900a359ACe85741f23E\n\nEnter your Transaction Hash / ID below:');
     if (txHash && txHash.trim().length > 5) {
-      try {
+      if ((window as any).unlockAcademyAccess) {
+        (window as any).unlockAcademyAccess('Crypto USDC', email, 'USDC_' + txHash.trim());
+      } else {
         localStorage.setItem('sirwise_paid', 'true');
         localStorage.setItem('academy_unlocked', 'true');
         localStorage.setItem('payment_verified', 'true');
-        localStorage.setItem('payment_ref', 'USDC_' + txHash.trim());
-      } catch (e) {}
-      alert('USDC Transaction Submitted (' + txHash.trim().substring(0, 10) + '...) - Verified! Academy Unlocked!');
-      window.location.reload();
+        showToast('USDC Transaction Submitted - Verified! Academy Unlocked!', 'success');
+        window.location.reload();
+      }
     } else if (txHash !== null) {
-      alert('Please enter a valid Transaction Hash.');
+      showToast('Please enter a valid Transaction Hash.', 'error');
     }
   };
 
   const payWithPi = () => {
     if (!validateCustomerEmail(customerEmail)) return;
+    const email = customerEmail.trim();
     const piRef = prompt('Pi Network GCV ($314,159)\nTransfer to Pi Wallet: @SirwiseGoye\n\nEnter your Pi Transfer Tx Reference / Wallet Username:');
     if (piRef && piRef.trim().length > 2) {
-      try {
+      if ((window as any).unlockAcademyAccess) {
+        (window as any).unlockAcademyAccess('Pi GCV', email, 'PI_' + piRef.trim());
+      } else {
         localStorage.setItem('sirwise_paid', 'true');
         localStorage.setItem('academy_unlocked', 'true');
         localStorage.setItem('payment_verified', 'true');
-        localStorage.setItem('payment_ref', 'PI_' + piRef.trim());
-      } catch (e) {}
-      alert('Pi Network Transfer Submitted - Verified! Academy Unlocked 100%!');
-      window.location.reload();
+        showToast('Pi Network Transfer Submitted - Verified! Academy Unlocked!', 'success');
+        window.location.reload();
+      }
     } else if (piRef !== null) {
-      alert('Please enter a valid Pi transfer reference.');
+      showToast('Please enter a valid Pi transfer reference.', 'error');
     }
   };
 
