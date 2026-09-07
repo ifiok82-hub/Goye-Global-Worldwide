@@ -815,7 +815,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
                 Checking Pi API Key...
               </div>
               <div style={{ color: '#888', fontSize: '10px', marginTop: '4px' }}>
-                GCV $314,159 = 0.000159 Pi = $49.99 - RC BN3583773
+                GCV $314,159 = 0.000159 Pi GCV at $49.99 - RC BN3583773
               </div>
             </div>
 

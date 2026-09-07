@@ -2,7 +2,7 @@ import AuthScreen from './components/AuthScreen';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { safeParse, safeGetNumber } from './utils/safeParse';
 import { X, Globe, Zap, Download, ShieldCheck, ChevronRight, Lock, BookOpen, Settings, List, Save, Mail, CreditCard, DollarSign, Wallet, Phone, Landmark, Home, ShoppingBag, ShoppingCart, GraduationCap, MessageCircle, Search, Edit, Trash2, Plus, FileText, Video, Eye, EyeOff, CheckCircle, RefreshCw, Users, Activity, UserCircle , Scan, QrCode, Smartphone, MoreVertical, Bot, LayoutDashboard, Camera, Mic, MoreHorizontal} from 'lucide-react';
-import { ALL_PRODUCTS } from './data';
+import { ALL_PRODUCTS, PI_GCV_USD } from './data';
 import UnifiedCheckoutModal from './components/UnifiedCheckoutModal';
 import AcademyDashboard from './components/AcademyDashboard';
 import EsimVideoModal from './components/EsimVideoModal';
@@ -687,11 +687,17 @@ export default function App() {
   };
 
   const formatPrice = (usdPrice: number) => {
-    const curr = exchangeRates.find(c => c.code === currentCurrency) || CURRENCIES[0];
-    if (curr.code === 'USD' || curr.code === 'USDC') return `${curr.symbol}${usdPrice.toFixed(2)}`;
-    const converted = usdPrice * curr.rate;
-    if (curr.code === 'PI') return `${usdPrice.toFixed(2)} (~${converted.toFixed(6)} ${curr.symbol})`;
-    return `${usdPrice.toFixed(2)} (~${curr.symbol}${converted.toFixed(0)})`;
+  const curr = exchangeRates.find(c => c.code === currentCurrency) || CURRENCIES[0];
+  if (curr.code === 'PI') return `${(usdPrice / PI_GCV_USD).toFixed(6)} Pi GCV`;
+  if (curr.code === 'USD' || curr.code === 'USDC') return `${curr.symbol}${usdPrice.toFixed(2)}`;
+  if (curr.code === 'NGN') return `₦${(usdPrice * 1600).toLocaleString('en-NG', { maximumFractionDigits: 0 })}`;
+  return `${curr.symbol}${(usdPrice * curr.rate).toFixed(2)}`;
+  };
+
+  const secondaryPrice = (usdPrice: number) => {
+  if (currentCurrency === 'PI') return `≈ $${usdPrice.toFixed(2)} USD`;
+  if (currentCurrency === 'USD' || currentCurrency === 'USDC') return `≈ ${(usdPrice / PI_GCV_USD).toFixed(6)} Pi GCV`;
+  return `≈ $${usdPrice.toFixed(2)} USD`;
   };
 
   const handleInstallClick = () => {
@@ -969,36 +975,36 @@ export default function App() {
                         <div className="text-3xl mb-2">🤖</div>
                         <h3 className="text-white font-bold mb-1 text-base">Sirwise AI & Prompt Engineering</h3>
                         <p className="text-gray-400 text-xs mb-3">Master AI prompts, homework assistance, research tools, and smart automation.</p>
-                        <div className="mb-3 text-xs font-bold" data-usd-price="49.99">0.000159 Pi GCV ($49.99)</div>
+                        <div className="mb-3 text-xs font-bold" data-usd-price="49.99"><span>{formatPrice(49.99)}</span><span className="block text-gray-400 font-normal mt-1">{secondaryPrice(49.99)}</span></div>
                       </div>
-                      <button data-usd-button="49.99" onClick={() => { setSelectedProduct({ id: "academy", name: "Sirwise AI Web3 Academy 4-Week", price: 49.99, category: "academy" }); setShowCheckoutModal(true); }} className="bg-[#FFD700] text-black text-xs font-bold w-full py-2.5 rounded-xl hover:bg-[#ffe033] cursor-pointer pointer-events-auto">Start Learning ($49.99)</button>
+                      <button data-usd-button="49.99" onClick={() => { setSelectedProduct({ id: "academy", name: "Sirwise AI Web3 Academy 4-Week", price: 49.99, category: "academy" }); setShowCheckoutModal(true); }} className="bg-[#FFD700] text-black text-xs font-bold w-full py-2.5 rounded-xl hover:bg-[#ffe033] cursor-pointer pointer-events-auto">Start Learning ({formatPrice(49.99)})</button>
                     </div>
                     <div className="bg-[#111] p-5 rounded-2xl border border-[#333] hover:border-[#FFD700] transition flex flex-col justify-between">
                       <div>
                         <div className="text-3xl mb-2">🎨</div>
                         <h3 className="text-white font-bold mb-1 text-base">Digital Asset Creation</h3>
                         <p className="text-gray-400 text-xs mb-3">Create digital art, storytelling, ebooks, and interactive multimedia projects.</p>
-                        <div className="mb-3 text-xs font-bold" data-usd-price="49.99">0.000159 Pi GCV ($49.99)</div>
+                        <div className="mb-3 text-xs font-bold" data-usd-price="49.99"><span>{formatPrice(49.99)}</span><span className="block text-gray-400 font-normal mt-1">{secondaryPrice(49.99)}</span></div>
                       </div>
-                      <button data-usd-button="49.99" onClick={() => { setSelectedProduct({ id: "academy", name: "Sirwise AI Web3 Academy 4-Week", price: 49.99, category: "academy" }); setShowCheckoutModal(true); }} className="bg-[#FFD700] text-black text-xs font-bold w-full py-2.5 rounded-xl hover:bg-[#ffe033] cursor-pointer pointer-events-auto">Start Learning ($49.99)</button>
+                      <button data-usd-button="49.99" onClick={() => { setSelectedProduct({ id: "academy", name: "Sirwise AI Web3 Academy 4-Week", price: 49.99, category: "academy" }); setShowCheckoutModal(true); }} className="bg-[#FFD700] text-black text-xs font-bold w-full py-2.5 rounded-xl hover:bg-[#ffe033] cursor-pointer pointer-events-auto">Start Learning ({formatPrice(49.99)})</button>
                     </div>
                     <div className="bg-[#111] p-5 rounded-2xl border border-[#333] hover:border-[#FFD700] transition flex flex-col justify-between">
                       <div>
                         <div className="text-3xl mb-2">🔐</div>
                         <h3 className="text-white font-bold mb-1 text-base">Web3 & Cyber Safety</h3>
                         <p className="text-gray-400 text-xs mb-3">Blockchain basics, digital identity security, NFT credentials, and online privacy.</p>
-                        <div className="mb-3 text-xs font-bold" data-usd-price="49.99">0.000159 Pi GCV ($49.99)</div>
+                        <div className="mb-3 text-xs font-bold" data-usd-price="49.99"><span>{formatPrice(49.99)}</span><span className="block text-gray-400 font-normal mt-1">{secondaryPrice(49.99)}</span></div>
                       </div>
-                      <button data-usd-button="49.99" onClick={() => { setSelectedProduct({ id: "academy", name: "Sirwise AI Web3 Academy 4-Week", price: 49.99, category: "academy" }); setShowCheckoutModal(true); }} className="bg-[#FFD700] text-black text-xs font-bold w-full py-2.5 rounded-xl hover:bg-[#ffe033] cursor-pointer pointer-events-auto">Start Learning ($49.99)</button>
+                      <button data-usd-button="49.99" onClick={() => { setSelectedProduct({ id: "academy", name: "Sirwise AI Web3 Academy 4-Week", price: 49.99, category: "academy" }); setShowCheckoutModal(true); }} className="bg-[#FFD700] text-black text-xs font-bold w-full py-2.5 rounded-xl hover:bg-[#ffe033] cursor-pointer pointer-events-auto">Start Learning ({formatPrice(49.99)})</button>
                     </div>
                     <div className="bg-[#111] p-5 rounded-2xl border border-[#333] hover:border-[#FFD700] transition flex flex-col justify-between">
                       <div>
                         <div className="text-3xl mb-2">🎓</div>
                         <h3 className="text-white font-bold mb-1 text-base">Capstone & Certification</h3>
                         <p className="text-gray-400 text-xs mb-3">Build your final project and receive an official blockchain-verified diploma.</p>
-                        <div className="mb-3 text-xs font-bold" data-usd-price="49.99">0.000159 Pi GCV ($49.99)</div>
+                        <div className="mb-3 text-xs font-bold" data-usd-price="49.99"><span>{formatPrice(49.99)}</span><span className="block text-gray-400 font-normal mt-1">{secondaryPrice(49.99)}</span></div>
                       </div>
-                      <button data-usd-button="49.99" onClick={() => { setSelectedProduct({ id: "academy", name: "Sirwise AI Web3 Academy 4-Week", price: 49.99, category: "academy" }); setShowCheckoutModal(true); }} className="bg-[#FFD700] text-black text-xs font-bold w-full py-2.5 rounded-xl hover:bg-[#ffe033] cursor-pointer pointer-events-auto">Start Learning ($49.99)</button>
+                      <button data-usd-button="49.99" onClick={() => { setSelectedProduct({ id: "academy", name: "Sirwise AI Web3 Academy 4-Week", price: 49.99, category: "academy" }); setShowCheckoutModal(true); }} className="bg-[#FFD700] text-black text-xs font-bold w-full py-2.5 rounded-xl hover:bg-[#ffe033] cursor-pointer pointer-events-auto">Start Learning ({formatPrice(49.99)})</button>
                     </div>
                   </div>
                 </div>
@@ -1073,7 +1079,7 @@ export default function App() {
                       </div>
                       
                       <div className="mt-auto pt-4 border-t border-[#222]">
-                        <div className="text-[#10B981] font-black text-2xl mb-4">${product.price}</div>
+                        <div className="text-[#10B981] font-black text-2xl mb-4"><span>{formatPrice(Number(product.price))}</span><span className="block text-gray-400 text-xs font-normal mt-1">{secondaryPrice(Number(product.price))}</span></div>
                         {hasAccess(product.id) ? (
                           <button onClick={() => {
                             showToast('Access granted! Downloading...');
@@ -1461,9 +1467,9 @@ export default function App() {
           <div className="bg-[#111] border border-[#333] p-6 rounded-3xl w-[90%] max-w-[300px] flex flex-col items-center relative max-h-[80vh] overflow-y-auto">
             <button onClick={() => setShowCurrencyModal(false)} className="absolute top-2 right-2 text-gray-500 font-bold cursor-pointer pointer-events-auto z-[100]">X</button>
             <h3 className="font-black text-white mb-4">Select Currency</h3>
-            {['USD', 'NGN', 'GBP', 'EUR', 'CAD', 'AUD', 'INR', 'ZAR'].map(curr => (
-               <button key={curr} onClick={() => { localStorage.setItem('goye_currency', curr); setCurrentCurrency(curr); showToast('Currency set to ' + curr); setShowCurrencyModal(false); window.location.reload(); }} className="w-full text-left p-3 border-b border-[#222] text-white hover:bg-[#222] font-bold cursor-pointer pointer-events-auto z-[100]">{curr}</button>
-            ))}
+  {['USD', 'NGN', 'PI', 'GBP', 'EUR', 'CAD', 'AUD', 'INR', 'ZAR'].map(curr => (
+  <button key={curr} onClick={() => { localStorage.setItem('goye_currency', curr); localStorage.setItem('goye_preferred_currency', curr); setCurrentCurrency(curr); showToast('Currency set to ' + curr); setShowCurrencyModal(false); }} className="w-full text-left p-3 border-b border-[#222] text-white hover:bg-[#222] font-bold cursor-pointer pointer-events-auto z-[100]">{curr}</button>
+  ))}
           </div>
         </div>
       )}
