@@ -415,7 +415,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
     setCryptoVerifying(true);
     setTimeout(() => {
       setCryptoVerifying(false);
-      handleSuccess(cryptoTxHash, activeGateway === 'pi' ? 'Pi GCV' : 'Crypto USDC', true);
+      handleSuccess(cryptoTxHash, activeGateway === 'pi' ? 'Pi GCV' : 'USDT BEP20', true);
       setSuccess(true);
     }, 1500);
   };
@@ -602,7 +602,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                   }}
                   className="flex items-center justify-center gap-2 hover:brightness-110 transition active:scale-[0.98]"
                 >
-                  <span>🦊</span> USDC Crypto (Ethereum - Metamask)
+                  <span>🟡</span> USDT BEP20 (BNB Smart Chain)
                 </button>
                 <button 
                   onClick={() => selectGatewayWithEmailCheck('pi')} 
@@ -686,42 +686,44 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
             </div>
           ) : activeGateway === 'crypto' ? (
             <div className="animate-in fade-in slide-in-from-right-4">
-              <div id="usdcPaymentSection" className="bg-[#1A1A1A] border-2 border-[#2775CA] rounded-2xl p-5 my-3">
-                <h3 className="text-[#2775CA] text-center font-bold text-lg mb-1">💵 Pay with USDC - Ethereum</h3>
-                <p className="text-center text-gray-400 text-xs mb-3">Global Payment - 190+ Countries - Instant Verification</p>
+              <div id="usdtPaymentSection" className="bg-[#1A1A1A] border-2 border-[#F0B90B] rounded-2xl p-5 my-3">
+                <h3 className="text-[#F0B90B] text-center font-bold text-lg mb-1">🟡 Pay with USDT BEP20 (BNB Smart Chain)</h3>
+                <p className="text-center text-gray-400 text-xs mb-3">Global Payment - 190+ Countries - Instant BSC Verification</p>
 
                 <div className="bg-white p-3 rounded-xl w-[200px] h-[200px] mx-auto mb-3 flex items-center justify-center shadow-lg">
-                  <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=0xaeed4e48f2146aadd07e85219f209053616e4e71" alt="USDC Ethereum QR" className="w-[180px] h-[180px]" />
+                  <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96" alt="USDT BEP20 BSC QR" className="w-[180px] h-[180px]" />
                 </div>
 
-                <p className="text-center font-bold text-white mb-1 text-sm">Ifiok Enyiema / Ethereum</p>
+                <p className="text-center font-bold text-white mb-1 text-sm">USDT BEP20 (BNB Smart Chain)</p>
                 <p className="text-center text-[#00FF88] text-[11px] font-mono break-all bg-black p-2.5 rounded-lg mb-3">
-                  0xaeed4e48f2146aadd07e85219f209053616e4e71
+                  0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96
                 </p>
 
                 <button 
                   onClick={() => {
-                    const addr = '0xaeed4e48f2146aadd07e85219f209053616e4e71';
+                    const addr = '0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96';
                     navigator.clipboard.writeText(addr).then(() => {
-                      if (onToast) onToast('Copied Ethereum address!');
-                      else alert('✅ Copied: ' + addr + '\nSend $49.99 USDC ERC20 only');
+                      if (onToast) onToast('Copied USDT BEP20 address!');
+                      else alert('✅ Copied: ' + addr + '\nSend USDT on BNB Smart Chain (BEP20) only');
                     });
                   }} 
                   className="w-full h-[50px] bg-white text-black rounded-xl font-bold cursor-pointer mb-2 hover:bg-gray-100 transition border-none text-sm active:scale-[0.99]"
                 >
-                  📋 Copy Ethereum Address
+                  📋 Copy USDT BEP20 Address
                 </button>
 
                 <div className="bg-black rounded-xl p-3 my-2 text-left space-y-1">
-                  <p className="text-[#FFD700] text-xs font-bold">Amount: $49.99 USDC (ERC20) = ₦74,985</p>
-                  <p className="text-gray-400 text-[11px]">Network: Ethereum ERC20 Only - Do not send other networks</p>
-                  <p className="text-gray-400 text-[11px]">Asset: USDC - 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48</p>
+                  <p className="text-[#FFD700] text-xs font-bold">Amount: $49.99 USDT (BEP20) = ₦74,985</p>
+                  <p className="text-gray-300 text-[11px]">Network: BNB Smart Chain (BEP20) / BSC</p>
+                  <p className="text-red-500 font-bold text-[11px] leading-tight mt-1">
+                    IMPORTANT: Only send USDT on BNB Smart Chain (BEP20) network to this address. Do NOT send USDC, ERC20, TRC20 or other networks. Assets sent on wrong network will be lost forever.
+                  </p>
                 </div>
 
                 <input 
                   type="text"
                   placeholder="Paste Transaction Hash after payment" 
-                  className="w-full bg-[#222] border border-[#333] p-3 rounded-xl text-white my-2 focus:border-[#2775CA] outline-none text-sm font-mono"
+                  className="w-full bg-[#222] border border-[#333] p-3 rounded-xl text-white my-2 focus:border-[#F0B90B] outline-none text-sm font-mono"
                   value={cryptoTxHash}
                   onChange={e => setCryptoTxHash(e.target.value)}
                 />
@@ -729,21 +731,21 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                 <button 
                   onClick={submitCrypto} 
                   disabled={cryptoVerifying} 
-                  className="w-full h-[55px] bg-[#2775CA] hover:bg-[#1f5fa5] text-white font-bold rounded-xl my-2 cursor-pointer transition disabled:opacity-50 text-base border-none active:scale-[0.99]"
+                  className="w-full h-[55px] bg-[#F0B90B] hover:bg-[#d9a60a] text-black font-extrabold rounded-xl my-2 cursor-pointer transition disabled:opacity-50 text-base border-none active:scale-[0.99]"
                 >
-                  {cryptoVerifying ? 'Verifying on-chain...' : '✅ Verify USDC Payment & Unlock Academy'}
+                  {cryptoVerifying ? 'Verifying on-chain...' : '✅ Verify USDT BEP20 Payment & Unlock Academy'}
                 </button>
 
                 <a 
-                  href="https://etherscan.io/address/0xaeed4e48f2146aadd07e85219f209053616e4e71" 
+                  href="https://bscscan.io/address/0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96" 
                   target="_blank" 
                   rel="noreferrer" 
-                  className="block text-center text-[#2775CA] text-xs my-2 underline hover:text-blue-300"
+                  className="block text-center text-[#F0B90B] text-xs my-2 underline hover:text-yellow-300"
                 >
-                  View on Etherscan - Ifiok Enyiema
+                  View on BscScan (BNB Smart Chain)
                 </a>
 
-                <p className="text-center text-gray-500 text-[10px] mt-2">After sending USDC $49.99 to address above, paste Tx Hash and click Verify - Academy unlocks automatically</p>
+                <p className="text-center text-gray-500 text-[10px] mt-2">After sending USDT BEP20 $49.99 to address above, paste Tx Hash and click Verify - Academy unlocks automatically</p>
               </div>
 
               <button onClick={() => setActiveGateway(null)} className="mt-3 text-gray-400 text-xs underline block mx-auto cursor-pointer pointer-events-auto hover:text-white">Back to Methods</button>

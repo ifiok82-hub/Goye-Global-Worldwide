@@ -90,11 +90,11 @@ const GLOBAL_MODULES = [
     id: 6, 
     title: 'Crypto, DeFi & Pi Network GCV Global Economy', 
     shortTitle: 'Crypto, DeFi & Pi GCV',
-    desc: 'Understanding Pi Network at Global Consensus Value $314,159, DeFi, USDC Ethereum, How to earn globally',
+    desc: 'Understanding Pi Network at Global Consensus Value $314,159, DeFi, USDT BEP20 (BNB Smart Chain), How to earn globally',
     duration: '40-45 mins',
     videoUrl: 'https://www.youtube.com/embed/aircAruvnKk',
     pdfTitle: 'Pi Network GCV $314k & DeFi Staking Manual (PDF)',
-    exercise: 'Calculate your global Pi GCV portfolio value and set up a USDC settlement address.',
+    exercise: 'Calculate your global Pi GCV portfolio value and set up a USDT BEP20 settlement address.',
     quiz: [
       { q: 'What does GCV stand for in the Pi Network ecosystem?', options: ['Global Consensus Value', 'General Currency Variable', 'Grand Crypto Value', 'Gold Coin Vault'], ans: 0 }
     ],
@@ -154,14 +154,14 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
   const [usdcTxHash, setUsdcTxHash] = useState('');
 
   const copyUSDC = () => {
-    const addr = '0xaeed4e48f2146aadd07e85219f209053616e4e71';
+    const addr = '0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96';
     navigator.clipboard.writeText(addr).then(() => {
-      showToast('✅ Copied: ' + addr + ' - Send $49.99 USDC ERC20 only', 'success');
+      showToast('✅ Copied: ' + addr + ' - Send USDT on BNB Smart Chain (BEP20) only', 'success');
     });
   };
 
   const verifyUSDCPayment = async () => {
-    const txInput = document.getElementById('usdcTxHash') as HTMLInputElement;
+    const txInput = (document.getElementById('usdtTxHash') || document.getElementById('usdcTxHash')) as HTMLInputElement;
     const tx = (txInput?.value || usdcTxHash || '').trim();
     const emailInput = document.getElementById('customerEmail') as HTMLInputElement;
     const email = (emailInput?.value || customerEmail || localStorage.getItem('user_email') || '').trim();
@@ -171,7 +171,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
       return;
     }
     if (!tx || tx.length < 20) {
-      showToast('Paste Transaction Hash after you sent USDC $49.99', 'error');
+      showToast('Paste Transaction Hash after you sent USDT BEP20 $49.99', 'error');
       return;
     }
 
@@ -184,22 +184,22 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
     localStorage.setItem('sirwise_paid', 'true');
     localStorage.setItem('academy_unlocked', 'true');
     localStorage.setItem('payment_verified', 'true');
-    localStorage.setItem('payment_method', 'USDC Ethereum');
+    localStorage.setItem('payment_method', 'USDT BEP20');
     localStorage.setItem('payment_ref', tx);
-    localStorage.setItem('usdc_address', '0xaeed4e48f2146aadd07e85219f209053616e4e71');
+    localStorage.setItem('crypto_address', '0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96');
 
     const record = {
       id: tx,
       customer: email.split('@')[0],
       email: email,
-      country: '🌍 Global USDC',
-      product: 'Sirwise AI Web3 Academy - USDC Payment',
-      amount: '₦74,985.00 ($49.99 USDC)',
+      country: '🌍 Global USDT BEP20',
+      product: 'Sirwise AI Web3 Academy - USDT BEP20 Payment',
+      amount: '₦74,985.00 ($49.99 USDT)',
       amount_num: 74985,
       status: 'Verified',
       verified: 'VERIFIED',
-      payment_method: 'USDC Ethereum',
-      usdc_address: '0xaeed4e48f2146aadd07e85219f209053616e4e71',
+      payment_method: 'USDT BEP20',
+      crypto_address: '0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96',
       date: new Date().toLocaleDateString('en-GB'),
       date_wat: new Date().toLocaleString('en-GB', { timeZone: 'Africa/Lagos' }) + ' WAT Lagos'
     };
@@ -219,13 +219,13 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          subject: 'New USDC Payment $49.99 - ' + email + ' - ' + tx,
-          message: 'USDC Payment Received\nEmail: ' + email + '\nTx: ' + tx + '\nAmount: $49.99\nAddress: 0xaeed4e48f2146aadd07e85219f209053616e4e71\nVerify: https://etherscan.io/tx/' + tx
+          subject: 'New USDT BEP20 Payment $49.99 - ' + email + ' - ' + tx,
+          message: 'USDT BEP20 Payment Received\nEmail: ' + email + '\nTx: ' + tx + '\nAmount: $49.99\nAddress: 0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96\nVerify: https://bscscan.io/tx/' + tx
         })
       });
     } catch (e) {}
 
-    showToast('✅ USDC Payment Verified! Tx: ' + tx + '. Academy Unlocked!', 'success');
+    showToast('✅ USDT BEP20 Payment Verified! Tx: ' + tx + '. Academy Unlocked!', 'success');
     setTimeout(() => window.location.reload(), 1000);
   };
 
@@ -421,18 +421,18 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
     }
   };
 
-  const payWithUSDC = () => {
+  const payWithUSDT = () => {
     if (!validateCustomerEmail(customerEmail)) return;
     const email = customerEmail.trim();
-    const txHash = prompt('Send $49.99 USDC (ERC20/TRC20) to address:\n0x9E7e59F295B0CD80bdfF2900a359ACe85741f23E\n\nEnter your Transaction Hash / ID below:');
+    const txHash = prompt('Send $49.99 USDT (BEP20 - BNB Smart Chain) to address:\n0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96\n\nEnter your Transaction Hash / ID below:');
     if (txHash && txHash.trim().length > 5) {
       if ((window as any).unlockAcademyAccess) {
-        (window as any).unlockAcademyAccess('Crypto USDC', email, 'USDC_' + txHash.trim());
+        (window as any).unlockAcademyAccess('USDT BEP20', email, 'USDT_' + txHash.trim());
       } else {
         localStorage.setItem('sirwise_paid', 'true');
         localStorage.setItem('academy_unlocked', 'true');
         localStorage.setItem('payment_verified', 'true');
-        showToast('USDC Transaction Submitted - Verified! Academy Unlocked!', 'success');
+        showToast('USDT BEP20 Transaction Submitted - Verified! Academy Unlocked!', 'success');
         window.location.reload();
       }
     } else if (txHash !== null) {
@@ -575,7 +575,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
               🚀 UPGRADE NOW - BUY & UNLOCK $49.99
             </button>
             <p style={{ fontSize: '11px', marginTop: '10px', fontWeight: 'bold', color: 'black' }}>
-              USDC: 0xaeed4e48f2146aadd07e85219f209053616e4e71 | OPay 6113541882 | Paystack Global
+              USDT BEP20: 0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96 | OPay 6113541882 | Paystack Global
             </p>
           </div>
         );
@@ -613,48 +613,50 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
             <button onClick={payWithFlutterwave} style={{ height: '52px', background: '#FB9129', color: '#ffffff', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', border: 'none', fontSize: '14px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>
               Flutterwave
             </button>
-            {/* Professional USDC Section */}
-            <div id="usdcPaymentSection" style={{ background: '#1A1A1A', border: '2px solid #2775CA', borderRadius: '16px', padding: '20px', margin: '12px 0', textShadow: 'none' }}>
-              <h3 style={{ color: '#2775CA', textAlign: 'center', fontWeight: 'bold', fontSize: '18px', margin: '0 0 4px 0' }}>💵 Pay with USDC - Ethereum</h3>
-              <p style={{ textAlign: 'center', color: '#888', fontSize: '12px', margin: '0 0 12px 0' }}>Global Payment - 190+ Countries - Instant Verification</p>
+            {/* Professional USDT BEP20 Section */}
+            <div id="usdtPaymentSection" style={{ background: '#1A1A1A', border: '2px solid #F0B90B', borderRadius: '16px', padding: '20px', margin: '12px 0', textShadow: 'none' }}>
+              <h3 style={{ color: '#F0B90B', textAlign: 'center', fontWeight: 'bold', fontSize: '18px', margin: '0 0 4px 0' }}>🟡 Pay with USDT BEP20 (BNB Smart Chain)</h3>
+              <p style={{ textAlign: 'center', color: '#888', fontSize: '12px', margin: '0 0 12px 0' }}>Global Payment - 190+ Countries - Instant BSC Verification</p>
 
               <div style={{ background: 'white', padding: '12px', borderRadius: '12px', width: '200px', height: '200px', margin: '12px auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=0xaeed4e48f2146aadd07e85219f209053616e4e71" alt="USDC Ethereum QR" style={{ width: '180px', height: '180px' }} />
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96" alt="USDT BEP20 BSC QR" style={{ width: '180px', height: '180px' }} />
               </div>
 
-              <p style={{ textAlign: 'center', fontWeight: 'bold', color: 'white', margin: '6px 0', fontSize: '14px' }}>Ifiok Enyiema / Ethereum</p>
+              <p style={{ textAlign: 'center', fontWeight: 'bold', color: 'white', margin: '6px 0', fontSize: '14px' }}>USDT BEP20 (BNB Smart Chain)</p>
               <p style={{ textAlign: 'center', color: '#00FF88', fontSize: '11px', wordBreak: 'break-all', background: '#000', padding: '10px', borderRadius: '8px', margin: '10px 0', fontFamily: 'monospace' }}>
-                0xaeed4e48f2146aadd07e85219f209053616e4e71
+                0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96
               </p>
 
               <button onClick={copyUSDC} style={{ width: '100%', height: '50px', background: 'white', color: 'black', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', margin: '8px 0', border: 'none', fontSize: '14px' }}>
-                📋 Copy Ethereum Address
+                📋 Copy USDT BEP20 Address
               </button>
 
               <div style={{ background: '#000', borderRadius: '12px', padding: '12px', margin: '10px 0', textAlign: 'left' }}>
-                <p style={{ color: '#FFD700', fontSize: '12px', margin: 0, fontWeight: 'bold' }}>Amount: $49.99 USDC (ERC20) = ₦74,985</p>
-                <p style={{ color: '#888', fontSize: '11px', margin: '4px 0' }}>Network: Ethereum ERC20 Only - Do not send other networks</p>
-                <p style={{ color: '#888', fontSize: '11px', margin: '4px 0' }}>Asset: USDC - 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48</p>
+                <p style={{ color: '#FFD700', fontSize: '12px', margin: 0, fontWeight: 'bold' }}>Amount: $49.99 USDT (BEP20) = ₦74,985</p>
+                <p style={{ color: '#ccc', fontSize: '11px', margin: '4px 0' }}>Network: BNB Smart Chain (BEP20) / BSC</p>
+                <p style={{ color: '#ef4444', fontSize: '11px', fontWeight: 'bold', margin: '6px 0 0 0', lineHeight: '1.4' }}>
+                  IMPORTANT: Only send USDT on BNB Smart Chain (BEP20) network to this address. Do NOT send USDC, ERC20, TRC20 or other networks. Assets sent on wrong network will be lost forever.
+                </p>
               </div>
 
               <input 
                 type="text" 
-                id="usdcTxHash" 
+                id="usdtTxHash" 
                 value={usdcTxHash}
                 onChange={(e) => setUsdcTxHash(e.target.value)}
                 placeholder="Paste Transaction Hash after payment" 
                 style={{ width: '100%', height: '50px', borderRadius: '12px', padding: '12px', margin: '8px 0', background: '#222', color: 'white', border: '1px solid #333', fontSize: '13px', outline: 'none' }} 
               />
 
-              <button onClick={verifyUSDCPayment} style={{ width: '100%', height: '55px', background: '#2775CA', color: 'white', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', margin: '8px 0', border: 'none', fontSize: '15px' }}>
-                ✅ Verify USDC Payment & Unlock Academy
+              <button onClick={verifyUSDCPayment} style={{ width: '100%', height: '55px', background: '#F0B90B', color: 'black', borderRadius: '12px', fontWeight: '900', cursor: 'pointer', margin: '8px 0', border: 'none', fontSize: '15px' }}>
+                ✅ Verify USDT BEP20 Payment & Unlock Academy
               </button>
 
-              <a href="https://etherscan.io/address/0xaeed4e48f2146aadd07e85219f209053616e4e71" target="_blank" rel="noreferrer" style={{ display: 'block', textAlign: 'center', color: '#2775CA', fontSize: '12px', margin: '8px 0', textDecoration: 'underline' }}>
-                View on Etherscan - Ifiok Enyiema
+              <a href="https://bscscan.io/address/0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96" target="_blank" rel="noreferrer" style={{ display: 'block', textAlign: 'center', color: '#F0B90B', fontSize: '12px', margin: '8px 0', textDecoration: 'underline' }}>
+                View on BscScan (BNB Smart Chain)
               </a>
 
-              <p style={{ textAlign: 'center', color: '#888', fontSize: '10px', margin: '6px 0 0 0' }}>After sending USDC $49.99 to address above, paste Tx Hash and click Verify - Academy unlocks automatically</p>
+              <p style={{ textAlign: 'center', color: '#888', fontSize: '10px', margin: '6px 0 0 0' }}>After sending USDT BEP20 $49.99 to address above, paste Tx Hash and click Verify - Academy unlocks automatically</p>
             </div>
             <button onClick={payWithPi} style={{ height: '52px', background: '#7A3ED6', color: '#ffffff', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', border: 'none', fontSize: '14px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>
               Pi Network GCV $314,159
