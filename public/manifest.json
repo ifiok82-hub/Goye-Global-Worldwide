@@ -1,7 +1,7 @@
 {
   "name": "Goye Global Sirwise AI WEB3 Academy",
   "short_name": "GOYE Store Global",
-  "description": "GOYE Global Worldwide RC BN3583773 - Sirwise AI WEB3 Academy - 100% Digital Products Store - 190+ Countries - GCV $314,159",
+  "description": "GOYE Global Worldwide - 100% Digital Products Store - Sirwise AI WEB3 Academy - GCV $314,159 - RC BN3583773 - gasv.store",
   "icons": [
     {"src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
     {"src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
@@ -9,5 +9,7 @@
   "background_color": "#FF00FF",
   "theme_color": "#FFD700",
   "start_url": "/",
-  "display": "standalone"
+  "display": "standalone",
+  "scope": "/",
+  "orientation": "portrait"
 }
