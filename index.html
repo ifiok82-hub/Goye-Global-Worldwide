@@ -129,13 +129,15 @@ body{background:#000; color:#fff; font-family:system-ui, -apple-system, sans-ser
 </script>
 </head>
 <body class="bg-black text-white min-h-screen">
-  <div id="root">
-    <div class="app-loader" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; background-color: #0a0a0a; color: #FFC800; font-family: system-ui, sans-serif; text-align: center;">
-      <img src="/logo.png" alt="GOYE Logo" style="width: 120px; height: 120px; margin-bottom: 24px; border-radius: 50%; box-shadow: 0 0 30px rgba(255, 0, 255, 0.4);" />
-      <div style="font-weight: 800; font-size: 18px; letter-spacing: 1px; color: #ffffff;">GOYE STORE GLOBAL</div>
-      <div style="font-size: 11px; color: #FFC800; margin-top: 4px; font-weight: 600;">190+ Countries Instant Delivery · RC: BN3583773</div>
-    </div>
+  <div id="loader" style="position:fixed;inset:0;background:black;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.5s;">
+    <img src="/icon-512.png" style="width:120px;height:120px;border-radius:50%;background:#FF00FF;" alt="GOYE">
+    <div style="color:white;font-weight:900;margin-top:16px;font-size:20px;">GOYE STORE GLOBAL</div>
+    <div style="color:#FFD700;font-size:13px;margin-top:6px;">190+ Countries Instant Delivery · RC: BN3583773</div>
   </div>
+  <script>
+  setTimeout(()=>{ const l=document.getElementById('loader'); if(l){ l.style.opacity='0'; setTimeout(()=>l.remove(),500); } }, 2000);
+  </script>
+  <div id="root"></div>
   <script type="module" src="/src/main.tsx"></script>
 
 <script>
@@ -882,5 +884,56 @@ window.openUserMenu = function() {
   document.body.appendChild(modal);
 };
 </script>
+
+<script>
+// FORCE HIDE SPLASH SCREEN STUCK - Fix 09:37 black screen with GOYE logo only
+(function(){
+  function forceShow(){
+    // Hide all possible loaders
+    ['loader','splash','loading','preloader','appLoader','initialLoader','splashScreen'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el){ el.style.display='none'; el.style.opacity='0'; el.remove(); }
+    });
+    document.querySelectorAll('[class*="loader"],[class*="splash"],[class*="loading-screen"]').forEach(el=>{
+      if(el.innerHTML.includes('GOYE STORE GLOBAL') && el.innerHTML.includes('190+ Countries')){
+        // Keep only if it's the main content, not loader
+        if(el.children.length<=2) { el.style.display='none'; }
+      }
+    });
+    // Force body visible
+    document.body.style.overflow='auto';
+    document.body.style.opacity='1';
+    const main=document.getElementById('programs')||document.getElementById('root')||document.querySelector('main')||document.getElementById('app');
+    if(main){ main.style.display='block'; main.style.opacity='1'; }
+    console.log('✅ Forced hide splash - Site should show now');
+  }
+  // Try immediately and after delays
+  forceShow();
+  setTimeout(forceShow, 500);
+  setTimeout(forceShow, 1500);
+  setTimeout(forceShow, 3000);
+  window.addEventListener('load', forceShow);
+})();
+
+// Also fix Pi SDK blocking - Init without blocking page
+window.initPiSafe=function(){
+  try{
+    if(typeof Pi!=='undefined'){
+      try{ Pi.init({version:"2.0", sandbox:false}); console.log('Pi Mainnet ready'); }catch(e){ console.log('Pi init fallback', e); }
+    }
+  }catch(e){ console.log('Pi SDK not blocking', e); }
+};
+// Don't block page load with Pi
+setTimeout(initPiSafe, 2000);
+
+// Ensure GCV converter runs even if Pi fails
+setTimeout(()=>{ if(typeof convertAllPrices==='function') convertAllPrices(); }, 1000);
+</script>
+
+<style>
+/* Emergency: Ensure content shows even if loader fails */
+body{opacity:1 !important; overflow:auto !important;}
+#programs, #academyProg, .card{display:block !important; opacity:1 !important;}
+</style>
 </body>
 </html>
