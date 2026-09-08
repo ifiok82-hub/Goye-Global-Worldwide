@@ -86,6 +86,16 @@ app.use(express.urlencoded({ extended: true }));
 
 // ===== 1. PI NETWORK API ROUTES - MUST BE FIRST - BEFORE STATIC & SPA =====
 
+// VERIFY DOMAIN FILE - Must be before static and fallback - Pi Core Team checks this
+app.get('/validation-key.txt', (req, res) => {
+  res.set('Content-Type', 'text/plain');
+  res.send('6fad9a58178d16528c6e748a4194797437604a6594d34e811d0dce570c722f1ab8a5caa04e3c5e340dbb68d3a50e9f75122d3a88f5f13fb0419ce5451dcc3201');
+});
+app.get('/.well-known/validation-key.txt', (req, res) => {
+  res.set('Content-Type', 'text/plain');
+  res.send('6fad9a58178d16528c6e748a4194797437604a6594d34e811d0dce570c722f1ab8a5caa04e3c5e340dbb68d3a50e9f75122d3a88f5f13fb0419ce5451dcc3201');
+});
+
 app.get('/api/pi-config', (req, res) => {
   const apiKey = process.env.PI_API_KEY;
   const sandbox = process.env.PI_SANDBOX === 'true';
@@ -96,7 +106,8 @@ app.get('/api/pi-config', (req, res) => {
     apiKeyLength: apiKey ? apiKey.length : 0,
     sandbox: sandbox,
     app: process.env.PI_APP_NAME || 'GOYE Store Global - Sirwise AI WEB3 Academy',
-    domain: 'www.gasv.store',
+    domain: 'gasv.store',
+    verified: 'validation-key.txt created',
     rc: 'BN3583773',
     gcv: 314159,
     amount_pi: 49.99 / 314159,
@@ -4639,8 +4650,8 @@ async function startServer() {
     app.use(express.static(distPath));
     app.use(express.static(path.join(process.cwd(), 'public')));
     app.get('*', (req, res) => {
-      if (req.path.startsWith('/api/')) {
-        return res.status(404).json({ error: 'API endpoint not found: ' + req.path });
+      if (req.path.startsWith('/api/') || req.path.includes('validation-key')) {
+        return res.status(404).send('Not found: ' + req.path);
       }
       const indexPath = path.join(distPath, 'index.html');
       res.sendFile(indexPath, (err) => {
