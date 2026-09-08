@@ -1,7 +1,7 @@
 {
-  "name": "GOYE Store Global - Sirwise AI WEB3 Academy",
-  "short_name": "GOYE Store Global",
-  "description": "GOYE Store Global and Sirwise AI WEB3 Academy — digital products, AI education, Web3 and Pi GCV checkout.",
+  "name": "Goye Store Global Sirwise AI WEB3 Academy",
+  "short_name": "Goye Store Global",
+  "description": "Sirwise AI WEB3 Academy - Goye Store Global - Official Pink Logo Complete - GCV $314,159 - RC BN3583773 - gasv.store",
   "icons": [
     {"src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
     {"src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
@@ -9,7 +9,5 @@
   "background_color": "#FF00FF",
   "theme_color": "#FFD700",
   "start_url": "/",
-  "display": "standalone",
-  "scope": "/",
-  "orientation": "portrait"
+  "display": "standalone"
 }
