@@ -89,10 +89,12 @@ app.use(express.urlencoded({ extended: true }));
 // VERIFY DOMAIN FILE - Must be before static and fallback - Pi Core Team checks this
 app.get('/validation-key.txt', (req, res) => {
   res.set('Content-Type', 'text/plain');
+  res.set('Cache-Control', 'no-cache');
   res.send('6fad9a58178d16528c6e748a4194797437604a6594d34e811d0dce570c722f1ab8a5caa04e3c5e340dbb68d3a50e9f75122d3a88f5f13fb0419ce5451dcc3201');
 });
 app.get('/.well-known/validation-key.txt', (req, res) => {
   res.set('Content-Type', 'text/plain');
+  res.set('Cache-Control', 'no-cache');
   res.send('6fad9a58178d16528c6e748a4194797437604a6594d34e811d0dce570c722f1ab8a5caa04e3c5e340dbb68d3a50e9f75122d3a88f5f13fb0419ce5451dcc3201');
 });
 
@@ -4650,8 +4652,8 @@ async function startServer() {
     app.use(express.static(distPath));
     app.use(express.static(path.join(process.cwd(), 'public')));
     app.get('*', (req, res) => {
-      if (req.path.startsWith('/api/') || req.path.includes('validation-key')) {
-        return res.status(404).send('Not found: ' + req.path);
+      if (req.path.includes('validation-key') || req.path.startsWith('/api/') || req.path.includes('.txt')) {
+        return res.status(404).type('text/plain').send('Not found: ' + req.path + ' - File should be served by explicit route');
       }
       const indexPath = path.join(distPath, 'index.html');
       res.sendFile(indexPath, (err) => {
