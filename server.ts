@@ -817,7 +817,7 @@ app.post('/api/payments/paystack/initialize', async (req, res) => {
         currency: 'NGN',
         reference: `goye-paystack-${Date.now()}`,
         metadata: {
-          platform: 'GOYE Global Worldwide',
+          platform: 'GOYE Store Global',
           original_usd_amount: amountUsd,
           original_currency_requested: currencyCode || 'USD'
         }
@@ -946,7 +946,7 @@ app.post('/api/payments/flutterwave/initialize', async (req, res) => {
           name: 'GOYE Sovereign Merchant'
         },
         customizations: {
-          title: 'GOYE Global Worldwide Payments',
+          title: 'GOYE Store Global Payments',
           description: 'Sovereign Multi-Sig Escrow Settlement',
           logo: 'https://images.unsplash.com/photo-1609592424109-dd003923709b?auto=format&fit=crop&w=150&q=80'
         }
@@ -1185,7 +1185,7 @@ app.get('/api/track-order', async (req, res) => {
       carrier,
       status: foundOrder ? foundOrder.status || 'In Transit' : 'In Transit (On Schedule)',
       currentLocation: 'Lagos Ikeja Freight Sorting & Customs Hub, Nigeria',
-      origin: 'GOYE Global Worldwide Fulfillment Center',
+      origin: 'GOYE Store Global Fulfillment Center',
       destination: 'Lekki Phase 1, Lagos, Nigeria',
       estimatedDelivery: '2026-07-31 (In 4 Days)',
       lastUpdated: new Date().toISOString(),
@@ -3609,7 +3609,7 @@ app.post('/api/gemini/ai-ceo-chat', async (req, res) => {
       model: 'gemini-3.6-flash',
       contents: message,
       config: {
-        systemInstruction: `You are the Autonomous AI CEO of GOYE Global Worldwide, developed by Goyedagosmess Enterprise (RC BN3583773).
+        systemInstruction: `You are the Autonomous AI CEO of GOYE Store Global, developed by Goyedagosmess Enterprise (RC BN3583773).
 Answer questions in a sophisticated, highly executive, professional tone. Support multiple languages dynamically (French, Yoruba, Spanish, Hindi, etc.) based on user language.
 Promote our 32-country merchant logistics network, multi-sig escrow system, direct phone airtime, regional eSIM delivery, and universal recharge PINs.
 Never mention internal file structures, system APIs, or directories.`
