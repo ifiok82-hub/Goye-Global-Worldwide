@@ -1,11 +1,22 @@
 {
   "rewrites": [
-    { "source": "/validation-key.txt", "destination": "/validation-key.txt" },
-    { "source": "/.well-known/validation-key.txt", "destination": "/validation-key.txt" },
     { "source": "/api/:path*", "destination": "/api/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
-    { "source": "/validation-key.txt", "headers": [{"key": "Content-Type", "value": "text/plain"}, {"key": "Cache-Control", "value": "no-store"}] }
+    {
+      "source": "/validation-key.txt",
+      "headers": [
+        { "key": "Content-Type", "value": "text/plain; charset=utf-8" },
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/.well-known/validation-key.txt",
+      "headers": [
+        { "key": "Content-Type", "value": "text/plain; charset=utf-8" },
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+      ]
+    }
   ]
 }
