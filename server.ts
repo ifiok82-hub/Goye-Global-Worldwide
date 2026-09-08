@@ -95,7 +95,7 @@ app.get('/api/pi-config', (req, res) => {
     apiKeyConfigured: !!apiKey,
     apiKeyLength: apiKey ? apiKey.length : 0,
     sandbox: sandbox,
-    app: process.env.PI_APP_NAME || 'Goye Global Sirwise AI WEB3 Academy',
+    app: process.env.PI_APP_NAME || 'GOYE Store Global - Sirwise AI WEB3 Academy',
     domain: 'www.gasv.store',
     rc: 'BN3583773',
     gcv: 314159,

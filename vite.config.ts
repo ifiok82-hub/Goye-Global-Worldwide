@@ -25,9 +25,9 @@ export default defineConfig(() => {
           enabled: true
         },
         manifest: {
-          name: 'Goye Global Sirwise AI WEB3 Academy',
+          name: 'GOYE Store Global - Sirwise AI WEB3 Academy',
           short_name: 'GOYE Store Global',
-          description: 'GOYE Global Worldwide - 100% Digital Products Store - Sirwise AI WEB3 Academy - GCV $314,159 - RC BN3583773 - gasv.store',
+          description: 'GOYE Store Global and Sirwise AI WEB3 Academy — digital products, AI education, Web3 and Pi GCV checkout.',
           theme_color: '#FFD700',
           background_color: '#FF00FF',
           display: 'standalone',
