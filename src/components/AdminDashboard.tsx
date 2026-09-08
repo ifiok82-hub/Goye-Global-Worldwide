@@ -102,7 +102,18 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
   
   const [products, setProducts] = useState(() => {
     const custom = safeParse('CUSTOM_PRODUCTS', []);
-    return [...ALL_PRODUCTS, ...custom];
+    const map = new Map();
+    ALL_PRODUCTS.forEach(p => map.set(p.id, p));
+    custom.forEach((p: any) => {
+      if (!map.has(p.id)) map.set(p.id, p);
+    });
+    return Array.from(map.values()).map(p => ({
+      ...p,
+      status: p.status || 'ACTIVE',
+      visible: true,
+      price: (!p.price || Number(p.price) <= 0) ? 1.00 : Number(p.price),
+      downloadUrl: p.downloadUrl || p.filePath || 'https://www.gasv.store/support'
+    }));
   });
   
   const [editingProduct, setEditingProduct] = useState<any>(null);

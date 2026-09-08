@@ -1568,17 +1568,28 @@ app.get('/api/clubkonnect/dataplans', async (req, res) => {
 // -------------------------------------------------------------------------
 // Global Digital Products Setup
 // -------------------------------------------------------------------------
-const fallbackGlobalDigitalProducts = [
-  { id: 'goye-dp-bestseller-bundle', title: '🔥 GOYE BEST SELLER - DIGITAL NOMAD PRO KIT', name: '🔥 GOYE BEST SELLER - DIGITAL NOMAD PRO KIT', priceNGN: 75950, priceUSD: 49.00, filePath: 'https://www.gasv.store/vault/digital-nomad-kit', downloadUrl: 'https://www.gasv.store/vault/digital-nomad-kit', description: 'Ultimate GOYE All-In-One Digital Nomad Pro Kit! Instant Digital Delivery on www.gasv.store.', sales: 4920, vendor: 'GOYE Global', global: true, isDigital: true, status: 'Active / Published', type: 'Digital / Downloadable product', image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=600&q=80', createdAt: new Date() },
-  { id: 'goye-dp-japa', title: '✈️ Japa Package - Full Relocation Guide, Documents & Visa Links', name: '✈️ Japa Package - Full Relocation Guide, Documents & Visa Links', priceNGN: 23250, priceUSD: 14.99, filePath: 'https://drive.google.com/drive/folders/goye_store_japa_relocation_package', downloadUrl: 'https://drive.google.com/drive/folders/goye_store_japa_relocation_package', description: 'Complete UK, Canada, USA, Europe & Australia Japa Relocation Masterclass Package. Linked directly to www.gasv.store Drive folder.', sales: 2840, vendor: 'GOYE Global', global: true, isDigital: true, status: 'Active / Published', type: 'Digital / Downloadable product', image: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=600&q=80', createdAt: new Date() },
-  { id: 'goye-dp-gpt', title: '⚡ GPT - ChatGPT Business Pack & 5,000+ Master Prompts', name: '⚡ GPT - ChatGPT Business Pack & 5,000+ Master Prompts', priceNGN: 10000, priceUSD: 6.45, filePath: 'https://drive.google.com/drive/folders/goye_store_gpt_chatgpt_business_pack', downloadUrl: 'https://drive.google.com/drive/folders/goye_store_gpt_chatgpt_business_pack', description: 'Ultimate ChatGPT Master Prompt Library & Business Automation Suite. Linked directly to www.gasv.store Drive folder.', sales: 3150, vendor: 'GOYE Global', global: true, isDigital: true, status: 'Active / Published', type: 'Digital / Downloadable product', image: 'https://images.unsplash.com/photo-1677442136019-21780efad99a?auto=format&fit=crop&w=600&q=80', createdAt: new Date() },
-  { id: 'goye-dp-pdf-bundle', title: '📚 PDF Store - All PDF Downloadable Contents & Masterclass Ebooks', name: '📚 PDF Store - All PDF Downloadable Contents & Masterclass Ebooks', priceNGN: 7500, priceUSD: 4.84, filePath: 'https://drive.google.com/drive/folders/goye_store_pdf_downloadable_contents', downloadUrl: 'https://drive.google.com/drive/folders/goye_store_pdf_downloadable_contents', description: 'Comprehensive Library of High-Value PDF Ebooks & Guides. Linked directly to www.gasv.store Drive folder.', sales: 1980, vendor: 'GOYE Global', global: true, isDigital: true, status: 'Active / Published', type: 'Digital / Downloadable product', image: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=600&q=80', createdAt: new Date() },
-  { id: 'seed-dp-1', title: 'UK CV Pack Pro', priceNGN: 5000, priceUSD: 6, filePath: '/uploads/digital/cv_pack_placeholder.pdf', description: 'Complete UK Standard CV Template and Cover Letter Pack designed by professionals to pass ATS scanners.', sales: 42, vendor: 'IFI-Goye', global: true, createdAt: new Date() },
-  { id: 'seed-dp-2', title: 'Global Developer Guide', priceNGN: 7500, priceUSD: 10, filePath: '/uploads/digital/developer_guide_placeholder.zip', description: 'Comprehensive roadmap and code templates for building high-scale fintech solutions across emerging markets.', sales: 128, vendor: 'IFI-Goye', global: true, createdAt: new Date() },
-  { id: 'seed-dp-3', title: '100 Professional Church Flyer Templates (Canva Editable — Sunday Service, Crusade, Youth Program)', priceNGN: 5500, priceUSD: 6.5, filePath: '/uploads/digital/church_flyer_templates.zip', description: 'Stop paying designer ₦3k per flyer! Get 100 church flyers editable in Canva Free. Change text, photo, print! Includes Sunday, Thanksgiving, Crusade, Youth.', sales: 87, vendor: 'IFI-Goye', global: true, createdAt: new Date() },
-  { id: 'seed-dp-4', title: '500 Luxury Logo Templates for Fashion, Barbing, POS, Restaurant (PNG + Canva)', priceNGN: 4000, priceUSD: 5, filePath: '/uploads/digital/luxury_logo_templates.zip', description: '500 ready logos! No designer needed! Fashion brand, Barbershop, POS business, Food. Edit name in Canva in 2 mins. Instant download.', sales: 154, vendor: 'IFI-Goye', global: true, createdAt: new Date() },
-  { id: 'seed-dp-5', title: 'USA & Canada Study SOP Samples (10 Winning SOPs That Got Visa Approved)', priceNGN: 7500, priceUSD: 9, filePath: '/uploads/digital/usa_canada_sop_samples.pdf', description: 'Use these 10 real SOPs that got visa! For MSc, BSc, Care. Copy structure, change your story, submit! Includes Canada & USA format.', sales: 93, vendor: 'IFI-Goye', global: true, createdAt: new Date() }
-];
+import { ALL_PRODUCTS } from './src/data';
+
+const fallbackGlobalDigitalProducts = ALL_PRODUCTS.map(p => ({
+  id: p.id,
+  title: p.title || p.name,
+  name: p.name || p.title,
+  priceNGN: p.priceNGN || Math.round(p.price * 1500),
+  priceUSD: p.priceUSD || p.price,
+  category: p.category,
+  status: 'ACTIVE',
+  visible: true,
+  isDeleted: false,
+  downloadUrl: p.downloadUrl || 'https://www.gasv.store/support',
+  filePath: p.filePath || 'https://www.gasv.store/support',
+  description: p.description || '',
+  sales: 250,
+  vendor: 'GOYE Global',
+  global: true,
+  isDigital: true,
+  badge: p.badge || 'ACTIVE',
+  createdAt: new Date()
+}));
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -1613,13 +1624,21 @@ app.post('/api/digital/upload', upload.single('file'), async (req, res) => {
     const newProd = {
       id: String(Date.now()),
       title: title || 'Untitled Product',
+      name: title || 'Untitled Product',
       priceNGN: Number(priceNGN) || 5000,
       priceUSD: Number(priceUSD) || 6,
-      filePath: filePath,
+      category: 'prompts',
+      status: 'ACTIVE',
+      visible: true,
+      downloadUrl: filePath || 'https://www.gasv.store/support',
+      filePath: filePath || 'https://www.gasv.store/support',
       description: description || '',
       sales: 0,
       vendor: 'IFI-Goye',
       global: true,
+      isDigital: true,
+      isDeleted: false,
+      badge: 'NEW',
       createdAt: new Date()
     };
 

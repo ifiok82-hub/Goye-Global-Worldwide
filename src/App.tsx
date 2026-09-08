@@ -131,9 +131,42 @@ export default function App() {
 
 
 
+  const [activeCategory, setActiveCategory] = useState<string>('all');
+
   const [products, setProducts] = useState(() => {
     const custom = safeParse('CUSTOM_PRODUCTS', []);
-    return [...ALL_PRODUCTS, ...custom];
+    const goyeProds = safeParse('goye_products', []);
+    const digProds = safeParse('digital_products', []);
+    
+    const prodMap = new Map();
+    // 1. Seed with default ALL_PRODUCTS (32+ items)
+    ALL_PRODUCTS.forEach(p => prodMap.set(p.id, p));
+    
+    // 2. Merge local stored products if present
+    [...custom, ...goyeProds, ...digProds].forEach((p: any) => {
+      if (p && p.id) {
+        const existing = prodMap.get(p.id) || {};
+        prodMap.set(p.id, { ...existing, ...p });
+      }
+    });
+
+    const finalProductList = Array.from(prodMap.values()).map(p => ({
+      ...p,
+      status: 'ACTIVE',
+      visible: true,
+      isDeleted: false,
+      price: (!p.price || Number(p.price) <= 0) ? 1.00 : Number(p.price),
+      downloadUrl: p.downloadUrl || p.filePath || (p.category === 'esim' || p.category === 'dubai' ? 'https://wa.me/2348162811195?text=Hi%20GOYE%20Store' : 'https://www.gasv.store/support'),
+      filePath: p.filePath || p.downloadUrl || 'https://www.gasv.store/support'
+    }));
+
+    try {
+      localStorage.setItem('CUSTOM_PRODUCTS', JSON.stringify(finalProductList));
+      localStorage.setItem('goye_products', JSON.stringify(finalProductList));
+      localStorage.setItem('digital_products', JSON.stringify(finalProductList));
+    } catch (e) {}
+
+    return finalProductList;
   });
   
   
@@ -1139,16 +1172,61 @@ export default function App() {
               />
             ) : (
               <>
-                <h2 className="text-white text-2xl font-black mb-6 border-b border-[#333] pb-2 inline-block mt-8">
-                  {tab === 'shop' ? 'All Digital Products' : 
-                   tab === 'esim' ? 'Global eSIMs' : 
-                   tab === 'contracts' ? 'Contracts & Visas' : 
-                   tab === 'prompts' ? 'AI Prompts' : 
-                   'Store'}
-                </h2>
+                <div className="mt-8 mb-6">
+                  <div className="flex items-center justify-between mb-4 border-b border-[#333] pb-2 flex-wrap gap-2">
+                    <h2 className="text-white text-2xl font-black">
+                      {tab === 'shop' ? 'All Digital Products' : 
+                       tab === 'esim' ? 'Global eSIMs' : 
+                       tab === 'contracts' ? 'Contracts & Visas' : 
+                       tab === 'prompts' ? 'AI Prompts' : 
+                       'Store & eSIM Hub'}
+                    </h2>
+                    <span className="text-xs font-mono font-bold text-[#FFD700] bg-[#111] px-3.5 py-1.5 rounded-full border border-[#FFD700]/40 shadow-sm">
+                      Total Active Products: {products.filter((p: any) => p.status === 'ACTIVE' && p.visible !== false).length}/32
+                    </span>
+                  </div>
+
+                  {/* Category Filter Pills */}
+                  <div className="flex items-center gap-2 overflow-x-auto pb-2 hide-scrollbar mb-4">
+                    {[
+                      { id: 'all', label: 'ALL (32)', icon: '⚡' },
+                      { id: 'dubai', label: 'DUBAI', icon: '🇦🇪' },
+                      { id: 'esim', label: 'ESIM', icon: '🌐' },
+                      { id: 'prompts', label: 'PROMPTS', icon: '🤖' },
+                      { id: 'academy', label: 'ACADEMY', icon: '🎓' },
+                      { id: 'contracts', label: 'CONTRACTS & VISAS', icon: '📄' },
+                      { id: 'toolkit', label: 'TOOLKITS', icon: '💼' }
+                    ].map(cat => (
+                      <button
+                        key={cat.id}
+                        onClick={() => setActiveCategory(cat.id)}
+                        className={`px-4 py-2 rounded-xl text-xs font-black transition whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+                          activeCategory === cat.id 
+                            ? 'bg-[#FFD700] text-black shadow-lg shadow-[#FFD700]/20' 
+                            : 'bg-[#1a1a1a] text-gray-300 border border-[#333] hover:border-[#FFD700]'
+                        }`}
+                      >
+                        <span>{cat.icon}</span>
+                        <span>{cat.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 
-                <div className="grid grid-cols-1 gap-6">
-                  {products.filter((p: any) => tab === 'shop' || tab === 'home' || p.category === tab).map((product: any) => {
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {products.filter((p: any) => {
+                    if (p.status !== 'ACTIVE' || p.visible === false || p.isDeleted === true) return false;
+                    if (activeCategory !== 'all') {
+                      if (activeCategory === 'contracts') return p.category === 'contracts' || p.category === 'jobs' || p.category === 'visa';
+                      if (activeCategory === 'prompts') return p.category === 'prompts' || p.category === 'starter';
+                      return p.category === activeCategory;
+                    }
+                    if (tab === 'esim') return p.category === 'esim' || p.category === 'dubai';
+                    if (tab === 'contracts') return p.category === 'contracts' || p.category === 'jobs' || p.category === 'visa';
+                    if (tab === 'prompts') return p.category === 'prompts' || p.category === 'starter' || p.category === 'toolkit';
+                    if (tab === 'academy') return p.category === 'academy';
+                    return true;
+                  }).map((product: any) => {
                     const priceDisplay = formatPriceDisplay(product.price, currentCurrency, currencyMode);
                     return (
                       <div key={product.id} className="bg-[#111] border border-[#333] rounded-2xl p-6 flex flex-col justify-between hover:border-[#FFD700] transition relative overflow-hidden">
@@ -1177,15 +1255,12 @@ export default function App() {
 
                           {hasAccess(product.id) ? (
                             <button onClick={() => {
-                              showToast('Access granted! Downloading...');
+                              showToast('Access granted! Opening download link...');
                               if (product.category === 'academy') {
                                 const m = document.getElementById('videoModal');
                                 if(m) m.style.display = 'flex';
                               } else {
-                                const a = document.createElement('a');
-                                a.href = 'data:text/plain;charset=utf-8,Access%20granted!%20This%20is%20your%20digital%20product%20content.';
-                                a.download = `${product.name}.txt`;
-                                a.click();
+                                window.open(product.downloadUrl || product.filePath || 'https://www.gasv.store/support', '_blank');
                               }
                             }} className="w-full bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/50 font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-[#10B981]/30 cursor-pointer pointer-events-auto z-10 touch-manipulation">
                               <Download size={18}/> Access Content
