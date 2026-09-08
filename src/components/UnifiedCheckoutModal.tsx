@@ -56,7 +56,8 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
   const displaySymbol = currentCurrency.symbol || '$';
   const displayPrice = (priceUSD * currentCurrency.rate).toFixed(2);
   const localPrice = displayPrice;
-  const priceNGN = (priceUSD === 3.00 || product?.id === 'web3-starter-toolkit') ? 2500 : (priceUSD === 19.99 ? 29900 : (priceUSD === 49.99 ? 74985 : priceUSD * 1500));
+  const piGcvAmount = (priceUSD / 314159).toFixed(6).replace(/\.0+$/, '').replace(/(\.\d*?)0+$/, '$1');
+  const priceNGN = (priceUSD === 3.00 || product?.id === 'web3-starter-toolkit') ? 2500 : (priceUSD === 19.99 ? 29900 : (priceUSD === 49.99 ? 74985 : priceUSD * 1600));
   const nairaAmount = priceNGN.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   
   const formSubmitId = 'b5ff137904e20ed9fbad829a69fc150b';
@@ -87,7 +88,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
             email: email || '',
             country: country,
             productName: cleanProductName,
-            amount: `₦${nairaAmount} (${displaySymbol}${localPrice})`,
+            amount: `${piGcvAmount} Pi GCV · $${priceUSD.toFixed(2)} USD · ₦${nairaAmount}`,
             amountUSD: priceUSD,
             price: priceUSD,
             currency: userCurrency,
@@ -340,7 +341,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
           },
           customizations: {
             title: 'Sirwise AI Web3 Academy',
-            description: 'Global $49.99 RC BN3583773',
+            description: `GOYE Store Global · ${piGcvAmount} Pi GCV · $${priceUSD.toFixed(2)} USD`,
             logo: 'https://www.gasv.store/logo.png',
           },
           callback: (data: any) => {

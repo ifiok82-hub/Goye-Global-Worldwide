@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GOYE Global - Sirwise AI WEB3 Academy - gasv.store - RC BN3583773 - 190+ Countries</title>
+<title>GOYE Store Global - Sirwise AI WEB3 Academy</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://sdk.minepi.com/pi-sdk.js"></script>
 <link rel="manifest" href="/manifest.json">
@@ -98,7 +98,7 @@ body{background:#000; color:#fff; font-family:system-ui, -apple-system, sans-ser
       customizations: {
         title: "Sirwise AI Web3 Academy",
         description: "Global $49.99 RC BN3583773",
-        logo: "https://www.gasv.store/logo.png",
+        logo: "https://www.gasv.store/icon-512.png",
       },
       callback: function(data){
         console.log(data);
@@ -129,13 +129,24 @@ body{background:#000; color:#fff; font-family:system-ui, -apple-system, sans-ser
 </script>
 </head>
 <body class="bg-black text-white min-h-screen">
-  <div id="loader" style="position:fixed;inset:0;background:black;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.5s;">
-    <img src="/icon-512.png" style="width:120px;height:120px;border-radius:50%;background:#FF00FF;" alt="GOYE">
+  <div id="loader" role="status" aria-live="polite" style="position:fixed;inset:0;background:#000;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.5s ease;pointer-events:auto;">
+    <img src="/icon-512.png" style="width:120px;height:120px;border-radius:24px;background:#FF00FF;object-fit:cover;" alt="GOYE Store Global official logo">
     <div style="color:white;font-weight:900;margin-top:16px;font-size:20px;">GOYE STORE GLOBAL</div>
-    <div style="color:#FFD700;font-size:13px;margin-top:6px;">190+ Countries Instant Delivery · RC: BN3583773</div>
+    <div style="color:#FFD700;font-size:13px;margin-top:6px;">Sirwise AI WEB3 Academy</div>
   </div>
   <script>
-  setTimeout(()=>{ const l=document.getElementById('loader'); if(l){ l.style.opacity='0'; setTimeout(()=>l.remove(),500); } }, 2000);
+  (() => {
+    const dismissLoader = () => {
+      const loader = document.getElementById('loader');
+      if (!loader || loader.dataset.dismissed) return;
+      loader.dataset.dismissed = 'true';
+      loader.style.opacity = '0';
+      loader.style.pointerEvents = 'none';
+      window.setTimeout(() => loader.remove(), 550);
+    };
+    window.addEventListener('load', () => window.setTimeout(dismissLoader, 350));
+    window.setTimeout(dismissLoader, 2200);
+  })();
   </script>
   <div id="root"></div>
   <script type="module" src="/src/main.tsx"></script>
