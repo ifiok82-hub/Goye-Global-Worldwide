@@ -86,16 +86,14 @@ app.use(express.urlencoded({ extended: true }));
 
 // ===== 1. PI NETWORK API ROUTES - MUST BE FIRST - BEFORE STATIC & SPA =====
 
-// Keep Pi verification tied to the repository file so every serving path returns
-// the same exact token without duplicating it in application code.
-const validationKeyPath = path.join(process.cwd(), 'public', 'validation-key.txt');
-const validationKey = (process.env.PI_VALIDATION_KEY || fs.readFileSync(validationKeyPath, 'utf8')).trim();
-
 // VERIFY DOMAIN FILE - Must be before static and fallback - Pi Core Team checks this
-app.get(['/validation-key.txt', '/.well-known/validation-key.txt'], (req, res) => {
-  res.set('Content-Type', 'text/plain; charset=utf-8');
-  res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-  res.send(validationKey);
+app.get('/validation-key.txt', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  res.type('text/plain').send('6fad9a58178d16528c6e748a4194797437604a6594d34e811d0dce570c722f1ab8a5caa04e3c5e340dbb68d3a50e9f75122d3a88f5f13fb0419ce5451dcc3201');
+});
+app.get('/.well-known/validation-key.txt', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  res.type('text/plain').send('6fad9a58178d16528c6e748a4194797437604a6594d34e811d0dce570c722f1ab8a5caa04e3c5e340dbb68d3a50e9f75122d3a88f5f13fb0419ce5451dcc3201');
 });
 
 app.get('/api/pi-config', (req, res) => {
