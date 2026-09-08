@@ -1,6 +1,6 @@
 {
-  "name": "GOYE Global - Sirwise AI WEB3 Academy - gasv.store - RC BN3583773",
-  "description": "GOYE Global Sirwise AI WEB3 Academy & Store. 190+ Countries Instant Delivery. RC: BN3583773.",
+  "name": "Goye Store Global Sirwise AI WEB3 Academy",
+  "description": "Sirwise AI WEB3 Academy - Goye Store Global - Official Pink Logo Complete - GCV $314,159 - RC BN3583773 - gasv.store",
   "requestFramePermissions": ["geolocation", "camera", "microphone"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

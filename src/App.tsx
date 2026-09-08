@@ -41,7 +41,7 @@ const HeroSection = ({ onLogoTap, onPlayVideo, onOpenLeadMagnet }: any) => (
     
     <div onClick={onLogoTap} className="inline-block cursor-pointer w-full mb-8">
       <h1 className="text-[#FFD700] text-[42px] font-black tracking-tight mb-2 leading-none uppercase">SIRWISE AI WEB3<br/>ACADEMY</h1>
-      <h2 className="text-white text-xl font-bold uppercase tracking-tight leading-none">GOYE STORE GLOBAL</h2>
+      <h2 className="text-white text-xl font-bold uppercase tracking-tight leading-none">GOYE Global Worldwide</h2>
     </div>
     
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
@@ -964,11 +964,12 @@ export default function App() {
 
         {/* Yellow Header - All buttons working */}
         <div className="yellow-header-nav" style={{ background: '#FFD700', padding: '12px', textAlign: 'center' }}>
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '10px' }} className="cursor-pointer" onClick={() => { const t = setTimeout(()=>setShowAdminLogin(true), 2000); adminPressTimer.current = t; }}>
-            <img src="/icon-192.png" style={{ width: '40px', height: '40px', borderRadius: '50%' }} alt="GOYE" />
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px', marginBottom: '10px' }} className="cursor-pointer" onClick={() => { const t = setTimeout(()=>setShowAdminLogin(true), 2000); adminPressTimer.current = t; }}>
+            <img src="/icon-512.png" style={{ width: '50px', height: '50px', borderRadius: '50%', background: '#FF00FF', border: '2px solid black', objectFit: 'cover' }} alt="Official Pink Logo Complete Sirwise AI WEB3 Academy Goye Store Global" onError={(e: any) => { e.target.src='/icon-192.png'; }} />
             <div style={{ textAlign: 'left' }}>
-              <div style={{ fontWeight: 900, color: 'black', fontSize: '16px', letterSpacing: '0.5px' }}>GOYE STORE GLOBAL</div>
-              <div style={{ color: 'black', fontSize: '11px', fontWeight: 900 }}>SIRWISE AI WEB3 ACADEMY<br />RC BN3583773 · www.gasv.store</div>
+              <div style={{ fontWeight: 900, fontSize: '17px', color: 'black', letterSpacing: '0.5px' }}>GOYE STORE GLOBAL</div>
+              <div style={{ fontSize: '12px', fontWeight: 900, color: 'black' }}>SIRWISE AI WEB3 ACADEMY</div>
+              <div style={{ fontSize: '10px', fontWeight: 'bold', color: 'black' }}>RC BN3583773 • www.gasv.store</div>
             </div>
           </div>
           
@@ -1400,7 +1401,7 @@ export default function App() {
                 <Search className="text-gray-400" size={20}/>
                 <span className="text-gray-300 text-[13px]">Google</span>
               </div>
-              <span className="text-gray-300 text-[13px]">GOYE Store Global</span>
+              <span className="text-gray-300 text-[13px]">GOYE Global Worldwide</span>
             </a>
     
 

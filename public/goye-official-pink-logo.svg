@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <!-- Gold Metallic Gradient for Rings and Text -->
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE57F" />
+      <stop offset="25%" stop-color="#FFD700" />
+      <stop offset="50%" stop-color="#FFF8DC" />
+      <stop offset="75%" stop-color="#DAA520" />
+      <stop offset="100%" stop-color="#FFD700" />
+    </linearGradient>
+
+    <!-- Dark Center Gradient -->
+    <radialGradient id="blackGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#121212" />
+      <stop offset="100%" stop-color="#000000" />
+    </radialGradient>
+
+    <!-- Path for Top Arc Text: SIRWISE AI • WEB3 • ACADEMY -->
+    <!-- Center (512, 512), radius 300 -->
+    <path id="topTextArc" d="M 182,512 A 330,330 0 1,1 842,512" fill="none" />
+  </defs>
+
+  <!-- 1. Bright Pink Background (#FF00FF) -->
+  <rect width="1024" height="1024" fill="#FF00FF" />
+
+  <!-- 2. Outer Gold Ring -->
+  <circle cx="512" cy="512" r="370" fill="url(#goldGrad)" />
+  <circle cx="512" cy="512" r="355" fill="#000000" />
+
+  <!-- 3. Main Black Badge Circle -->
+  <circle cx="512" cy="512" r="348" fill="url(#blackGrad)" />
+
+  <!-- 4. Inner Gold Accent Ring -->
+  <circle cx="512" cy="512" r="260" fill="none" stroke="url(#goldGrad)" stroke-width="4" />
+
+  <!-- 5. Circular Text Along Arc: SIRWISE AI • WEB3 • ACADEMY -->
+  <text font-family="DejaVu Sans, Arial, Helvetica, sans-serif" font-weight="900" font-size="52" fill="url(#goldGrad)" letter-spacing="4">
+    <textPath href="#topTextArc" startOffset="50%" text-anchor="middle">
+      SIRWISE AI • WEB3 • ACADEMY
+    </textPath>
+  </text>
+
+  <!-- 6. Center GOYE Text -->
+  <text x="512" y="520" font-family="DejaVu Sans, Arial, Helvetica, sans-serif" font-weight="900" font-size="140" fill="url(#goldGrad)" text-anchor="middle" letter-spacing="4">
+    GOYE
+  </text>
+
+  <!-- 7. Center STORE GLOBAL Text -->
+  <text x="512" y="590" font-family="DejaVu Sans, Arial, Helvetica, sans-serif" font-weight="800" font-size="42" fill="url(#goldGrad)" text-anchor="middle" letter-spacing="6">
+    STORE GLOBAL
+  </text>
+</svg>
