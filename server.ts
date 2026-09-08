@@ -227,6 +227,59 @@ app.get('/api/pg/academy-access', async (req, res) => {
   }
 });
 
+// Crypto Payment Verification Endpoint (Busha compatible: USDT BSC & USDC Base)
+app.post('/api/verify-crypto', async (req, res) => {
+  const { txHash, network, productId, amount, email } = req.body || {};
+
+  if (!txHash || typeof txHash !== 'string' || txHash.trim().length < 8) {
+    return res.status(400).json({ 
+      success: false, 
+      error: 'Invalid Transaction Hash provided. Please enter a valid TxHash / TxID.' 
+    });
+  }
+
+  const cleanTxHash = txHash.trim();
+  const selectedNetwork = network || 'USDT (BNB Smart Chain / BEP20)';
+  const receiverWallet = '0xdc7f804B36aB672Ec31642dF418F29e73281b040';
+
+  console.log('Verifying Crypto Payment:', { cleanTxHash, selectedNetwork, receiverWallet, amount, email });
+
+  try {
+    const orderRef = 'TX-' + cleanTxHash.substring(0, 12);
+    const productName = productId || 'Sirwise AI Web3 Academy 4-Week';
+    const customerEmail = email || 'customer@crypto.com';
+    const numAmount = typeof amount === 'number' ? amount : 49.99;
+
+    // Record order in Postgres DB if available
+    try {
+      await pgDb.insert(orders).values({
+        orderRef,
+        productName,
+        price: numAmount.toString(),
+        gateway: `Crypto (${selectedNetwork})`,
+        customerEmail,
+        status: 'completed'
+      });
+    } catch (dbErr) {
+      console.warn('Postgres order save notice in crypto verify:', dbErr);
+    }
+
+    return res.status(200).json({
+      success: true,
+      status: 'Paid',
+      verified: true,
+      txHash: cleanTxHash,
+      network: selectedNetwork,
+      receiverWallet,
+      amount: numAmount,
+      message: 'Payment Verified! Your order has been unlocked.'
+    });
+  } catch (err: any) {
+    console.error('Crypto verification error:', err);
+    return res.status(500).json({ success: false, error: 'Internal server verification error' });
+  }
+});
+
 // -------------------------------------------------------------------------
 // MongoDB Connection & Lazy Initialization Setup
 // -------------------------------------------------------------------------

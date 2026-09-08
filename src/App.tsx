@@ -116,7 +116,7 @@ export default function App() {
   const [paymentConfig, setPaymentConfig] = useState<any>({
     paystack: localStorage.getItem('paystack_public_key') || '',
     flutterwave: localStorage.getItem('flutterwave_public_key') || '',
-    crypto: localStorage.getItem('crypto_wallet') || '0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96',
+    crypto: localStorage.getItem('crypto_wallet') || '0xdc7f804B36aB672Ec31642dF418F29e73281b040',
     pi: localStorage.getItem('pi_wallet') || 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ'
   });
 
@@ -289,7 +289,7 @@ export default function App() {
           <p style="color:#222; font-size:11px; margin-bottom:12px;">109 tested free, top 10% upgraded — You are early</p>
           <input type="email" id="conversionEmail" value="${email}" placeholder="Enter your email to unlock" style="width:100%; height:48px; border-radius:10px; padding:12px; margin:0 0 10px 0; border:2px solid black; background:white; color:black; font-weight:bold; font-size:14px;" />
           <button id="unlockAcademyConversionBtn" onclick="window.goToPaywallFromConversion && window.goToPaywallFromConversion()" style="width:100%; height:56px; background:black; color:#FFD700; border-radius:12px; font-weight:bold; font-size:16px; cursor:pointer; border:none; transition:all 0.2s;">🚀 UNLOCK FULL ACADEMY NOW - $49.99</button>
-          <p style="color:#111; font-size:10px; margin:10px 0 0 0; font-weight:600;">USDT BEP20 0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96 | OPay 6113541882 | Paystack | Flutterwave | Pi GCV $314,159</p>
+          <p style="color:#111; font-size:10px; margin:10px 0 0 0; font-weight:600;">USDT BEP20 & USDC Base: 0xdc7f804B36aB672Ec31642dF418F29e73281b040 | OPay 6113541882 | Paystack | Flutterwave | Pi GCV $314,159</p>
         </div>
 
         <button onclick="document.getElementById('conversionPage')?.remove()" style="width:100%; margin-top:14px; background:#222; color:#ccc; height:44px; border-radius:12px; cursor:pointer; border:1px solid #333; font-size:13px; font-weight:bold;">Continue Browsing — I will upgrade later</button>
