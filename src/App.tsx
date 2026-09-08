@@ -904,8 +904,8 @@ export default function App() {
 
             
       <header style={{ position: 'sticky', top: 0, zIndex: 50, width: '100%', background: '#000', borderBottom: '1px solid #333' }}>
-        {/* Top Pi GCV Bar - Fixed no overlap with Currency Engine */}
-        <div id="piGcvBar">
+        {/* Top Pi GCV Bar - Clean conditional render */}
+        <div id="piGcvBar" className="flex items-center justify-between px-3 py-2 bg-black border-b border-[#222]">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#FFD700', fontSize: '12px', fontWeight: 'bold', flexWrap: 'wrap' }}>
             <span>💱 GCV: 1 Pi = $314,159</span>
             <select 
@@ -917,6 +917,13 @@ export default function App() {
                 localStorage.setItem('goye_currency', val);
                 localStorage.setItem('goye_preferred_currency', val);
                 (window as any).SELECTED_CURRENCY = val;
+                if (val === 'PI') {
+                  setCurrencyMode('pi');
+                  localStorage.setItem('goye_curr_mode', 'pi');
+                } else {
+                  setCurrencyMode('fiat');
+                  localStorage.setItem('goye_curr_mode', 'fiat');
+                }
                 if (typeof (window as any).changeCurrency === 'function') {
                   (window as any).changeCurrency(val);
                 }
@@ -934,52 +941,58 @@ export default function App() {
               <option value="PI">Pi (π)</option>
             </select>
 
-            <button 
-              id="toggleCurrencyModeBtn"
-              onClick={() => {
-                const newMode = currencyMode === 'pi' ? 'fiat' : 'pi';
-                setCurrencyMode(newMode);
-                localStorage.setItem('goye_curr_mode', newMode);
-                (window as any).CURRENCY_MODE = newMode;
-                if (typeof (window as any).toggleCurrencyMode === 'function') {
-                  (window as any).toggleCurrencyMode();
-                }
-              }}
-              style={{ background: '#222', color: '#00FF88', border: '1px solid #00FF88', borderRadius: '6px', padding: '2px 8px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}
-            >
-              {currencyMode === 'pi' ? '🟣 Pi GCV Mode' : '💵 Fiat Mode'}
-            </button>
+            {(currencyMode === 'pi' || currentCurrency === 'PI') && (
+              <button 
+                id="toggleCurrencyModeBtn"
+                onClick={() => {
+                  const newMode = currencyMode === 'pi' ? 'fiat' : 'pi';
+                  setCurrencyMode(newMode);
+                  localStorage.setItem('goye_curr_mode', newMode);
+                  (window as any).CURRENCY_MODE = newMode;
+                  if (typeof (window as any).toggleCurrencyMode === 'function') {
+                    (window as any).toggleCurrencyMode();
+                  }
+                }}
+                style={{ background: '#222', color: '#00FF88', border: '1px solid #00FF88', borderRadius: '6px', padding: '2px 8px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}
+              >
+                {currencyMode === 'pi' ? '🟣 Pi GCV Mode' : '💵 Fiat Mode'}
+              </button>
+            )}
           </div>
 
           <div id="piLoginContainer" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-            <button 
-              id="refreshPiPricesBtn" 
-              onClick={() => {
-                if (typeof (window as any).refreshPricesAndFx === 'function') {
-                  (window as any).refreshPricesAndFx();
-                } else if (typeof (window as any).convertAllPrices === 'function') {
-                  (window as any).convertAllPrices();
-                }
-              }} 
-              style={{ background: '#7D2AE7', color: 'white', padding: '6px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}
-            >
-              🔄 Refresh Prices
-            </button>
-            <button 
-              id="loginWithPiBtn" 
-              onClick={() => {
-                if (typeof (window as any).loginWithPi === 'function') {
-                  (window as any).loginWithPi();
-                } else {
-                  if (typeof (window as any).showToast === 'function') {
-                    (window as any).showToast('Pi Network SDK loading... Open gasv.store in Pi Browser app!');
-                  }
-                }
-              }} 
-              style={{ background: '#7D2AE7', color: 'white', padding: '8px 16px', borderRadius: '12px', fontSize: '13px', fontWeight: 'bold', border: '2px solid #fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
-            >
-              <span style={{ width: '12px', height: '12px', background: '#FFD700', borderRadius: '50%', display: 'inline-block' }}></span> Connect Pi Wallet
-            </button>
+            {(currencyMode === 'pi' || currentCurrency === 'PI') && (
+              <>
+                <button 
+                  id="refreshPiPricesBtn" 
+                  onClick={() => {
+                    if (typeof (window as any).refreshPricesAndFx === 'function') {
+                      (window as any).refreshPricesAndFx();
+                    } else if (typeof (window as any).convertAllPrices === 'function') {
+                      (window as any).convertAllPrices();
+                    }
+                  }} 
+                  style={{ background: '#7D2AE7', color: 'white', padding: '6px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}
+                >
+                  🔄 Refresh
+                </button>
+                <button 
+                  id="loginWithPiBtn" 
+                  onClick={() => {
+                    if (typeof (window as any).loginWithPi === 'function') {
+                      (window as any).loginWithPi();
+                    } else {
+                      if (typeof (window as any).showToast === 'function') {
+                        (window as any).showToast('Pi Network SDK loading... Open gasv.store in Pi Browser app!');
+                      }
+                    }
+                  }} 
+                  style={{ background: '#7D2AE7', color: 'white', padding: '6px 12px', borderRadius: '10px', fontSize: '11px', fontWeight: 'bold', border: '2px solid #fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                >
+                  <span style={{ width: '8px', height: '8px', background: '#FFD700', borderRadius: '50%', display: 'inline-block' }}></span> Connect Pi
+                </button>
+              </>
+            )}
             <button 
               onClick={() => {
                 if (typeof (window as any).openUserMenu === 'function') {
@@ -988,50 +1001,15 @@ export default function App() {
                   setShowMoreMenu(!showMoreMenu);
                 }
               }} 
-              style={{ background: 'white', color: 'black', width: '36px', height: '36px', borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              style={{ background: 'white', color: 'black', width: '32px', height: '32px', borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '14px' }}
             >
               👤
             </button>
           </div>
         </div>
 
-        {/* Yellow Header - All buttons working */}
-        <div className="yellow-header-nav" style={{ background: '#FFD700', padding: '12px', textAlign: 'center' }}>
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px', marginBottom: '10px' }} className="cursor-pointer" onClick={() => { const t = setTimeout(()=>setShowAdminLogin(true), 2000); adminPressTimer.current = t; }}>
-            <img src="/icon-512.png" style={{ width: '50px', height: '50px', borderRadius: '50%', background: '#FF00FF', border: '2px solid black', objectFit: 'cover' }} alt="Official Pink Logo Complete Sirwise AI WEB3 Academy Goye Store Global" onError={(e: any) => { e.target.src='/icon-192.png'; }} />
-            <div style={{ textAlign: 'left' }}>
-              <div style={{ fontWeight: 900, fontSize: '17px', color: 'black', letterSpacing: '0.5px' }}>GOYE STORE GLOBAL</div>
-              <div style={{ fontSize: '12px', fontWeight: 900, color: 'black' }}>SIRWISE AI WEB3 ACADEMY</div>
-              <div style={{ fontSize: '10px', fontWeight: 'bold', color: 'black' }}>RC BN3583773 • www.gasv.store</div>
-            </div>
-          </div>
-          
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', flexWrap: 'wrap', margin: '10px 0' }}>
-            <button onClick={() => { if (typeof (window as any).scrollToSection === 'function') (window as any).scrollToSection('programs'); setTab("home"); setTimeout(() => { const el = document.getElementById("programs-section") || document.getElementById("programs"); if(el) el.scrollIntoView({behavior: "smooth"}); }, 100); }} style={{ background: 'transparent', border: 'none', color: 'black', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', padding: '6px 10px' }}>Programs</button>
-            <button onClick={() => { if (typeof (window as any).scrollToSection === 'function') (window as any).scrollToSection('our-method'); setTab("home"); setTimeout(() => { const el = document.getElementById("our-method-section") || document.getElementById("our-method"); if(el) el.scrollIntoView({behavior: "smooth"}); }, 100); }} style={{ background: 'transparent', border: 'none', color: 'black', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', padding: '6px 10px' }}>Our method</button>
-            <button onClick={() => { if (typeof (window as any).scrollToSection === 'function') (window as any).scrollToSection('community'); trackUserClick("Community", "Header"); window.open("/go/whatsapp?text=Join%20Sirwise%20Community", "_blank"); }} style={{ background: 'transparent', border: 'none', color: 'black', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', padding: '6px 10px' }}>Community</button>
-            <button onClick={() => { if (typeof (window as any).openStudentDashboard === 'function') (window as any).openStudentDashboard(); else if(!isAuthenticated) setTab("auth"); else { setTab("academy"); setTimeout(()=>document.getElementById("dashboard")?.scrollIntoView({behavior:"smooth"}), 100); } }} style={{ background: 'black', color: '#FFD700', padding: '8px 14px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>Student dashboard <span>›</span></button>
-          </div>
-          
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', flexWrap: 'wrap', margin: '10px 0' }}>
-            <button onClick={() => { if(localStorage.getItem("sirwise_paid") !== "true" || localStorage.getItem("academy_unlocked") !== "true") { setSelectedProduct({ id: "academy", name: "Sirwise AI Web3 Academy 4-Week Masterclass", price: 49.99, category: "academy" }); setShowCheckoutModal(true); } else { setTab("academy"); } }} style={{ background: '#1E3A8A', color: 'white', padding: '8px 16px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>Start learning <span>›</span></button>
-            <button onClick={() => { if (typeof (window as any).openReferral === 'function') (window as any).openReferral(); else setShowReferralModal(true); }} style={{ background: 'transparent', border: 'none', color: 'black', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', padding: '6px 10px' }}>Referral</button>
-          </div>
-          
-          <div style={{ textAlign: 'center', margin: '8px 0' }}>
-            <button onClick={() => { if (typeof (window as any).scrollToSection === 'function') (window as any).scrollToSection('programs'); setTab("home"); setTimeout(() => { const el = document.getElementById("programs-section") || document.getElementById("programs"); if(el) el.scrollIntoView({behavior: "smooth"}); }, 100); }} style={{ background: 'transparent', border: 'none', color: 'black', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>EXPLORE THE PROGRAMMES →</button>
-          </div>
-          
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', flexWrap: 'wrap', marginTop: '12px' }}>
-            <button onClick={() => { if (typeof (window as any).openQR === 'function') (window as any).openQR(); else setShowQRModal(true); }} style={{ background: 'black', color: '#FFD700', padding: '8px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}><span>⊞</span> QR</button>
-            <button onClick={() => { if (typeof (window as any).openScan === 'function') (window as any).openScan(); else setShowScanModal(true); }} style={{ background: 'black', color: '#00FF88', padding: '8px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}><span>◯</span> Scan</button>
-            <button onClick={() => { if (typeof (window as any).openRecord === 'function') (window as any).openRecord(); else setShowVoiceModal(true); }} style={{ background: 'black', color: '#60A5FA', padding: '8px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}><span>🎤</span> Record</button>
-            <button onClick={() => { if (typeof (window as any).openMore === 'function') (window as any).openMore(); else setShowMoreMenu(!showMoreMenu); }} style={{ background: 'black', color: 'white', padding: '8px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>⋯ More</button>
-          </div>
-        </div>
-
         {showMoreMenu && (
-            <div className="absolute top-[80px] right-[10px] bg-[#111] border border-[#FFD700] rounded-xl shadow-2xl z-[99999] w-[200px] overflow-hidden pointer-events-auto">
+            <div className="absolute top-[50px] right-[10px] bg-[#111] border border-[#FFD700] rounded-xl shadow-2xl z-[99999] w-[200px] overflow-hidden pointer-events-auto">
                 <button onClick={() => setShowMoreMenu(false)} className="absolute top-2 right-2 text-gray-500 hover:text-white pointer-events-auto z-10"><X size={16} /></button>
                 <button onClick={() => { setShowReferralModal(true); setShowMoreMenu(false); }} className="w-full text-left px-4 py-3 border-b border-[#222] text-sm text-white hover:bg-[#222] flex items-center gap-2 cursor-pointer pointer-events-auto z-[100]"><Users size={16} className="text-[#FFD700]"/> 🤝 Referral & Earn</button>
                 <button onClick={() => { setShowLanguageModal(true); setShowMoreMenu(false); }} className="w-full text-left px-4 py-3 border-b border-[#222] text-sm text-white hover:bg-[#222] flex items-center gap-2 cursor-pointer pointer-events-auto z-[100]"><Globe size={16} className="text-[#3b82f6]"/> 🌐 Language</button>
@@ -1059,104 +1037,291 @@ export default function App() {
         ) : null}
         
         {(tab !== 'downloads' && tab !== 'admin' && tab !== 'support') && (
-          <div className="px-4 mt-8 animate-in fade-in duration-500 pb-[100px]">
+          <div className="px-4 mt-4 animate-in fade-in duration-500 pb-[100px]">
 
-            {!isAuthenticated && tab === 'home' && (
-               <div className="bg-[#111] border-2 border-[#FFD700] p-4 rounded-xl mb-6 text-center">
-                 <h3 className="text-[#FFD700] font-bold mb-2">Welcome to GOYE Store</h3>
-                 <p className="text-sm text-gray-300 mb-4">Please Register or Login to unlock all features.</p>
-                 <button onClick={() => setTab('auth')} className="bg-[#FFD700] text-black px-6 py-2 rounded-lg font-bold">Register / Login</button>
-               </div>
-            )}
             {tab === 'home' && (
               <>
-                <HeroSection 
-                  onOpenLeadMagnet={() => setShowLeadMagnetModal(true)}
-                  onLogoTap={() => {
-                    const newCount = adminTapCount + 1;
-                    setAdminTapCount(newCount);
-                    if (newCount >= 5) { setShowAdminLogin(true); setAdminTapCount(0); }
-                    setTimeout(() => setAdminTapCount(0), 3000);
-                  }} 
-                />
+                {/* 2. NEW HERO SECTION */}
+                <div className="bg-[#FFD700] text-black p-5 rounded-2xl shadow-xl border-2 border-black mb-6">
+                  <div className="flex flex-col gap-4">
+                    {/* Left: Brand / Logo */}
+                    <div 
+                      className="flex items-center gap-3 cursor-pointer" 
+                      onClick={() => {
+                        const newCount = adminTapCount + 1;
+                        setAdminTapCount(newCount);
+                        if (newCount >= 5) { setShowAdminLogin(true); setAdminTapCount(0); }
+                        setTimeout(() => setAdminTapCount(0), 3000);
+                      }}
+                    >
+                      <img 
+                        src="/icon-192.png" 
+                        style={{ width: '52px', height: '52px', borderRadius: '50%', border: '2px solid black', objectFit: 'cover' }} 
+                        alt="GOYE Store Global Logo" 
+                        onError={(e: any) => { e.target.src='https://gasv.store/icon-192.png'; }} 
+                      />
+                      <div>
+                        <h1 className="font-black text-lg leading-tight text-black uppercase tracking-tight">GOYE STORE GLOBAL</h1>
+                        <p className="font-extrabold text-[11px] text-black/90 uppercase">SIRWISE AI WEB3 ACADEMY</p>
+                        <p className="font-bold text-[10px] text-black/80">RC BN3583773 • www.gasv.store</p>
+                      </div>
+                    </div>
 
-                <ShareBlueprintSection onToast={showToast} />
+                    {/* Right: 2 Big CTA Buttons Side-by-Side */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full">
+                      <button 
+                        onClick={() => {
+                          const el = document.getElementById('esim-hub');
+                          if (el) el.scrollIntoView({ behavior: 'smooth' });
+                        }}
+                        className="bg-black text-[#FFD700] border-2 border-black font-black py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg transition active:scale-95 cursor-pointer"
+                      >
+                        <span>🌍</span> Get Dubai eSIM Instant - $7.50
+                      </button>
 
+                      <button 
+                        onClick={() => {
+                          setTab('academy');
+                          window.location.hash = 'academy';
+                        }}
+                        className="bg-[#1E3A8A] text-white border-2 border-black font-black py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg transition active:scale-95 cursor-pointer"
+                      >
+                        <span>🎓</span> Join AI Web3 Academy
+                      </button>
+                    </div>
+                  </div>
+                </div>
 
-                {/* Programs Section */}
-                <div id="programs-section" className="mt-8 mb-8 border-t border-[#333] pt-6 scroll-mt-24">
-                  <h2 className="text-[#FFD700] text-xl font-black mb-2 text-center uppercase tracking-wider">Academic Programmes</h2>
-                  <p className="text-gray-400 text-xs text-center mb-6">4-Week Masterclasses for Global Pupils Aged 8-18</p>
+                {/* 4. STORE & eSIM HUB (POSITION #1 AFTER HERO) */}
+                <div id="esim-hub" className="mb-8 scroll-mt-20">
+                  <div className="flex items-center justify-between mb-3 border-b border-[#333] pb-2 flex-wrap gap-2">
+                    <div>
+                      <span className="bg-[#FFD700] text-black text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                        INSTANT DELIVERY
+                      </span>
+                      <h2 className="text-white text-xl font-black mt-1">✈️ Dubai & Global eSIM</h2>
+                      <p className="text-gray-400 text-xs">Instant QR Delivery via WhatsApp • 190+ Countries</p>
+                    </div>
+                    <span className="text-xs font-mono font-bold text-[#FFD700] bg-[#111] px-3 py-1 rounded-full border border-[#FFD700]/40">
+                      Total Active Products: {products.filter((p: any) => p.status === 'ACTIVE' && p.visible !== false && !p.isDeleted).length}
+                    </span>
+                  </div>
+
+                  {/* Category Filter Pills - Clean text only, no overlapping emoji */}
+                  <div className="flex items-center gap-2 overflow-x-auto pb-2 hide-scrollbar mb-4">
+                    {[
+                      { id: 'all', label: `ALL (${products.filter((p: any) => p.status === 'ACTIVE' && p.visible !== false && !p.isDeleted).length})` },
+                      { id: 'dubai', label: 'DUBAI' },
+                      { id: 'esim', label: 'ESIM' },
+                      { id: 'prompts', label: 'PROMPTS' },
+                      { id: 'academy', label: 'ACADEMY' },
+                      { id: 'contracts', label: 'VISAS' }
+                    ].map(cat => (
+                      <button
+                        key={cat.id}
+                        onClick={() => setActiveCategory(cat.id)}
+                        className={`px-3.5 py-2 rounded-xl text-xs font-black transition whitespace-nowrap cursor-pointer border ${
+                          activeCategory === cat.id 
+                            ? 'bg-[#FFD700] text-black border-[#FFD700] shadow-md' 
+                            : 'bg-[#111] text-gray-300 border-[#333] hover:border-[#FFD700]'
+                        }`}
+                      >
+                        {cat.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Grid of Products */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-[#111] p-5 rounded-2xl border border-[#333] hover:border-[#FFD700] transition flex flex-col justify-between">
+                    {products.filter((p: any) => {
+                      if (p.status !== 'ACTIVE' || p.visible === false || p.isDeleted === true) return false;
+                      if (activeCategory !== 'all') {
+                        if (activeCategory === 'contracts') return p.category === 'contracts' || p.category === 'jobs' || p.category === 'visa';
+                        if (activeCategory === 'prompts') return p.category === 'prompts' || p.category === 'starter' || p.category === 'toolkit';
+                        return p.category === activeCategory;
+                      }
+                      return true;
+                    }).slice(0, activeCategory === 'all' ? 6 : 100).map((product: any) => {
+                      const priceDisplay = formatPriceDisplay(product.price, currentCurrency, currencyMode);
+                      return (
+                        <div key={product.id} className="bg-[#111] border border-[#333] rounded-2xl p-4 flex flex-col justify-between hover:border-[#FFD700] transition relative overflow-hidden shadow-lg">
+                          {product.badge && (
+                            <div className="absolute top-0 right-0 bg-[#FFD700] text-black text-[10px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-wider">
+                              {product.badge}
+                            </div>
+                          )}
+                          <div>
+                            <div className="text-3xl mb-2">{product.icon || '📱'}</div>
+                            <h3 className="text-white font-black text-sm mb-1 leading-snug">{product.name}</h3>
+                            {product.description && <p className="text-gray-400 text-xs mb-3 line-clamp-2 leading-relaxed">{product.description}</p>}
+                            {(product.data || product.days) && (
+                              <div className="flex gap-2 mb-3">
+                                {product.data && <span className="bg-[#222] text-[#FFD700] font-mono text-[11px] font-bold px-2.5 py-1 rounded-lg border border-[#333]">{product.data}</span>}
+                                {product.days && <span className="bg-[#222] text-gray-300 font-mono text-[11px] font-bold px-2.5 py-1 rounded-lg border border-[#333]">{product.days}</span>}
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div className="mt-2 pt-3 border-t border-[#222]">
+                            <div className="flex items-baseline justify-between mb-2">
+                              <div className="text-[#10B981] font-black text-lg" data-usd-price={product.price}>
+                                {priceDisplay.main}
+                              </div>
+                              <div className="text-gray-400 text-[10px] font-medium">
+                                {priceDisplay.sub}
+                              </div>
+                            </div>
+
+                            {hasAccess(product.id) ? (
+                              <button onClick={() => {
+                                showToast('Access granted! Opening link...');
+                                window.open(product.downloadUrl || product.filePath || 'https://www.gasv.store/support', '_blank');
+                              }} className="w-full bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/50 font-bold py-2.5 rounded-xl flex items-center justify-center gap-2 hover:bg-[#10B981]/30 cursor-pointer text-xs">
+                                <Download size={14}/> Access Content
+                              </button>
+                            ) : (
+                              <button 
+                                data-usd-button={product.price}
+                                onClick={() => { setSelectedProduct(product); setShowCheckoutModal(true); }} 
+                                className="w-full bg-[#FFD700] text-black font-black py-2.5 rounded-xl flex items-center justify-center gap-1.5 hover:bg-yellow-400 cursor-pointer pointer-events-auto shadow-md transition active:scale-95 text-xs uppercase tracking-wider"
+                              >
+                                <ShoppingCart size={14}/> Buy & Unlock ({priceDisplay.main})
+                              </button>
+                            )}
+                            <p className="text-[10px] text-gray-400 font-medium text-center mt-1.5 flex items-center justify-center gap-1">
+                              ⚡ Delivered in 60 seconds
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {activeCategory === 'all' && (
+                    <div className="text-center mt-5">
+                      <button 
+                        onClick={() => { setTab('shop'); window.location.hash = 'shop'; }} 
+                        className="bg-[#222] hover:bg-[#333] text-[#FFD700] border border-[#FFD700] font-black py-3 px-6 rounded-xl text-xs uppercase tracking-wider transition active:scale-95 cursor-pointer shadow-md"
+                      >
+                        View All {products.filter((p: any) => p.status === 'ACTIVE' && p.visible !== false && !p.isDeleted).length} Products →
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* 5. ACADEMY SECTION (POSITION #2 AFTER eSIM HUB) */}
+                <div id="academy-section" className="mb-8 border-t border-[#333] pt-6 scroll-mt-20">
+                  <div className="text-center mb-5">
+                    <span className="bg-[#1E3A8A] text-white text-[9px] font-extrabold px-3 py-1 rounded-full uppercase tracking-widest border border-blue-400">
+                      ACADEMY PROGRAMMES
+                    </span>
+                    <h2 className="text-[#FFD700] text-xl font-black mt-1.5 uppercase tracking-tight">
+                      SIRWISE AI WEB3 ACADEMY
+                    </h2>
+                    <p className="text-gray-400 text-xs mt-0.5">4-Week Masterclasses for Global Pupils • RC BN3583773</p>
+                  </div>
+
+                  {/* 3 Main Cards in 1 row horizontal scroll */}
+                  <div className="flex gap-3 overflow-x-auto pb-4 hide-scrollbar snap-x mb-6">
+                    <div className="min-w-[260px] max-w-[280px] flex-shrink-0 bg-[#111] p-4 rounded-2xl border border-[#333] hover:border-[#FFD700] transition flex flex-col justify-between snap-start">
                       <div>
                         <div className="text-3xl mb-2">🤖</div>
-                        <h3 className="text-white font-bold mb-1 text-base">Sirwise AI & Prompt Engineering</h3>
-                        <p className="text-gray-400 text-xs mb-3">Master AI prompts, homework assistance, research tools, and smart automation.</p>
-                        <div className="mb-3 text-xs font-bold" data-usd-price="49.99">0.000159 Pi GCV ($49.99)</div>
+                        <h3 className="text-white font-bold text-sm mb-1">AI Mastery</h3>
+                        <p className="text-gray-400 text-xs mb-3 leading-snug">Master AI prompts, homework assistance, research tools, and smart automation.</p>
+                        <div className="text-[#10B981] font-mono font-bold text-xs mb-3">$49.99 (0.000159 Pi GCV)</div>
                       </div>
-                      <button data-usd-button="49.99" onClick={() => { setSelectedProduct({ id: "academy", name: "Sirwise AI Web3 Academy 4-Week", price: 49.99, category: "academy" }); setShowCheckoutModal(true); }} className="bg-[#FFD700] text-black text-xs font-bold w-full py-2.5 rounded-xl hover:bg-[#ffe033] cursor-pointer pointer-events-auto">Start Learning ($49.99)</button>
+                      <button 
+                        onClick={() => { setSelectedProduct({ id: "academy", name: "Sirwise AI Web3 Academy 4-Week Pass", price: 49.99, category: "academy" }); setShowCheckoutModal(true); }}
+                        className="bg-[#FFD700] text-black font-black text-xs w-full py-2.5 rounded-xl hover:bg-yellow-400 cursor-pointer pointer-events-auto"
+                      >
+                        Start Learning ($49.99)
+                      </button>
                     </div>
-                    <div className="bg-[#111] p-5 rounded-2xl border border-[#333] hover:border-[#FFD700] transition flex flex-col justify-between">
+
+                    <div className="min-w-[260px] max-w-[280px] flex-shrink-0 bg-[#111] p-4 rounded-2xl border border-[#333] hover:border-[#FFD700] transition flex flex-col justify-between snap-start">
+                      <div>
+                        <div className="text-3xl mb-2">💰</div>
+                        <h3 className="text-white font-bold text-sm mb-1">Crypto & DeFi</h3>
+                        <p className="text-gray-400 text-xs mb-3 leading-snug">Deep dive into blockchain basics, wallet security, decentralized finance, and Pi GCV.</p>
+                        <div className="text-[#10B981] font-mono font-bold text-xs mb-3">$49.99 (0.000159 Pi GCV)</div>
+                      </div>
+                      <button 
+                        onClick={() => { setSelectedProduct({ id: "academy", name: "Sirwise AI Web3 Academy 4-Week Pass", price: 49.99, category: "academy" }); setShowCheckoutModal(true); }}
+                        className="bg-[#FFD700] text-black font-black text-xs w-full py-2.5 rounded-xl hover:bg-yellow-400 cursor-pointer pointer-events-auto"
+                      >
+                        Start Learning ($49.99)
+                      </button>
+                    </div>
+
+                    <div className="min-w-[260px] max-w-[280px] flex-shrink-0 bg-[#111] p-4 rounded-2xl border border-[#333] hover:border-[#FFD700] transition flex flex-col justify-between snap-start">
                       <div>
                         <div className="text-3xl mb-2">🎨</div>
-                        <h3 className="text-white font-bold mb-1 text-base">Digital Asset Creation</h3>
-                        <p className="text-gray-400 text-xs mb-3">Create digital art, storytelling, ebooks, and interactive multimedia projects.</p>
-                        <div className="mb-3 text-xs font-bold" data-usd-price="49.99">0.000159 Pi GCV ($49.99)</div>
+                        <h3 className="text-white font-bold text-sm mb-1">Digital Asset Creation</h3>
+                        <p className="text-gray-400 text-xs mb-3 leading-snug">Create digital art, storytelling, ebooks, and interactive multimedia capstone projects.</p>
+                        <div className="text-[#10B981] font-mono font-bold text-xs mb-3">$49.99 (0.000159 Pi GCV)</div>
                       </div>
-                      <button data-usd-button="49.99" onClick={() => { setSelectedProduct({ id: "academy", name: "Sirwise AI Web3 Academy 4-Week", price: 49.99, category: "academy" }); setShowCheckoutModal(true); }} className="bg-[#FFD700] text-black text-xs font-bold w-full py-2.5 rounded-xl hover:bg-[#ffe033] cursor-pointer pointer-events-auto">Start Learning ($49.99)</button>
+                      <button 
+                        onClick={() => { setSelectedProduct({ id: "academy", name: "Sirwise AI Web3 Academy 4-Week Pass", price: 49.99, category: "academy" }); setShowCheckoutModal(true); }}
+                        className="bg-[#FFD700] text-black font-black text-xs w-full py-2.5 rounded-xl hover:bg-yellow-400 cursor-pointer pointer-events-auto"
+                      >
+                        Start Learning ($49.99)
+                      </button>
                     </div>
-                    <div className="bg-[#111] p-5 rounded-2xl border border-[#333] hover:border-[#FFD700] transition flex flex-col justify-between">
-                      <div>
-                        <div className="text-3xl mb-2">🔐</div>
-                        <h3 className="text-white font-bold mb-1 text-base">Web3 & Cyber Safety</h3>
-                        <p className="text-gray-400 text-xs mb-3">Blockchain basics, digital identity security, NFT credentials, and online privacy.</p>
-                        <div className="mb-3 text-xs font-bold" data-usd-price="49.99">0.000159 Pi GCV ($49.99)</div>
+                  </div>
+
+                  {/* Teaching Method - 3 Columns */}
+                  <div className="bg-[#111] p-4 rounded-2xl border border-[#222] mb-5">
+                    <h3 className="text-[#3b82f6] text-center font-black text-xs uppercase mb-1">OUR TEACHING METHOD</h3>
+                    <p className="text-gray-400 text-[11px] text-center mb-4">How Sirwise AI Guarantees Success for Every Pupil</p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div className="bg-black p-3 rounded-xl border border-[#222] text-center">
+                        <div className="text-xl mb-1">🤖</div>
+                        <h4 className="text-white font-bold text-xs mb-0.5">24/7 AI Guidance</h4>
+                        <p className="text-gray-400 text-[10px]">Personalized tutor providing step-by-step interactive lessons anytime.</p>
                       </div>
-                      <button data-usd-button="49.99" onClick={() => { setSelectedProduct({ id: "academy", name: "Sirwise AI Web3 Academy 4-Week", price: 49.99, category: "academy" }); setShowCheckoutModal(true); }} className="bg-[#FFD700] text-black text-xs font-bold w-full py-2.5 rounded-xl hover:bg-[#ffe033] cursor-pointer pointer-events-auto">Start Learning ($49.99)</button>
-                    </div>
-                    <div className="bg-[#111] p-5 rounded-2xl border border-[#333] hover:border-[#FFD700] transition flex flex-col justify-between">
-                      <div>
-                        <div className="text-3xl mb-2">🎓</div>
-                        <h3 className="text-white font-bold mb-1 text-base">Capstone & Certification</h3>
-                        <p className="text-gray-400 text-xs mb-3">Build your final project and receive an official blockchain-verified diploma.</p>
-                        <div className="mb-3 text-xs font-bold" data-usd-price="49.99">0.000159 Pi GCV ($49.99)</div>
+                      <div className="bg-black p-3 rounded-xl border border-[#222] text-center">
+                        <div className="text-xl mb-1">🛠️</div>
+                        <h4 className="text-white font-bold text-xs mb-0.5">Hands-On Projects</h4>
+                        <p className="text-gray-400 text-[10px]">Learn by creating real digital art, stories, apps, and Web3 portfolio items.</p>
                       </div>
-                      <button data-usd-button="49.99" onClick={() => { setSelectedProduct({ id: "academy", name: "Sirwise AI Web3 Academy 4-Week", price: 49.99, category: "academy" }); setShowCheckoutModal(true); }} className="bg-[#FFD700] text-black text-xs font-bold w-full py-2.5 rounded-xl hover:bg-[#ffe033] cursor-pointer pointer-events-auto">Start Learning ($49.99)</button>
+                      <div className="bg-black p-3 rounded-xl border border-[#222] text-center">
+                        <div className="text-xl mb-1">🎓</div>
+                        <h4 className="text-white font-bold text-xs mb-0.5">Verified Diploma</h4>
+                        <p className="text-gray-400 text-[10px]">Tamper-proof certificate with QR verification under RC BN3583773.</p>
+                      </div>
                     </div>
+                  </div>
+
+                  {/* Action toolbar for Academy */}
+                  <div className="flex flex-wrap items-center justify-center gap-2">
+                    <button onClick={() => { setTab('academy'); window.location.hash = 'academy'; }} className="bg-black text-[#FFD700] px-3.5 py-2 rounded-xl text-xs font-bold border border-[#FFD700] flex items-center gap-1.5 cursor-pointer">
+                      <GraduationCap size={14}/> Student Dashboard
+                    </button>
+                    <button onClick={() => setShowReferralModal(true)} className="bg-black text-gray-300 px-3 py-2 rounded-xl text-xs font-bold border border-[#333] flex items-center gap-1 cursor-pointer">
+                      <Users size={14}/> Referral
+                    </button>
+                    <button onClick={() => setShowQRModal(true)} className="bg-black text-[#FFD700] px-3 py-2 rounded-xl text-xs font-bold border border-[#333] flex items-center gap-1 cursor-pointer">
+                      <QrCode size={14}/> QR
+                    </button>
+                    <button onClick={() => setShowScanModal(true)} className="bg-black text-[#00FF88] px-3 py-2 rounded-xl text-xs font-bold border border-[#333] flex items-center gap-1 cursor-pointer">
+                      <Scan size={14}/> Scan
+                    </button>
+                    <button onClick={() => setShowVoiceModal(true)} className="bg-black text-[#60A5FA] px-3 py-2 rounded-xl text-xs font-bold border border-[#333] flex items-center gap-1 cursor-pointer">
+                      <Mic size={14}/> Record
+                    </button>
                   </div>
                 </div>
 
-                {/* Our Method Section */}
-                <div id="our-method-section" className="mt-8 mb-8 border-t border-[#333] pt-6 scroll-mt-24">
-                  <h2 className="text-[#3b82f6] text-xl font-black mb-2 text-center uppercase tracking-wider">Our Teaching Method</h2>
-                  <p className="text-gray-400 text-xs text-center mb-6">How Sirwise AI Guarantees Success for Every Pupil</p>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-[#111] p-4 rounded-xl border border-[#222]">
-                      <div className="text-2xl mb-2">🤖</div>
-                      <h4 className="text-white font-bold text-sm mb-1">24/7 AI Guidance</h4>
-                      <p className="text-gray-400 text-xs">Personalized tutor providing step-by-step interactive lessons and feedback anytime.</p>
-                    </div>
-                    <div className="bg-[#111] p-4 rounded-xl border border-[#222]">
-                      <div className="text-2xl mb-2">🛠️</div>
-                      <h4 className="text-white font-bold text-sm mb-1">Hands-On Projects</h4>
-                      <p className="text-gray-400 text-xs">Learn by creating real digital art, stories, apps, and Web3 portfolio items.</p>
-                    </div>
-                    <div className="bg-[#111] p-4 rounded-xl border border-[#222]">
-                      <div className="text-2xl mb-2">🎓</div>
-                      <h4 className="text-white font-bold text-sm mb-1">Verified Diploma</h4>
-                      <p className="text-gray-400 text-xs">Tamper-proof certificate with QR verification under RC BN3583773.</p>
-                    </div>
-                  </div>
-                </div>
+                {/* 6. SOCIAL PROOF & COMMUNITY (POSITION #3) */}
+                <div id="community-section" className="mb-6 border-t border-[#333] pt-6">
+                  <ShareBlueprintSection onToast={showToast} compact={true} />
 
-                {/* Community Section */}
-                <div id="community-section" className="mt-8 mb-8 border-t border-[#333] pt-6 scroll-mt-24">
-                  <div className="bg-gradient-to-r from-[#111] to-[#1a1a1a] p-6 rounded-2xl border border-[#FFD700] text-center">
-                    <h2 className="text-[#FFD700] text-xl font-black mb-2 uppercase">Join Global Pupil Community</h2>
-                    <p className="text-gray-300 text-xs mb-4">Connect with pupils and parents across 190+ countries in our safe community group.</p>
-                    <a href="/go/whatsapp?text=Join%20Sirwise%20Community" target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 bg-[#25D366] text-black font-black px-6 py-3 rounded-xl text-xs hover:bg-[#20ba5a] transition">
-                      💬 Join WhatsApp Community
+                  <div className="mt-4 bg-gradient-to-r from-[#111] to-[#1a1a1a] p-5 rounded-2xl border border-[#25D366]/40 text-center">
+                    <h3 className="text-[#FFD700] text-sm font-black mb-1 uppercase">Join Global Pupil Community</h3>
+                    <p className="text-gray-300 text-xs mb-3">Connect with pupils across 190+ countries in our safe WhatsApp community.</p>
+                    <a href="/go/whatsapp?text=Join%20Sirwise%20Community" target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 bg-[#25D366] text-black font-black px-5 py-2.5 rounded-xl text-xs hover:bg-[#20ba5a] transition">
+                      <MessageCircle size={16}/> Join WhatsApp Community
                     </a>
                   </div>
                 </div>
@@ -1554,12 +1719,6 @@ export default function App() {
         </div>
       </footer>
 
-      
-      <div className="fixed bottom-[90px] right-[10px] z-[99] pointer-events-auto">
-        <button onClick={() => setShowSirwiseBot(true)} className="bg-[#FFD700] w-[70px] h-[70px] rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(255,215,0,0.4)] border-2 border-black animate-bounce cursor-pointer pointer-events-auto">
-          <span className="text-3xl">🤖</span>
-        </button>
-      </div>
       <SirwiseAITeacher isOpen={showSirwiseBot} onClose={() => setShowSirwiseBot(false)} />
       
       {showQRModal && (
