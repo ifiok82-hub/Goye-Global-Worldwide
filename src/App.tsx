@@ -324,7 +324,7 @@ export default function App() {
         <div style="padding:16px; text-align:center; background:#111;">
           <p style="color:white; margin:0 0 12px 0; font-weight:bold; font-size:14px;">You watched 90 Sec — Unlock Full Academy Now?</p>
           <button onclick="document.getElementById('videoModalFullscreen').remove(); if(window.goToPaywallFromConversion){ window.goToPaywallFromConversion(); } else if(window.goToAcademyPaywall){ window.goToAcademyPaywall(); }" style="width:100%; height:55px; background:#FFD700; color:black; border-radius:12px; font-weight:bold; font-size:16px; cursor:pointer; border:none;">🚀 UNLOCK FULL ACADEMY $49.99 - After Video</button>
-          <p style="color:#888; font-size:10px; margin-top:8px;">Official goyedagosmess@gmail.com RC BN3583773 USDT BEP20 0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96</p>
+          <p style="color:#888; font-size:10px; margin-top:8px;">Official goyedagosmess@gmail.com RC BN3583773 USDT BEP20 0xdc7f804B36aB672Ec31642dF418F29e73281b040</p>
         </div>
       </div>
     `;

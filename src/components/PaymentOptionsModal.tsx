@@ -172,14 +172,14 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ onClos
 
   const handleUSDT = () => {
     if ((window as any).trackClick) {
-      (window as any).trackClick('usdt_bep20_click', { address: '0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96' });
+      (window as any).trackClick('usdt_bep20_click', { address: '0xdc7f804B36aB672Ec31642dF418F29e73281b040' });
     }
     setDetailsType('usdt_bep20');
   };
 
   const handleUSDC = () => {
     if ((window as any).trackClick) {
-      (window as any).trackClick('usdc_base_click', { address: '0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96' });
+      (window as any).trackClick('usdc_base_click', { address: '0xdc7f804B36aB672Ec31642dF418F29e73281b040' });
     }
     setDetailsType('usdc_base');
   };

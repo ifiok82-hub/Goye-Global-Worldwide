@@ -3,6 +3,7 @@ import { GraduationCap, CheckCircle, Circle, Play, Lock, ChevronRight, Globe, Aw
 import CertificateGenerator from './CertificateGenerator';
 import VideoModalPlayer from './VideoModalPlayer';
 import { cleanUserEmail } from '../lib/contact';
+import { RECEIVING_WALLET_ADDRESS, PI_WALLET_ADDRESS } from '../config/payment';
 
 const showToast = (msg: string, type?: string) => {
   if (typeof (window as any).showToast === 'function') {
@@ -206,7 +207,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
   };
 
   const copyUSDC = () => {
-    const addr = '0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96';
+    const addr = RECEIVING_WALLET_ADDRESS;
     navigator.clipboard.writeText(addr).then(() => {
       showToast('✅ Copied: ' + addr + ' - Send USDT on BNB Smart Chain (BEP20) only', 'success');
     });
@@ -238,7 +239,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
     localStorage.setItem('payment_verified', 'true');
     localStorage.setItem('payment_method', 'USDT BEP20');
     localStorage.setItem('payment_ref', tx);
-    localStorage.setItem('crypto_address', '0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96');
+    localStorage.setItem('crypto_address', RECEIVING_WALLET_ADDRESS);
 
     const record = {
       id: tx,
@@ -251,7 +252,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
       status: 'Verified',
       verified: 'VERIFIED',
       payment_method: 'USDT BEP20',
-      crypto_address: '0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96',
+      crypto_address: RECEIVING_WALLET_ADDRESS,
       date: new Date().toLocaleDateString('en-GB'),
       date_wat: new Date().toLocaleString('en-GB', { timeZone: 'Africa/Lagos' }) + ' WAT Lagos'
     };
@@ -720,23 +721,23 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
               <p style={{ textAlign: 'center', color: '#888', fontSize: '12px', margin: '0 0 12px 0' }}>Global Payment - 190+ Countries - Instant BSC Verification</p>
 
               <div style={{ background: 'white', padding: '12px', borderRadius: '12px', width: '200px', height: '200px', margin: '12px auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96" alt="USDT BEP20 BSC QR" style={{ width: '180px', height: '180px' }} />
+                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${RECEIVING_WALLET_ADDRESS}`} alt="USDT BEP20 BSC QR" style={{ width: '180px', height: '180px' }} />
               </div>
 
               <p style={{ textAlign: 'center', fontWeight: 'bold', color: 'white', margin: '6px 0', fontSize: '14px' }}>USDT BEP20 (BNB Smart Chain)</p>
               <p style={{ textAlign: 'center', color: '#00FF88', fontSize: '11px', wordBreak: 'break-all', background: '#000', padding: '10px', borderRadius: '8px', margin: '10px 0', fontFamily: 'monospace' }}>
-                0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96
+                {RECEIVING_WALLET_ADDRESS}
               </p>
 
               <button onClick={copyUSDC} style={{ width: '100%', height: '50px', background: 'white', color: 'black', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', margin: '8px 0', border: 'none', fontSize: '14px' }}>
                 📋 Copy USDT BEP20 Address
               </button>
 
-              <div style={{ background: '#000', borderRadius: '12px', padding: '12px', margin: '10px 0', textAlign: 'left' }}>
-                <p style={{ color: '#FFD700', fontSize: '12px', margin: 0, fontWeight: 'bold' }}>Amount: $49.99 USDT (BEP20) = ₦74,985</p>
+              <div style={{ background: '#2a0000', border: '1px solid #ff4444', borderRadius: '12px', padding: '12px', margin: '10px 0', textAlign: 'left' }}>
+                <p style={{ color: '#FFD700', fontSize: '12px', margin: 0, fontWeight: 'bold' }}>Amount: $49.99 USDT (BEP20) = ₦74,985 (Min Deposit: 2 USDT)</p>
                 <p style={{ color: '#ccc', fontSize: '11px', margin: '4px 0' }}>Network: BNB Smart Chain (BEP20) / BSC</p>
-                <p style={{ color: '#ef4444', fontSize: '11px', fontWeight: 'bold', margin: '6px 0 0 0', lineHeight: '1.4' }}>
-                  IMPORTANT: Only send USDT on BNB Smart Chain (BEP20) network to this address. Do NOT send USDC, ERC20, TRC20 or other networks. Assets sent on wrong network will be lost forever.
+                <p style={{ color: '#ffaaaa', fontSize: '11px', fontWeight: 'bold', margin: '6px 0 0 0', lineHeight: '1.4' }}>
+                  ⚠️ Send ONLY via BNB Smart Chain (BEP20/BSC). Transfers sent via Ethereum (ERC20) or other networks will be permanently lost.
                 </p>
               </div>
 
@@ -753,7 +754,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
                 ✅ Verify USDT BEP20 Payment & Unlock Academy
               </button>
 
-              <a href="https://bscscan.io/address/0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96" target="_blank" rel="noreferrer" style={{ display: 'block', textAlign: 'center', color: '#F0B90B', fontSize: '12px', margin: '8px 0', textDecoration: 'underline' }}>
+              <a href={`https://bscscan.io/address/${RECEIVING_WALLET_ADDRESS}`} target="_blank" rel="noreferrer" style={{ display: 'block', textAlign: 'center', color: '#F0B90B', fontSize: '12px', margin: '8px 0', textDecoration: 'underline' }}>
                 View on BscScan (BNB Smart Chain)
               </a>
 

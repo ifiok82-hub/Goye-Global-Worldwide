@@ -1,4 +1,13 @@
 import React, { useState } from 'react';
+import {
+  RECEIVING_WALLET_ADDRESS,
+  PI_WALLET_ADDRESS,
+  OPAY_ACCOUNT_NUMBER,
+  OPAY_ACCOUNT_NAME,
+  USDT_CONFIG,
+  USDC_CONFIG,
+  PI_CONFIG
+} from '../config/payment';
 
 interface PaymentDetailsModalProps {
   type: string; // 'usdt_bep20' | 'usdc_base' | 'opay' | 'pi'
@@ -20,41 +29,60 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
   const [verifying, setVerifying] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
-  const piWalletAddress = typeof window !== 'undefined' && localStorage.getItem('pi_wallet_address')
-    ? localStorage.getItem('pi_wallet_address')!
-    : 'GD3Z64X8P3583773GOYESTOREGLOBAL314159GCV';
-
-  const configs: Record<string, { title: string; address: string; amount: string; network: string; qr: string; instructions: string }> = {
+  const configs: Record<
+    string,
+    {
+      title: string;
+      token: string;
+      address: string;
+      amount: string;
+      network: string;
+      minDeposit?: string;
+      qr: string;
+      warning: string;
+      instructions: string;
+    }
+  > = {
     usdt_bep20: {
-      title: 'USDT BEP20 (BNB Smart Chain)',
-      address: '0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96',
+      title: 'USDT (BNB Smart Chain / BEP20)',
+      token: 'USDT',
+      address: RECEIVING_WALLET_ADDRESS,
       amount: `$${amountUSD.toFixed(2)} USDT`,
-      network: 'BEP20 (BSC) - BNB Smart Chain',
-      qr: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96`,
-      instructions: `Send $${amountUSD.toFixed(2)} USDT via BEP20 network.\nThen enter your Tx Hash below for instant automated unlock.`
+      network: USDT_CONFIG.network,
+      minDeposit: USDT_CONFIG.minDeposit,
+      qr: USDT_CONFIG.qr,
+      warning: USDT_CONFIG.warning,
+      instructions: `Send $${amountUSD.toFixed(2)} USDT via BNB Smart Chain (BEP20).\nPaste your Tx Hash below for instant automated unlock.`
     },
     usdc_base: {
-      title: 'USDC (Base Network / BSC)',
-      address: '0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96',
+      title: 'USDC (Base Network)',
+      token: 'USDC',
+      address: RECEIVING_WALLET_ADDRESS,
       amount: `$${amountUSD.toFixed(2)} USDC`,
-      network: 'Base / BSC - Use Base Network for low fees',
-      qr: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96`,
-      instructions: `Send $${amountUSD.toFixed(2)} USDC via Base or BEP20.\nThen enter your Tx Hash below for instant automated unlock.`
+      network: USDC_CONFIG.network,
+      minDeposit: USDC_CONFIG.minDeposit,
+      qr: USDC_CONFIG.qr,
+      warning: USDC_CONFIG.warning,
+      instructions: `Send $${amountUSD.toFixed(2)} USDC via Base Network.\nPaste your Tx Hash below for instant automated unlock.`
     },
     opay: {
       title: 'Bank Transfer / OPay',
-      address: '6113541882',
+      token: 'NGN / USD',
+      address: OPAY_ACCOUNT_NUMBER,
       amount: `₦${priceNGN.toLocaleString()} or $${amountUSD.toFixed(2)}`,
-      network: 'OPay • GOYE STORE GLOBAL / GOYEDAGOSMESS ENTERPRISE',
+      network: `OPay • ${OPAY_ACCOUNT_NAME}`,
       qr: '',
-      instructions: `Bank: OPay\nAccount Number: 6113541882\nAccount Name: GOYE STORE GLOBAL / GOYEDAGOSMESS ENTERPRISE\nAmount: ₦${priceNGN.toLocaleString()} or $${amountUSD.toFixed(2)}\n\nAfter transfer, paste your OPay Session ID or Transaction Reference below to verify instantly!`
+      warning: `Bank: OPay\nAccount Number: ${OPAY_ACCOUNT_NUMBER}\nAccount Name: ${OPAY_ACCOUNT_NAME}`,
+      instructions: `Transfer ₦${priceNGN.toLocaleString()} to OPay Account ${OPAY_ACCOUNT_NUMBER}.\nThen paste your Session ID or Transaction Reference below for instant automated verification.`
     },
     pi: {
       title: 'Pi Network GCV $314,159',
-      address: piWalletAddress,
+      token: 'Pi',
+      address: PI_WALLET_ADDRESS,
       amount: '0.000159 Pi',
-      network: 'Pi Browser Only - MinePi',
+      network: PI_CONFIG.network,
       qr: '',
+      warning: PI_CONFIG.warning,
       instructions: 'Pay with Pi in Pi Browser - GCV $314,159 - Amount 0.000159 Pi ≈ $49.99 - RC BN3583773 - 190+ Countries'
     }
   };
@@ -90,7 +118,7 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
     const refClean = refInput.trim();
 
     if (!refClean) {
-      alert(type === 'usdt_bep20' || type === 'usdc_base' ? 'Please paste your Transaction Hash / TxID.' : 'Please enter your OPay Session ID or Bank Transaction Reference.');
+      alert(type === 'usdt_bep20' || type === 'usdc_base' ? 'Please paste your Transaction Hash (TxID).' : 'Please enter your OPay Session ID or Bank Transaction Reference.');
       return;
     }
 
@@ -124,7 +152,6 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
     } catch (err: any) {
       setVerifying(false);
       setStatusMessage(null);
-      // Fallback verification unlock if server responds offline
       unlockAndRedirect(type === 'usdt_bep20' ? 'USDT BEP20' : type === 'usdc_base' ? 'USDC Base' : 'Bank Transfer OPay', refClean, email);
     }
   };
@@ -134,7 +161,7 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
     const Pi = (window as any).Pi;
 
     if (!Pi) {
-      alert('⚠️ Open gasv.store in Pi Browser!\n\nYou are in Chrome - Pi payment works inside Pi Browser:\n\n1. Open Pi Browser → gasv.store\n2. Select Pi Network GCV $314,159\n3. Click Open Pi Payment → Pi wallet opens automatically!\n\nAmount: 0.000159 Pi ≈ $49.99 GCV $314,159\nRC BN3583773');
+      alert('⚠️ Open gasv.store in Pi Browser!\n\nYou are in Chrome - Pi payment works inside Pi Browser:\n\n1. Open Pi Browser → gasv.store\n2. Select Pi Network GCV $314,159\n3. Click Open Pi Payment → Pi wallet opens automatically!\n\nReceiver Wallet:\n' + PI_WALLET_ADDRESS + '\n\nAmount: 0.000159 Pi ≈ $49.99 GCV $314,159\nRC BN3583773');
       window.open('https://minepi.com', '_blank');
       return;
     }
@@ -152,7 +179,7 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
         {
           amount: 0.000159,
           memo: `Goye Store Global ${productName} RC BN3583773`,
-          metadata: { email, product: productName }
+          metadata: { email, product: productName, recipient: PI_WALLET_ADDRESS }
         },
         {
           onReadyForServerApproval: (id: string) =>
@@ -187,23 +214,32 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', overflowY: 'auto' }}>
-      <div style={{ background: '#111', border: '2px solid #FFD700', borderRadius: '20px', padding: '20px', maxWidth: '400px', width: '100%', boxShadow: '0 0 40px rgba(255,215,0,0.3)' }}>
+      <div style={{ background: '#111', border: '2px solid #FFD700', borderRadius: '20px', padding: '20px', maxWidth: '420px', width: '100%', boxShadow: '0 0 40px rgba(255,215,0,0.3)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
           <h2 style={{ color: '#FFD700', fontWeight: 900, fontSize: '18px', margin: 0 }}>{cfg.title}</h2>
           <button onClick={onClose} style={{ background: '#222', color: '#FFD700', border: '1px solid #FFD700', borderRadius: '50%', width: '30px', height: '30px', fontWeight: 'bold', cursor: 'pointer' }}>✕</button>
         </div>
 
-        <p style={{ color: '#10B981', fontWeight: 700, margin: '8px 0', fontSize: '14px' }}>{cfg.amount} • {cfg.network}</p>
+        <p style={{ color: '#10B981', fontWeight: 700, margin: '8px 0', fontSize: '14px' }}>
+          {cfg.amount} • {cfg.network} {cfg.minDeposit ? `• Min: ${cfg.minDeposit}` : ''}
+        </p>
+
+        {/* Warning Notice Banner */}
+        <div style={{ background: '#2a0000', border: '1px solid #ff4444', borderRadius: '12px', padding: '12px', margin: '10px 0' }}>
+          <p style={{ color: '#ffaaaa', fontSize: '12px', fontWeight: 700, margin: 0, lineHeight: '1.4', whiteSpace: 'pre-line' }}>
+            {cfg.warning}
+          </p>
+        </div>
 
         {cfg.qr && (
-          <div style={{ display: 'flex', justifyContent: 'center', margin: '16px 0', background: 'white', padding: '12px', borderRadius: '12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', margin: '14px 0', background: 'white', padding: '12px', borderRadius: '12px' }}>
             <img src={cfg.qr} alt="QR Code" style={{ width: '180px', height: '180px' }} />
           </div>
         )}
 
         <div style={{ background: 'black', border: '1px solid #333', borderRadius: '12px', padding: '12px', margin: '12px 0' }}>
           <p style={{ color: '#888', fontSize: '11px', margin: '0 0 4px 0' }}>Address / Account Number:</p>
-          <p style={{ color: 'white', fontWeight: 700, wordBreak: 'break-all', fontSize: '13px', margin: 0 }}>{cfg.address}</p>
+          <p style={{ color: 'white', fontWeight: 700, wordBreak: 'break-all', fontSize: '13px', margin: 0, fontFamily: 'monospace' }}>{cfg.address}</p>
           <button
             onClick={() => {
               navigator.clipboard.writeText(cfg.address);
@@ -212,7 +248,7 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
                 (window as any).trackClick(type + '_copy_address', { address: cfg.address });
               }
             }}
-            style={{ background: '#FFD700', color: 'black', width: '100%', padding: '10px', borderRadius: '8px', fontWeight: 900, marginTop: '8px', cursor: 'pointer', border: 'none' }}
+            style={{ background: '#FFD700', color: 'black', width: '100%', padding: '12px', borderRadius: '8px', fontWeight: 900, marginTop: '8px', cursor: 'pointer', border: 'none' }}
           >
             📋 Copy Address / Account
           </button>
