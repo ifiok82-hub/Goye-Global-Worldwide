@@ -429,7 +429,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
     localStorage.setItem('academy_unlocked', 'true');
     localStorage.setItem('is_admin', 'true');
     localStorage.setItem('admin_device', 'true');
-    localStorage.setItem('goye_academy_progress_guest', JSON.stringify({ isEnrolled: true, progress: [1, 2, 3, 4] }));
+    localStorage.setItem('goye_academy_progress_guest', JSON.stringify({ isEnrolled: true, progress: [] }));
     showToast('🔓 Admin testing unlocked! Full access enabled', 'success');
     console.log('Admin unlocked 100% testing mode');
     window.location.hash = '#academy';

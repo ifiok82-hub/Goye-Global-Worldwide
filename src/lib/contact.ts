@@ -8,13 +8,14 @@ export function cleanUserEmail(rawEmail?: string | null): string {
   if (!rawEmail) return '';
   const clean = rawEmail.trim().toLowerCase();
   if (
+    clean.includes('goyedagosmess') ||
+    clean.includes('goyedagos') ||
     clean.includes('ifiok82') ||
     clean.includes('godswill') ||
     clean.includes('gasv.store') ||
     clean.includes('null') ||
     clean.includes('undefined') ||
     clean.includes('ico') ||
-    (clean.includes('goyedagos@') && !clean.endsWith('.com')) ||
     !clean.includes('@') ||
     !clean.includes('.')
   ) {

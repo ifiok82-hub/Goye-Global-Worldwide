@@ -328,7 +328,10 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
         setShowPaymentModal(false);
         const savedCompleted: number[] = [];
         GLOBAL_MODULES.forEach(m => {
-          if (localStorage.getItem(`module_${m.id}_completed`) === 'true') {
+          if (
+            localStorage.getItem(`module_${m.id}_completed`) === 'true' ||
+            localStorage.getItem(`module-${m.id}-completed`) === 'true'
+          ) {
             savedCompleted.push(m.id);
           }
         });
@@ -341,12 +344,16 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
         } else if (localData) {
           try {
             const parsed = JSON.parse(localData);
-            setProgress(parsed.progress || [1, 2, 3, 4, 5, 6, 7, 8]);
+            if (Array.isArray(parsed.progress) && savedCompleted.length > 0) {
+              setProgress(parsed.progress);
+            } else {
+              setProgress(savedCompleted);
+            }
           } catch (e) {
-            setProgress([1, 2, 3, 4, 5, 6, 7, 8]);
+            setProgress([]);
           }
         } else {
-          setProgress([1, 2, 3, 4, 5, 6, 7, 8]);
+          setProgress([]);
         }
       } else {
         setIsEnrolled(false);
@@ -355,7 +362,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
 
       const storedEmail = cleanUserEmail(localStorage.getItem('user_email') || currentUser?.email || '');
       setCustomerEmail(storedEmail);
-      if (localStorage.getItem('user_email') && !storedEmail) {
+      if (localStorage.getItem('user_email') && (!storedEmail || localStorage.getItem('user_email')?.includes('goyedagos'))) {
         localStorage.removeItem('user_email');
         localStorage.removeItem('customer_email');
       }
@@ -368,7 +375,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
     const handleUnlocked = () => {
       setIsEnrolled(true);
       setShowPaymentModal(false);
-      setProgress([1, 2, 3, 4, 5, 6, 7, 8]);
+      setProgress([]);
     };
     window.addEventListener('academyUnlocked', handleUnlocked);
     return () => window.removeEventListener('academyUnlocked', handleUnlocked);
@@ -521,13 +528,16 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
       handleBuyUnlockNow();
       return;
     }
-    const newProgress = progress.includes(id) 
+    const isCurrentlyCompleted = progress.includes(id);
+    const newProgress = isCurrentlyCompleted 
       ? progress.filter(pid => pid !== id)
       : [...progress, id];
     setProgress(newProgress);
 
     try {
-      localStorage.setItem(`module_${id}_completed`, (!progress.includes(id)).toString());
+      const isNowCompleted = !isCurrentlyCompleted;
+      localStorage.setItem(`module_${id}_completed`, isNowCompleted.toString());
+      localStorage.setItem(`module-${id}-completed`, isNowCompleted.toString());
       const localKey = `goye_academy_progress_${currentUser?.uid || 'guest'}`;
       localStorage.setItem(localKey, JSON.stringify({ isEnrolled: true, progress: newProgress }));
       const percent = Math.min(100, Math.round((newProgress.length / GLOBAL_MODULES.length) * 100));
@@ -771,9 +781,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
                     <Lock className="text-gray-500 hover:text-[#FFD700]" size={22} />
                   ) : isCompleted ? (
                     <CheckCircle className="text-[#10B981]" size={24} />
-                  ) : (
-                    <Circle className="text-gray-500 hover:text-[#FFD700]" size={24} />
-                  )}
+                  ) : null}
                 </button>
               </div>
 
@@ -808,13 +816,13 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
                       className={`flex-1 py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition cursor-pointer z-10 ${
                         isCompleted 
                           ? 'bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/40 hover:bg-[#10B981]/30' 
-                          : 'bg-[#FFD700] text-black hover:bg-yellow-400 font-black'
+                          : 'bg-[#222] hover:bg-[#333] text-gray-300 font-bold border border-[#444]'
                       }`}
                     >
                       {isCompleted ? (
                         <><CheckCircle size={18} /> COMPLETED • Review Module</>
                       ) : (
-                        <><Play size={18} fill="currentColor" /> Start Learning</>
+                        <><Play size={18} fill="currentColor" /> Start Module →</>
                       )}
                     </button>
 
@@ -843,7 +851,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
             type="email" 
             name="email" 
             required 
-            placeholder="Your email address" 
+            placeholder="Enter your email address" 
             value={customerEmail}
             onChange={(e) => setCustomerEmail(e.target.value)}
             className="w-full bg-black border border-[#333] focus:border-[#FFD700] rounded-xl p-3 text-white text-xs outline-none" 

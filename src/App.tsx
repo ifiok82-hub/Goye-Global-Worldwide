@@ -388,11 +388,13 @@ export default function App() {
       localStorage.setItem('is_enrolled', 'true');
       localStorage.setItem('payment_date', new Date().toISOString());
 
-      const userEmail = customerEmail || localStorage.getItem('user_email') || localStorage.getItem('lead_email') || 'student@gasv.store';
-      localStorage.setItem('user_email', userEmail);
+      const userEmail = cleanUserEmail(customerEmail || localStorage.getItem('user_email') || localStorage.getItem('lead_email') || '');
+      if (userEmail) {
+        localStorage.setItem('user_email', userEmail);
+      }
 
-      const localKey = `goye_academy_progress_${userEmail}`;
-      localStorage.setItem(localKey, JSON.stringify({ isEnrolled: true, progress: [1, 2, 3, 4, 5, 6, 7, 8] }));
+      const localKey = `goye_academy_progress_${userEmail || 'guest'}`;
+      localStorage.setItem(localKey, JSON.stringify({ isEnrolled: true, progress: [] }));
 
       // Close all sales modals / overlays
       const vidModal = document.getElementById('videoModalFullscreen');
