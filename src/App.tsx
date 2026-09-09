@@ -9,6 +9,7 @@ import AcademyDashboard from './components/AcademyDashboard';
 import EsimVideoModal from './components/EsimVideoModal';
 import FreeLeadMagnetModal from './components/FreeLeadMagnetModal';
 import PostPurchaseUpsellModal from './components/PostPurchaseUpsellModal';
+import PaymentOptionsModal from './components/PaymentOptionsModal';
 
 import ScanModal from './components/ScanModal';
 import ReferralDashboardModal from './components/ReferralDashboardModal';
@@ -182,84 +183,15 @@ export default function App() {
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const [showLeadMagnetModal, setShowLeadMagnetModal] = useState(false);
   const [showPostPurchaseUpsellModal, setShowPostPurchaseUpsellModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const goToAcademyPaywall = () => {
-    console.log('Upgrade clicked - Going to Academy');
-    setTab('academy');
-    if (window.location.hash !== '#academy') {
-      window.location.hash = '#academy';
-    }
-
-    try {
-      const excludeAdminClicks = localStorage.getItem('exclude_admin_clicks') === 'true' || localStorage.getItem('excludeAdminClicks') === 'true';
-      const isAdminUser = localStorage.getItem('is_admin_auth') === 'true' || localStorage.getItem('admin_logged_in') === 'true';
-      if (!(excludeAdminClicks && isAdminUser)) {
-        let clicks = safeGetNumber('total_clicks', 0) + 1;
-        localStorage.setItem('total_clicks', clicks.toString());
-        let logs = safeParse('live_traffic_activity', []);
-        logs.unshift({
-          id: 'UPGRADE-' + Date.now(),
-          location: '🇳🇬 Nigeria',
-          customer_name: (localStorage.getItem('lead_name') || localStorage.getItem('user_name') || 'Guest') + ' - Upgrade Click',
-          status: 'Wants to Upgrade',
-          time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-          device: 'Mobile',
-          excluded: 'Customer',
-          product: 'Upgrade to Full Academy $49.99',
-          timestamp: new Date().toISOString()
-        });
-        localStorage.setItem('live_traffic_activity', JSON.stringify(logs.slice(0, 100)));
-      }
-    } catch (e) {}
-
-    localStorage.setItem('active_tab', 'academy');
-
-    // Try to click Academy bottom nav
-    try {
-      const navBtns = document.querySelectorAll('nav button, [class*="bottom"] button, button');
-      navBtns.forEach(b => {
-        if (b.textContent && b.textContent.toUpperCase().includes('ACADEMY')) {
-          (b as HTMLElement).click();
-        }
-      });
-    } catch (e) {}
-
-    setTimeout(() => {
-      const paywall = document.getElementById('paywall') || document.getElementById('usdcPaymentSection') || document.querySelector('[id*="buy"], [class*="paywall"]');
-      if (paywall) {
-        paywall.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        (paywall as HTMLElement).style.border = '4px solid #FFD700';
-        (paywall as HTMLElement).style.boxShadow = '0 0 30px #FFD700';
-        const emailInput = document.getElementById('customerEmail');
-        if (emailInput) (emailInput as HTMLElement).focus();
-        setTimeout(() => {
-          (paywall as HTMLElement).style.border = '2px solid #FFD700';
-          (paywall as HTMLElement).style.boxShadow = '';
-        }, 3000);
-      } else {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    }, 400);
+    console.log('Upgrade clicked - Opening Payment Options Modal');
+    setShowPaymentModal(true);
   };
 
   const openUpgradeModal = () => {
-    const existing = document.getElementById('upgradeModalOverlay');
-    if (existing) existing.remove();
-
-    const modal = document.createElement('div');
-    modal.id = 'upgradeModalOverlay';
-    modal.innerHTML = `
-      <div style="position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px;">
-        <div style="background:black; border:2px solid #FFD700; border-radius:16px; padding:24px; max-width:400px; width:100%;">
-          <h2 style="color:#FFD700; font-weight:900; margin:0;">Upgrade to Full Academy</h2>
-          <p style="color:white; margin:12px 0;">8 Modules • Certificate • RC BN3583773 • 190+ Countries</p>
-          <p style="color:#10B981; font-weight:900; font-size:20px; margin:0 0 16px 0;">$49.99 or Pi GCV $314,159</p>
-          <button onclick="window.location.hash='shop'; this.closest('div').parentElement.remove();" style="background:#FFD700; color:black; width:100%; padding:12px; border-radius:8px; font-weight:900; cursor:pointer; border:none; margin-top:8px;">Go to Shop - Pay with Pi</button>
-          <button onclick="this.closest('div').parentElement.remove()" style="background:transparent; color:white; width:100%; padding:8px; margin-top:8px; cursor:pointer; border:none;">Close</button>
-        </div>
-      </div>`;
-    document.body.appendChild(modal);
-    (window as any).openUpgradeModal = openUpgradeModal;
+    setShowPaymentModal(true);
   };
 
   const showConversionPageOverlay = (name: string, email: string) => {
@@ -1515,25 +1447,7 @@ export default function App() {
 
                 <button 
                   id="upgradeToAcademyBtn" 
-                  onClick={() => {
-                    // Scroll to shop and open Pi payment
-                    window.location.hash = 'shop';
-                    setTab('shop');
-                    const shopEl = document.getElementById('shop') || document.querySelector('[data-shop]');
-                    if (shopEl) shopEl.scrollIntoView({ behavior: 'smooth' });
-                    // Open upgrade modal
-                    if ((window as any).openUpgradeModal) {
-                      (window as any).openUpgradeModal();
-                    } else if ((window as any).openPiPayment) {
-                      (window as any).openPiPayment('academy-full', 49.99);
-                    } else {
-                      // Fallback: go to shop tab
-                      document.querySelectorAll('nav button').forEach(b => {
-                        if (b.textContent?.includes('SHOP')) (b as HTMLElement).click();
-                      });
-                      setTimeout(() => alert('Upgrade to Full Academy - 8 Modules Certificate - $49.99 - Pay with Pi GCV $314,159 or Card - gasv.store - Contact: goye@gasv.store - RC BN3583773'), 300);
-                    }
-                  }} 
+                  onClick={() => setShowPaymentModal(true)} 
                   style={{ background: '#FFD700', width: '100%', padding: '16px', borderRadius: '12px', fontWeight: 900, fontSize: '15px', cursor: 'pointer', color: 'black', border: 'none', position: 'relative', zIndex: 10 }}
                   className="active:scale-95 transition shadow-lg flex items-center justify-center text-center px-3"
                 >
@@ -1907,6 +1821,10 @@ export default function App() {
       </div>
 
       {/* Toast Notification */}
+      {showPaymentModal && (
+        <PaymentOptionsModal onClose={() => setShowPaymentModal(false)} />
+      )}
+
       {toastMsg && (
         <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[9999] bg-[#10B981] text-black px-6 py-3 rounded-full font-bold shadow-lg animate-in fade-in slide-in-from-top-4 flex items-center gap-2">
           <CheckCircle size={18} /> {toastMsg}
