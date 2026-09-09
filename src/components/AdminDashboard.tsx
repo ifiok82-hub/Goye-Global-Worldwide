@@ -220,12 +220,22 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
     });
   };
 
-  const refreshConversionRate = () => {
+  const refreshConversionRate = async () => {
     const excludeOn = localStorage.getItem('exclude_my_clicks') !== 'false' && localStorage.getItem('excludeAdminClicks') !== 'false';
 
     let allUsers = safeParse('registered_customers', []);
     let allOrders = safeParse('live_orders', []);
     let allLeads = safeParse('academy_leads', []);
+    let capturedLeads = safeParse('captured_leads', []);
+
+    let dbLeadCount = 0;
+    try {
+      const res = await fetch('/api/leads');
+      const data = await res.json();
+      if (data && data.success && typeof data.totalCount === 'number') {
+        dbLeadCount = data.totalCount;
+      }
+    } catch (e) {}
 
     const realUsers = excludeOn
       ? allUsers.filter((u: any) => {
@@ -249,25 +259,21 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
       ? allLeads.filter((l: any) => !isAdminClick(l.name, l.email))
       : allLeads;
 
-    const freeLeads = realLeads.length || realUsers.length;
-    const paid = realOrders.length;
+    const freeLeads = Math.max(dbLeadCount, realLeads.length, capturedLeads.length, realUsers.length);
+    const paid = verifiedOrders.length || realOrders.length;
     const rate = freeLeads > 0 ? ((paid / freeLeads) * 100).toFixed(1) : '0.0';
     const revenue = (paid * 49.99).toFixed(2);
 
-    let exclAdminLogs = safeParse('excluded_admin_clicks', []);
-    const excludedAdminCount = exclAdminLogs.length;
-
     setUsers(realUsers);
     setOrders(realOrders);
-    setTotalClicks(realUsers.length + paid);
     setLeadSubmissions(freeLeads);
 
     const textEl = document.getElementById('conversionStats');
     if (textEl) {
-      textEl.innerHTML = `Free Leads: ${freeLeads} (109 tested originally) | Paid: ${paid} | Conversion Rate: ${rate}% — Goal: 10% = 11 sales $549.89`;
+      textEl.innerHTML = `Free Leads: ${freeLeads} | Paid Orders: ${paid} | Conversion Rate: ${rate}% — Goal: 10% = 11 sales $549.89`;
     }
 
-    showToast(`🔄 Refreshed!\nFree Leads: ${freeLeads} | Paid: ${paid} | Conversion: ${rate}% | Revenue: $${revenue}`);
+    showToast(`🔄 Refreshed!\nFree Leads: ${freeLeads} | Paid Orders: ${paid} | Conversion: ${rate}% | Revenue: $${revenue}`);
   };
 
   const loadLocalData = () => {
@@ -939,7 +945,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
               <div>
                 <h4 className="text-[#FFD700] font-black text-sm uppercase tracking-wider">Master Funnel Conversion Tracker</h4>
                 <p id="conversionStats" className="text-white font-bold text-xs mt-0.5">
-                  Free Leads: {users.length} ({users.length > 0 ? '109 tested' : '0 tested'}) | Paid: {verifiedOrders.length} | Conversion Rate: {users.length > 0 ? ((verifiedOrders.length / users.length) * 100).toFixed(1) : '0.0'}% — Goal: 10% = 11 sales $549.89
+                  Free Leads: {Math.max(leadSubmissions, users.length)} | Paid Orders: {verifiedOrders.length} | Conversion Rate: {Math.max(leadSubmissions, users.length) > 0 ? ((verifiedOrders.length / Math.max(leadSubmissions, users.length)) * 100).toFixed(1) : '0.0'}% — Goal: 10% = 11 sales $549.89
                 </p>
               </div>
             </div>

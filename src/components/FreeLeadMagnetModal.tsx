@@ -225,36 +225,46 @@ export default function FreeLeadMagnetModal({ isOpen, onClose, onClaimTripwire, 
 
     setIsSubmitting(true);
 
-    try {
-      // 1. Send POST to /api/leads/subscribe
-      await fetch('/api/leads/subscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: cleanName,
-          email: cleanEmail,
-          source: 'Free 5-Minute AI Prompt Blueprint',
-          sourceDomain: window.location.hostname || 'gasv.store'
-        })
-      });
-    } catch (e) {}
-
-    // CAPTURE TO ACADEMY FUNNEL - COURSE REMINDER
-    localStorage.setItem('user_email', cleanEmail);
-    localStorage.setItem('customer_email', cleanEmail);
-    localStorage.setItem('lead_name', cleanName);
-    localStorage.setItem('user_name', cleanName);
-    localStorage.setItem('lead_captured_date', new Date().toISOString());
-    localStorage.setItem('lead_source', 'Free 5-Minute AI Prompt Blueprint');
-    localStorage.setItem('sirwise_lead_captured', 'true');
-
-    // Determine location for lead record
+    // 1. Determine location / country for lead record
     let country = 'Nigeria';
     try {
       const r = await fetch('https://ipapi.co/json/');
       const d = await r.json();
       country = d.country_name || 'Nigeria';
     } catch (e) {}
+
+    const timestampIso = new Date().toISOString();
+
+    // 2. Direct Async Handler to Database API /api/leads
+    try {
+      const res = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: cleanName,
+          email: cleanEmail,
+          country: country,
+          source: '5-Minute AI Prompt Blueprint',
+          sourceDomain: window.location.hostname || 'gasv.store',
+          timestamp: timestampIso
+        })
+      });
+      const data = await res.json();
+      if (data && data.totalCount) {
+        localStorage.setItem('total_leads_count', data.totalCount.toString());
+      }
+    } catch (e) {
+      console.warn('Direct async lead submission notice:', e);
+    }
+
+    // 3. CAPTURE TO LOCALSTORAGE & ACADEMY FUNNEL
+    localStorage.setItem('user_email', cleanEmail);
+    localStorage.setItem('customer_email', cleanEmail);
+    localStorage.setItem('lead_name', cleanName);
+    localStorage.setItem('user_name', cleanName);
+    localStorage.setItem('lead_captured_date', timestampIso);
+    localStorage.setItem('lead_source', 'Free 5-Minute AI Prompt Blueprint');
+    localStorage.setItem('sirwise_lead_captured', 'true');
 
     const lead = {
       name: cleanName,
@@ -264,7 +274,7 @@ export default function FreeLeadMagnetModal({ isOpen, onClose, onClaimTripwire, 
       status: 'Free Lead - Course Reminder',
       date: new Date().toLocaleDateString('en-GB'),
       date_wat: new Date().toLocaleString('en-GB', { timeZone: 'Africa/Lagos' }) + ' WAT Lagos',
-      source: '5-Minute Blueprint',
+      source: '5-Minute AI Prompt Blueprint',
       academy_reminder: true,
       needs_payment: true
     };
@@ -274,6 +284,11 @@ export default function FreeLeadMagnetModal({ isOpen, onClose, onClaimTripwire, 
     if (!Array.isArray(leads)) leads = [];
     leads.unshift(lead);
     localStorage.setItem('academy_leads', JSON.stringify(leads.slice(0, 200)));
+
+    let capturedLeads = JSON.parse(localStorage.getItem('captured_leads') || '[]');
+    if (!Array.isArray(capturedLeads)) capturedLeads = [];
+    capturedLeads.unshift(lead);
+    localStorage.setItem('captured_leads', JSON.stringify(capturedLeads.slice(0, 200)));
 
     // Save to registered_customers
     let users = JSON.parse(localStorage.getItem('registered_customers') || '[]');
@@ -290,21 +305,37 @@ export default function FreeLeadMagnetModal({ isOpen, onClose, onClaimTripwire, 
       page: 'Free Blueprint Download',
       customer_name: cleanName,
       email: cleanEmail,
-      timestamp: new Date().toISOString()
+      timestamp: timestampIso
     });
     localStorage.setItem('live_traffic_activity', JSON.stringify(traffic.slice(0, 200)));
 
-    // Send to goyedagosmess@gmail.com - Official
+    // 4. Background Email Backup (FormSubmit AJAX - non-blocking)
     try {
-      await fetch('https://formsubmit.co/ajax/goyedagosmess@gmail.com', {
+      fetch('https://formsubmit.co/ajax/goyedagosmess@gmail.com', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({
-          subject: 'New Free Lead - ' + cleanName + ' - ' + cleanEmail + ' - Needs Academy Reminder',
-          message: 'New Lead Captured\nName: ' + cleanName + '\nEmail: ' + cleanEmail + '\nCountry: ' + country + '\nSource: 5-Minute AI Prompt Blueprint\nDate: ' + lead.date_wat + '\nAction: Send Academy course reminder to enroll $49.99\nLink: www.gasv.store/academy?lead=' + cleanEmail
+          _subject: 'New Free Lead - ' + cleanName + ' (' + cleanEmail + ') - 5-Minute AI Prompt Blueprint',
+          Name: cleanName,
+          Email: cleanEmail,
+          Country: country,
+          Source: '5-Minute AI Prompt Blueprint',
+          Date: lead.date_wat,
+          Action: 'Send Academy course reminder to enroll $49.99',
+          Link: 'www.gasv.store/academy?lead=' + cleanEmail
         })
-      });
+      }).catch(() => {});
     } catch (e) {}
+
+    // Trigger live dashboard metric refresh
+    if (typeof window !== 'undefined') {
+      if (typeof (window as any).refreshConversionRate === 'function') {
+        (window as any).refreshConversionRate();
+      }
+      if (typeof (window as any).checkAcademyLeadsConversion === 'function') {
+        (window as any).checkAcademyLeadsConversion();
+      }
+    }
 
     setIsSubmitting(false);
 

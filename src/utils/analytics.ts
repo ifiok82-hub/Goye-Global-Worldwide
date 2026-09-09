@@ -177,28 +177,38 @@ export async function saveUserClick(nameInput?: string, emailInput?: string): Pr
   let clicks = safeGetNumber('total_clicks', 0) + 1;
   localStorage.setItem('total_clicks', clicks.toString());
 
-  // Log non-admin customer click to server database
-  try {
-    fetch('/api/analytics/click', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sessionId: getAnonymousSessionId(),
-        page: nameInput || 'Home',
-        target: emailInput || 'User Click',
-        customerName: name,
-        customerEmail: email,
-        isAdmin: false
+  // Log non-admin customer click to server database using non-blocking sendBeacon & keepalive
+  const clickPayload = JSON.stringify({
+    sessionId: getAnonymousSessionId(),
+    page: nameInput || 'Home',
+    target: emailInput || 'User Click',
+    customerName: name,
+    customerEmail: email,
+    isAdmin: false
+  });
+
+  if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
+    try {
+      const blob = new Blob([clickPayload], { type: 'application/json' });
+      navigator.sendBeacon('/api/analytics/click', blob);
+    } catch (e) {}
+  } else {
+    try {
+      fetch('/api/analytics/click', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: clickPayload,
+        keepalive: true
       })
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data && data.success && typeof data.totalClicks === 'number') {
-        localStorage.setItem('total_clicks', data.totalClicks.toString());
-      }
-    })
-    .catch(() => {});
-  } catch (e) {}
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.success && typeof data.totalClicks === 'number') {
+          localStorage.setItem('total_clicks', data.totalClicks.toString());
+        }
+      })
+      .catch(() => {});
+    } catch (e) {}
+  }
 }
 
 export async function saveGlobalClick(type: string = 'page_view', product: string = 'Sirwise AI Web3 Academy', amount: string = '', ref: string = ''): Promise<void> {
@@ -283,28 +293,38 @@ export async function saveGlobalClick(type: string = 'page_view', product: strin
     localStorage.setItem('verified_revenue', '$' + (orders.length * 49.99).toFixed(2));
   }
 
-  // Log non-admin customer click to database
-  try {
-    fetch('/api/analytics/click', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sessionId: getAnonymousSessionId(),
-        page: type || 'Page View',
-        target: product || 'CTA Click',
-        customerName: name || 'Guest Customer',
-        customerEmail: email || '',
-        isAdmin: false
+  // Log non-admin customer click to database using non-blocking sendBeacon & keepalive
+  const globalClickPayload = JSON.stringify({
+    sessionId: getAnonymousSessionId(),
+    page: type || 'Page View',
+    target: product || 'CTA Click',
+    customerName: name || 'Guest Customer',
+    customerEmail: email || '',
+    isAdmin: false
+  });
+
+  if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
+    try {
+      const blob = new Blob([globalClickPayload], { type: 'application/json' });
+      navigator.sendBeacon('/api/analytics/click', blob);
+    } catch (e) {}
+  } else {
+    try {
+      fetch('/api/analytics/click', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: globalClickPayload,
+        keepalive: true
       })
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data && data.success && typeof data.totalClicks === 'number') {
-        localStorage.setItem('total_clicks', data.totalClicks.toString());
-      }
-    })
-    .catch(() => {});
-  } catch (e) {}
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.success && typeof data.totalClicks === 'number') {
+          localStorage.setItem('total_clicks', data.totalClicks.toString());
+        }
+      })
+      .catch(() => {});
+    } catch (e) {}
+  }
 }
 
 export async function trackGlobalClick(page: string = 'home', product: string = 'Sirwise AI Web3 Academy'): Promise<void> {
@@ -323,7 +343,7 @@ export async function identifyUserSession(customerName: string, customerEmail: s
   localStorage.setItem('user_name', customerName);
 }
 
-// Attach window listeners automatically
+// Attach window listeners automatically for non-blocking link & button click tracking
 if (typeof window !== 'undefined') {
   (window as any).saveGlobalClick = saveGlobalClick;
   (window as any).saveUserClick = saveUserClick;
@@ -331,20 +351,44 @@ if (typeof window !== 'undefined') {
   (window as any).trackGlobalClick = saveUserClick;
   (window as any).isAdminClick = isAdminClick;
 
-  // Auto track every visit
+  // Auto track page load
   window.addEventListener('load', () => {
     setTimeout(() => saveGlobalClick('page_view', 'Page View', '', ''), 1500);
   });
 
-  // Track Buy / Unlock button click
+  // Non-blocking listener for ALL links and buttons
   document.addEventListener('click', (e: MouseEvent) => {
-    const target = e.target as HTMLElement;
-    if (target && target.textContent && (target.textContent.includes('BUY') || target.textContent.includes('Unlock'))) {
-      const em = (document.getElementById('customerEmail') as HTMLInputElement)?.value;
-      if (em) localStorage.setItem('user_email', em);
-      saveGlobalClick('buy_click', 'Sirwise Academy $49.99', '₦74,985.00 ($49.99)', '');
-    }
-  });
+    try {
+      const targetEl = (e.target as HTMLElement)?.closest('a, button, [role="button"], input[type="submit"]');
+      if (targetEl) {
+        const text = (targetEl.textContent || targetEl.getAttribute('aria-label') || targetEl.getAttribute('title') || 'Link Click').trim().substring(0, 60);
+        const href = targetEl.getAttribute('href') || 'button';
+        const em = (document.getElementById('customerEmail') as HTMLInputElement)?.value;
+        if (em) localStorage.setItem('user_email', em);
+
+        const linkPayload = JSON.stringify({
+          sessionId: getAnonymousSessionId(),
+          page: (window.location.pathname || '/') + (window.location.hash || ''),
+          target: `${text} (${href})`,
+          customerName: localStorage.getItem('user_name') || 'Guest Customer',
+          customerEmail: localStorage.getItem('user_email') || '',
+          isAdmin: isAdminClick(localStorage.getItem('user_name') || '', localStorage.getItem('user_email') || '')
+        });
+
+        if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
+          const blob = new Blob([linkPayload], { type: 'application/json' });
+          navigator.sendBeacon('/api/analytics/click', blob);
+        } else {
+          fetch('/api/analytics/click', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: linkPayload,
+            keepalive: true
+          }).catch(() => {});
+        }
+      }
+    } catch (err) {}
+  }, { capture: true, passive: true });
 }
 
 

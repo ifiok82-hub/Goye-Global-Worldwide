@@ -152,6 +152,58 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
   const [capstoneSubmission, setCapstoneSubmission] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
   const [usdcTxHash, setUsdcTxHash] = useState('');
+  const [supportMessage, setSupportMessage] = useState('');
+  const [isSubmittingSupport, setIsSubmittingSupport] = useState(false);
+
+  const handleSupportInquirySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanEmail = (customerEmail || '').trim().toLowerCase();
+    const cleanMsg = supportMessage.trim();
+
+    if (!cleanEmail || !cleanEmail.includes('@') || !cleanEmail.includes('.')) {
+      showToast('Please enter a valid email address.', 'error');
+      return;
+    }
+    if (!cleanMsg) {
+      showToast('Please enter your message or payment details.', 'error');
+      return;
+    }
+
+    setIsSubmittingSupport(true);
+
+    // Save lead record to database
+    try {
+      await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: cleanEmail.split('@')[0],
+          email: cleanEmail,
+          source: 'Academy Direct Support Inquiry (RC BN3583773)',
+          message: cleanMsg,
+          timestamp: new Date().toISOString()
+        })
+      });
+    } catch (err) {}
+
+    // Background FormSubmit notification
+    try {
+      fetch('https://formsubmit.co/ajax/goyedagosmess@gmail.com', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({
+          _subject: 'New Sirwise Academy Inquiry RC BN3583773',
+          Email: cleanEmail,
+          Message: cleanMsg,
+          Date: new Date().toISOString()
+        })
+      }).catch(() => {});
+    } catch (err) {}
+
+    setIsSubmittingSupport(false);
+    setSupportMessage('');
+    showToast('✅ Inquiry sent successfully! Our team will contact ' + cleanEmail + ' shortly.', 'success');
+  };
 
   const copyUSDC = () => {
     const addr = '0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96';
@@ -786,10 +838,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
           <Mail size={20} /> Direct Support Inquiry (RC BN3583773)
         </h3>
         <p className="text-gray-400 text-xs mb-4">Send an official inquiry or payment proof to GOYE Support.</p>
-        <form action="https://formsubmit.co/goyedagosmess@gmail.com" method="POST" className="space-y-3">
-          <input type="hidden" name="_captcha" value="false" />
-          <input type="hidden" name="_subject" value="New Sirwise Academy Inquiry RC BN3583773" />
-          <input type="hidden" name="_next" value="https://www.gasv.store" />
+        <form onSubmit={handleSupportInquirySubmit} className="space-y-3">
           <input 
             type="email" 
             name="email" 
@@ -803,10 +852,12 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
             name="message" 
             required 
             placeholder="Enter your message or bank transfer payment details..." 
+            value={supportMessage}
+            onChange={(e) => setSupportMessage(e.target.value)}
             className="w-full bg-black border border-[#333] focus:border-[#FFD700] rounded-xl p-3 text-white text-xs outline-none h-24"
           ></textarea>
-          <button type="submit" className="w-full bg-[#FFD700] text-black font-black py-3 rounded-xl text-xs hover:bg-yellow-400 flex items-center justify-center gap-2">
-            <Send size={14} /> Send to goyedagosmess@gmail.com
+          <button type="submit" disabled={isSubmittingSupport} className="w-full bg-[#FFD700] text-black font-black py-3 rounded-xl text-xs hover:bg-yellow-400 flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer">
+            <Send size={14} /> {isSubmittingSupport ? 'Sending Inquiry...' : 'Send to goyedagosmess@gmail.com'}
           </button>
         </form>
       </div>
