@@ -119,7 +119,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
   const [editingProduct, setEditingProduct] = useState<any>(null);
   
   const [paymentConfig, setPaymentConfig] = useState({
-    paystack: localStorage.getItem('paystack_public_key') || 'pk_live_9f7e06b21fa6dc4e3e94cc0',
+    paystack: localStorage.getItem('paystack_public_key') || '',
     paystackSecret: localStorage.getItem('paystack_secret_key') || localStorage.getItem('paystack_admin_sk') || '',
     flutterwave: localStorage.getItem('flutterwave_public_key') || 'FLWPUBK-cbb518a9b8f74421e8871',
     flutterwaveSecret: localStorage.getItem('flutterwave_secret_key') || '',
@@ -140,6 +140,112 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
   const [excludeMyClicks, setExcludeMyClicks] = useState(
     localStorage.getItem('excludeAdminClicks') === 'true' || localStorage.getItem('exclude_my_clicks') !== 'false'
   );
+
+  // Leads & Clicks Tracking State
+  const [leadsList, setLeadsList] = useState<any[]>([]);
+  const [clicksList, setClicksList] = useState<any[]>([]);
+
+  const fetchLeadsAndClicks = () => {
+    fetch('/api/leads')
+      .then(res => res.json())
+      .then(data => {
+        const serverLeads = Array.isArray(data) ? data : (data.leads || []);
+        const localLeads = safeParse('admin_leads', safeParse('academy_leads', safeParse('captured_leads', [])));
+        const combined = [...serverLeads, ...localLeads];
+        const map = new Map();
+        combined.forEach((item: any) => {
+          const key = item.id || (item.email ? item.email + (item.action || item.source || '') : JSON.stringify(item));
+          if (!map.has(key)) map.set(key, item);
+        });
+        setLeadsList(Array.from(map.values()));
+      })
+      .catch(() => {
+        const localLeads = safeParse('admin_leads', safeParse('academy_leads', safeParse('captured_leads', [])));
+        setLeadsList(localLeads);
+      });
+
+    fetch('/api/clicks')
+      .then(res => res.json())
+      .then(data => {
+        const serverClicks = Array.isArray(data) ? data : (data.clicks || []);
+        const localClicks = safeParse('admin_clicks', safeParse('traffic_log', safeParse('global_traffic', [])));
+        const combined = [...serverClicks, ...localClicks];
+        setClicksList(combined);
+      })
+      .catch(() => {
+        const localClicks = safeParse('admin_clicks', safeParse('traffic_log', safeParse('global_traffic', [])));
+        setClicksList(localClicks);
+      });
+  };
+
+  useEffect(() => {
+    fetchLeadsAndClicks();
+    const interval = setInterval(fetchLeadsAndClicks, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const sendUpgradeReminderToLead = (lead: any) => {
+    const email = lead.email || lead.customerEmail;
+    const name = lead.name || lead.customerName || 'Valued Lead';
+    if (!email) {
+      alert('No email found for this lead');
+      return;
+    }
+
+    alert(`✅ UPGRADE REMINDER SENT TO ${email}:\n\nDear ${name},\n\nUnlock the full Sirwise AI WEB3 Academy 8-Module Masterclass ($49.99)!\n\nLink: https://www.gasv.store/#shop\nIncludes: Certificate, 50+ Prompts, Pi Network GCV Guide\n\nOfficial RC BN3583773 | www.gasv.store`);
+
+    try {
+      const fd = new FormData();
+      fd.append('email', email);
+      fd.append('name', name);
+      fd.append('_subject', `Academy Reminder for ${name}: Upgrade to Full Academy $49.99 (RC BN3583773)`);
+      fd.append('_autoresponse', `Hi ${name}!\n\nThis is an automated reminder from Sirwise AI WEB3 Academy (RC BN3583773).\n\nYou downloaded our Free AI Prompt Blueprint. Don't miss out on unlocking all 8 full modules, certificate, and Web3 tools!\n\nEnroll now for $49.99: https://www.gasv.store/#shop\nSupport: goyedagosmess@gmail.com\n\nwww.gasv.store`);
+      fd.append('_template', 'table');
+      fetch('https://formsubmit.co/goyedagosmess@gmail.com', { method: 'POST', body: fd }).catch(() => {});
+    } catch (e) {}
+
+    const updated = leadsList.map(l => (l.email === email ? { ...l, status: 'Reminder Sent - ' + new Date().toLocaleTimeString() } : l));
+    setLeadsList(updated);
+    localStorage.setItem('admin_leads', JSON.stringify(updated));
+    showToast(`Reminder sent to ${email}`);
+  };
+
+  const exportLeadsCSV = () => {
+    const rows = ['Date,Name,Email,Country,Source,Action,Link,Status'];
+    leadsList.forEach(l => {
+      rows.push(`"${l.date || l.timestamp || ''}","${l.name || ''}","${l.email || ''}","${l.country || ''}","${l.source || ''}","${l.action || ''}","${l.link || ''}","${l.status || 'New Lead'}"`);
+    });
+    const bomBytes = new Uint8Array([0xEF, 0xBB, 0xBF]);
+    const blob = new Blob([bomBytes, rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.setAttribute('href', url);
+    a.setAttribute('download', `Leads_List_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  };
+
+  const clearAllLeads = () => {
+    if (confirm('Are you sure you want to clear all leads?')) {
+      setLeadsList([]);
+      localStorage.removeItem('admin_leads');
+      localStorage.removeItem('academy_leads');
+      localStorage.removeItem('captured_leads');
+      showToast('Leads cleared');
+    }
+  };
+
+  const clearAllClicks = () => {
+    if (confirm('Are you sure you want to clear all click logs?')) {
+      setClicksList([]);
+      localStorage.removeItem('admin_clicks');
+      localStorage.removeItem('traffic_log');
+      localStorage.removeItem('global_traffic');
+      showToast('Click logs cleared');
+    }
+  };
 
   // Modals for full CRM
   const [showCustomersModal, setShowCustomersModal] = useState(false);
@@ -746,6 +852,8 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
 
   const TABS = [
     { id: 'analytics', icon: Activity, label: 'Analytics Overview' },
+    { id: 'leads', icon: Mail, label: 'Leads & Reminders' },
+    { id: 'clicks', icon: Eye, label: 'Click Log' },
     { id: 'payments', icon: CreditCard, label: 'Payments' },
     { id: 'users', icon: Users, label: 'Users' },
     { id: 'orders', icon: ShoppingCart, label: 'Orders & Sales' },
@@ -963,9 +1071,17 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
               <button
                 id="resetAllTrafficBtn"
                 onClick={() => {
-                  if (typeof (window as any).resetAllFakeTraffic === 'function') {
-                    (window as any).resetAllFakeTraffic();
-                  }
+                  localStorage.removeItem('admin_leads');
+                  localStorage.removeItem('admin_clicks');
+                  localStorage.removeItem('live_traffic_activity');
+                  localStorage.removeItem('traffic_log');
+                  localStorage.removeItem('excluded_logs');
+                  localStorage.setItem('total_clicks', '0');
+                  setClicksList([]);
+                  setLeadsList([]);
+                  setTotalClicks(0);
+                  alert('Reset complete - Fresh Start - All fake traffic cleared');
+                  location.reload();
                 }}
                 style={{ background: 'linear-gradient(135deg,#FF4444,#CC0000)', color: 'white', borderRadius: '10px', padding: '10px 14px', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer', border: '2px solid white' }}
               >
@@ -981,7 +1097,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
                 <span className="text-[10px] uppercase font-bold">Total Link Clicks</span>
               </div>
               <div className="text-2xl font-black text-white">
-                {totalClicks.toLocaleString()}
+                {(clicksList.length || totalClicks).toLocaleString()}
               </div>
             </div>
 
@@ -1603,6 +1719,137 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
             <button onClick={saveSettings} className="bg-[#3b82f6] hover:bg-[#2563eb] text-white font-bold px-6 py-2 rounded mt-4">
               SAVE SETTINGS
             </button>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'leads' && (
+        <div className="bg-[#111] border border-[#333] rounded-2xl p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div>
+              <h3 className="text-[#FFD700] font-bold text-lg flex items-center gap-2">
+                <Mail /> Lead Capture & Auto-Reply Reminder System
+              </h3>
+              <p className="text-gray-400 text-xs mt-0.5">
+                Total Captured Leads: <span className="text-[#FFD700] font-bold">{leadsList.length}</span> — Tracked across website, blueprint downloads, & server database.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                onClick={() => {
+                  if (confirm('Send Academy $49.99 Upgrade reminder to ALL leads?')) {
+                    leadsList.forEach(l => sendUpgradeReminderToLead(l));
+                    showToast('Bulk reminders sent!');
+                  }
+                }}
+                className="flex items-center gap-1.5 text-xs text-black bg-[#FFD700] px-3.5 py-2 rounded-xl font-black hover:bg-yellow-400 transition"
+              >
+                ⚡ Send Upgrade Reminder to All ({leadsList.length})
+              </button>
+              <button onClick={exportLeadsCSV} className="flex items-center gap-1.5 text-xs text-white bg-black border border-[#333] px-3 py-2 rounded-xl hover:border-[#FFD700] transition">
+                <Download size={14}/> Export CSV
+              </button>
+              <button onClick={clearAllLeads} className="flex items-center gap-1.5 text-xs text-red-400 bg-red-950/40 border border-red-500/30 px-3 py-2 rounded-xl hover:bg-red-900/50 transition">
+                <Trash2 size={14}/> Clear All
+              </button>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm whitespace-nowrap">
+              <thead className="bg-white/5 text-gray-400 text-xs uppercase font-bold">
+                <tr>
+                  <th className="p-3.5 rounded-tl-lg">Date (WAT Lagos)</th>
+                  <th className="p-3.5">Name</th>
+                  <th className="p-3.5">Email</th>
+                  <th className="p-3.5">Country</th>
+                  <th className="p-3.5">Source</th>
+                  <th className="p-3.5">Action</th>
+                  <th className="p-3.5">Status</th>
+                  <th className="p-3.5 rounded-tr-lg">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {leadsList.map((l: any, idx: number) => (
+                  <tr key={l.id || idx} className="hover:bg-white/[0.02]">
+                    <td className="p-3.5 text-gray-400 text-xs">{l.date || l.date_wat || new Date(l.timestamp || Date.now()).toLocaleString()}</td>
+                    <td className="p-3.5 text-white font-bold">{l.name || l.customerName || 'Lead User'}</td>
+                    <td className="p-3.5 text-[#3b82f6] font-mono text-xs">{l.email || 'N/A'}</td>
+                    <td className="p-3.5 text-gray-300">{safeCountryStr(l.country || 'Nigeria')}</td>
+                    <td className="p-3.5 text-gray-400 text-xs">{l.source || '5-Minute AI Prompt Blueprint'}</td>
+                    <td className="p-3.5 text-amber-400 text-xs font-medium">{l.action || 'Download Free Blueprint'}</td>
+                    <td className="p-3.5">
+                      <span className="px-2.5 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-[10px] font-bold border border-yellow-500/30">
+                        {l.status || 'Free Lead - Course Reminder'}
+                      </span>
+                    </td>
+                    <td className="p-3.5">
+                      <button
+                        onClick={() => sendUpgradeReminderToLead(l)}
+                        className="bg-[#FFD700] hover:bg-yellow-400 text-black text-xs font-bold px-3 py-1.5 rounded-lg transition cursor-pointer"
+                      >
+                        📩 Send Reminder
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {leadsList.length === 0 && (
+                  <tr>
+                    <td colSpan={8} className="p-8 text-center text-gray-500">
+                      No leads captured yet.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'clicks' && (
+        <div className="bg-[#111] border border-[#333] rounded-2xl p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div>
+              <h3 className="text-[#FFD700] font-bold text-lg flex items-center gap-2">
+                <Eye /> Click & Interaction Tracking Log
+              </h3>
+              <p className="text-gray-400 text-xs mt-0.5">
+                Total Tracked Clicks: <span className="text-[#10B981] font-bold">{clicksList.length}</span> — Server & client events recorded in real-time.
+              </p>
+            </div>
+            <button onClick={clearAllClicks} className="flex items-center gap-1.5 text-xs text-red-400 bg-red-950/40 border border-red-500/30 px-3 py-2 rounded-xl hover:bg-red-900/50 transition">
+              <Trash2 size={14}/> Clear Clicks
+            </button>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm whitespace-nowrap">
+              <thead className="bg-white/5 text-gray-400 text-xs uppercase font-bold">
+                <tr>
+                  <th className="p-3.5 rounded-tl-lg">Date / Time</th>
+                  <th className="p-3.5">Action</th>
+                  <th className="p-3.5">Details</th>
+                  <th className="p-3.5 rounded-tr-lg">Page / Route</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {clicksList.map((c: any, idx: number) => (
+                  <tr key={c.id || idx} className="hover:bg-white/[0.02]">
+                    <td className="p-3.5 text-gray-400 text-xs">{c.date ? new Date(c.date).toLocaleString() : 'Just now'}</td>
+                    <td className="p-3.5 text-[#FFD700] font-bold text-xs">{c.action || 'click'}</td>
+                    <td className="p-3.5 text-gray-300 font-mono text-xs">{typeof c.details === 'object' ? JSON.stringify(c.details) : String(c.details || '-')}</td>
+                    <td className="p-3.5 text-[#3b82f6] font-mono text-xs">{c.page || '/'}</td>
+                  </tr>
+                ))}
+                {clicksList.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="p-8 text-center text-gray-500">
+                      No clicks recorded yet.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       )}

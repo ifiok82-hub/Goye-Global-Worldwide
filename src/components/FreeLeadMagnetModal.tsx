@@ -237,21 +237,21 @@ export default function FreeLeadMagnetModal({ isOpen, onClose, onClaimTripwire, 
 
     // 2. Direct Async Handler to Database API /api/leads
     try {
-      const res = await fetch('/api/leads', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      if ((window as any).trackLead) {
+        (window as any).trackLead({
           name: cleanName,
           email: cleanEmail,
           country: country,
           source: '5-Minute AI Prompt Blueprint',
-          sourceDomain: window.location.hostname || 'gasv.store',
-          timestamp: timestampIso
-        })
-      });
-      const data = await res.json();
-      if (data && data.totalCount) {
-        localStorage.setItem('total_leads_count', data.totalCount.toString());
+          action: 'Downloaded Free Blueprint - Needs Academy Reminder',
+          link: 'https://www.gasv.store/#academy?lead=' + cleanEmail
+        });
+      }
+      if ((window as any).trackClick) {
+        (window as any).trackClick('download_free_blueprint', { email: cleanEmail, name: cleanName });
+      }
+      if ((window as any).sendAutoReply) {
+        (window as any).sendAutoReply(cleanEmail, cleanName);
       }
     } catch (e) {
       console.warn('Direct async lead submission notice:', e);

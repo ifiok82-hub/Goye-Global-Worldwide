@@ -395,9 +395,47 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
     return true;
   };
 
+  const getValidPaystackKey = (): string | null => {
+    let key = (
+      localStorage.getItem('paystack_public_key') ||
+      (import.meta.env && import.meta.env.VITE_PAYSTACK_PUBLIC_KEY) ||
+      (window as any).env?.VITE_PAYSTACK_PUBLIC_KEY ||
+      ''
+    ).trim();
+
+    const isValidFormat = (k: string) => (k.startsWith('pk_live_') || k.startsWith('pk_test_')) && k.length >= 32;
+
+    if (isValidFormat(key)) {
+      return key;
+    }
+
+    const inputKey = prompt(
+      '🔑 Paystack Public Key Required:\n\nPlease enter your Paystack Public Key from paystack.com Dashboard (Settings -> API Keys & Webhooks):\n(Must start with pk_live_ or pk_test_)',
+      key
+    );
+
+    if (inputKey) {
+      const cleanKey = inputKey.trim();
+      if (isValidFormat(cleanKey)) {
+        localStorage.setItem('paystack_public_key', cleanKey);
+        return cleanKey;
+      }
+    }
+
+    return null;
+  };
+
   const payWithPaystack = () => {
     if (!validateCustomerEmail(customerEmail)) return;
     const email = customerEmail.trim();
+
+    const paystackKey = getValidPaystackKey();
+
+    if (!paystackKey) {
+      showToast('Paystack Public Key not configured. Please try Bank Transfer or Flutterwave.', 'info');
+      setShowPaymentModal(true);
+      return;
+    }
 
     if (typeof (window as any).PaystackPop === 'undefined') {
       showToast('Paystack SDK is loading... Check internet connection.', 'info');
@@ -406,7 +444,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
 
     try {
       const handler = (window as any).PaystackPop.setup({
-        key: 'pk_live_f0088ba761e01f60447fae2985f4fa6e897a9f8e',
+        key: paystackKey,
         email: email,
         amount: 7498500, // NGN 74,985 in kobo
         currency: 'NGN',
@@ -429,7 +467,8 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
       handler.openIframe();
     } catch (err) {
       console.error('Paystack error:', err);
-      showToast('Unable to initialize Paystack. Please try Bank Transfer.', 'error');
+      showToast('Unable to initialize Paystack. Switching to Bank Transfer.', 'error');
+      setShowPaymentModal(true);
     }
   };
 

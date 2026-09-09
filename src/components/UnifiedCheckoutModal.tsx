@@ -252,12 +252,30 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
     localStorage.setItem('customer_email', emailInput);
     trackUserClick('Paystack Payment Click', 'CheckoutModal', product?.id || 'academy');
 
-    const paystackPublicKey = 
+    let paystackPublicKey = (
       (import.meta.env && import.meta.env.VITE_PAYSTACK_PUBLIC_KEY) || 
       (window as any).env?.VITE_PAYSTACK_PUBLIC_KEY || 
       paymentConfig?.paystack || 
       localStorage.getItem('paystack_public_key') || 
-      'pk_live_9f7e06b21fa6dc4e3e94cc00c74587c01249a89b';
+      ''
+    ).trim();
+
+    const isValidFormat = (k: string) => (k.startsWith('pk_live_') || k.startsWith('pk_test_')) && k.length >= 32;
+
+    if (!isValidFormat(paystackPublicKey)) {
+      const inputKey = prompt(
+        '🔑 Paystack Public Key Required:\n\nPlease enter your Paystack Public Key from paystack.com Dashboard (Settings -> API Keys & Webhooks):\n(Must start with pk_live_ or pk_test_)',
+        paystackPublicKey
+      );
+      if (inputKey && isValidFormat(inputKey.trim())) {
+        paystackPublicKey = inputKey.trim();
+        localStorage.setItem('paystack_public_key', paystackPublicKey);
+      } else {
+        if (showToast) showToast('Paystack Key missing or invalid. Please try Bank / OPay Transfer.', 'info');
+        setActiveGateway('bank');
+        return;
+      }
+    }
 
     const nairaPrice = Math.round(priceNGN);
     const amountInKobo = nairaPrice * 100; // e.g., 250000 kobo for NGN 2,500

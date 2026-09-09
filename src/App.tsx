@@ -386,6 +386,81 @@ export default function App() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      (window as any).trackLead = (leadData: any) => {
+        try {
+          const lead = {
+            ...leadData,
+            id: leadData.id || Date.now(),
+            date: leadData.date || new Date().toLocaleString('en-NG', { timeZone: 'Africa/Lagos' }) + ' WAT Lagos',
+            timestamp: new Date().toISOString()
+          };
+          let adminLeads = safeParse('admin_leads', []);
+          if (!Array.isArray(adminLeads)) adminLeads = [];
+          adminLeads.unshift(lead);
+          localStorage.setItem('admin_leads', JSON.stringify(adminLeads.slice(0, 500)));
+
+          fetch('/api/leads', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(lead)
+          }).catch(err => console.warn('Lead API error:', err));
+          console.log('NEW LEAD TRACKED:', lead);
+        } catch (e) {
+          console.error('Error tracking lead:', e);
+        }
+      };
+
+      (window as any).trackClick = (action: string, details: any = {}) => {
+        try {
+          const click = {
+            action,
+            details,
+            id: Date.now(),
+            date: new Date().toISOString(),
+            page: window.location.hash || window.location.pathname || '/'
+          };
+          let adminClicks = safeParse('admin_clicks', []);
+          if (!Array.isArray(adminClicks)) adminClicks = [];
+          adminClicks.unshift(click);
+          localStorage.setItem('admin_clicks', JSON.stringify(adminClicks.slice(0, 1000)));
+
+          fetch('/api/clicks', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(click)
+          }).catch(err => console.warn('Click API error:', err));
+          console.log('NEW CLICK TRACKED:', action, details);
+        } catch (e) {
+          console.error('Error tracking click:', e);
+        }
+      };
+
+      (window as any).sendAutoReply = (email: string, name: string) => {
+        if (!email || !email.includes('@')) return;
+        const cleanEmail = email.trim();
+        const cleanName = name?.trim() || 'Valued Customer';
+
+        setTimeout(() => {
+          alert(`🎉 AUTO REPLY SENT TO YOUR EMAIL (${cleanEmail}):\n\nHi ${cleanName}!\n\nThank you for choosing Goye Store Global & Sirwise AI WEB3 Academy (RC BN3583773)!\n\nYour 5-Minute AI Prompt Blueprint access is confirmed.\n\n⚡ SPECIAL OFFER: Upgrade to Full Academy - $49.99 (8 Modules, Blockchain Certificate, 190+ Countries)\n\nEnroll link: https://www.gasv.store/#shop\nSupport: goyedagosmess@gmail.com`);
+        }, 300);
+
+        try {
+          const formData = new FormData();
+          formData.append('email', cleanEmail);
+          formData.append('name', cleanName);
+          formData.append('_subject', 'Your Blueprint Access + Academy Upgrade Offer $49.99 - Goye Store Global');
+          formData.append('_autoresponse', `Hi ${cleanName}!\n\nThank you for requesting The 5-Minute AI Prompt Blueprint for Entrepreneurs from Sirwise AI Web3 Academy (RC BN3583773).\n\nYour Blueprint download is ready!\n\n🚀 NEXT STEP: Upgrade to Full Academy ($49.99 USD / ₦75,000 / Pi GCV $314,159)\n- 8 Complete Modules (AI Copywriting, Web3, Pi Network, Automation)\n- Blockchain-Verified Certificate\n- Lifetime Community Access\n\nVisit: https://www.gasv.store/#shop\nPayment Methods: Paystack, Flutterwave, PayPal, USDC, Pi GCV\n\nContact: goyedagosmess@gmail.com\nWeb: https://www.gasv.store`);
+          formData.append('_template', 'table');
+
+          fetch('https://formsubmit.co/goyedagosmess@gmail.com', {
+            method: 'POST',
+            body: formData
+          }).catch(err => console.warn('FormSubmit auto response network err:', err));
+        } catch (e) {
+          console.warn('FormSubmit auto reply exception:', e);
+        }
+      };
+
       (window as any).goToAcademyPaywall = goToAcademyPaywall;
       (window as any).goToPaywallFromConversion = goToPaywallFromConversion;
       (window as any).getFreeBlueprintAfterDownload = handleDownloadBlueprintClick;

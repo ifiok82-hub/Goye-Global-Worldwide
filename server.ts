@@ -119,6 +119,25 @@ app.get('/api/pi-config', (req, res) => {
   });
 });
 
+app.post('/api/pi/approve', async (req, res) => {
+  const { paymentId } = req.body || {};
+  const apiKey = process.env.PI_API_KEY;
+  if (!apiKey) return res.status(500).json({ error: 'PI_API_KEY not configured - Add in Env Vars from develop.pi' });
+  if (!paymentId) return res.status(400).json({ error: 'paymentId required' });
+  try {
+    const piRes = await fetch(`https://api.minepi.com/v2/payments/${paymentId}/approve`, {
+      method: 'POST',
+      headers: { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' }
+    });
+    const data = await piRes.json();
+    console.log('Pi approve:', paymentId, { ok: piRes.ok, status: piRes.status });
+    res.status(piRes.ok ? 200 : piRes.status).json(data);
+  } catch (e: any) {
+    console.error('Pi approve error', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.post('/api/pi-approve', async (req, res) => {
   const { paymentId } = req.body || {};
   const apiKey = process.env.PI_API_KEY;
@@ -134,6 +153,26 @@ app.post('/api/pi-approve', async (req, res) => {
     res.status(piRes.ok ? 200 : piRes.status).json(data);
   } catch (e: any) {
     console.error('Pi approve error', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/pi/complete', async (req, res) => {
+  const { paymentId, txid } = req.body || {};
+  const apiKey = process.env.PI_API_KEY;
+  if (!apiKey) return res.status(500).json({ error: 'PI_API_KEY not configured' });
+  if (!paymentId || !txid) return res.status(400).json({ error: 'paymentId and txid required' });
+  try {
+    const piRes = await fetch(`https://api.minepi.com/v2/payments/${paymentId}/complete`, {
+      method: 'POST',
+      headers: { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ txid })
+    });
+    const data = await piRes.json();
+    console.log('Pi complete:', paymentId, txid, { ok: piRes.ok, status: piRes.status });
+    res.status(piRes.ok ? 200 : piRes.status).json({ completed: piRes.ok, piData: data, amount_usd: 49.99, amount_pi: 49.99 / 314159, gcv: 314159, store: 'gasv.store', rc: 'BN3583773' });
+  } catch (e: any) {
+    console.error('Pi complete error', e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -156,6 +195,85 @@ app.post('/api/pi-complete', async (req, res) => {
     console.error('Pi complete error', e);
     res.status(500).json({ error: e.message });
   }
+});
+
+// --- Leads and Clicks DB Persistent Tracking ---
+let leadsDB: any[] = [];
+let clicksDB: any[] = [];
+
+try {
+  if (fs.existsSync('./leads.json')) {
+    leadsDB = JSON.parse(fs.readFileSync('./leads.json', 'utf-8'));
+  }
+} catch(e) {}
+
+// Pre-seed initial leads if empty
+if (leadsDB.length === 0) {
+  leadsDB = [
+    {
+      id: 1725869786000,
+      name: "Victor Bassey udo",
+      email: "v657f_b@yahoo.com",
+      country: "Nigeria",
+      source: "5-Minute AI Prompt Blueprint",
+      date: "09/09/2026, 09:16:26 WAT Lagos",
+      action: "Send Academy course reminder to enroll $49.99",
+      link: "www.gasv.store/academy?lead=v657f_b@yahoo.com"
+    },
+    {
+      id: 1725867638000,
+      name: "idongesit Enoabasi ossom",
+      email: "idongesitossom800@gmail.com",
+      country: "Nigeria",
+      source: "5-Minute AI Prompt Blueprint",
+      date: "09/09/2026, 08:40:38 WAT Lagos",
+      action: "Send Academy course reminder to enroll $49.99",
+      link: "www.gasv.store/academy?lead=idongesitossom800@gmail.com"
+    },
+    {
+      id: 1725864604000,
+      name: "David Joseph Ekpoudo",
+      email: "davidoscarelshaddaiai@gmail.com",
+      country: "Nigeria",
+      source: "5-Minute AI Prompt Blueprint",
+      date: "09/09/2026, 07:50:04 WAT Lagos",
+      action: "Send Academy course reminder to enroll $49.99",
+      link: "www.gasv.store/academy?lead=davidoscarelshaddaiai@gmail.com"
+    },
+    {
+      id: 1725863021000,
+      name: "Samuel Akpan",
+      email: "sammytech2026@gmail.com",
+      country: "Nigeria",
+      source: "5-Minute AI Prompt Blueprint",
+      date: "09/09/2026, 07:23:41 WAT Lagos",
+      action: "Send Academy course reminder to enroll $49.99",
+      link: "www.gasv.store/academy?lead=sammytech2026@gmail.com"
+    }
+  ];
+  try { fs.writeFileSync('./leads.json', JSON.stringify(leadsDB)); } catch(e){}
+}
+
+app.post('/api/leads', express.json(), (req, res) => {
+  const lead = { ...req.body, id: Date.now(), date: req.body.date || new Date().toLocaleString('en-NG', { timeZone: 'Africa/Lagos' }) + ' WAT Lagos' };
+  leadsDB.unshift(lead);
+  console.log('NEW LEAD:', lead);
+  try { fs.writeFileSync('./leads.json', JSON.stringify(leadsDB.slice(0, 500))); } catch (e) {}
+  res.json({ success: true, lead });
+});
+
+app.get('/api/leads', (req, res) => {
+  res.json(leadsDB);
+});
+
+app.post('/api/clicks', express.json(), (req, res) => {
+  const click = { ...req.body, id: Date.now(), date: new Date().toISOString() };
+  clicksDB.unshift(click);
+  res.json({ success: true });
+});
+
+app.get('/api/clicks', (req, res) => {
+  res.json(clicksDB);
 });
 
 app.post('/api/pi-cancel', async (req, res) => {
