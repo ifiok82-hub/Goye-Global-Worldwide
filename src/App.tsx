@@ -242,6 +242,26 @@ export default function App() {
     }, 400);
   };
 
+  const openUpgradeModal = () => {
+    const existing = document.getElementById('upgradeModalOverlay');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'upgradeModalOverlay';
+    modal.innerHTML = `
+      <div style="position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px;">
+        <div style="background:black; border:2px solid #FFD700; border-radius:16px; padding:24px; max-width:400px; width:100%;">
+          <h2 style="color:#FFD700; font-weight:900; margin:0;">Upgrade to Full Academy</h2>
+          <p style="color:white; margin:12px 0;">8 Modules • Certificate • RC BN3583773 • 190+ Countries</p>
+          <p style="color:#10B981; font-weight:900; font-size:20px; margin:0 0 16px 0;">$49.99 or Pi GCV $314,159</p>
+          <button onclick="window.location.hash='shop'; this.closest('div').parentElement.remove();" style="background:#FFD700; color:black; width:100%; padding:12px; border-radius:8px; font-weight:900; cursor:pointer; border:none; margin-top:8px;">Go to Shop - Pay with Pi</button>
+          <button onclick="this.closest('div').parentElement.remove()" style="background:transparent; color:white; width:100%; padding:8px; margin-top:8px; cursor:pointer; border:none;">Close</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+    (window as any).openUpgradeModal = openUpgradeModal;
+  };
+
   const showConversionPageOverlay = (name: string, email: string) => {
     const existing = document.getElementById('conversionPage');
     if (existing) existing.remove();
@@ -442,6 +462,7 @@ export default function App() {
       (window as any).playAcademyVideoFullscreen = playAcademyVideoFullscreen;
       (window as any).unlockAcademyAccess = unlockAcademyAccess;
       (window as any).unlockAcademy = unlockAcademyAccess;
+      (window as any).openUpgradeModal = openUpgradeModal;
     }
 
     const interval = setInterval(checkAcademyLeadsConversion, 5000);
@@ -1038,7 +1059,7 @@ export default function App() {
            />
         ) : null}
         
-        {(tab !== 'downloads' && tab !== 'admin' && tab !== 'support') && (
+        {(tab !== 'admin' && tab !== 'support') && (
           <div className="px-4 mt-4 animate-in fade-in duration-500 pb-[100px]">
 
             {tab === 'home' && (
@@ -1337,6 +1358,24 @@ export default function App() {
                 onPurchase={(item: any) => { setSelectedProduct(item);  }}
                 onToast={showToast}
               />
+            ) : tab === 'downloads' ? (
+              <div className="mb-6 flex flex-col items-center justify-center pt-2">
+                <button 
+                  onClick={() => {
+                    const link = document.createElement('a');
+                    link.href = '/certificate-template.pdf';
+                    link.download = 'Goye-Store-Global-Sirwise-AI-WEB3-Academy-E-Certificate-RC-BN3583773.pdf';
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                  }} 
+                  style={{ background: '#FFD700', width: '100%', padding: '16px', borderRadius: '12px', fontWeight: 900, fontSize: '16px', color: 'black', cursor: 'pointer', border: 'none', position: 'relative', zIndex: 10 }}
+                  className="flex items-center justify-center gap-2 shadow-lg active:scale-95 transition"
+                >
+                  ⬇ DOWNLOAD E-CERTIFICATE
+                </button>
+                <p className="text-gray-400 text-xs mt-2 text-center">Your official verified Web3 & AI credential</p>
+              </div>
             ) : (
               <>
                 <div className="mt-8 mb-6">
@@ -1465,17 +1504,37 @@ export default function App() {
               <div className="flex flex-col gap-3">
                 <button 
                   id="downloadBlueprintBtn"
-                  onClick={handleDownloadBlueprintClick} 
-                  style={{ width: '100%', height: '54px', background: '#10B981', color: 'black', borderRadius: '12px', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer', pointerEvents: 'auto', zIndex: 9999, position: 'relative', border: 'none' }}
-                  className="flex items-center justify-center gap-2 hover:brightness-110 transition active:scale-95"
+                  onClick={() => {
+                    window.open('/blueprints/5-Minute-AI-Prompt-Blueprint.pdf', '_blank');
+                  }} 
+                  style={{ background: '#10B981', width: '100%', padding: '14px', borderRadius: '12px', fontWeight: 900, color: 'black', cursor: 'pointer', border: 'none', position: 'relative', zIndex: 10 }}
+                  className="flex items-center justify-center gap-2 hover:brightness-110 transition active:scale-95 text-sm font-bold"
                 >
-                  <Download size={18}/> ⚡ Download Free AI Prompt Blueprint
+                  ⚡ Download Free AI Prompt Blueprint
                 </button>
 
                 <button 
                   id="upgradeToAcademyBtn" 
-                  onClick={goToAcademyPaywall} 
-                  style={{ width: '100%', minHeight: '65px', background: '#FFD700', color: 'black', borderRadius: '16px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', pointerEvents: 'auto', zIndex: 9999, position: 'relative', border: '3px solid black' }}
+                  onClick={() => {
+                    // Scroll to shop and open Pi payment
+                    window.location.hash = 'shop';
+                    setTab('shop');
+                    const shopEl = document.getElementById('shop') || document.querySelector('[data-shop]');
+                    if (shopEl) shopEl.scrollIntoView({ behavior: 'smooth' });
+                    // Open upgrade modal
+                    if ((window as any).openUpgradeModal) {
+                      (window as any).openUpgradeModal();
+                    } else if ((window as any).openPiPayment) {
+                      (window as any).openPiPayment('academy-full', 49.99);
+                    } else {
+                      // Fallback: go to shop tab
+                      document.querySelectorAll('nav button').forEach(b => {
+                        if (b.textContent?.includes('SHOP')) (b as HTMLElement).click();
+                      });
+                      setTimeout(() => alert('Upgrade to Full Academy - 8 Modules Certificate - $49.99 - Pay with Pi GCV $314,159 or Card - gasv.store - Contact: goye@gasv.store - RC BN3583773'), 300);
+                    }
+                  }} 
+                  style={{ background: '#FFD700', width: '100%', padding: '16px', borderRadius: '12px', fontWeight: 900, fontSize: '15px', cursor: 'pointer', color: 'black', border: 'none', position: 'relative', zIndex: 10 }}
                   className="active:scale-95 transition shadow-lg flex items-center justify-center text-center px-3"
                 >
                   🎓 Upgrade to Full Academy $49.99 - 8 Modules Certificate
