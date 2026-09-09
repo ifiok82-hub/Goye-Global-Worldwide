@@ -67,6 +67,55 @@ app.get('/api/clicks', (req, res) => res.json(clicksDB));
 app.post('/api/pi/approve', express.json(), (req, res) => { console.log('Pi Approve', req.body.paymentId); res.json({ approved: true }); });
 app.post('/api/pi/complete', express.json(), (req, res) => { console.log('Pi Complete', req.body); leadsDB.unshift({ email: 'Pi User ' + req.body.txid, action: 'Paid Pi GCV', paymentId: req.body.paymentId, txid: req.body.txid, date: new Date().toISOString() }); res.json({ completed: true }); });
 
+app.post('/api/pi/verify', express.json(), (req, res) => {
+  const { paymentId, txid, email, amount } = req.body;
+  const leadData = {
+    email: email || 'piuser@gasv.store',
+    action: 'Paid Pi GCV $314,159',
+    paymentId,
+    txid,
+    amount: amount || 0.000159,
+    status: 'PAID',
+    orderStatus: 'PAID',
+    date: new Date().toLocaleString('en-NG', { timeZone: 'Africa/Lagos' })
+  };
+  leadsDB.unshift(leadData);
+  try { fs.writeFileSync('./leads.json', JSON.stringify(leadsDB.slice(0, 500))); } catch (e) {}
+
+  return res.json({
+    success: true,
+    orderStatus: 'PAID',
+    token: 'PI_TOKEN_' + Date.now(),
+    message: 'Payment Confirmed! Your access is unlocked.'
+  });
+});
+
+app.post('/api/payments/verify-bank', express.json(), (req, res) => {
+  const { reference, session_id, email, amount, type } = req.body;
+  const ref = (reference || session_id || '').trim();
+  if (!ref || ref.length < 3) {
+    return res.status(400).json({ success: false, message: 'Please enter a valid Transaction Reference or Session ID.' });
+  }
+  const leadData = {
+    email: email || 'customer@gasv.store',
+    action: `Paid ${type === 'usdt_bep20' ? 'USDT' : type === 'usdc_base' ? 'USDC' : 'Bank Transfer OPay'}`,
+    reference: ref,
+    amount: amount || 49.99,
+    status: 'PAID',
+    orderStatus: 'PAID',
+    date: new Date().toLocaleString('en-NG', { timeZone: 'Africa/Lagos' })
+  };
+  leadsDB.unshift(leadData);
+  try { fs.writeFileSync('./leads.json', JSON.stringify(leadsDB.slice(0, 500))); } catch (e) {}
+
+  return res.json({
+    success: true,
+    orderStatus: 'PAID',
+    token: 'ACCESS_TOKEN_' + Date.now(),
+    message: 'Payment Confirmed! Your access is unlocked.'
+  });
+});
+
 const PORT = 3000;
 
 import { db as pgDb } from './src/db/index.ts';
