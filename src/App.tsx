@@ -971,7 +971,7 @@ export default function App() {
               <option value="PI">Pi (π)</option>
             </select>
 
-            {(currencyMode === 'pi' || currentCurrency === 'PI') && (
+            {(currentCurrency === 'PI') && (
               <button 
                 id="toggleCurrencyModeBtn"
                 onClick={() => {
@@ -991,7 +991,7 @@ export default function App() {
           </div>
 
           <div id="piLoginContainer" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-            {(currencyMode === 'pi' || currentCurrency === 'PI') && (
+            {(currentCurrency === 'PI') && (
               <>
                 <button 
                   id="refreshPiPricesBtn" 
@@ -1140,7 +1140,7 @@ export default function App() {
                   {/* Category Filter Pills - Clean text only, no overlapping emoji */}
                   <div className="flex items-center gap-2 overflow-x-auto pb-2 hide-scrollbar mb-4">
                     {[
-                      { id: 'all', label: `ALL (${products.filter((p: any) => p.status === 'ACTIVE' && p.visible !== false && !p.isDeleted).length})` },
+                      { id: 'all', label: 'ALL' },
                       { id: 'dubai', label: 'DUBAI' },
                       { id: 'esim', label: 'ESIM' },
                       { id: 'prompts', label: 'PROMPTS' },
@@ -1150,7 +1150,7 @@ export default function App() {
                       <button
                         key={cat.id}
                         onClick={() => setActiveCategory(cat.id)}
-                        className={`px-3.5 py-2 rounded-xl text-xs font-black transition whitespace-nowrap cursor-pointer border ${
+                        className={`px-4 py-2 rounded-xl text-xs font-black transition whitespace-nowrap cursor-pointer flex-shrink-0 border ${
                           activeCategory === cat.id 
                             ? 'bg-[#FFD700] text-black border-[#FFD700] shadow-md' 
                             : 'bg-[#111] text-gray-300 border-[#333] hover:border-[#FFD700]'
@@ -1395,32 +1395,30 @@ export default function App() {
                        'Store & eSIM Hub'}
                     </h2>
                     <span className="text-xs font-mono font-bold text-[#FFD700] bg-[#111] px-3.5 py-1.5 rounded-full border border-[#FFD700]/40 shadow-sm">
-                      Total Active Products: {products.filter((p: any) => p.status === 'ACTIVE' && p.visible !== false).length}/32
+                      Total Active Products: {products.filter((p: any) => p.status === 'ACTIVE' && p.visible !== false && !p.isDeleted).length}
                     </span>
                   </div>
 
                   {/* Category Filter Pills */}
                   <div className="flex items-center gap-2 overflow-x-auto pb-2 hide-scrollbar mb-4">
                     {[
-                      { id: 'all', label: 'ALL (32)', icon: '⚡' },
-                      { id: 'dubai', label: 'DUBAI', icon: '🇦🇪' },
-                      { id: 'esim', label: 'ESIM', icon: '🌐' },
-                      { id: 'prompts', label: 'PROMPTS', icon: '🤖' },
-                      { id: 'academy', label: 'ACADEMY', icon: '🎓' },
-                      { id: 'contracts', label: 'CONTRACTS & VISAS', icon: '📄' },
-                      { id: 'toolkit', label: 'TOOLKITS', icon: '💼' }
+                      { id: 'all', label: 'ALL' },
+                      { id: 'dubai', label: 'DUBAI' },
+                      { id: 'esim', label: 'ESIM' },
+                      { id: 'prompts', label: 'PROMPTS' },
+                      { id: 'academy', label: 'ACADEMY' },
+                      { id: 'contracts', label: 'VISAS' }
                     ].map(cat => (
                       <button
                         key={cat.id}
                         onClick={() => setActiveCategory(cat.id)}
-                        className={`px-4 py-2 rounded-xl text-xs font-black transition whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+                        className={`px-4 py-2 rounded-xl text-xs font-black transition whitespace-nowrap cursor-pointer flex-shrink-0 border ${
                           activeCategory === cat.id 
-                            ? 'bg-[#FFD700] text-black shadow-lg shadow-[#FFD700]/20' 
-                            : 'bg-[#1a1a1a] text-gray-300 border border-[#333] hover:border-[#FFD700]'
+                            ? 'bg-[#FFD700] text-black border-[#FFD700] shadow-md' 
+                            : 'bg-[#111] text-gray-300 border-[#333] hover:border-[#FFD700]'
                         }`}
                       >
-                        <span>{cat.icon}</span>
-                        <span>{cat.label}</span>
+                        {cat.label}
                       </button>
                     ))}
                   </div>
