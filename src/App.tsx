@@ -1140,17 +1140,17 @@ export default function App() {
                   {/* Category Filter Pills - Clean text only, no overlapping emoji */}
                   <div className="flex items-center gap-2 overflow-x-auto pb-2 hide-scrollbar mb-4">
                     {[
-                      { id: 'all', label: 'ALL' },
+                      { id: 'all', label: `ALL (${products.filter((p: any) => p.status === 'ACTIVE' && p.visible !== false && !p.isDeleted).length})` },
                       { id: 'dubai', label: 'DUBAI' },
                       { id: 'esim', label: 'ESIM' },
                       { id: 'prompts', label: 'PROMPTS' },
                       { id: 'academy', label: 'ACADEMY' },
-                      { id: 'contracts', label: 'VISAS' }
+                      { id: 'contracts', label: 'VISA' }
                     ].map(cat => (
                       <button
                         key={cat.id}
                         onClick={() => setActiveCategory(cat.id)}
-                        className={`px-4 py-2 rounded-xl text-xs font-black transition whitespace-nowrap cursor-pointer flex-shrink-0 border ${
+                        className={`px-3 py-1.5 rounded-xl text-[11px] font-extrabold transition whitespace-nowrap cursor-pointer flex-shrink-0 border ${
                           activeCategory === cat.id 
                             ? 'bg-[#FFD700] text-black border-[#FFD700] shadow-md' 
                             : 'bg-[#111] text-gray-300 border-[#333] hover:border-[#FFD700]'
@@ -1402,17 +1402,17 @@ export default function App() {
                   {/* Category Filter Pills */}
                   <div className="flex items-center gap-2 overflow-x-auto pb-2 hide-scrollbar mb-4">
                     {[
-                      { id: 'all', label: 'ALL' },
+                      { id: 'all', label: `ALL (${products.filter((p: any) => p.status === 'ACTIVE' && p.visible !== false && !p.isDeleted).length})` },
                       { id: 'dubai', label: 'DUBAI' },
                       { id: 'esim', label: 'ESIM' },
                       { id: 'prompts', label: 'PROMPTS' },
                       { id: 'academy', label: 'ACADEMY' },
-                      { id: 'contracts', label: 'VISAS' }
+                      { id: 'contracts', label: 'VISA' }
                     ].map(cat => (
                       <button
                         key={cat.id}
                         onClick={() => setActiveCategory(cat.id)}
-                        className={`px-4 py-2 rounded-xl text-xs font-black transition whitespace-nowrap cursor-pointer flex-shrink-0 border ${
+                        className={`px-3 py-1.5 rounded-xl text-[11px] font-extrabold transition whitespace-nowrap cursor-pointer flex-shrink-0 border ${
                           activeCategory === cat.id 
                             ? 'bg-[#FFD700] text-black border-[#FFD700] shadow-md' 
                             : 'bg-[#111] text-gray-300 border-[#333] hover:border-[#FFD700]'
