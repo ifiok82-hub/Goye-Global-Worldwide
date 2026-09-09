@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { PaymentDetailsModal } from './PaymentDetailsModal';
 
 interface PaymentOptionsModalProps {
   onClose: () => void;
@@ -7,6 +8,7 @@ interface PaymentOptionsModalProps {
 
 export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ onClose, product }) => {
   const [selected, setSelected] = useState('paystack');
+  const [detailsType, setDetailsType] = useState<string | null>(null);
   const [email, setEmail] = useState(() => {
     return localStorage.getItem('user_email') || localStorage.getItem('customer_email') || '';
   });
@@ -169,72 +171,31 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ onClos
   };
 
   const handleUSDT = () => {
-    const addr = '0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96';
-    navigator.clipboard.writeText(addr);
     if ((window as any).trackClick) {
-      (window as any).trackClick('usdt_bep20_click', { address: addr });
+      (window as any).trackClick('usdt_bep20_click', { address: '0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96' });
     }
-    alert(`🟡 USDT BEP20 (BNB Smart Chain)\n\nAddress Copied:\n${addr}\n\nAmount: $${priceUSD} USDT\nNetwork: BEP20 (BSC)\n\nAfter payment, send your Tx Hash + email to goyedagosmess@gmail.com for instant manual verification.\nRC BN3583773`);
+    setDetailsType('usdt_bep20');
   };
 
   const handleUSDC = () => {
-    const addr = '0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96';
-    navigator.clipboard.writeText(addr);
     if ((window as any).trackClick) {
-      (window as any).trackClick('usdc_base_click', { address: addr });
+      (window as any).trackClick('usdc_base_click', { address: '0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96' });
     }
-    alert(`🔵 USDC (Base Network / BSC)\n\nAddress Copied:\n${addr}\n\nAmount: $${priceUSD} USDC\nNetwork: Base / BSC\n\nSend Tx Hash + email to goyedagosmess@gmail.com\nRC BN3583773`);
+    setDetailsType('usdc_base');
   };
 
   const handlePi = () => {
     if ((window as any).trackClick) {
       (window as any).trackClick('pi_gcv_click', { gcv: '$314,159' });
     }
-    if ((window as any).Pi) {
-      (window as any).Pi.createPayment(
-        {
-          amount: 0.000159,
-          memo: `Goye Store Global - ${productName} - RC BN3583773`,
-          metadata: { product: productName, price: priceUSD.toString() }
-        },
-        {
-          onReadyForServerApproval: (paymentId: string) => {
-            fetch('/api/pi/approve', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ paymentId })
-            }).catch(() => {});
-          },
-          onReadyForServerCompletion: (paymentId: string, txid: string) => {
-            fetch('/api/pi/complete', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ paymentId, txid })
-            }).then(() => {
-              alert('🎉 Pi Payment Success! TX: ' + txid + '\nAcademy Unlocked!');
-              localStorage.setItem('sirwise_paid', 'true');
-              localStorage.setItem('academy_unlocked', 'true');
-              localStorage.setItem('payment_verified', 'true');
-              onClose();
-              window.location.hash = 'academy';
-              window.location.reload();
-            });
-          },
-          onCancel: () => alert('Pi Payment Cancelled'),
-          onError: (e: any) => alert('Pi Error: ' + JSON.stringify(e))
-        }
-      );
-    } else {
-      alert(`💜 Pay with Pi GCV ($314,159)\n\nPlease open www.gasv.store in Pi Browser to execute instant Pi payments.\n\nTransfer to Pi Username: @SirwiseGoye\nAmount: 0.000159 Pi ≈ $49.99\n\nRC BN3583773`);
-      window.open('https://minepi.com', '_blank');
-    }
+    setDetailsType('pi');
   };
 
   const handleBank = () => {
     if ((window as any).trackClick) {
       (window as any).trackClick('bank_transfer_click', {});
     }
-    alert(`🏦 Bank Transfer / OPay\n\nBank: OPay\nAccount Number: 6113541882\nAccount Name: GOYE STORE GLOBAL / GOYEDAGOSMESS ENTERPRISE\nAmount: ₦${priceNGN.toLocaleString()} or $${priceUSD}\n\nAfter transfer, send proof + your email to:\nEmail: goyedagosmess@gmail.com\nWhatsApp: +2348162811195\nRC BN3583773 - Instant Unlock within 5 mins`);
+    setDetailsType('opay');
   };
 
   const handlePayNow = () => {
@@ -245,6 +206,18 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ onClos
     else if (selected === 'pi') handlePi();
     else if (selected === 'bank') handleBank();
   };
+
+  if (detailsType) {
+    return (
+      <PaymentDetailsModal
+        type={detailsType}
+        onClose={() => setDetailsType(null)}
+        amountUSD={priceUSD}
+        userEmail={email}
+        productName={productName}
+      />
+    );
+  }
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, overflowY: 'auto' }}>

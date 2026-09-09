@@ -54,6 +54,19 @@ export const app = express();
     next();
   });
 
+// VALIDATION-KEY.TXT FIRST - Fixes Pi domain verification - Must be before all
+app.get('/validation-key.txt', (req, res) => { res.type('text/plain').set('Cache-Control', 'no-store').send('6fad9a58178d16528c6e748a4194797437604a6594d34e811d0dce570c722f1ab8a5caa04e3c5e340dbb68d3a50e9f75122d3a88f5f13fb0419ce5451dcc3201'); });
+app.get('/.well-known/validation-key.txt', (req, res) => { res.type('text/plain').send('6fad9a58178d16528c6e748a4194797437604a6594d34e811d0dce570c722f1ab8a5caa04e3c5e340dbb68d3a50e9f75122d3a88f5f13fb0419ce5451dcc3201'); });
+
+let leadsDB: any[] = [];
+let clicksDB: any[] = [];
+app.post('/api/leads', express.json(), (req, res) => { leadsDB.unshift({ ...req.body, id: Date.now(), date: new Date().toLocaleString('en-NG', { timeZone: 'Africa/Lagos' }) }); try { fs.writeFileSync('./leads.json', JSON.stringify(leadsDB.slice(0, 500))); } catch (e) {} res.json({ success: true }); });
+app.get('/api/leads', (req, res) => res.json(leadsDB));
+app.post('/api/clicks', express.json(), (req, res) => { clicksDB.unshift({ ...req.body, id: Date.now() }); res.json({ success: true }); });
+app.get('/api/clicks', (req, res) => res.json(clicksDB));
+app.post('/api/pi/approve', express.json(), (req, res) => { console.log('Pi Approve', req.body.paymentId); res.json({ approved: true }); });
+app.post('/api/pi/complete', express.json(), (req, res) => { console.log('Pi Complete', req.body); leadsDB.unshift({ email: 'Pi User ' + req.body.txid, action: 'Paid Pi GCV', paymentId: req.body.paymentId, txid: req.body.txid, date: new Date().toISOString() }); res.json({ completed: true }); });
+
 const PORT = 3000;
 
 import { db as pgDb } from './src/db/index.ts';
@@ -198,9 +211,6 @@ app.post('/api/pi-complete', async (req, res) => {
 });
 
 // --- Leads and Clicks DB Persistent Tracking ---
-let leadsDB: any[] = [];
-let clicksDB: any[] = [];
-
 try {
   if (fs.existsSync('./leads.json')) {
     leadsDB = JSON.parse(fs.readFileSync('./leads.json', 'utf-8'));

@@ -3,6 +3,7 @@ import { X, ShieldCheck, Lock, Copy, CheckCircle, RefreshCw, ChevronRight, Zap, 
 import { identifyUserSession, trackUserClick } from '../utils/analytics';
 import { cleanUserEmail } from '../lib/contact';
 import { safeParse } from '../utils/safeParse';
+import { PaymentDetailsModal } from './PaymentDetailsModal';
 
 const showToast = (msg: string, type?: string) => {
   if (typeof (window as any).showToast === 'function') {
@@ -13,6 +14,7 @@ const showToast = (msg: string, type?: string) => {
 
 export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, onToast }: any) {
   const [activeGateway, setActiveGateway] = useState<string | null>(null);
+  const [paymentDetailsType, setPaymentDetailsType] = useState<string | null>(null);
   const [email, setEmail] = useState('');
 
   useEffect(() => {
@@ -634,7 +636,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                   <span>🌍</span> Flutterwave (Africa Cards)
                 </button>
                 <button 
-                  onClick={() => { setCryptoNetwork('usdt_bsc'); selectGatewayWithEmailCheck('crypto'); }} 
+                  onClick={() => setPaymentDetailsType('usdt_bep20')} 
                   style={{
                     background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
                     color: '#000',
@@ -656,7 +658,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                   <span>🟡</span> USDT BEP20 (BNB Smart Chain)
                 </button>
                 <button 
-                  onClick={() => { setCryptoNetwork('usdc_base'); selectGatewayWithEmailCheck('crypto'); }} 
+                  onClick={() => setPaymentDetailsType('usdc_base')} 
                   style={{
                     background: 'linear-gradient(135deg, #0052FF 0%, #0033AD 100%)',
                     color: '#FFF',
@@ -678,7 +680,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                   <span>🔵</span> USDC (Base Network)
                 </button>
                 <button 
-                  onClick={() => selectGatewayWithEmailCheck('pi')} 
+                  onClick={() => setPaymentDetailsType('pi')} 
                   style={{
                     background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
                     color: '#000',
@@ -700,7 +702,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                   <span>🟣</span> Pi Network GCV $314,159
                 </button>
                 <button 
-                  onClick={() => selectGatewayWithEmailCheck('bank')} 
+                  onClick={() => setPaymentDetailsType('opay')} 
                   style={{
                     background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
                     color: '#000',
@@ -1095,6 +1097,15 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
           </div>
         </div>
       </div>
+      {paymentDetailsType && (
+        <PaymentDetailsModal
+          type={paymentDetailsType}
+          onClose={() => setPaymentDetailsType(null)}
+          amountUSD={priceUSD}
+          userEmail={email}
+          productName={product?.name || 'Sirwise AI WEB3 Academy Full'}
+        />
+      )}
     </div>
   );
 }
