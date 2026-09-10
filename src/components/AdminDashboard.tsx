@@ -121,10 +121,10 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
   const [paymentConfig, setPaymentConfig] = useState({
     paystack: localStorage.getItem('paystack_public_key') || '',
     paystackSecret: localStorage.getItem('paystack_secret_key') || localStorage.getItem('paystack_admin_sk') || '',
-    flutterwave: localStorage.getItem('flutterwave_public_key') || 'FLWPUBK-cbb518a9b8f74421e8871',
+    flutterwave: localStorage.getItem('flutterwave_public_key') || '',
     flutterwaveSecret: localStorage.getItem('flutterwave_secret_key') || '',
-    crypto: localStorage.getItem('crypto_wallet') || '0xaeed4e48f2146aadd07e85219f209053616e4e71',
-    pi: localStorage.getItem('pi_wallet') || 'GBR4B47WY7JDK2JKUUQQTWWI'
+    crypto: localStorage.getItem('crypto_wallet') || '',
+    pi: localStorage.getItem('pi_wallet') || ''
   });
 
   const [showPaystackSecret, setShowPaystackSecret] = useState(false);

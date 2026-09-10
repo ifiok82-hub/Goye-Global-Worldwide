@@ -66,4 +66,22 @@ export const analyticsClicks = pgTable('analytics_clicks', {
   createdAt: timestamp('created_at').defaultNow(),
 });
 
+export const adminSettings = pgTable('admin_settings', {
+  id: serial('id').primaryKey(),
+  keyName: text('key_name').notNull().unique(), // 'payment_settings'
+  piApiKey: text('pi_api_key'),
+  piWallet: text('pi_wallet'),
+  piSandbox: text('pi_sandbox').default('true'),
+  paystackPublicKey: text('paystack_public_key'),
+  paystackSecretKey: text('paystack_secret_key'),
+  flutterwavePublicKey: text('flutterwave_public_key'),
+  flutterwaveSecretKey: text('flutterwave_secret_key'),
+  usdtAddress: text('usdt_address'),
+  usdcAddress: text('usdc_address'),
+  opayAccount: text('opay_account'),
+  opayName: text('opay_name'),
+  updatedByAdminUid: text('updated_by_admin_uid'),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
 

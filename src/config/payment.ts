@@ -1,16 +1,16 @@
 // Payment Gateway Central Config & Receiver Addresses
-// Environment variables take precedence, falling back to verified hardcoded constants
+// Environment variables and DB settings take precedence. Defaults strictly to empty string ("").
 
 export const RECEIVING_WALLET_ADDRESS =
-  (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_RECEIVING_WALLET_ADDRESS) ||
-  '0xdc7f804B36aB672Ec31642dF418F29e73281b040';
+  (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_RECEIVING_WALLET_ADDRESS) || '';
 
 export const PI_WALLET_ADDRESS =
-  (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_PI_WALLET_ADDRESS) ||
-  'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ7XE36YFQY6LKPVO6R';
+  (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_PI_WALLET_ADDRESS) || '';
 
-export const OPAY_ACCOUNT_NUMBER = '6113541882';
-export const OPAY_ACCOUNT_NAME = 'GOYE STORE GLOBAL / GOYEDAGOSMESS ENTERPRISE';
+export const OPAY_ACCOUNT_NUMBER =
+  (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_OPAY_ACCOUNT_NUMBER) || '';
+export const OPAY_ACCOUNT_NAME =
+  (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_OPAY_ACCOUNT_NAME) || '';
 
 export const USDT_CONFIG = {
   token: 'USDT',
@@ -18,7 +18,7 @@ export const USDT_CONFIG = {
   address: RECEIVING_WALLET_ADDRESS,
   minDeposit: '2 USDT',
   warning: '⚠️ Send ONLY via BNB Smart Chain (BEP20/BSC). Transfers sent via Ethereum (ERC20) or other networks will be permanently lost.',
-  qr: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${RECEIVING_WALLET_ADDRESS}`
+  qr: RECEIVING_WALLET_ADDRESS ? `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${RECEIVING_WALLET_ADDRESS}` : ''
 };
 
 export const USDC_CONFIG = {
@@ -27,7 +27,7 @@ export const USDC_CONFIG = {
   address: RECEIVING_WALLET_ADDRESS,
   minDeposit: '2 USDC',
   warning: '⚠️ CRITICAL: Ensure you select the BASE NETWORK when transferring USDC. Sending via Ethereum Mainnet, Polygon, or Solana will result in lost funds.',
-  qr: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${RECEIVING_WALLET_ADDRESS}`
+  qr: RECEIVING_WALLET_ADDRESS ? `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${RECEIVING_WALLET_ADDRESS}` : ''
 };
 
 export const PI_CONFIG = {
@@ -36,3 +36,4 @@ export const PI_CONFIG = {
   address: PI_WALLET_ADDRESS,
   warning: '⚠️ Pay with Pi in Pi Browser - GCV $314,159 - Amount 0.000159 Pi ≈ $49.99'
 };
+
