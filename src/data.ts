@@ -2,6 +2,32 @@ export const PI_GCV_USD = 314159;
 export const ACADEMY_PRICE_USD = 49.99;
 
 export const ALL_PRODUCTS = [
+  // 0. AI Starter & Global Travel Pass ($1 Tripwire)
+  {
+    id: 'ai-starter-tripwire-pass',
+    name: 'AI Starter & Global Travel Pass ($1 / 0.000003 Pi)',
+    title: 'AI Starter & Global Travel Pass',
+    icon: '⚡',
+    data: '1GB Trial Pass',
+    days: 'Instant',
+    price: 1.00,
+    priceUSD: 1.00,
+    priceNGN: 1500,
+    category: 'starter',
+    badge: 'MICRO-OFFER ($1)',
+    bestseller: true,
+    status: 'ACTIVE',
+    visible: true,
+    isDeleted: false,
+    downloadUrl: 'https://www.gasv.store/#downloads',
+    filePath: 'https://www.gasv.store/#downloads',
+    description: '3 High-Impact Copy-Paste Prompts + 1GB Travel eSIM Trial + 1-Day Access Pass to Sirwise AI Academy.',
+    features: [
+      '3 High-Impact Copy-Paste Prompts',
+      '1GB Global Travel eSIM Trial Pass',
+      '1-Day VIP Access Pass to Sirwise AI Academy'
+    ]
+  },
   // 1. Dubai eSIM 1GB (HOT - Top HOME #1)
   {
     id: 'dubai-esim-1gb',
@@ -19,8 +45,8 @@ export const ALL_PRODUCTS = [
     status: 'ACTIVE',
     visible: true,
     isDeleted: false,
-    downloadUrl: 'https://wa.me/2348162811195?text=Hi%20GOYE%20Store%2C%20I%20purchased%20Dubai%20eSIM%201GB',
-    filePath: 'https://wa.me/2348162811195?text=Hi%20GOYE%20Store%2C%20I%20purchased%20Dubai%20eSIM%201GB',
+    downloadUrl: 'https://wa.me/2348033584736?text=Hi%20GOYE%20Store%2C%20I%20purchased%20Dubai%20eSIM%201GB',
+    filePath: 'https://wa.me/2348033584736?text=Hi%20GOYE%20Store%2C%20I%20purchased%20Dubai%20eSIM%201GB',
     description: 'Instant 1GB Dubai high-speed 5G/4G eSIM profile delivered via WhatsApp & Email within 60 seconds.',
     features: ['Instant WhatsApp QR Delivery', '1GB High-Speed 5G/4G UAE Data', 'Valid 3 Days in Dubai & UAE']
   },
@@ -42,8 +68,8 @@ export const ALL_PRODUCTS = [
     status: 'ACTIVE',
     visible: true,
     isDeleted: false,
-    downloadUrl: 'https://wa.me/2348162811195?text=Hi%20GOYE%20Store%2C%20I%20purchased%20Dubai%20Unlimited%20eSIM',
-    filePath: 'https://wa.me/2348162811195?text=Hi%20GOYE%20Store%2C%20I%20purchased%20Dubai%20Unlimited%20eSIM',
+    downloadUrl: 'https://wa.me/2348033584736?text=Hi%20GOYE%20Store%2C%20I%20purchased%20Dubai%20Unlimited%20eSIM',
+    filePath: 'https://wa.me/2348033584736?text=Hi%20GOYE%20Store%2C%20I%20purchased%20Dubai%20Unlimited%20eSIM',
     description: 'Unlimited High-Speed 5G/4G Dubai eSIM valid for 10 Days. Instant delivery via WhatsApp QR code & email.',
     features: ['Unlimited UAE 5G/4G Data', 'Valid 10 Days across Dubai & UAE', 'Instant WhatsApp QR Activation']
   },
@@ -65,8 +91,8 @@ export const ALL_PRODUCTS = [
     status: 'ACTIVE',
     visible: true,
     isDeleted: false,
-    downloadUrl: 'https://wa.me/2348162811195?text=Hi%20GOYE%20Store%2C%20I%20purchased%20GOYE%20eSIM%20Global',
-    filePath: 'https://wa.me/2348162811195?text=Hi%20GOYE%20Store%2C%20I%20purchased%20GOYE%20eSIM%20Global',
+    downloadUrl: 'https://wa.me/2348033584736?text=Hi%20GOYE%20Store%2C%20I%20purchased%20GOYE%20eSIM%20Global',
+    filePath: 'https://wa.me/2348033584736?text=Hi%20GOYE%20Store%2C%20I%20purchased%20GOYE%20eSIM%20Global',
     description: 'Global roaming eSIM valid in 190+ countries with 1GB data for 7 days. Instant QR activation.',
     features: ['190+ Countries Worldwide', '1GB High-Speed Roaming Data', 'Instant QR Code Activation']
   },
@@ -88,8 +114,8 @@ export const ALL_PRODUCTS = [
     status: 'ACTIVE',
     visible: true,
     isDeleted: false,
-    downloadUrl: 'https://wa.me/2348162811195?text=Hi%20GOYE%20Store%2C%20I%20purchased%20GOYE%20eSIM%20Global%205GB',
-    filePath: 'https://wa.me/2348162811195?text=Hi%20GOYE%20Store%2C%20I%20purchased%20GOYE%20eSIM%20Global%205GB',
+    downloadUrl: 'https://wa.me/2348033584736?text=Hi%20GOYE%20Store%2C%20I%20purchased%20GOYE%20eSIM%20Global%205GB',
+    filePath: 'https://wa.me/2348033584736?text=Hi%20GOYE%20Store%2C%20I%20purchased%20GOYE%20eSIM%20Global%205GB',
     description: 'Premium 5GB Global Data Package valid in 190+ countries for 30 days. High-speed 5G/4G roaming.',
     features: ['190+ Countries Coverage', '5GB 30-Day Global Roaming', 'Zero Roaming Fees']
   },
@@ -111,8 +137,8 @@ export const ALL_PRODUCTS = [
     status: 'ACTIVE',
     visible: true,
     isDeleted: false,
-    downloadUrl: 'https://wa.me/2348162811195?text=Hi%20GOYE%20Store%2C%20I%20purchased%20USA%20eSIM',
-    filePath: 'https://wa.me/2348162811195?text=Hi%20GOYE%20Store%2C%20I%20purchased%20USA%20eSIM',
+    downloadUrl: 'https://wa.me/2348033584736?text=Hi%20GOYE%20Store%2C%20I%20purchased%20USA%20eSIM',
+    filePath: 'https://wa.me/2348033584736?text=Hi%20GOYE%20Store%2C%20I%20purchased%20USA%20eSIM',
     description: 'AT&T / T-Mobile USA 5GB 5G/4G Data eSIM valid for 15 Days. Instant delivery.',
     features: ['AT&T & T-Mobile Network', '5GB High-Speed Data', 'Instant QR Profile']
   },
@@ -134,8 +160,8 @@ export const ALL_PRODUCTS = [
     status: 'ACTIVE',
     visible: true,
     isDeleted: false,
-    downloadUrl: 'https://wa.me/2348162811195?text=Hi%20GOYE%20Store%2C%20I%20purchased%20UK%20eSIM',
-    filePath: 'https://wa.me/2348162811195?text=Hi%20GOYE%20Store%2C%20I%20purchased%20UK%20eSIM',
+    downloadUrl: 'https://wa.me/2348033584736?text=Hi%20GOYE%20Store%2C%20I%20purchased%20UK%20eSIM',
+    filePath: 'https://wa.me/2348033584736?text=Hi%20GOYE%20Store%2C%20I%20purchased%20UK%20eSIM',
     description: 'EE & Vodafone UK 5GB High-Speed Data eSIM valid for 15 Days.',
     features: ['EE & Vodafone UK Networks', '5GB 5G/4G LTE Data', 'Instant Setup']
   },
@@ -157,8 +183,8 @@ export const ALL_PRODUCTS = [
     status: 'ACTIVE',
     visible: true,
     isDeleted: false,
-    downloadUrl: 'https://wa.me/2348162811195?text=Hi%20GOYE%20Store%2C%20I%20purchased%20Canada%20eSIM',
-    filePath: 'https://wa.me/2348162811195?text=Hi%20GOYE%20Store%2C%20I%20purchased%20Canada%20eSIM',
+    downloadUrl: 'https://wa.me/2348033584736?text=Hi%20GOYE%20Store%2C%20I%20purchased%20Canada%20eSIM',
+    filePath: 'https://wa.me/2348033584736?text=Hi%20GOYE%20Store%2C%20I%20purchased%20Canada%20eSIM',
     description: 'Rogers / Bell / Telus Canada 5GB Data eSIM valid for 15 Days across all Canadian provinces.',
     features: ['Rogers & Bell Networks', '5GB 5G Data', 'Instant WhatsApp QR']
   },
@@ -180,8 +206,8 @@ export const ALL_PRODUCTS = [
     status: 'ACTIVE',
     visible: true,
     isDeleted: false,
-    downloadUrl: 'https://wa.me/2348162811195?text=Hi%20GOYE%20Store%2C%20I%20purchased%20Europe%20eSIM',
-    filePath: 'https://wa.me/2348162811195?text=Hi%20GOYE%20Store%2C%20I%20purchased%20Europe%20eSIM',
+    downloadUrl: 'https://wa.me/2348033584736?text=Hi%20GOYE%20Store%2C%20I%20purchased%20Europe%20eSIM',
+    filePath: 'https://wa.me/2348033584736?text=Hi%20GOYE%20Store%2C%20I%20purchased%20Europe%20eSIM',
     description: 'Seamless roaming across 30 European countries (UK, France, Germany, Italy, Spain, etc.) with 10GB data.',
     features: ['30 European Countries', '10GB High-Speed 5G', '30 Days Validity']
   },
@@ -203,8 +229,8 @@ export const ALL_PRODUCTS = [
     status: 'ACTIVE',
     visible: true,
     isDeleted: false,
-    downloadUrl: 'https://wa.me/2348162811195?text=Hi%20GOYE%20Store%2C%20I%20purchased%20Asia%20eSIM',
-    filePath: 'https://wa.me/2348162811195?text=Hi%20GOYE%20Store%2C%20I%20purchased%20Asia%20eSIM',
+    downloadUrl: 'https://wa.me/2348033584736?text=Hi%20GOYE%20Store%2C%20I%20purchased%20Asia%20eSIM',
+    filePath: 'https://wa.me/2348033584736?text=Hi%20GOYE%20Store%2C%20I%20purchased%20Asia%20eSIM',
     description: 'High-speed 5GB data valid in Singapore, Malaysia, Thailand, Vietnam, Philippines, Indonesia & Hong Kong.',
     features: ['12 Asian Countries', '5GB High-Speed 5G', '15 Days Validity']
   },
@@ -226,8 +252,8 @@ export const ALL_PRODUCTS = [
     status: 'ACTIVE',
     visible: true,
     isDeleted: false,
-    downloadUrl: 'https://wa.me/2348162811195?text=Hi%20GOYE%20Store%2C%20I%20purchased%20France%20eSIM',
-    filePath: 'https://wa.me/2348162811195?text=Hi%20GOYE%20Store%2C%20I%20purchased%20France%20eSIM',
+    downloadUrl: 'https://wa.me/2348033584736?text=Hi%20GOYE%20Store%2C%20I%20purchased%20France%20eSIM',
+    filePath: 'https://wa.me/2348033584736?text=Hi%20GOYE%20Store%2C%20I%20purchased%20France%20eSIM',
     description: 'Orange & SFR France 10GB 5G/4G eSIM profile. Instant delivery for Paris & French territories.',
     features: ['Orange & SFR Networks', '10GB 5G Data', 'Valid 30 Days']
   },
@@ -249,8 +275,8 @@ export const ALL_PRODUCTS = [
     status: 'ACTIVE',
     visible: true,
     isDeleted: false,
-    downloadUrl: 'https://wa.me/2348162811195?text=Hi%20GOYE%20Store%2C%20I%20purchased%20Germany%20eSIM',
-    filePath: 'https://wa.me/2348162811195?text=Hi%20GOYE%20Store%2C%20I%20purchased%20Germany%20eSIM',
+    downloadUrl: 'https://wa.me/2348033584736?text=Hi%20GOYE%20Store%2C%20I%20purchased%20Germany%20eSIM',
+    filePath: 'https://wa.me/2348033584736?text=Hi%20GOYE%20Store%2C%20I%20purchased%20Germany%20eSIM',
     description: 'Telekom & Vodafone Germany 10GB 5G eSIM profile. High-speed nationwide data.',
     features: ['Telekom Germany Network', '10GB 5G Data', '30 Days Validity']
   },
@@ -272,8 +298,8 @@ export const ALL_PRODUCTS = [
     status: 'ACTIVE',
     visible: true,
     isDeleted: false,
-    downloadUrl: 'https://wa.me/2348162811195?text=Hi%20GOYE%20Store%2C%20I%20purchased%20Japan%20eSIM',
-    filePath: 'https://wa.me/2348162811195?text=Hi%20GOYE%20Store%2C%20I%20purchased%20Japan%20eSIM',
+    downloadUrl: 'https://wa.me/2348033584736?text=Hi%20GOYE%20Store%2C%20I%20purchased%20Japan%20eSIM',
+    filePath: 'https://wa.me/2348033584736?text=Hi%20GOYE%20Store%2C%20I%20purchased%20Japan%20eSIM',
     description: 'NTT Docomo Japan 1GB High-Speed eSIM profile. Perfect for Tokyo, Osaka & Kyoto travelers.',
     features: ['NTT Docomo Network', '1GB High-Speed Data', '7 Days Validity']
   },
@@ -295,8 +321,8 @@ export const ALL_PRODUCTS = [
     status: 'ACTIVE',
     visible: true,
     isDeleted: false,
-    downloadUrl: 'https://wa.me/2348162811195?text=Hi%20GOYE%20Store%2C%20I%20purchased%20Turkey%20eSIM',
-    filePath: 'https://wa.me/2348162811195?text=Hi%20GOYE%20Store%2C%20I%20purchased%20Turkey%20eSIM',
+    downloadUrl: 'https://wa.me/2348033584736?text=Hi%20GOYE%20Store%2C%20I%20purchased%20Turkey%20eSIM',
+    filePath: 'https://wa.me/2348033584736?text=Hi%20GOYE%20Store%2C%20I%20purchased%20Turkey%20eSIM',
     description: 'Turkcell & Vodafone Turkey 1GB Data eSIM profile for Istanbul, Antalya & Cappadocia.',
     features: ['Turkcell 5G Network', '1GB High-Speed Data', '7 Days Validity']
   },
@@ -318,8 +344,8 @@ export const ALL_PRODUCTS = [
     status: 'ACTIVE',
     visible: true,
     isDeleted: false,
-    downloadUrl: 'https://wa.me/2348162811195?text=Hi%20GOYE%20Store%2C%20I%20purchased%20Saudi%20eSIM',
-    filePath: 'https://wa.me/2348162811195?text=Hi%20GOYE%20Store%2C%20I%20purchased%20Saudi%20eSIM',
+    downloadUrl: 'https://wa.me/2348033584736?text=Hi%20GOYE%20Store%2C%20I%20purchased%20Saudi%20eSIM',
+    filePath: 'https://wa.me/2348033584736?text=Hi%20GOYE%20Store%2C%20I%20purchased%20Saudi%20eSIM',
     description: 'STC / Mobily Saudi Arabia 3GB High-Speed eSIM. Ideal for Hajj, Umrah & Riyadh business travel.',
     features: ['STC & Mobily Networks', '3GB High-Speed Data', '14 Days Validity']
   },
@@ -341,8 +367,8 @@ export const ALL_PRODUCTS = [
     status: 'ACTIVE',
     visible: true,
     isDeleted: false,
-    downloadUrl: 'https://wa.me/2348162811195?text=Hi%20GOYE%20Store%2C%20I%20purchased%20South%20Africa%20eSIM',
-    filePath: 'https://wa.me/2348162811195?text=Hi%20GOYE%20Store%2C%20I%20purchased%20South%20Africa%20eSIM',
+    downloadUrl: 'https://wa.me/2348033584736?text=Hi%20GOYE%20Store%2C%20I%20purchased%20South%20Africa%20eSIM',
+    filePath: 'https://wa.me/2348033584736?text=Hi%20GOYE%20Store%2C%20I%20purchased%20South%20Africa%20eSIM',
     description: 'MTN & Vodacom South Africa 5GB Data eSIM profile valid for Johannesburg, Cape Town & Durban.',
     features: ['MTN & Vodacom Networks', '5GB 5G/4G Data', '15 Days Validity']
   },

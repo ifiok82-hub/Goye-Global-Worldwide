@@ -25,18 +25,59 @@ import { trackUserClick } from './utils/analytics';
 import { cleanUserEmail } from './lib/contact';
 
 
-// Dummy components for things that were in App.tsx
-const HeroSection = ({ onLogoTap, onPlayVideo, onOpenLeadMagnet }: any) => (
+// Urgency Countdown Banner at top of gasv.store
+const UrgencyCountdownBanner = () => {
+  const [timeLeft, setTimeLeft] = useState(872); // ~14:32 ticking timer
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft(prev => (prev > 0 ? prev - 1 : 900));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const minutes = Math.floor(timeLeft / 60);
+  const seconds = timeLeft % 60;
+  const timeFormatted = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+  return (
+    <div className="bg-gradient-to-r from-[#111] via-[#1a1400] to-[#111] border-b border-[#FFD700]/40 text-[#FFD700] text-xs font-bold py-2 px-4 text-center sticky top-0 z-[9990] backdrop-blur-md flex items-center justify-center gap-2 flex-wrap shadow-md">
+      <span className="inline-flex items-center gap-1.5 bg-[#FFD700] text-black px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider animate-pulse">
+        <Zap size={12} className="fill-black" /> LIVE
+      </span>
+      <span>⚡ Instant Auto-Delivery Active • 100% Verified SSL • Offer Expires in</span>
+      <span className="font-mono text-white bg-black/80 px-2 py-0.5 rounded border border-[#FFD700] font-black text-xs">
+        {timeFormatted}
+      </span>
+    </div>
+  );
+};
+
+// Floating WhatsApp Support Button
+const FloatingWhatsAppButton = () => (
+  <a
+    href="https://wa.me/2348033584736?text=Hello%20Goye%20Store%20Support!%20I%20need%20assistance%20with%20my%20order"
+    target="_blank"
+    rel="noreferrer"
+    className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-[9995] bg-[#25D366] hover:bg-[#20ba5a] text-white p-3.5 rounded-full shadow-[0_4px_20px_rgba(37,211,102,0.5)] flex items-center gap-2 font-bold text-xs transition-transform active:scale-95 border-2 border-white/20 group cursor-pointer"
+    title="Need Help? Chat on WhatsApp"
+  >
+    <MessageCircle size={24} className="fill-white text-[#25D366]" />
+    <span className="hidden sm:inline font-bold pr-1">Need Help? Chat 24/7</span>
+  </a>
+);
+
+// Hero Section with Tripwire Offer
+const HeroSection = ({ onLogoTap, onPlayVideo, onOpenLeadMagnet, onOpenTripwire }: any) => (
   <div className="bg-[#0a0a0a] border border-[#FFD700] rounded-[2rem] p-6 text-center mt-6 relative mx-4 pointer-events-auto">
     <div className="flex flex-col gap-3 mb-8">
       <div className="bg-[#FFD700] text-black text-[11px] font-bold py-2 px-5 rounded-full mx-auto inline-flex items-center gap-2">
         <span className="text-yellow-600">⚡</span> 100% DIGITAL PRODUCTS STORE
       </div>
       <button 
-        onClick={onOpenLeadMagnet}
-        className="bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 text-black font-black text-xs py-2 px-4 rounded-xl mx-auto inline-flex items-center gap-2 shadow-lg transition active:scale-95 cursor-pointer"
+        onClick={onOpenTripwire || onOpenLeadMagnet}
+        className="bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 hover:from-yellow-300 hover:to-amber-300 text-black font-black text-xs sm:text-sm py-3.5 px-6 rounded-2xl mx-auto flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(255,215,0,0.4)] transition active:scale-95 cursor-pointer border border-yellow-200"
       >
-        <span>🎁 Free Download: 5-Minute AI Prompt Blueprint</span>
+        <span>⚡ Get the AI Starter & Global Travel Pass for $1 / 0.000003 Pi</span>
       </button>
     </div>
     
@@ -50,19 +91,19 @@ const HeroSection = ({ onLogoTap, onPlayVideo, onOpenLeadMagnet }: any) => (
         <div className="text-3xl mb-2">🤖</div>
         <h3 className="text-white font-bold mb-1">AI Mastery</h3>
         <p className="text-gray-400 text-xs mb-4">Master AI and machine learning for business</p>
-        <button onClick={() => { window.location.hash = 'academy'; }} className="bg-[#FFD700] text-black text-xs font-bold w-full py-2 rounded-lg">Start Learning</button>
+        <button onClick={() => { window.location.hash = 'academy'; }} className="bg-[#FFD700] text-black text-xs font-bold w-full py-2 rounded-lg cursor-pointer">Start Learning</button>
       </div>
       <div className="bg-[#111] p-4 rounded-xl border border-[#333] hover:border-[#FFD700] transition">
         <div className="text-3xl mb-2">💰</div>
         <h3 className="text-white font-bold mb-1">Crypto & DeFi</h3>
         <p className="text-gray-400 text-xs mb-4">Deep dive into decentralized finance and trading</p>
-        <button onClick={() => { window.location.hash = 'academy'; }} className="bg-[#FFD700] text-black text-xs font-bold w-full py-2 rounded-lg">Start Learning</button>
+        <button onClick={() => { window.location.hash = 'academy'; }} className="bg-[#FFD700] text-black text-xs font-bold w-full py-2 rounded-lg cursor-pointer">Start Learning</button>
       </div>
       <div className="bg-[#111] p-4 rounded-xl border border-[#333] hover:border-[#FFD700] transition">
         <div className="text-3xl mb-2">π</div>
         <h3 className="text-white font-bold mb-1">Pi Network GCV</h3>
         <p className="text-gray-400 text-xs mb-4">Understanding Pi Network at Global Consensus Value</p>
-        <button onClick={() => { window.location.hash = 'academy'; }} className="bg-[#FFD700] text-black text-xs font-bold w-full py-2 rounded-lg">Start Learning</button>
+        <button onClick={() => { window.location.hash = 'academy'; }} className="bg-[#FFD700] text-black text-xs font-bold w-full py-2 rounded-lg cursor-pointer">Start Learning</button>
       </div>
     </div>
   </div>
@@ -157,7 +198,7 @@ export default function App() {
       visible: true,
       isDeleted: false,
       price: (!p.price || Number(p.price) <= 0) ? 1.00 : Number(p.price),
-      downloadUrl: p.downloadUrl || p.filePath || (p.category === 'esim' || p.category === 'dubai' ? 'https://wa.me/2348162811195?text=Hi%20GOYE%20Store' : 'https://www.gasv.store/support'),
+      downloadUrl: p.downloadUrl || p.filePath || (p.category === 'esim' || p.category === 'dubai' ? 'https://wa.me/2348033584736?text=Hi%20GOYE%20Store' : 'https://www.gasv.store/support'),
       filePath: p.filePath || p.downloadUrl || 'https://www.gasv.store/support'
     }));
 
@@ -933,6 +974,8 @@ export default function App() {
       )}
 
             
+      <UrgencyCountdownBanner />
+
       <header style={{ position: 'sticky', top: 0, zIndex: 50, width: '100%', background: '#000', borderBottom: '1px solid #333' }}>
         {/* Top Pi GCV Bar - Clean conditional render */}
         <div id="piGcvBar" className="flex items-center justify-between px-3 py-2 bg-black border-b border-[#222]">
@@ -1071,6 +1114,58 @@ export default function App() {
 
             {tab === 'home' && (
               <>
+                {/* 1. TRIPWIRE MICRO-OFFER CARD AT TOP OF HOMEPAGE */}
+                <div className="bg-[#0f0f0f] border-2 border-[#FFD700] rounded-2xl p-4 sm:p-5 mb-6 text-left shadow-[0_0_30px_rgba(255,215,0,0.25)] relative overflow-hidden">
+                  <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
+                    <span className="bg-[#FFD700] text-black font-black text-[11px] px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5 animate-pulse">
+                      <Zap size={12} className="fill-black" /> TRIPWIRE MICRO-OFFER ($1 / 0.000003 Pi)
+                    </span>
+                    <span className="text-[#10B981] font-mono font-black text-xs bg-[#1a1a1a] px-2.5 py-1 rounded-lg border border-[#10B981]/40">
+                      0.000003 Pi GCV
+                    </span>
+                  </div>
+
+                  <h2 className="text-white text-lg sm:text-xl font-black mb-1">
+                    Get the <span className="text-[#FFD700]">AI Starter & Global Travel Pass</span> for $1 / 0.000003 Pi
+                  </h2>
+                  <p className="text-gray-300 text-xs sm:text-sm mb-3 font-medium">
+                    Includes 3 High-Impact Copy-Paste Prompts + 1GB Travel eSIM Trial + 1-Day Access Pass to Sirwise AI Academy.
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs text-gray-200 mb-4">
+                    <div className="bg-[#1a1a1a] p-2.5 rounded-xl border border-[#333] flex items-center gap-2">
+                      <span className="text-[#FFD700] text-base">🤖</span>
+                      <span><strong>3 Copy-Paste Prompts</strong> for ChatGPT/Gemini</span>
+                    </div>
+                    <div className="bg-[#1a1a1a] p-2.5 rounded-xl border border-[#333] flex items-center gap-2">
+                      <span className="text-[#FFD700] text-base">🌐</span>
+                      <span><strong>1GB Travel eSIM Trial</strong> for 190+ countries</span>
+                    </div>
+                    <div className="bg-[#1a1a1a] p-2.5 rounded-xl border border-[#333] flex items-center gap-2">
+                      <span className="text-[#FFD700] text-base">🎓</span>
+                      <span><strong>1-Day Academy Access</strong> Pass to Sirwise AI</span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      const tripwireProd = products.find((p: any) => p.id === 'ai-starter-tripwire-pass') || {
+                        id: 'ai-starter-tripwire-pass',
+                        name: 'AI Starter & Global Travel Pass ($1 / 0.000003 Pi)',
+                        price: 1.00,
+                        priceUSD: 1.00,
+                        priceNGN: 1500,
+                        category: 'starter'
+                      };
+                      setSelectedProduct(tripwireProd);
+                    }}
+                    className="w-full bg-gradient-to-r from-[#FFD700] via-amber-400 to-[#FFA500] hover:brightness-110 text-black font-black py-3.5 px-5 rounded-xl flex items-center justify-center gap-2 text-sm shadow-lg transition active:scale-95 cursor-pointer border border-yellow-200"
+                  >
+                    <span>⚡ Get the AI Starter & Global Travel Pass for $1 / 0.000003 Pi</span>
+                    <ChevronRight size={18} />
+                  </button>
+                </div>
+
                 {/* 2. NEW HERO SECTION */}
                 <div className="bg-[#FFD700] text-black p-5 rounded-2xl shadow-xl border-2 border-black mb-6">
                   <div className="flex flex-col gap-4">
@@ -1887,6 +1982,7 @@ export default function App() {
         </a>
       </nav>
       {/* Floating Widgets */}
+      <FloatingWhatsAppButton />
       <div className="fixed bottom-[90px] right-[20px] z-[99999] cursor-pointer pointer-events-auto">
         <button onClick={() => setShowSirwiseBot(true)} className="bg-[#FFD700] text-black w-14 h-14 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(255,215,0,0.4)] relative transition hover:scale-105 active:scale-95 border-2 border-black text-2xl font-black">
           🤖

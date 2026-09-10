@@ -417,31 +417,50 @@ Structure the output into 4 clear sections: Executive Summary, Project Scope, Ti
           <div className="overflow-y-auto pr-1">
             {/* Top Badge */}
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#FFD700]/10 border border-[#FFD700]/40 rounded-full text-[#FFD700] text-xs font-bold uppercase tracking-wider mb-4">
-              <Sparkles size={14} /> Free Instant Access
+              <Sparkles size={14} /> TRIPWIRE MICRO-OFFER ($1 / 0.000003 Pi)
             </div>
 
             {/* Headline */}
             <h2 className="text-2xl sm:text-3xl font-black text-white leading-tight mb-2">
-              Free Download: <span className="text-[#FFD700]">The 5-Minute AI Prompt Blueprint</span> for Entrepreneurs
+              Get the <span className="text-[#FFD700]">AI Starter & Global Travel Pass</span> for $1 / 0.000003 Pi
             </h2>
             <p className="text-gray-300 text-sm sm:text-base mb-6 font-medium">
-              Save 15+ hours a week automating your business, marketing, and sales copy using battle-tested AI prompts.
+              3 High-Impact Copy-Paste Prompts + 1GB Travel eSIM Trial + 1-Day Access to Sirwise AI Academy.
             </p>
 
             {/* Feature Checklist */}
             <div className="space-y-3 mb-6 bg-[#161616] p-4 rounded-2xl border border-[#2A2A2A]">
               <div className="flex items-start gap-3 text-xs sm:text-sm text-gray-200">
                 <CheckCircle2 size={18} className="text-[#FFD700] shrink-0 mt-0.5" />
-                <span><strong>4 Battle-Tested AI Prompts</strong> to automate content, proposals & sales</span>
+                <span><strong>3 High-Impact Copy-Paste Prompts</strong> for ChatGPT, Claude & Gemini</span>
               </div>
               <div className="flex items-start gap-3 text-xs sm:text-sm text-gray-200">
                 <CheckCircle2 size={18} className="text-[#FFD700] shrink-0 mt-0.5" />
-                <span><strong>Copy-Paste Formulas</strong> compatible with ChatGPT, Gemini, & Claude</span>
+                <span><strong>1GB Global Travel eSIM Trial</strong> for 190+ countries instant activation</span>
               </div>
               <div className="flex items-start gap-3 text-xs sm:text-sm text-gray-200">
                 <CheckCircle2 size={18} className="text-[#FFD700] shrink-0 mt-0.5" />
-                <span><strong>Instant Free Download</strong> — No credit card required</span>
+                <span><strong>1-Day Full VIP Access Pass</strong> to Sirwise AI Web3 Academy</span>
               </div>
+            </div>
+
+            {/* Direct Micro-Offer Claim Button */}
+            <div className="space-y-3 mb-6">
+              <button 
+                type="button" 
+                onClick={() => {
+                  if (onClaimTripwire) {
+                    onClaimTripwire();
+                  } else {
+                    onClose();
+                  }
+                }}
+                style={{ width: '100%', padding: '16px', background: 'linear-gradient(90deg, #FFD700 0%, #FFA500 100%)', color: 'black', borderRadius: '16px', fontWeight: 900, fontSize: '16px', cursor: 'pointer', border: 'none' }}
+                className="hover:brightness-110 active:scale-95 transition shadow-[0_0_25px_rgba(255,215,0,0.4)] flex items-center justify-center gap-2"
+              >
+                <span>⚡ Claim Pass Now for $1 / 0.000003 Pi (₦1,500)</span>
+                <ArrowRight size={18} />
+              </button>
             </div>
 
             {/* Lead Capture Form */}
