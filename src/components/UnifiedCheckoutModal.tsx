@@ -733,14 +733,14 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                 
                 <div className="bg-black p-4 rounded-xl border border-[#7D2AE7]/50 my-3">
                   <div className="text-xs text-gray-400 font-bold mb-1">Amount Due</div>
-                  <div className="text-2xl font-black text-[#FFD700]">{(priceUSD / 314159).toFixed(6)} Pi GCV</div>
+                  <div className="text-2xl font-black text-[#FFD700]">{product?.id === 'pi-testnet-test' ? '0.000100' : (priceUSD / 314159).toFixed(6)} Pi GCV</div>
                   <div className="text-xs text-gray-400 mt-1">(${priceUSD} USD / ₦{nairaAmount})</div>
                 </div>
 
                 <button 
                   onClick={() => {
                     if (typeof (window as any).createPiPayment === 'function') {
-                      const amountToPay = product?.id === 'pi-testnet-test' ? 0.01 : priceUSD;
+                      const amountToPay = product?.id === 'pi-testnet-test' ? 0.0001 : priceUSD;
                       (window as any).createPiPayment(amountToPay, product?.name || 'Pi Network Order');
                     } else {
                       alert('Pi Network payment initializer loading...');
@@ -1037,10 +1037,10 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                     return;
                   }
                   if (typeof (window as any).createPiPayment === 'function') {
-                    const amountToPay = product?.id === 'pi-testnet-test' ? 0.01 : priceUSD;
+                    const amountToPay = product?.id === 'pi-testnet-test' ? 0.0001 : priceUSD;
                     (window as any).createPiPayment(amountToPay, product?.name || 'Pi Network Order');
                   } else if (typeof (window as any).payWithPi === 'function') {
-                    const amountToPay = product?.id === 'pi-testnet-test' ? 0.01 : priceUSD;
+                    const amountToPay = product?.id === 'pi-testnet-test' ? 0.0001 : priceUSD;
                     (window as any).payWithPi(userEmail, amountToPay);
                   } else {
                     alert('Please open https://www.gasv.store in the Pi Browser app to pay with Pi SDK!');

@@ -1,11 +1,20 @@
 export async function POST(req: Request) {
   try {
-    let body: any = {};
-    try { body = await req.json(); } catch (e) {}
-    const paymentId = body.paymentId || 'pi_pay_' + Date.now();
-    const txid = body.txid || 'pi_tx_' + Date.now();
-    return Response.json({ completed: true, paymentId, txid, status: 'VERIFIED', unlocked: true });
-  } catch (err: any) {
-    return Response.json({ completed: true, status: 'VERIFIED', notice: err.message });
+    const { paymentId, txid } = await req.json();
+    if (!paymentId || !txid) return Response.json({ completed: false, error: 'paymentId and txid are required' }, { status: 400 });
+
+    const apiKey = process.env.PI_VALIDATION_KEY;
+    if (!apiKey) return Response.json({ completed: false, error: 'PI_VALIDATION_KEY is not configured' }, { status: 500 });
+
+    const response = await fetch(`https://api.testnet.minepi.com/v2/payments/${encodeURIComponent(paymentId)}/complete`, {
+      method: 'POST',
+      headers: { Authorization: `Key ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ txid }),
+      cache: 'no-store'
+    });
+    const data = await response.json();
+    return Response.json({ ...data, completed: response.ok && Boolean(data.transaction?.txid || data.txid), paymentId, txid }, { status: response.ok ? 200 : response.status });
+  } catch (error) {
+    return Response.json({ completed: false, error: error instanceof Error ? error.message : 'Completion failed' }, { status: 500 });
   }
 }

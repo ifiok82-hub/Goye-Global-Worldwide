@@ -316,9 +316,9 @@ window.initPiSDK = function() {
   try {
     if (typeof Pi !== 'undefined') {
       try {
-        Pi.init({ version: "2.0", sandbox: false });
+        Pi.init({ version: "2.0", sandbox: true });
         piReady = true;
-        console.log('Pi SDK Mainnet ready');
+        console.log('Pi SDK Testnet ready');
       } catch(e) {
         try {
           Pi.init({ version: "2.0", sandbox: true });
@@ -419,8 +419,8 @@ window.createPiPayment = async function(inputAmount, itemTitle) {
   let piAmount, usdAmount;
   itemTitle = itemTitle || "Pi Network Testnet Payment";
   if (!inputAmount) {
-    piAmount = 0.01;
-    usdAmount = 3141.59;
+    piAmount = 0.0001;
+    usdAmount = 31.4159;
   } else if (typeof inputAmount === 'number' && inputAmount < 1) {
     piAmount = inputAmount;
     usdAmount = piAmount * (window.GCV_RATE || 314159);
@@ -428,7 +428,7 @@ window.createPiPayment = async function(inputAmount, itemTitle) {
     usdAmount = parseFloat(inputAmount) || 49.99;
     piAmount = parseFloat((usdAmount / (window.GCV_RATE || 314159)).toFixed(6));
   }
-  if (piAmount <= 0) piAmount = 0.01;
+  if (piAmount <= 0) piAmount = 0.0001;
 
   if (typeof Pi === 'undefined') {
     showToast('Pay with Pi is active inside Pi Browser app. Opening Pi guide...', 'info');

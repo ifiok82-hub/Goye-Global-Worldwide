@@ -340,8 +340,8 @@ export default function App() {
       });
       await Pi.createPayment(
         {
-          amount: 0.01,
-          memo: 'Pi Testnet Payment Test (0.01 Pi) - Official Developer Portal Testnet Verification - RC BN3583773 - gasv.store',
+          amount: 0.0001,
+          memo: 'Pi Testnet Payment Test (0.0001 Pi) - Official Developer Portal Testnet Verification - RC BN3583773 - gasv.store',
           metadata: { product: 'pi-testnet-test', email, type: 'testnet-checklist' }
         },
         {
@@ -358,12 +358,14 @@ export default function App() {
             fetch('/api/pi/complete', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ paymentId: id, txid, email, productName: 'Pi Testnet Payment Test' })
-            }).then(() => {
+              body: JSON.stringify({ paymentId: id, txid, email, productName: 'Pi Testnet Payment Test', amount: 0.0001, environment: 'testnet' })
+            }).then(async (response) => {
+              const result = await response.json();
+              if (!response.ok || !result.completed) throw new Error(result.error || 'Pi completion was not verified');
               if (typeof (window as any).unlockAcademy === 'function') {
-                (window as any).unlockAcademy(email, 'Pi Testnet 0.01 Pi GREEN Checklist', txid);
+                (window as any).unlockAcademy(email, 'Pi Testnet 0.0001 Pi GREEN Checklist', txid);
               } else if (typeof (window as any).unlockAcademyAccess === 'function') {
-                (window as any).unlockAcademyAccess('Pi Testnet 0.01 Pi GREEN Checklist', email, txid);
+                (window as any).unlockAcademyAccess('Pi Testnet 0.0001 Pi GREEN Checklist', email, txid);
               } else {
                 localStorage.setItem('academy_full_unlocked', 'true');
                 localStorage.setItem('pi_testnet_paid', 'true');
