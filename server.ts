@@ -67,6 +67,42 @@ app.use(['/validation-key.txt', '/.well-known/validation-key.txt', '/validation-
   res.send(PI_VALIDATION_KEY);
 });
 
+let savedKeys = {
+  pi_api_key: process.env.PI_API_KEY || '',
+  pi_wallet: process.env.PI_WALLET || 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ',
+  pi_sandbox: process.env.PI_SANDBOX || 'true',
+  paystack: process.env.PAYSTACK_PUBLIC_KEY || '',
+  flutterwave: process.env.FLUTTERWAVE_PUBLIC_KEY || '',
+  usdt: '0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96',
+  usdc: '0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96',
+  opay: '6113541882',
+  opay_name: 'GOYE STORE GLOBAL'
+};
+
+try {
+  if (fs.existsSync('./keys.json')) {
+    savedKeys = { ...savedKeys, ...JSON.parse(fs.readFileSync('./keys.json', 'utf8')) };
+  }
+} catch(e) {}
+
+app.post('/api/admin/save-keys', express.json(), (req, res) => {
+  savedKeys = { ...savedKeys, ...req.body };
+  console.log('Keys saved. PI_API_KEY present:', !!savedKeys.pi_api_key);
+  try {
+    fs.writeFileSync('./keys.json', JSON.stringify(savedKeys));
+  } catch(e) {}
+  res.json({ success: true, keys: savedKeys });
+});
+
+app.get('/api/admin/keys', (req, res) => {
+  try {
+    const f = fs.readFileSync('./keys.json', 'utf8');
+    res.json(JSON.parse(f));
+  } catch(e) {
+    res.json(savedKeys);
+  }
+});
+
 let leadsDB: any[] = [];
 let clicksDB: any[] = [];
 app.post('/api/leads', express.json(), (req, res) => { leadsDB.unshift({ ...req.body, id: Date.now(), date: new Date().toLocaleString('en-NG', { timeZone: 'Africa/Lagos' }) }); try { fs.writeFileSync('./leads.json', JSON.stringify(leadsDB.slice(0, 500))); } catch (e) {} res.json({ success: true }); });
@@ -161,8 +197,8 @@ app.use(['/validation-key.txt', '/.well-known/validation-key.txt', '/validation-
 });
 
 app.get('/api/pi-config', (req, res) => {
-  const apiKey = process.env.PI_API_KEY;
-  const sandbox = process.env.PI_SANDBOX === 'true';
+  const apiKey = savedKeys.pi_api_key || process.env.PI_API_KEY || '';
+  const sandbox = savedKeys.pi_sandbox === 'true' || process.env.PI_SANDBOX === 'true';
   console.log('Pi config check - apiKey exists:', !!apiKey, 'sandbox:', sandbox);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.json({
@@ -177,7 +213,7 @@ app.get('/api/pi-config', (req, res) => {
     amount_pi: 49.99 / 314159,
     amount_usd: 49.99,
     amount_ngn: 74985,
-    status: apiKey ? '✅ Pi API Key configured - Real Pi payments enabled - ' + apiKey.substring(0, 6) + '...' : '⚠️ PI_API_KEY not configured - Add in Environment Variables from develop.pi',
+    status: apiKey ? '✅ Pi API Key configured - Real Pi payments enabled - ' + apiKey.substring(0, 6) + '...' : '⚠️ PI_API_KEY not configured - Add in #admin-settings or Environment Variables',
     timestamp: new Date().toISOString(),
     wat: new Date().toLocaleString('en-GB', { timeZone: 'Africa/Lagos' }) + ' WAT Lagos'
   });
@@ -185,13 +221,14 @@ app.get('/api/pi-config', (req, res) => {
 
 app.post(['/api/pi/approve', '/api/pi-approve'], async (req, res) => {
   const { paymentId, environment } = req.body || {};
-  console.log(`[Pi Approve Request] paymentId: ${paymentId} | env: ${environment || 'testnet'}`);
-  const apiKey = process.env.PI_API_KEY;
-  if (!apiKey) {
-    console.error('[Pi Approve Error] PI_API_KEY environment variable missing');
-    return res.status(200).json({ approved: true, paymentId, note: 'Approved without API Key' });
-  }
+  const apiKey = savedKeys.pi_api_key || process.env.PI_API_KEY || '';
+  console.log(`[Pi Approve Request] paymentId: ${paymentId} | Key present: ${!!apiKey} | env: ${environment || 'testnet'}`);
   if (!paymentId) return res.status(400).json({ error: 'paymentId required', approved: false });
+
+  if (!apiKey) {
+    console.log('No PI_API_KEY - Using fallback approve for Testnet checklist');
+    return res.status(200).json({ approved: true, fallback: true, paymentId, message: 'Save PI_API_KEY in #admin-settings' });
+  }
 
   try {
     const controller = new AbortController();
@@ -201,6 +238,7 @@ app.post(['/api/pi/approve', '/api/pi-approve'], async (req, res) => {
       method: 'POST',
       headers: {
         'Authorization': `Key ${apiKey}`,
+        'X-API-Key': apiKey,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({}),
@@ -214,19 +252,19 @@ app.post(['/api/pi/approve', '/api/pi-approve'], async (req, res) => {
     return res.status(200).json({ approved: true, paymentId, piData: data });
   } catch (e: any) {
     console.error('[Pi Approve Exception]', e?.message || e);
-    return res.status(200).json({ approved: true, paymentId, error: e?.message || 'Approved fallback' });
+    return res.status(200).json({ approved: true, fallback: true, paymentId, error: e?.message || 'Approved fallback' });
   }
 });
 
 app.post(['/api/pi/complete', '/api/pi-complete'], async (req, res) => {
   const { paymentId, txid, email, productName, amount, environment } = req.body || {};
-  const apiKey = process.env.PI_API_KEY;
+  const apiKey = savedKeys.pi_api_key || process.env.PI_API_KEY || '';
   if (!paymentId || !txid) {
     return res.status(400).json({ error: 'paymentId and txid required', completed: false });
   }
 
   try {
-    console.log(`[Pi Complete Request] paymentId: ${paymentId} with txid: ${txid} | env: ${environment || 'testnet'}`);
+    console.log(`[Pi Complete Request] paymentId: ${paymentId} with txid: ${txid} | Key present: ${!!apiKey} | env: ${environment || 'testnet'}`);
     let data = {};
     if (apiKey) {
       const controller = new AbortController();
@@ -236,6 +274,7 @@ app.post(['/api/pi/complete', '/api/pi-complete'], async (req, res) => {
         method: 'POST',
         headers: {
           'Authorization': `Key ${apiKey}`,
+          'X-API-Key': apiKey,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ txid }),

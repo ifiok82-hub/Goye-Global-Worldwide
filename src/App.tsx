@@ -16,6 +16,7 @@ import ReferralDashboardModal from './components/ReferralDashboardModal';
 import VoiceModal from './components/VoiceModal';
 import LanguageModal from './components/LanguageModal';
 import AdminDashboard from './components/AdminDashboard';
+import AdminSettings from './components/AdminSettings';
 import CurrencyModal, { CURRENCIES } from './components/CurrencyModal';
 import ShareBlueprintSection from './components/ShareBlueprintSection';
 import { Bell, User } from 'lucide-react';
@@ -1095,7 +1096,11 @@ export default function App() {
            />
         ) : null}
         
-        {(tab !== 'admin' && tab !== 'support') && (
+        {(tab === 'admin-settings' || tab === 'admin_settings') && (
+          <AdminSettings />
+        )}
+
+        {(tab !== 'admin' && tab !== 'support' && tab !== 'admin-settings' && tab !== 'admin_settings') && (
           <div className="px-4 mt-4 animate-in fade-in duration-500 pb-[100px]">
 
             {tab === 'home' && (
