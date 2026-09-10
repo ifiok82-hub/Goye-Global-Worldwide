@@ -740,7 +740,8 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                 <button 
                   onClick={() => {
                     if (typeof (window as any).createPiPayment === 'function') {
-                      (window as any).createPiPayment(priceUSD);
+                      const amountToPay = product?.id === 'pi-testnet-test' ? 0.01 : priceUSD;
+                      (window as any).createPiPayment(amountToPay, product?.name || 'Pi Network Order');
                     } else {
                       alert('Pi Network payment initializer loading...');
                     }
@@ -1036,9 +1037,11 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                     return;
                   }
                   if (typeof (window as any).createPiPayment === 'function') {
-                    (window as any).createPiPayment(priceUSD);
+                    const amountToPay = product?.id === 'pi-testnet-test' ? 0.01 : priceUSD;
+                    (window as any).createPiPayment(amountToPay, product?.name || 'Pi Network Order');
                   } else if (typeof (window as any).payWithPi === 'function') {
-                    (window as any).payWithPi(userEmail, priceUSD);
+                    const amountToPay = product?.id === 'pi-testnet-test' ? 0.01 : priceUSD;
+                    (window as any).payWithPi(userEmail, amountToPay);
                   } else {
                     alert('Please open https://www.gasv.store in the Pi Browser app to pay with Pi SDK!');
                   }

@@ -73,8 +73,6 @@ app.post('/api/leads', express.json(), (req, res) => { leadsDB.unshift({ ...req.
 app.get('/api/leads', (req, res) => res.json(leadsDB));
 app.post('/api/clicks', express.json(), (req, res) => { clicksDB.unshift({ ...req.body, id: Date.now() }); res.json({ success: true }); });
 app.get('/api/clicks', (req, res) => res.json(clicksDB));
-app.post('/api/pi/approve', express.json(), (req, res) => { console.log('Pi Approve', req.body.paymentId); res.json({ approved: true }); });
-app.post('/api/pi/complete', express.json(), (req, res) => { console.log('Pi Complete', req.body); leadsDB.unshift({ email: 'Pi User ' + req.body.txid, action: 'Paid Pi GCV', paymentId: req.body.paymentId, txid: req.body.txid, date: new Date().toISOString() }); res.json({ completed: true }); });
 
 app.post('/api/pi/verify', express.json(), (req, res) => {
   const { paymentId, txid, email, amount } = req.body;
@@ -185,81 +183,98 @@ app.get('/api/pi-config', (req, res) => {
   });
 });
 
-app.post('/api/pi/approve', async (req, res) => {
+app.post(['/api/pi/approve', '/api/pi-approve'], async (req, res) => {
   const { paymentId } = req.body || {};
   const apiKey = process.env.PI_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: 'PI_API_KEY not configured - Add in Env Vars from develop.pi' });
+  if (!apiKey) {
+    console.error('[Pi Approve Error] PI_API_KEY environment variable missing');
+    return res.status(500).json({ error: 'PI_API_KEY not configured' });
+  }
   if (!paymentId) return res.status(400).json({ error: 'paymentId required' });
+
   try {
+    console.log(`[Pi Approve] Requesting approval for paymentId: ${paymentId}`);
     const piRes = await fetch(`https://api.minepi.com/v2/payments/${paymentId}/approve`, {
       method: 'POST',
       headers: { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' }
     });
     const data = await piRes.json();
-    console.log('Pi approve:', paymentId, { ok: piRes.ok, status: piRes.status });
-    res.status(piRes.ok ? 200 : piRes.status).json(data);
+    console.log(`[Pi Approve Result] paymentId: ${paymentId} | status: ${piRes.status}`, data);
+    return res.status(piRes.ok ? 200 : piRes.status).json(data);
   } catch (e: any) {
-    console.error('Pi approve error', e);
-    res.status(500).json({ error: e.message });
+    console.error('[Pi Approve Exception]', e);
+    return res.status(500).json({ error: e.message });
   }
 });
 
-app.post('/api/pi-approve', async (req, res) => {
-  const { paymentId } = req.body || {};
+app.post(['/api/pi/complete', '/api/pi-complete'], async (req, res) => {
+  const { paymentId, txid, email, productName, amount } = req.body || {};
   const apiKey = process.env.PI_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: 'PI_API_KEY not configured - Add in Env Vars from develop.pi' });
-  if (!paymentId) return res.status(400).json({ error: 'paymentId required' });
-  try {
-    const piRes = await fetch(`https://api.minepi.com/v2/payments/${paymentId}/approve`, {
-      method: 'POST',
-      headers: { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' }
-    });
-    const data = await piRes.json();
-    console.log('Pi approve:', paymentId, { ok: piRes.ok, status: piRes.status });
-    res.status(piRes.ok ? 200 : piRes.status).json(data);
-  } catch (e: any) {
-    console.error('Pi approve error', e);
-    res.status(500).json({ error: e.message });
+  if (!apiKey) {
+    console.error('[Pi Complete Error] PI_API_KEY environment variable missing');
+    return res.status(500).json({ error: 'PI_API_KEY not configured' });
   }
-});
+  if (!paymentId || !txid) {
+    return res.status(400).json({ error: 'paymentId and txid required' });
+  }
 
-app.post('/api/pi/complete', async (req, res) => {
-  const { paymentId, txid } = req.body || {};
-  const apiKey = process.env.PI_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: 'PI_API_KEY not configured' });
-  if (!paymentId || !txid) return res.status(400).json({ error: 'paymentId and txid required' });
   try {
+    console.log(`[Pi Complete] Completing paymentId: ${paymentId} with txid: ${txid}`);
     const piRes = await fetch(`https://api.minepi.com/v2/payments/${paymentId}/complete`, {
       method: 'POST',
       headers: { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ txid })
     });
     const data = await piRes.json();
-    console.log('Pi complete:', paymentId, txid, { ok: piRes.ok, status: piRes.status });
-    res.status(piRes.ok ? 200 : piRes.status).json({ completed: piRes.ok, piData: data, amount_usd: 49.99, amount_pi: 49.99 / 314159, gcv: 314159, store: 'gasv.store', rc: 'BN3583773' });
-  } catch (e: any) {
-    console.error('Pi complete error', e);
-    res.status(500).json({ error: e.message });
-  }
-});
+    console.log(`[Pi Complete Result] paymentId: ${paymentId} | status: ${piRes.status}`, data);
 
-app.post('/api/pi-complete', async (req, res) => {
-  const { paymentId, txid } = req.body || {};
-  const apiKey = process.env.PI_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: 'PI_API_KEY not configured' });
-  if (!paymentId || !txid) return res.status(400).json({ error: 'paymentId and txid required' });
-  try {
-    const piRes = await fetch(`https://api.minepi.com/v2/payments/${paymentId}/complete`, {
-      method: 'POST',
-      headers: { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ txid })
+    const customerEmail = email || 'pi_pioneer@pi.network';
+    const orderRecord = {
+      orderId: paymentId,
+      txid: txid,
+      customerEmail,
+      email: customerEmail,
+      productName: productName || 'Pi Testnet Payment Test',
+      amount: amount || 0.01,
+      currency: 'PI',
+      paymentGateway: 'Pi Network Testnet',
+      status: 'PAID',
+      orderStatus: 'PAID',
+      action: 'Paid Pi Testnet ' + (productName || ''),
+      date: new Date().toLocaleString('en-NG', { timeZone: 'Africa/Lagos' }),
+      purchasedAt: new Date().toISOString()
+    };
+
+    leadsDB.unshift(orderRecord);
+    fallbackOrders.unshift(orderRecord);
+    try { fs.writeFileSync('./leads.json', JSON.stringify(leadsDB.slice(0, 500))); } catch (e) {}
+
+    try {
+      if (pgDb) {
+        await pgDb.insert(orders).values({
+          orderRef: paymentId,
+          productName: orderRecord.productName,
+          price: String(amount || '0.01'),
+          gateway: 'Pi Network Testnet',
+          customerEmail,
+          status: 'completed'
+        });
+      }
+    } catch (e) {}
+
+    return res.status(piRes.ok ? 200 : piRes.status).json({
+      completed: piRes.ok || piRes.status === 200,
+      status: 'PAID',
+      orderStatus: 'PAID',
+      paymentId,
+      txid,
+      piData: data,
+      store: 'gasv.store',
+      rc: 'BN3583773'
     });
-    const data = await piRes.json();
-    console.log('Pi complete:', paymentId, txid, { ok: piRes.ok, status: piRes.status });
-    res.status(piRes.ok ? 200 : piRes.status).json({ completed: piRes.ok, piData: data, amount_usd: 49.99, amount_pi: 49.99 / 314159, gcv: 314159, store: 'gasv.store', rc: 'BN3583773' });
   } catch (e: any) {
-    console.error('Pi complete error', e);
-    res.status(500).json({ error: e.message });
+    console.error('[Pi Complete Exception]', e);
+    return res.status(500).json({ error: e.message });
   }
 });
 
@@ -4484,71 +4499,6 @@ app.post('/api/content/access', async (req: any, res: any) => {
     });
   } catch (err: any) {
     return res.status(500).json({ unlocked: false, error: err.message });
-  }
-});
-
-// Dedicated Pi Network Server Approval & Completion API Routes
-app.post('/api/pi/approve', async (req: any, res: any) => {
-  try {
-    const { paymentId, txid } = req.body || {};
-    console.log(`[PI PAYMENT APPROVAL] PaymentId: ${paymentId}`);
-    return res.status(200).json({
-      approved: true,
-      paymentId: paymentId || 'pi_pay_' + Date.now(),
-      status: 'APPROVED',
-      timestamp: new Date().toISOString()
-    });
-  } catch (err: any) {
-    console.error('Pi Approval Notice:', err);
-    return res.status(200).json({ approved: true, notice: err.message });
-  }
-});
-
-app.post('/api/pi/complete', async (req: any, res: any) => {
-  try {
-    const { paymentId, txid, email } = req.body || {};
-    console.log(`[PI PAYMENT COMPLETED] PaymentId: ${paymentId} | TxID: ${txid}`);
-
-    const customerEmail = email || 'pi_pioneer@pi.network';
-    const orderRecord = {
-      orderId: paymentId || 'PI-ORD-' + Date.now(),
-      customerEmail,
-      productName: 'Sirwise AI Web3 Academy - Pi Network GCV $314,159',
-      amount: 0.000159,
-      currency: 'PI',
-      paymentGateway: 'Pi Network Testnet',
-      status: 'COMPLETED',
-      accessUnlocked: true,
-      txid: txid || 'pi_tx_' + Date.now(),
-      purchasedAt: new Date().toISOString()
-    };
-
-    fallbackOrders.unshift(orderRecord);
-
-    try {
-      if (pgDb) {
-        await pgDb.insert(orders).values({
-          orderRef: orderRecord.orderId,
-          productName: orderRecord.productName,
-          price: '49.99',
-          gateway: 'Pi Network',
-          customerEmail,
-          status: 'completed'
-        });
-      }
-    } catch (e) {}
-
-    return res.status(200).json({
-      completed: true,
-      paymentId: orderRecord.orderId,
-      txid: orderRecord.txid,
-      status: 'VERIFIED',
-      unlocked: true,
-      timestamp: new Date().toISOString()
-    });
-  } catch (err: any) {
-    console.error('Pi Completion Notice:', err);
-    return res.status(200).json({ completed: true, status: 'VERIFIED', notice: err.message });
   }
 });
 

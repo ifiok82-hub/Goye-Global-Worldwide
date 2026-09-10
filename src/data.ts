@@ -2,6 +2,32 @@ export const PI_GCV_USD = 314159;
 export const ACADEMY_PRICE_USD = 49.99;
 
 export const ALL_PRODUCTS = [
+  // 0. Pi Testnet Payment Test (Developer Portal Verification)
+  {
+    id: 'pi-testnet-test',
+    name: 'Pi Testnet Payment Test (0.01 Pi)',
+    title: 'Pi Testnet Payment Test',
+    icon: '🟣',
+    data: '0.01 Pi Testnet',
+    days: 'Instant',
+    price: 3141.59,
+    priceUSD: 3141.59,
+    priceNGN: 4712385,
+    category: 'pi',
+    badge: 'PI TESTNET 10/10',
+    bestseller: true,
+    status: 'ACTIVE',
+    visible: true,
+    isDeleted: false,
+    downloadUrl: 'https://gasv.store/validation-key.txt',
+    filePath: 'https://gasv.store/validation-key.txt',
+    description: 'Official Pi Network Developer Portal Testnet Verification Product. Test User-to-App payment inside Pi Browser (0.01 Pi Testnet).',
+    features: [
+      'Pi Developer Portal 10/10 Checklist Verification',
+      '0.01 Pi Testnet Real Transaction',
+      'Official Pi SDK Integration & Server Approval'
+    ]
+  },
   // 0. AI Starter & Global Travel Pass ($1 Tripwire)
   {
     id: 'ai-starter-tripwire-pass',

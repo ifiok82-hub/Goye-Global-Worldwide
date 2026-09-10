@@ -161,45 +161,59 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
     const Pi = (window as any).Pi;
 
     if (!Pi) {
-      alert('⚠️ Open gasv.store in Pi Browser!\n\nYou are in Chrome - Pi payment works inside Pi Browser:\n\n1. Open Pi Browser → gasv.store\n2. Select Pi Network GCV $314,159\n3. Click Open Pi Payment → Pi wallet opens automatically!\n\nReceiver Wallet:\n' + PI_WALLET_ADDRESS + '\n\nAmount: 0.000159 Pi ≈ $49.99 GCV $314,159\nRC BN3583773');
+      alert('⚠️ Open gasv.store in Pi Browser!\n\nYou are in Chrome - Pi payment works inside Pi Browser:\n\n1. Open Pi Browser → gasv.store\n2. Select Pi Network GCV $314,159\n3. Click Open Pi Payment → Pi wallet opens automatically!\n\nReceiver Wallet:\n' + PI_WALLET_ADDRESS + '\n\nRC BN3583773');
       window.open('https://minepi.com', '_blank');
       return;
     }
 
+    const isTestProduct = (productName || '').toLowerCase().includes('test') || (productName || '').toLowerCase().includes('0.01');
+    const piAmount = isTestProduct ? 0.01 : 0.000159;
+
     try {
       await Pi.authenticate(['username', 'payments'], (p: any) => {
-        fetch('/api/pi/complete', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ paymentId: p.identifier, txid: p.transaction?.txid })
-        }).catch(() => {});
+        if (p && p.identifier && p.transaction?.txid) {
+          fetch('/api/pi/complete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ paymentId: p.identifier, txid: p.transaction.txid, email, productName, amount: piAmount })
+          }).catch(() => {});
+        }
       });
 
       await Pi.createPayment(
         {
-          amount: 0.000159,
-          memo: `Goye Store Global ${productName} RC BN3583773`,
-          metadata: { email, product: productName, recipient: PI_WALLET_ADDRESS }
+          amount: piAmount,
+          memo: `Goye Store ${productName || 'Pi Payment'} RC BN3583773`,
+          metadata: { email, product: productName, recipient: PI_WALLET_ADDRESS, store: 'gasv.store' }
         },
         {
-          onReadyForServerApproval: (id: string) =>
-            fetch('/api/pi/approve', {
+          onReadyForServerApproval: async (id: string) => {
+            console.log('[Pi SDK] onReadyForServerApproval:', id);
+            const res = await fetch('/api/pi/approve', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ paymentId: id })
-            }),
+            });
+            const data = await res.json();
+            console.log('[Pi SDK] Server approve response:', data);
+          },
           onReadyForServerCompletion: async (id: string, txid: string) => {
+            console.log('[Pi SDK] onReadyForServerCompletion:', id, txid);
             if ((window as any).trackLead) {
-              (window as any).trackLead({ email, source: 'Pi GCV Paid', action: 'Paid Pi GCV $314,159', paymentId: id, txid });
+              (window as any).trackLead({ email, source: 'Pi Payment Paid', action: `Paid ${productName}`, paymentId: id, txid });
             }
 
             try {
-              await fetch('/api/pi/verify', {
+              const res = await fetch('/api/pi/complete', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ paymentId: id, txid, email, amount: 0.000159 })
+                body: JSON.stringify({ paymentId: id, txid, email, productName, amount: piAmount })
               });
-            } catch (e) {}
+              const data = await res.json();
+              console.log('[Pi SDK] Server complete response:', data);
+            } catch (e) {
+              console.error('[Pi SDK] Complete error:', e);
+            }
 
             unlockAndRedirect('Pi Network GCV $314,159', txid, email);
           },

@@ -397,53 +397,72 @@ window.loginWithPi = async function() {
   }
 };
 
-window.createPiPayment = async function(usdAmount) {
-  usdAmount = usdAmount || 49.99;
-  const piAmount = (usdAmount / window.GCV_RATE).toFixed(6);
+window.createPiPayment = async function(inputAmount, itemTitle) {
+  let piAmount, usdAmount;
+  itemTitle = itemTitle || "Pi Network Testnet Payment";
+  if (!inputAmount) {
+    piAmount = 0.01;
+    usdAmount = 3141.59;
+  } else if (typeof inputAmount === 'number' && inputAmount < 1) {
+    piAmount = inputAmount;
+    usdAmount = piAmount * (window.GCV_RATE || 314159);
+  } else {
+    usdAmount = parseFloat(inputAmount) || 49.99;
+    piAmount = parseFloat((usdAmount / (window.GCV_RATE || 314159)).toFixed(6));
+  }
+  if (piAmount <= 0) piAmount = 0.01;
+
   if (typeof Pi === 'undefined') {
     showToast('Pay with Pi is active inside Pi Browser app. Opening Pi guide...', 'info');
     if (typeof showPiGuideReal === 'function') showPiGuideReal();
     return;
   }
+
+  const userEmail = localStorage.getItem('user_email') || localStorage.getItem('customer_email') || 'piuser@gasv.store';
+
   try {
     const paymentData = {
-      amount: parseFloat(piAmount),
-      memo: "GOYE Global Sirwise AI WEB3 Academy - RC BN3583773 - gasv.store - $" + usdAmount,
-      metadata: { usd: usdAmount, pi: piAmount, gcv: window.GCV_RATE, store: "gasv.store", rc: "BN3583773" }
+      amount: piAmount,
+      memo: "GOYE Global " + itemTitle + " - RC BN3583773 - gasv.store",
+      metadata: { usd: usdAmount, pi: piAmount, gcv: window.GCV_RATE || 314159, store: "gasv.store", rc: "BN3583773", email: userEmail, product: itemTitle }
     };
+
     const callbacks = {
       onReadyForServerApproval: async function(id) {
+        console.log('[Pi SDK index.html] Approval requested for id:', id);
         try {
-          const r = await fetch('/api/pi-approve', {
+          const r = await fetch('/api/pi/approve', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ paymentId: id })
           });
-          console.log('Pi approved', await r.json());
-        } catch(e) { console.error(e); }
+          const resData = await r.json();
+          console.log('[Pi SDK index.html] Approval response:', resData);
+        } catch(e) { console.error('[Pi SDK Approval Error]', e); }
       },
       onReadyForServerCompletion: async function(id, txid) {
+        console.log('[Pi SDK index.html] Completion requested for id:', id, 'txid:', txid);
         try {
-          const r = await fetch('/api/pi-complete', {
+          const r = await fetch('/api/pi/complete', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ paymentId: id, txid: txid })
+            body: JSON.stringify({ paymentId: id, txid: txid, email: userEmail, productName: itemTitle, amount: piAmount })
           });
           const d = await r.json();
-          console.log('Pi completed', d);
-          if (d.completed) {
-            showToast('✅ Pi Payment Verified! ' + piAmount + ' Pi = $' + usdAmount + ' - TxID:' + txid, 'success');
+          console.log('[Pi SDK index.html] Completion response:', d);
+          if (d.completed || d.status === 'PAID') {
+            showToast('✅ Pi Payment Completed! ' + piAmount + ' Pi - TxID: ' + txid, 'success');
             localStorage.setItem("sirwise_paid", "true");
             localStorage.setItem("academy_unlocked", "true");
             window.location.hash = '#academy';
           }
-        } catch(e) { console.error(e); }
+        } catch(e) { console.error('[Pi SDK Completion Error]', e); }
       },
-      onCancel: function(id) { console.log('Pi cancelled', id); },
-      onError: function(err) { console.error(err); showToast('Pi error: ' + (err.message || err), 'error'); }
+      onCancel: function(id) { console.log('Pi payment cancelled by user:', id); },
+      onError: function(err) { console.error('Pi payment error:', err); showToast('Pi error: ' + (err.message || err), 'error'); }
     };
     await Pi.createPayment(paymentData, callbacks);
-  } catch(e) { console.error(e); showToast('Pi payment error: ' + (e.message || e), 'error'); }
+  } catch(e) { console.error('Pi createPayment exception:', e); showToast('Pi payment error: ' + (e.message || e), 'error'); }
 };
 
 window.payWithPi = function(email, usdAmount) {
