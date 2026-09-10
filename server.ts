@@ -151,11 +151,11 @@ app.use(express.urlencoded({ extended: true }));
 // VERIFY DOMAIN FILE - Must be before static and fallback - Pi Core Team checks this
 app.get('/validation-key.txt', (req, res) => {
   res.set('Cache-Control', 'no-store');
-  res.type('text/plain').send('6fad9a58178d16528c6e748a4194797435f3d7914bf1ae1e66c9baae7886faef');
+  res.type('text/plain').send('6fad9a58178d16528c6e748a4194797437604a6594d34e811d0dce570c722f1ab8a5caa04e3c5e340dbb68d3a50e9f75122d3a88f5f13fb0419ce5451dcc3201');
 });
 app.get('/.well-known/validation-key.txt', (req, res) => {
   res.set('Cache-Control', 'no-store');
-  res.type('text/plain').send('6fad9a58178d16528c6e748a4194797435f3d7914bf1ae1e66c9baae7886faef');
+  res.type('text/plain').send('6fad9a58178d16528c6e748a4194797437604a6594d34e811d0dce570c722f1ab8a5caa04e3c5e340dbb68d3a50e9f75122d3a88f5f13fb0419ce5451dcc3201');
 });
 
 app.get('/api/pi-config', (req, res) => {
