@@ -217,8 +217,27 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
 
             unlockAndRedirect('Pi Network GCV $314,159', txid, email);
           },
-          onCancel: (id: string) => alert('Pi Payment Cancelled ' + id),
-          onError: (e: any) => alert('Pi Error: ' + JSON.stringify(e) + ' - Ensure domain gasv.store verified at develop.pi')
+          onCancel: (id: string) => {
+            console.log('[Pi SDK Modal] Payment cancelled:', id);
+            if (id) {
+              fetch('/api/pi/cancel', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ paymentId: id, environment: 'testnet' })
+              }).catch(() => {});
+            }
+          },
+          onError: (e: any, payment: any) => {
+            console.error('[Pi SDK Modal] Payment error:', e, payment);
+            const pid = (payment && payment.identifier) || (e && e.paymentId);
+            if (pid) {
+              fetch('/api/pi/cancel', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ paymentId: pid, environment: 'testnet' })
+              }).catch(() => {});
+            }
+          }
         }
       );
     } catch (err: any) {
