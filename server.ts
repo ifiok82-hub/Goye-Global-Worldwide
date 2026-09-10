@@ -54,9 +54,18 @@ export const app = express();
     next();
   });
 
-// VALIDATION-KEY.TXT FIRST - Fixes Pi domain verification - Must be before all
-app.get('/validation-key.txt', (req, res) => { res.type('text/plain').set('Cache-Control', 'no-store').send('6fad9a58178d16528c6e748a4194797437604a6594d34e811d0dce570c722f1ab8a5caa04e3c5e340dbb68d3a50e9f75122d3a88f5f13fb0419ce5451dcc3201'); });
-app.get('/.well-known/validation-key.txt', (req, res) => { res.type('text/plain').send('6fad9a58178d16528c6e748a4194797437604a6594d34e811d0dce570c722f1ab8a5caa04e3c5e340dbb68d3a50e9f75122d3a88f5f13fb0419ce5451dcc3201'); });
+// VALIDATION-KEY.TXT FIRST - Fixes Pi domain verification - Must be before all middleware/redirects
+const PI_VALIDATION_KEY = '6fad9a58178d16528c6e748a4194797437604a6594d34e811d0dce570c722f1ab8a5caa04e3c5e340dbb68d3a50e9f75122d3a88f5f13fb0419ce5451dcc3201';
+app.use(['/validation-key.txt', '/.well-known/validation-key.txt', '/validation-key'], (req, res) => {
+  res.status(200);
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+  res.send(PI_VALIDATION_KEY);
+});
 
 let leadsDB: any[] = [];
 let clicksDB: any[] = [];
@@ -149,13 +158,8 @@ app.use(express.urlencoded({ extended: true }));
 // ===== 1. PI NETWORK API ROUTES - MUST BE FIRST - BEFORE STATIC & SPA =====
 
 // VERIFY DOMAIN FILE - Must be before static and fallback - Pi Core Team checks this
-app.get('/validation-key.txt', (req, res) => {
-  res.set('Cache-Control', 'no-store');
-  res.type('text/plain').send('6fad9a58178d16528c6e748a4194797437604a6594d34e811d0dce570c722f1ab8a5caa04e3c5e340dbb68d3a50e9f75122d3a88f5f13fb0419ce5451dcc3201');
-});
-app.get('/.well-known/validation-key.txt', (req, res) => {
-  res.set('Cache-Control', 'no-store');
-  res.type('text/plain').send('6fad9a58178d16528c6e748a4194797437604a6594d34e811d0dce570c722f1ab8a5caa04e3c5e340dbb68d3a50e9f75122d3a88f5f13fb0419ce5451dcc3201');
+app.use(['/validation-key.txt', '/.well-known/validation-key.txt', '/validation-key'], (req, res) => {
+  res.status(200).setHeader('Content-Type', 'text/plain; charset=utf-8').set('Cache-Control', 'no-store').send(PI_VALIDATION_KEY);
 });
 
 app.get('/api/pi-config', (req, res) => {
