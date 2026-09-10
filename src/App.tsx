@@ -315,6 +315,82 @@ export default function App() {
     showConversionPageOverlay(name, email);
   };
 
+  const handlePiTestnetDirect = async () => {
+    const email = localStorage.getItem('userEmail') || localStorage.getItem('user_email') || localStorage.getItem('customer_email') || prompt('Email for instant delivery:') || 'testnet@gasv.store';
+    const piKey = localStorage.getItem('PI_API_KEY') || localStorage.getItem('pi_api_key');
+    if (!piKey) {
+      alert('⚠️ First paste PI_API_KEY in #admin-settings - Go to gasv.store/#admin-settings');
+      window.location.hash = 'admin-settings';
+      setTab('admin-settings');
+      return;
+    }
+    if (!(window as any).Pi) {
+      alert('Open gasv.store in Pi Browser App to test - Pi Browser required for Testnet 10/10');
+      return;
+    }
+    try {
+      showToast('Initializing Pi Testnet Direct Payment...');
+      const Pi = (window as any).Pi;
+      await Pi.authenticate(['username', 'payments'], (inc: any) => {
+        fetch('/api/pi/complete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ paymentId: inc.identifier, txid: inc.transaction?.txid, email, productName: 'Pi Testnet Payment Test' })
+        });
+      });
+      await Pi.createPayment(
+        {
+          amount: 0.01,
+          memo: 'Pi Testnet Payment Test (0.01 Pi) - Official Developer Portal Testnet Verification - RC BN3583773 - gasv.store',
+          metadata: { product: 'pi-testnet-test', email, type: 'testnet-checklist' }
+        },
+        {
+          onReadyForServerApproval: (id: string) => {
+            console.log('[Pi Direct] Approval requested:', id);
+            fetch('/api/pi/approve', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ paymentId: id })
+            });
+          },
+          onReadyForServerCompletion: (id: string, txid: string) => {
+            console.log('[Pi Direct] Completion requested:', id, txid);
+            fetch('/api/pi/complete', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ paymentId: id, txid, email, productName: 'Pi Testnet Payment Test' })
+            }).then(() => {
+              if (typeof (window as any).unlockAcademy === 'function') {
+                (window as any).unlockAcademy(email, 'Pi Testnet 0.01 Pi GREEN Checklist', txid);
+              } else if (typeof (window as any).unlockAcademyAccess === 'function') {
+                (window as any).unlockAcademyAccess('Pi Testnet 0.01 Pi GREEN Checklist', email, txid);
+              } else {
+                localStorage.setItem('academy_full_unlocked', 'true');
+                localStorage.setItem('pi_testnet_paid', 'true');
+                alert('✅ Auto Confirmed! Pi Testnet TX: ' + txid + '\nInstant Delivery - Check Downloads\nRC BN3583773');
+                window.location.hash = 'downloads';
+                setTab('downloads');
+              }
+            });
+          },
+          onCancel: (id: string) => {
+            showToast('Pi Testnet Cancelled: ' + id, 'error');
+            fetch('/api/pi/cancel', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ paymentId: id })
+            }).catch(() => {});
+          },
+          onError: (e: any) => {
+            alert('Pi Testnet Error: ' + JSON.stringify(e) + '\nCheck PI_API_KEY saved in #admin-settings and validation-key.txt returns only key');
+          }
+        }
+      );
+    } catch (err: any) {
+      alert('Pi Testnet Error: ' + (err?.message || err));
+    }
+  };
+
   const playAcademyVideoFullscreen = () => {
     console.log('Play Academy Video clicked');
     const youtubeId = 'aircAruvnKk';
@@ -1298,7 +1374,18 @@ export default function App() {
                             ) : (
                               <button 
                                 data-usd-button={product.price}
-                                onClick={() => { setSelectedProduct(product); setShowCheckoutModal(true); }} 
+                                onClick={() => {
+                                  const isTestnet = product.id === 'pi-testnet-test' || 
+                                                    (product.name && product.name.toLowerCase().includes('pi testnet')) || 
+                                                    (product.badge && product.badge.includes('PI TESTNET')) ||
+                                                    (product.title && product.title.toLowerCase().includes('pi testnet'));
+                                  if (isTestnet) {
+                                    handlePiTestnetDirect();
+                                  } else {
+                                    setSelectedProduct(product);
+                                    setShowCheckoutModal(true);
+                                  }
+                                }} 
                                 className="w-full bg-[#FFD700] text-black font-black py-2.5 rounded-xl flex items-center justify-center gap-1.5 hover:bg-yellow-400 cursor-pointer pointer-events-auto shadow-md transition active:scale-95 text-xs uppercase tracking-wider"
                               >
                                 <ShoppingCart size={14}/> Buy & Unlock ({priceDisplay.main})
@@ -1565,7 +1652,18 @@ export default function App() {
                           ) : (
                             <button 
                               data-usd-button={product.price}
-                              onClick={() => { setSelectedProduct(product); setShowCheckoutModal(true); }} 
+                              onClick={() => {
+                                const isTestnet = product.id === 'pi-testnet-test' || 
+                                                  (product.name && product.name.toLowerCase().includes('pi testnet')) || 
+                                                  (product.badge && product.badge.includes('PI TESTNET')) ||
+                                                  (product.title && product.title.toLowerCase().includes('pi testnet'));
+                                if (isTestnet) {
+                                  handlePiTestnetDirect();
+                                } else {
+                                  setSelectedProduct(product);
+                                  setShowCheckoutModal(true);
+                                }
+                              }} 
                               className="w-full bg-[#FFD700] text-black font-black py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-yellow-400 cursor-pointer pointer-events-auto z-10 touch-manipulation shadow-lg transition active:scale-95"
                             >
                               <ShoppingCart size={18}/> Buy & Unlock ({priceDisplay.main})

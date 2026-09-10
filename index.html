@@ -10,7 +10,25 @@
 <script src="https://checkout.flutterwave.com/v3.js"></script>
 <script>
 window.addEventListener('load', function(){
-  if(window.Pi){ try{ Pi.init({version:"2.0", sandbox:true}); console.log('Pi SDK Ready - GCV $314,159 - gasv.store RC BN3583773'); }catch(e){} }
+  var sandbox = localStorage.getItem('PI_SANDBOX') || 'true';
+  if(window.Pi){
+    try{
+      Pi.init({version:"2.0", sandbox: sandbox === 'true'});
+      console.log('Pi SDK Ready - Sandbox:', sandbox, '- gasv.store RC BN3583773');
+    }catch(e){
+      console.error('Pi init error:', e);
+    }
+  }
+  window.unlockAcademy = function(email, method, txid){
+    localStorage.setItem('academy_full_unlocked', 'true');
+    localStorage.setItem('tripwire_paid', 'true');
+    localStorage.setItem('pi_testnet_paid', 'true');
+    localStorage.setItem('sirwise_paid', 'true');
+    localStorage.setItem('paid_email', email);
+    alert('✅ Auto Confirmed! ' + method + '\nTX: ' + (txid || 'VERIFIED') + '\nInstant Delivery - Check Downloads + Academy\nRC BN3583773');
+    window.location.hash = 'downloads';
+    setTimeout(function(){ location.reload(); }, 600);
+  };
 });
 window.trackClick = (a,d)=>{ try{ const c=JSON.parse(localStorage.getItem('admin_clicks')||'[]'); c.unshift({action:a, details:d, date:new Date().toISOString()}); localStorage.setItem('admin_clicks', JSON.stringify(c.slice(0,1000))); fetch('/api/clicks',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:a, details:d})}).catch(()=>{});}catch(e){}};
 window.trackLead = (data)=>{ try{ const l=JSON.parse(localStorage.getItem('admin_leads')||'[]'); l.unshift({...data, date:new Date().toLocaleString()}); localStorage.setItem('admin_leads', JSON.stringify(l.slice(0,500))); fetch('/api/leads',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)}).catch(()=>{});}catch(e){}};

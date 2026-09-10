@@ -167,7 +167,7 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
     }
 
     const isTestProduct = (productName || '').toLowerCase().includes('test') || (productName || '').toLowerCase().includes('0.01');
-    const piAmount = isTestProduct ? 0.01 : 0.000159;
+    const piAmount = isTestProduct ? 0.01 : (amountUSD === 1.00 ? 0.000003 : (amountUSD === 49.99 ? 0.000159 : Number((amountUSD / 314159).toFixed(6))));
 
     try {
       await Pi.authenticate(['username', 'payments'], (p: any) => {
