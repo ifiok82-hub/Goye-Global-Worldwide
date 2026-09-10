@@ -1295,14 +1295,14 @@ export default function App() {
                       <p className="text-gray-400 text-xs">Instant QR Delivery via WhatsApp • 190+ Countries</p>
                     </div>
                     <span className="text-xs font-mono font-bold text-[#FFD700] bg-[#111] px-3 py-1 rounded-full border border-[#FFD700]/40">
-                      Total Active Products: {products.filter((p: any) => p.status === 'ACTIVE' && p.visible !== false && !p.isDeleted).length}
+                      Total Active Products: {products.filter((p: any) => p.status === 'ACTIVE' && p.visible !== false && !p.isDeleted && p.id !== 'pi-testnet-test').length}
                     </span>
                   </div>
 
                   {/* Category Filter Pills - Clean text only, no overlapping emoji */}
                   <div className="flex items-center gap-2 overflow-x-auto pb-2 hide-scrollbar mb-4">
                     {[
-                      { id: 'all', label: `ALL (${products.filter((p: any) => p.status === 'ACTIVE' && p.visible !== false && !p.isDeleted).length})` },
+                      { id: 'all', label: `ALL (${products.filter((p: any) => p.status === 'ACTIVE' && p.visible !== false && !p.isDeleted && p.id !== 'pi-testnet-test').length})` },
                       { id: 'dubai', label: 'DUBAI' },
                       { id: 'esim', label: 'ESIM' },
                       { id: 'prompts', label: 'PROMPTS' },
@@ -1326,7 +1326,7 @@ export default function App() {
                   {/* Grid of Products */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {products.filter((p: any) => {
-                      if (p.status !== 'ACTIVE' || p.visible === false || p.isDeleted === true) return false;
+                      if (p.status !== 'ACTIVE' || p.visible === false || p.isDeleted === true || p.id === 'pi-testnet-test' || p.category === 'developer') return false;
                       if (activeCategory !== 'all') {
                         if (activeCategory === 'contracts') return p.category === 'contracts' || p.category === 'jobs' || p.category === 'visa';
                         if (activeCategory === 'prompts') return p.category === 'prompts' || p.category === 'starter' || p.category === 'toolkit';
@@ -1568,14 +1568,14 @@ export default function App() {
                        'Store & eSIM Hub'}
                     </h2>
                     <span className="text-xs font-mono font-bold text-[#FFD700] bg-[#111] px-3.5 py-1.5 rounded-full border border-[#FFD700]/40 shadow-sm">
-                      Total Active Products: {products.filter((p: any) => p.status === 'ACTIVE' && p.visible !== false && !p.isDeleted).length}
+                      Total Active Products: {products.filter((p: any) => p.status === 'ACTIVE' && p.visible !== false && !p.isDeleted && p.id !== 'pi-testnet-test').length}
                     </span>
                   </div>
 
                   {/* Category Filter Pills */}
                   <div className="flex items-center gap-2 overflow-x-auto pb-2 hide-scrollbar mb-4">
                     {[
-                      { id: 'all', label: `ALL (${products.filter((p: any) => p.status === 'ACTIVE' && p.visible !== false && !p.isDeleted).length})` },
+                      { id: 'all', label: `ALL (${products.filter((p: any) => p.status === 'ACTIVE' && p.visible !== false && !p.isDeleted && p.id !== 'pi-testnet-test').length})` },
                       { id: 'dubai', label: 'DUBAI' },
                       { id: 'esim', label: 'ESIM' },
                       { id: 'prompts', label: 'PROMPTS' },
@@ -1599,7 +1599,7 @@ export default function App() {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {products.filter((p: any) => {
-                    if (p.status !== 'ACTIVE' || p.visible === false || p.isDeleted === true) return false;
+                    if (p.status !== 'ACTIVE' || p.visible === false || p.isDeleted === true || p.id === 'pi-testnet-test' || p.category === 'developer') return false;
                     if (activeCategory !== 'all') {
                       if (activeCategory === 'contracts') return p.category === 'contracts' || p.category === 'jobs' || p.category === 'visa';
                       if (activeCategory === 'prompts') return p.category === 'prompts' || p.category === 'starter';
@@ -1764,6 +1764,93 @@ export default function App() {
         {isAdminAuth && tab === 'admin' && (
           <AdminDashboard showToast={showToast} />
         )}
+
+        {/* DEVELOPER ONLY - PI NETWORK TESTNET CHECKLIST 10/10 - HIDDEN SECTION AT BOTTOM */}
+        <div id="pi-testnet-developer-only" className="bg-[#0a0a0a] border-t-2 border-dashed border-[#FFD700] p-5 my-12 mb-28 rounded-2xl max-w-[500px] mx-auto text-center pointer-events-auto">
+          <div className="bg-[#111] border border-dashed border-[#444] rounded-2xl p-4">
+            <p className="text-gray-500 text-[10px] font-mono uppercase tracking-widest text-center mb-1">
+              DEVELOPER ONLY - PI NETWORK TESTNET CHECKLIST 10/10 - NOT FOR CUSTOMERS - HIDDEN SECTION
+            </p>
+            <h3 className="text-[#FFD700] text-sm font-black mt-2 text-center">
+              Pi Testnet Payment Test (0.01 Pi) - For Pi Developer Portal Verification Only
+            </h3>
+            <p className="text-gray-400 text-[11px] text-center my-1 leading-relaxed">
+              Official Pi Network Developer Portal Testnet Verification Product. This is Test Pi only, no real money, no GCV, no delivery.
+            </p>
+            
+            <div className="bg-black rounded-xl p-3 my-3 text-center border border-[#333]">
+              <p className="text-white font-black text-base">0.01 Pi Testnet</p>
+              <p className="text-gray-400 text-[11px]">Test Pi • No USD • No GCV • Test Payment Only</p>
+              <p className="text-[#FFD700] text-[10px] mt-1 font-bold">Uses Test Pi from wallet.pinet.com faucet - Not real Pi</p>
+            </div>
+
+            <button 
+              onClick={async () => {
+                const email = localStorage.getItem('userEmail') || localStorage.getItem('user_email') || localStorage.getItem('customer_email') || 'testnet@gasv.store';
+                const piKey = localStorage.getItem('PI_API_KEY') || localStorage.getItem('pi_api_key');
+                if (!piKey) { 
+                  alert('Paste PI_API_KEY in #admin-settings first'); 
+                  window.location.hash = 'admin-settings'; 
+                  setTab('admin-settings');
+                  return; 
+                }
+                if (!(window as any).Pi) { 
+                  alert('Open gasv.store inside Pi Browser app to test Pi Testnet'); 
+                  return; 
+                }
+                try {
+                  showToast('Initializing Pi Testnet 0.01 Pi Payment...');
+                  const Pi = (window as any).Pi;
+                  await Pi.authenticate(['username', 'payments'], (inc: any) => { 
+                    fetch('/api/pi/complete', {
+                      method: 'POST', 
+                      headers: { 'Content-Type': 'application/json' }, 
+                      body: JSON.stringify({ paymentId: inc.identifier, txid: inc.transaction?.txid, email, productName: 'Pi Testnet Payment Test' })
+                    }); 
+                  });
+                  await Pi.createPayment({
+                    amount: 0.01, 
+                    memo: 'Pi Testnet Payment Test (0.01 Pi) - Official Developer Portal Testnet Verification - gasv.store - Testnet Only', 
+                    metadata: { type: 'pi-testnet-checklist', product: 'pi-testnet-10-10', email }
+                  }, {
+                    onReadyForServerApproval: (id: string) => { 
+                      console.log('Testnet approve', id); 
+                      fetch('/api/pi/approve', {
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/json' }, 
+                        body: JSON.stringify({ paymentId: id })
+                      }); 
+                    },
+                    onReadyForServerCompletion: (id: string, txid: string) => { 
+                      fetch('/api/pi/complete', {
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/json' }, 
+                        body: JSON.stringify({ paymentId: id, txid, email, productName: 'Pi Testnet Payment Test' })
+                      }).then(() => { 
+                        localStorage.setItem('pi_testnet_paid', 'true'); 
+                        alert('✅ Pi Testnet 10/10 SUCCESS!\n\nPayment ID: ' + id + '\nTXID: ' + txid + '\nAmount: 0.01 Pi Testnet (Test Pi only)\n\nCheck develop.pi dashboard - PI TESTNET 10/10 should now be GREEN ✅\n\nRC BN3583773'); 
+                        window.location.hash = 'support'; 
+                        setTab('support');
+                      }); 
+                    },
+                    onCancel: (id: string) => alert('Testnet Cancelled ' + id),
+                    onError: (e: any) => alert('Testnet Error: ' + JSON.stringify(e))
+                  });
+                } catch (err: any) { 
+                  alert('Testnet Error: ' + (err?.message || err)); 
+                }
+              }} 
+              style={{ background: '#FFD700', color: 'black', width: '100%', padding: '14px', borderRadius: '12px', fontWeight: 900, cursor: 'pointer', fontSize: '14px', border: 'none' }}
+              className="shadow-lg active:scale-95 transition flex items-center justify-center gap-2"
+            >
+              🟣 Test Pi Payment - 0.01 Pi Testnet - For 10/10 GREEN
+            </button>
+
+            <p className="text-gray-500 text-[9px] text-center mt-2.5 leading-relaxed">
+              This button is only for Pi Developer Portal checklist. Customers use real payment methods above (Paystack, Flutterwave, USDT BEP20 0x66e190..., USDC, OPay 6113541882, Pi GCV). RC BN3583773
+            </p>
+          </div>
+        </div>
       </main>
 
       {selectedProduct && (

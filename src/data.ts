@@ -2,7 +2,7 @@ export const PI_GCV_USD = 314159;
 export const ACADEMY_PRICE_USD = 49.99;
 
 export const ALL_PRODUCTS = [
-  // 0. Pi Testnet Payment Test (Developer Portal Verification)
+  // 0. Pi Testnet Payment Test (Developer Portal Verification Only - Hidden from customer shop)
   {
     id: 'pi-testnet-test',
     name: 'Pi Testnet Payment Test (0.01 Pi)',
@@ -10,14 +10,14 @@ export const ALL_PRODUCTS = [
     icon: '🟣',
     data: '0.01 Pi Testnet',
     days: 'Instant',
-    price: 3141.59,
-    priceUSD: 3141.59,
-    priceNGN: 4712385,
-    category: 'pi',
+    price: 0,
+    priceUSD: 0,
+    priceNGN: 0,
+    category: 'developer',
     badge: 'PI TESTNET 10/10',
-    bestseller: true,
+    bestseller: false,
     status: 'ACTIVE',
-    visible: true,
+    visible: false,
     isDeleted: false,
     downloadUrl: 'https://gasv.store/validation-key.txt',
     filePath: 'https://gasv.store/validation-key.txt',
