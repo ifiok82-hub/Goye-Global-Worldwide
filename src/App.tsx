@@ -52,20 +52,6 @@ const UrgencyCountdownBanner = () => {
   );
 };
 
-// Floating WhatsApp Support Button
-const FloatingWhatsAppButton = () => (
-  <a
-    href="https://wa.me/2348033584736?text=Hello%20Goye%20Store%20Support!%20I%20need%20assistance%20with%20my%20order"
-    target="_blank"
-    rel="noreferrer"
-    className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-[9995] bg-[#25D366] hover:bg-[#20ba5a] text-white p-3.5 rounded-full shadow-[0_4px_20px_rgba(37,211,102,0.5)] flex items-center gap-2 font-bold text-xs transition-transform active:scale-95 border-2 border-white/20 group cursor-pointer"
-    title="Need Help? Chat on WhatsApp"
-  >
-    <MessageCircle size={24} className="fill-white text-[#25D366]" />
-    <span className="hidden sm:inline font-bold pr-1">Need Help? Chat 24/7</span>
-  </a>
-);
-
 // Hero Section with Tripwire Offer
 const HeroSection = ({ onLogoTap, onPlayVideo, onOpenLeadMagnet, onOpenTripwire }: any) => (
   <div className="bg-[#0a0a0a] border border-[#FFD700] rounded-[2rem] p-6 text-center mt-6 relative mx-4 pointer-events-auto">
@@ -1981,12 +1967,28 @@ export default function App() {
           <span className="text-[9px] font-bold">SUPPORT</span>
         </a>
       </nav>
-      {/* Floating Widgets */}
-      <FloatingWhatsAppButton />
-      <div className="fixed bottom-[90px] right-[20px] z-[99999] cursor-pointer pointer-events-auto">
-        <button onClick={() => setShowSirwiseBot(true)} className="bg-[#FFD700] text-black w-14 h-14 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(255,215,0,0.4)] relative transition hover:scale-105 active:scale-95 border-2 border-black text-2xl font-black">
+      {/* Floating Widgets Container (Stacked Vertically to Prevent Overlap) */}
+      <div className="fixed bottom-[80px] right-[16px] sm:right-[24px] z-[9995] flex flex-col items-end gap-3 pointer-events-auto">
+        {/* Top: AI Assistant Bot Floating Button */}
+        <button 
+          onClick={() => setShowSirwiseBot(true)} 
+          className="bg-[#FFD700] text-black w-13 h-13 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(255,215,0,0.4)] transition hover:scale-105 active:scale-95 border-2 border-black text-2xl font-black cursor-pointer"
+          title="Open AI Support Bot"
+        >
           🤖
         </button>
+
+        {/* Bottom: WhatsApp Floating Support Button */}
+        <a
+          href="https://wa.me/2348033584736?text=Hello%20Goye%20Store%20Support!%20I%20need%20assistance%20with%20my%20order"
+          target="_blank"
+          rel="noreferrer"
+          className="bg-[#25D366] hover:bg-[#20ba5a] text-white p-3.5 rounded-full shadow-[0_4px_20px_rgba(37,211,102,0.5)] flex items-center gap-2 font-bold text-xs transition-transform active:scale-95 border-2 border-white/20 group cursor-pointer"
+          title="Need Help? Chat on WhatsApp"
+        >
+          <MessageCircle size={22} className="fill-white text-[#25D366]" />
+          <span className="hidden sm:inline font-bold pr-1 text-xs">Need Help? Chat 24/7</span>
+        </a>
       </div>
 
       {/* Toast Notification */}
