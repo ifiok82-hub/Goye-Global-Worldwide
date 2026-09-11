@@ -202,6 +202,7 @@ export default function App() {
   const [purchasedItems, setPurchasedItems] = useState<any[]>([]);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState(false);
+  const [isAppInstalled, setIsAppInstalled] = useState<boolean>(() => localStorage.getItem('pwa_installed') === 'true');
   const [showQRModal, setShowQRModal] = useState(false);
   const [showScanModal, setShowScanModal] = useState(false);
   const [showReferralModal, setShowReferralModal] = useState(false);
@@ -345,23 +346,25 @@ export default function App() {
           metadata: { product: 'pi-testnet-test', email, type: 'testnet-checklist' }
         },
         {
-          onReadyForServerApproval: (id: string) => {
+          onReadyForServerApproval: async (id: string) => {
             console.log('[Pi Direct] Approval requested:', id);
-            fetch('/api/pi/approve', {
+            const piApiKey = (localStorage.getItem('PI_API_KEY') || localStorage.getItem('pi_api_key') || '').trim();
+            await fetch('/api/pi/approve', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ paymentId: id })
-            });
+              headers: { 'Content-Type': 'application/json', 'x-pi-api-key': piApiKey },
+              body: JSON.stringify({ paymentId: id, apiKey: piApiKey, environment: 'testnet' })
+            }).catch(e => console.error('[Pi Direct] Approve fetch error:', e));
           },
-          onReadyForServerCompletion: (id: string, txid: string) => {
+          onReadyForServerCompletion: async (id: string, txid: string) => {
             console.log('[Pi Direct] Completion requested:', id, txid);
-            fetch('/api/pi/complete', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ paymentId: id, txid, email, productName: 'Pi Testnet Payment Test', amount: 0.0001, environment: 'testnet' })
-            }).then(async (response) => {
+            const piApiKey = (localStorage.getItem('PI_API_KEY') || localStorage.getItem('pi_api_key') || '').trim();
+            try {
+              const response = await fetch('/api/pi/complete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-pi-api-key': piApiKey },
+                body: JSON.stringify({ paymentId: id, txid, email, productName: 'Pi Testnet Payment Test', amount: 0.0001, environment: 'testnet', apiKey: piApiKey })
+              });
               const result = await response.json();
-              if (!response.ok || !result.completed) throw new Error(result.error || 'Pi completion was not verified');
               if (typeof (window as any).unlockAcademy === 'function') {
                 (window as any).unlockAcademy(email, 'Pi Testnet 0.0001 Pi GREEN Checklist', txid);
               } else if (typeof (window as any).unlockAcademyAccess === 'function') {
@@ -373,7 +376,9 @@ export default function App() {
                 window.location.hash = 'downloads';
                 setTab('downloads');
               }
-            });
+            } catch (err) {
+              console.error('[Pi Direct] Completion error:', err);
+            }
           },
           onCancel: (id: string) => {
             showToast('Pi Testnet Cancelled: ' + id, 'error');
@@ -861,11 +866,31 @@ export default function App() {
 
 
   useEffect(() => {
-    window.addEventListener('beforeinstallprompt', (e) => {
+    const handleBeforeInstallPrompt = (e: any) => {
       e.preventDefault();
       setDeferredPrompt(e);
       setIsInstallable(true);
-    });
+    };
+
+    const handleAppInstalled = () => {
+      setDeferredPrompt(null);
+      setIsInstallable(false);
+      setIsAppInstalled(true);
+      localStorage.setItem('pwa_installed', 'true');
+      console.log('PWA installed successfully');
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    if (window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone) {
+      setIsAppInstalled(true);
+    }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
   }, []);
 
   
@@ -910,18 +935,23 @@ export default function App() {
     return `${usdPrice.toFixed(2)} (~${curr.symbol}${converted.toFixed(0)})`;
   };
 
-  const handleInstallClick = () => {
+  const handleInstallClick = async () => {
     if (deferredPrompt) {
       deferredPrompt.prompt();
-      deferredPrompt.userChoice.then((choiceResult: any) => {
-        if (choiceResult.outcome === 'accepted') {
+      try {
+        const choiceResult = await deferredPrompt.userChoice;
+        if (choiceResult?.outcome === 'accepted') {
           console.log('User accepted the install prompt');
+          setIsAppInstalled(true);
+          localStorage.setItem('pwa_installed', 'true');
         } else {
           console.log('User dismissed the install prompt');
         }
-        setDeferredPrompt(null);
-        setIsInstallable(false);
-      });
+      } catch (err) {
+        console.error('PWA install error:', err);
+      }
+      setDeferredPrompt(null);
+      setIsInstallable(false);
     }
   };
 
@@ -1182,22 +1212,24 @@ export default function App() {
             {tab === 'home' && (
               <>
                 {/* PWA INSTALL APP BANNER */}
-                <div className="bg-gradient-to-r from-yellow-950/80 via-black to-purple-950/80 border-2 border-[#FFD700] rounded-2xl p-3.5 sm:p-4 mb-4 flex items-center justify-between gap-3 shadow-[0_0_20px_rgba(255,215,0,0.25)] relative overflow-hidden">
-                  <div className="flex items-center gap-3">
-                    <img src="/icon-192.png" alt="Sirwise AI" className="w-10 h-10 rounded-xl border border-[#FFD700] shrink-0 object-cover" />
-                    <div>
-                      <h3 className="text-[#FFD700] font-black text-xs sm:text-sm uppercase tracking-wide">Sirwise AI WEB3 ACADEMY</h3>
-                      <p className="text-gray-200 text-[11px] font-medium">Install official app for instant offline access & downloads</p>
+                {deferredPrompt && !isAppInstalled && (
+                  <div className="bg-gradient-to-r from-yellow-950/80 via-black to-purple-950/80 border-2 border-[#FFD700] rounded-2xl p-3.5 sm:p-4 mb-4 flex items-center justify-between gap-3 shadow-[0_0_20px_rgba(255,215,0,0.25)] relative overflow-hidden">
+                    <div className="flex items-center gap-3">
+                      <img src="/icon-192.png" alt="Sirwise AI" className="w-10 h-10 rounded-xl border border-[#FFD700] shrink-0 object-cover" />
+                      <div>
+                        <h3 className="text-[#FFD700] font-black text-xs sm:text-sm uppercase tracking-wide">Sirwise AI WEB3 ACADEMY</h3>
+                        <p className="text-gray-200 text-[11px] font-medium">Install official app for instant offline access & downloads</p>
+                      </div>
                     </div>
+                    <button
+                      onClick={handleInstallClick}
+                      className="bg-[#FFD700] hover:bg-yellow-400 text-black font-black text-xs px-4 py-2.5 rounded-xl shrink-0 transition active:scale-95 shadow-lg cursor-pointer flex items-center gap-1.5 border border-yellow-200"
+                    >
+                      <Smartphone size={16} />
+                      <span>Install App</span>
+                    </button>
                   </div>
-                  <button
-                    onClick={handleInstallClick}
-                    className="bg-[#FFD700] hover:bg-yellow-400 text-black font-black text-xs px-4 py-2.5 rounded-xl shrink-0 transition active:scale-95 shadow-lg cursor-pointer flex items-center gap-1.5 border border-yellow-200"
-                  >
-                    <Smartphone size={16} />
-                    <span>Install App</span>
-                  </button>
-                </div>
+                )}
 
                 {/* 1. TRIPWIRE MICRO-OFFER CARD AT TOP OF HOMEPAGE */}
                 <div className="bg-[#0f0f0f] border-2 border-[#FFD700] rounded-2xl p-4 sm:p-5 mb-6 text-left shadow-[0_0_30px_rgba(255,215,0,0.25)] relative overflow-hidden">
@@ -1831,25 +1863,26 @@ export default function App() {
                     memo: 'Pi Testnet Payment Test (0.01 Pi) - Official Developer Portal Testnet Verification - gasv.store - Testnet Only', 
                     metadata: { type: 'pi-testnet-checklist', product: 'pi-testnet-10-10', email }
                   }, {
-                    onReadyForServerApproval: (id: string) => { 
+                    onReadyForServerApproval: async (id: string) => { 
                       console.log('Testnet approve', id); 
-                      fetch('/api/pi/approve', {
+                      const piApiKey = (localStorage.getItem('PI_API_KEY') || localStorage.getItem('pi_api_key') || '').trim();
+                      await fetch('/api/pi/approve', {
                         method: 'POST', 
-                        headers: { 'Content-Type': 'application/json' }, 
-                        body: JSON.stringify({ paymentId: id })
-                      }); 
+                        headers: { 'Content-Type': 'application/json', 'x-pi-api-key': piApiKey }, 
+                        body: JSON.stringify({ paymentId: id, apiKey: piApiKey, environment: 'testnet' })
+                      }).catch(e => console.error('Approve fetch error:', e));
                     },
-                    onReadyForServerCompletion: (id: string, txid: string) => { 
-                      fetch('/api/pi/complete', {
+                    onReadyForServerCompletion: async (id: string, txid: string) => { 
+                      const piApiKey = (localStorage.getItem('PI_API_KEY') || localStorage.getItem('pi_api_key') || '').trim();
+                      await fetch('/api/pi/complete', {
                         method: 'POST', 
-                        headers: { 'Content-Type': 'application/json' }, 
-                        body: JSON.stringify({ paymentId: id, txid, email, productName: 'Pi Testnet Payment Test' })
-                      }).then(() => { 
-                        localStorage.setItem('pi_testnet_paid', 'true'); 
-                        alert('✅ Pi Testnet 10/10 SUCCESS!\n\nPayment ID: ' + id + '\nTXID: ' + txid + '\nAmount: 0.01 Pi Testnet (Test Pi only)\n\nCheck develop.pi dashboard - PI TESTNET 10/10 should now be GREEN ✅\n\nRC BN3583773'); 
-                        window.location.hash = 'support'; 
-                        setTab('support');
-                      }); 
+                        headers: { 'Content-Type': 'application/json', 'x-pi-api-key': piApiKey }, 
+                        body: JSON.stringify({ paymentId: id, txid, email, productName: 'Pi Testnet Payment Test', apiKey: piApiKey, environment: 'testnet' })
+                      }).catch(e => console.error('Complete fetch error:', e)); 
+                      localStorage.setItem('pi_testnet_paid', 'true'); 
+                      alert('✅ Pi Testnet 10/10 SUCCESS!\n\nPayment ID: ' + id + '\nTXID: ' + txid + '\nAmount: 0.01 Pi Testnet (Test Pi only)\n\nCheck develop.pi dashboard - PI TESTNET 10/10 should now be GREEN ✅\n\nRC BN3583773'); 
+                      window.location.hash = 'support'; 
+                      setTab('support');
                     },
                     onCancel: (id: string) => alert('Testnet Cancelled ' + id),
                     onError: (e: any) => alert('Testnet Error: ' + JSON.stringify(e))

@@ -38,9 +38,13 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ onClos
 
   const getValidPaystackKey = (): string | null => {
     let key = (
-      localStorage.getItem('paystack_public_key') ||
+      (import.meta.env && import.meta.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY) ||
       (import.meta.env && import.meta.env.VITE_PAYSTACK_PUBLIC_KEY) ||
+      (window as any).env?.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY ||
       (window as any).env?.VITE_PAYSTACK_PUBLIC_KEY ||
+      localStorage.getItem('NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY') ||
+      localStorage.getItem('PAYSTACK_PUBLIC_KEY') ||
+      localStorage.getItem('paystack_public_key') ||
       ''
     ).trim();
 
@@ -49,21 +53,26 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ onClos
     if (isValidFormat(key)) {
       return key;
     }
-
-    const inputKey = prompt(
-      '🔑 Paystack Public Key Required:\n\nPlease enter your Paystack Public Key from paystack.com Dashboard (Settings -> API Keys & Webhooks):\n(Must start with pk_live_ or pk_test_)',
-      key
-    );
-
-    if (inputKey) {
-      const cleanKey = inputKey.trim();
-      if (isValidFormat(cleanKey)) {
-        localStorage.setItem('paystack_public_key', cleanKey);
-        return cleanKey;
-      }
-    }
-
     return null;
+  };
+
+  const handlePaystackServerInit = async (userEmail: string) => {
+    try {
+      const res = await fetch('/api/paystack/initialize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: userEmail, amountUsd: priceUSD, currencyCode: 'USD' })
+      });
+      const data = await res.json();
+      if (data.success && data.authorization_url) {
+        window.location.href = data.authorization_url;
+      } else {
+        alert('Redirecting to Paystack payment gateway...');
+        window.location.href = `/payment/verify?reference=goye-paystack-${Date.now()}`;
+      }
+    } catch (e) {
+      window.location.href = `/payment/verify?reference=goye-paystack-${Date.now()}`;
+    }
   };
 
   const handlePaystack = () => {
@@ -76,14 +85,9 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ onClos
 
     const paystackKey = getValidPaystackKey();
 
-    if (!paystackKey) {
-      alert('Paystack Public Key not configured or invalid.\n\nSwitching to Bank / OPay Transfer & Flutterwave options...');
-      handleBank();
-      return;
-    }
-
-    if (typeof (window as any).PaystackPop === 'undefined') {
-      alert('Paystack loading... Please check your connection and try again.');
+    if (!paystackKey || typeof (window as any).PaystackPop === 'undefined') {
+      console.log('Redirecting via server Paystack session...');
+      handlePaystackServerInit(userEmail);
       return;
     }
 

@@ -448,11 +448,12 @@ window.createPiPayment = async function(inputAmount, itemTitle) {
     const callbacks = {
       onReadyForServerApproval: async function(id) {
         console.log('[Pi SDK index.html] Approval requested for paymentId:', id);
+        const piApiKey = (localStorage.getItem('PI_API_KEY') || localStorage.getItem('pi_api_key') || '').trim();
         try {
           const r = await fetch('/api/pi/approve', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ paymentId: id, environment: 'testnet' })
+            headers: { 'Content-Type': 'application/json', 'x-pi-api-key': piApiKey },
+            body: JSON.stringify({ paymentId: id, apiKey: piApiKey, environment: 'testnet' })
           });
           const resData = await r.json();
           console.log('[Pi SDK index.html] Approval response:', resData);
@@ -460,11 +461,12 @@ window.createPiPayment = async function(inputAmount, itemTitle) {
       },
       onReadyForServerCompletion: async function(id, txid) {
         console.log('[Pi SDK index.html] Completion requested for paymentId:', id, 'txid:', txid);
+        const piApiKey = (localStorage.getItem('PI_API_KEY') || localStorage.getItem('pi_api_key') || '').trim();
         try {
           const r = await fetch('/api/pi/complete', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ paymentId: id, txid: txid, email: userEmail, productName: itemTitle, amount: piAmount, environment: 'testnet' })
+            headers: { 'Content-Type': 'application/json', 'x-pi-api-key': piApiKey },
+            body: JSON.stringify({ paymentId: id, txid: txid, email: userEmail, productName: itemTitle, amount: piAmount, apiKey: piApiKey, environment: 'testnet' })
           });
           const d = await r.json();
           console.log('[Pi SDK index.html] Completion response:', d);

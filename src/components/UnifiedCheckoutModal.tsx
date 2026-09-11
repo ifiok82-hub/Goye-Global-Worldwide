@@ -255,28 +255,23 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
     trackUserClick('Paystack Payment Click', 'CheckoutModal', product?.id || 'academy');
 
     let paystackPublicKey = (
+      (import.meta.env && import.meta.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY) || 
       (import.meta.env && import.meta.env.VITE_PAYSTACK_PUBLIC_KEY) || 
+      (window as any).env?.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || 
       (window as any).env?.VITE_PAYSTACK_PUBLIC_KEY || 
       paymentConfig?.paystack || 
+      localStorage.getItem('NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY') || 
       localStorage.getItem('paystack_public_key') || 
+      localStorage.getItem('PAYSTACK_PUBLIC_KEY') || 
       ''
     ).trim();
 
     const isValidFormat = (k: string) => (k.startsWith('pk_live_') || k.startsWith('pk_test_')) && k.length >= 32;
 
     if (!isValidFormat(paystackPublicKey)) {
-      const inputKey = prompt(
-        '🔑 Paystack Public Key Required:\n\nPlease enter your Paystack Public Key from paystack.com Dashboard (Settings -> API Keys & Webhooks):\n(Must start with pk_live_ or pk_test_)',
-        paystackPublicKey
-      );
-      if (inputKey && isValidFormat(inputKey.trim())) {
-        paystackPublicKey = inputKey.trim();
-        localStorage.setItem('paystack_public_key', paystackPublicKey);
-      } else {
-        if (showToast) showToast('Paystack Key missing or invalid. Please try Bank / OPay Transfer.', 'info');
-        setActiveGateway('bank');
-        return;
-      }
+      console.log('Paystack client key not available/valid. Using automated server initialization...');
+      initializePaystackServerRedirect(emailInput);
+      return;
     }
 
     const nairaPrice = Math.round(priceNGN);
