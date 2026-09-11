@@ -452,11 +452,14 @@ window.createPiPayment = async function(inputAmount, itemTitle) {
           const r = await fetch('/api/pi/approve', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ paymentId: id, environment: 'testnet' })
+            body: JSON.stringify({ paymentId: id })
           });
           const resData = await r.json();
           console.log('[Pi SDK index.html] Approval response:', resData);
-        } catch(e) { console.error('[Pi SDK Approval Error]', e); }
+          if (!r.ok || !resData.approved) {
+            console.error('[Pi SDK Approval Failed]', resData);
+          }
+        } catch(e) { console.error('[Pi SDK Approval Exception]', e); }
       },
       onReadyForServerCompletion: async function(id, txid) {
         console.log('[Pi SDK index.html] Completion requested for paymentId:', id, 'txid:', txid);
@@ -464,15 +467,17 @@ window.createPiPayment = async function(inputAmount, itemTitle) {
           const r = await fetch('/api/pi/complete', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ paymentId: id, txid: txid, email: userEmail, productName: itemTitle, amount: piAmount, environment: 'testnet' })
+            body: JSON.stringify({ paymentId: id, txid: txid, email: userEmail, productName: itemTitle, amount: piAmount })
           });
           const d = await r.json();
           console.log('[Pi SDK index.html] Completion response:', d);
-          if (d.completed || d.status === 'PAID') {
-            showToast('✅ Pi Payment Completed! ' + piAmount + ' Pi - TxID: ' + txid, 'success');
+          if (r.ok && (d.completed || d.verified)) {
+            showToast('✅ Pi Payment Verified Server-Side! ' + piAmount + ' Pi - TxID: ' + txid, 'success');
             localStorage.setItem("sirwise_paid", "true");
             localStorage.setItem("academy_unlocked", "true");
             window.location.hash = '#academy';
+          } else {
+            showToast('⚠️ Pi Payment server verification pending: ' + (d.error || 'Server check required'), 'error');
           }
         } catch(e) { console.error('[Pi SDK Completion Error]', e); }
       },
@@ -482,22 +487,22 @@ window.createPiPayment = async function(inputAmount, itemTitle) {
           fetch('/api/pi/cancel', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ paymentId: id, environment: 'testnet' })
+            body: JSON.stringify({ paymentId: id, reason: 'user_cancelled' })
           }).catch(() => {});
         }
+        showToast('Pi Testnet payment expired or was cancelled. Please start a new payment.', 'info');
       },
       onError: function(err, payment) {
         console.error('[Pi SDK index.html] Payment error:', err, payment);
-        const errMsg = (err && (err.message || err.toString())) || '';
-        showToast('Pi Payment Note: ' + (errMsg || 'Network timeout handled'), 'info');
         const pid = (payment && payment.identifier) || (err && err.paymentId);
         if (pid) {
-          fetch('/api/pi/cancel', {
+          fetch('/api/pi/error', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ paymentId: pid, environment: 'testnet' })
+            body: JSON.stringify({ paymentId: pid, error: err?.message || err })
           }).catch(() => {});
         }
+        showToast('Pi Testnet payment expired or was cancelled. Please start a new payment.', 'info');
       }
     };
     await Pi.createPayment(paymentData, callbacks);

@@ -29,7 +29,7 @@ export default function AdminSettings() {
 
   useEffect(() => {
     // Load local storage keys - Defaults strictly to empty string "" (No hardcoded wallet addresses)
-    const piKey = localStorage.getItem('PI_API_KEY') || '';
+    localStorage.removeItem('PI_API_KEY'); // Ensure old key is completely cleared from browser storage
     const piWallet = localStorage.getItem('PI_WALLET_ADDRESS') || '';
     const sandbox = localStorage.getItem('PI_SANDBOX') || 'true';
     const paystack = localStorage.getItem('PAYSTACK_KEY') || localStorage.getItem('PAYSTACK_PUBLIC_KEY') || '';
@@ -41,7 +41,6 @@ export default function AdminSettings() {
     const opayAcc = localStorage.getItem('OPAY_ACCOUNT') || '';
     const opayNm = localStorage.getItem('OPAY_NAME') || '';
 
-    setPiApiKey(piKey);
     setPiWalletAddress(piWallet);
     setPiSandbox(sandbox);
     setPaystackKey(paystack);
@@ -69,7 +68,6 @@ export default function AdminSettings() {
       .then(data => {
         const d = data.settings || data;
         if (d && typeof d === 'object') {
-          if (d.pi_api_key) setPiApiKey(d.pi_api_key);
           if (d.pi_wallet !== undefined) setPiWalletAddress(d.pi_wallet || '');
           if (d.pi_sandbox) setPiSandbox(d.pi_sandbox);
           if (d.paystack) setPaystackKey(d.paystack);
@@ -89,8 +87,7 @@ export default function AdminSettings() {
   }, []);
 
   const handleSaveAllKeys = async () => {
-    // Save to local storage for instant state update
-    localStorage.setItem('PI_API_KEY', piApiKey);
+    localStorage.removeItem('PI_API_KEY');
     localStorage.setItem('PI_WALLET_ADDRESS', piWalletAddress);
     localStorage.setItem('PI_SANDBOX', piSandbox);
     localStorage.setItem('PAYSTACK_KEY', paystackKey);
@@ -105,7 +102,6 @@ export default function AdminSettings() {
     localStorage.setItem('OPAY_NAME', opayName);
 
     const payload = {
-      pi_api_key: piApiKey,
       pi_wallet: piWalletAddress,
       pi_sandbox: piSandbox,
       paystack: paystackKey,
@@ -189,28 +185,9 @@ export default function AdminSettings() {
             <span>1. Pi Network Developer Portal Settings</span>
           </div>
 
-          <div>
-            <label className="text-xs font-bold text-gray-300 block mb-1">
-              PI_API_KEY (From develop.pi -&gt; API Keys)
-            </label>
-            <div className="relative">
-              <input
-                id="pi_api_key"
-                type={showPiApiKey ? 'text' : 'password'}
-                autoComplete="new-password"
-                value={piApiKey}
-                onChange={(e) => setPiApiKey(e.target.value)}
-                placeholder="Paste PI_API_KEY here"
-                className="w-full bg-black border border-[#333] focus:border-[#FFD700] rounded-xl px-4 py-3 text-sm text-white pr-10 font-mono"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPiApiKey(!showPiApiKey)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
-              >
-                {showPiApiKey ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
+          <div className="bg-amber-950/40 border border-amber-500/30 rounded-xl p-3 text-xs text-amber-200 leading-relaxed">
+            <span className="font-bold text-amber-400 block mb-1">🔒 Server-Side Security Protection:</span>
+            To prevent secret exposure, <code className="bg-black/60 px-1.5 py-0.5 rounded text-[#FFD700]">PI_API_KEY</code> is managed exclusively on the backend server via Environment Variables (<code className="bg-black/60 px-1.5 py-0.5 rounded text-[#FFD700]">PI_API_KEY</code>). Client-side storing or editing is disabled for safety.
           </div>
 
           <div>

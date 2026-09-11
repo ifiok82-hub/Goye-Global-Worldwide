@@ -1831,59 +1831,100 @@ export default function App() {
               onClick={async () => {
                 const email = localStorage.getItem('userEmail') || localStorage.getItem('user_email') || localStorage.getItem('customer_email') || 'testnet@gasv.store';
                 if (!(window as any).Pi) { 
-                  alert('Open gasv.store inside Pi Browser app to test Pi Testnet'); 
+                  alert('Open https://gasv.store inside Pi Browser app to pay with Pi Testnet'); 
                   return; 
                 }
                 try {
                   showToast('Initializing Pi Testnet 0.01 Pi Payment...');
                   const Pi = (window as any).Pi;
                   await Pi.authenticate(['username', 'payments'], (inc: any) => { 
-                    fetch('/api/pi/complete', {
-                      method: 'POST', 
-                      headers: { 'Content-Type': 'application/json' }, 
-                      body: JSON.stringify({ paymentId: inc.identifier, txid: inc.transaction?.txid, email, productName: 'Pi Testnet Payment Test' })
-                    }).catch(() => {}); 
+                    if (inc && inc.identifier) {
+                      fetch('/api/pi/complete', {
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/json' }, 
+                        body: JSON.stringify({ paymentId: inc.identifier, txid: inc.transaction?.txid || inc.txid, email, productName: 'Pi Testnet Payment Test' })
+                      }).catch(() => {}); 
+                    }
                   });
                   await Pi.createPayment({
                     amount: 0.01, 
-                    memo: 'Pi Testnet Payment Test (0.01 Pi) - Official Developer Portal Testnet Verification - gasv.store - Testnet Only', 
+                    memo: 'Pay with Pi — TESTNET (0.01 Pi Testnet) - Developer Portal Testnet Verification - gasv.store', 
                     metadata: { type: 'pi-testnet-checklist', product: 'pi-testnet-10-10', email }
                   }, {
                     onReadyForServerApproval: async (id: string) => { 
-                      console.log('Testnet approve', id); 
-                      await fetch('/api/pi/approve', {
+                      console.log('[Pi Testnet] Server Approval requested for paymentId:', id); 
+                      const res = await fetch('/api/pi/approve', {
                         method: 'POST', 
                         headers: { 'Content-Type': 'application/json' }, 
-                        body: JSON.stringify({ paymentId: id, environment: 'testnet' })
-                      }).catch(e => console.error('Approve fetch error:', e));
+                        body: JSON.stringify({ paymentId: id })
+                      }).catch(e => {
+                        console.error('Approve fetch error:', e);
+                        return null;
+                      });
+                      if (res && !res.ok) {
+                        const errData = await res.json().catch(() => ({}));
+                        console.error('Approval failed:', errData);
+                      }
                     },
                     onReadyForServerCompletion: async (id: string, txid: string) => { 
-                      await fetch('/api/pi/complete', {
+                      console.log('[Pi Testnet] Server Completion requested for paymentId:', id, 'txid:', txid);
+                      const res = await fetch('/api/pi/complete', {
                         method: 'POST', 
                         headers: { 'Content-Type': 'application/json' }, 
-                        body: JSON.stringify({ paymentId: id, txid, email, productName: 'Pi Testnet Payment Test', environment: 'testnet' })
-                      }).catch(e => console.error('Complete fetch error:', e)); 
-                      localStorage.setItem('pi_testnet_paid', 'true'); 
-                      alert('✅ Pi Testnet 10/10 SUCCESS!\n\nPayment ID: ' + id + '\nTXID: ' + txid + '\nAmount: 0.01 Pi Testnet (Test Pi only)\n\nCheck develop.pi dashboard - PI TESTNET 10/10 should now be GREEN ✅\n\nRC BN3583773'); 
-                      window.location.hash = 'support'; 
-                      setTab('support');
+                        body: JSON.stringify({ paymentId: id, txid, email, productName: 'Pi Testnet Payment Test', amount: 0.01 })
+                      }).catch(e => {
+                        console.error('Complete fetch error:', e);
+                        return null;
+                      }); 
+                      if (res && res.ok) {
+                        const data = await res.json().catch(() => ({}));
+                        if (data.completed || data.verified) {
+                          localStorage.setItem('pi_testnet_paid', 'true'); 
+                          alert('✅ Pi Testnet Payment Verified Server-Side!\n\nPayment ID: ' + id + '\nTXID: ' + txid + '\nAmount: 0.01 Pi Testnet\n\nCheck develop.pi dashboard — PI TESTNET 10/10 should now be GREEN ✅\n\nRC BN3583773'); 
+                          window.location.hash = 'support'; 
+                          setTab('support');
+                          return;
+                        }
+                      }
+                      alert('⚠️ Pi Testnet completion could not be verified by server. Please try starting a new payment.');
                     },
-                    onCancel: (id: string) => alert('Testnet Cancelled ' + id),
-                    onError: (e: any) => alert('Testnet Error: ' + JSON.stringify(e))
+                    onCancel: (id: string) => {
+                      console.log('[Pi Testnet] Cancelled for paymentId:', id);
+                      if (id) {
+                        fetch('/api/pi/cancel', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ paymentId: id, reason: 'user_cancelled' })
+                        }).catch(() => {});
+                      }
+                      alert('Pi Testnet payment expired or was cancelled. Please start a new payment.');
+                    },
+                    onError: (e: any, payment: any) => {
+                      console.error('[Pi Testnet] Error:', e, payment);
+                      const pid = payment?.identifier || e?.paymentId;
+                      if (pid) {
+                        fetch('/api/pi/error', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ paymentId: pid, error: e?.message || e })
+                        }).catch(() => {});
+                      }
+                      alert('Pi Testnet payment expired or was cancelled. Please start a new payment.');
+                    }
                   });
                 } catch (err: any) { 
                   console.error('Testnet Exception:', err);
-                  alert('Testnet Error: ' + (err?.message || err)); 
+                  alert('Pi Testnet payment expired or was cancelled. Please start a new payment.'); 
                 }
               }} 
-              style={{ background: '#FFD700', color: 'black', width: '100%', padding: '14px', borderRadius: '12px', fontWeight: 900, cursor: 'pointer', fontSize: '14px', border: 'none' }}
+              style={{ background: '#FFD700', color: 'black', width: '100%', padding: '14px', borderRadius: '12px', fontWeight: 900, cursor: 'pointer', fontSize: '15px', border: 'none' }}
               className="shadow-lg active:scale-95 transition flex items-center justify-center gap-2"
             >
-              🟣 Test Pi Payment - 0.01 Pi Testnet - For 10/10 GREEN
+              🟣 Pay with Pi — TESTNET
             </button>
 
-            <p className="text-gray-500 text-[9px] text-center mt-2.5 leading-relaxed">
-              This button is only for Pi Developer Portal checklist. Customers use real payment methods above (Paystack, Flutterwave, USDT BEP20 0xdc7f804B..., USDC, OPay 6113541882, Pi GCV). RC BN3583773
+            <p className="text-gray-400 text-[10px] text-center mt-2 font-bold tracking-wide">
+              Pi Testnet only — no real Pi
             </p>
           </div>
         </div>

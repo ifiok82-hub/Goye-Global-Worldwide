@@ -540,20 +540,12 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
 
   const payWithPi = () => {
     if (!validateCustomerEmail(customerEmail)) return;
-    const email = customerEmail.trim();
-    const piRef = prompt('Pi Network GCV ($314,159)\nTransfer to Pi Wallet: @SirwiseGoye\n\nEnter your Pi Transfer Tx Reference / Wallet Username:');
-    if (piRef && piRef.trim().length > 2) {
-      if ((window as any).unlockAcademyAccess) {
-        (window as any).unlockAcademyAccess('Pi GCV', email, 'PI_' + piRef.trim());
-      } else {
-        localStorage.setItem('sirwise_paid', 'true');
-        localStorage.setItem('academy_unlocked', 'true');
-        localStorage.setItem('payment_verified', 'true');
-        showToast('Pi Network Transfer Submitted - Verified! Academy Unlocked!', 'success');
-        window.location.reload();
-      }
-    } else if (piRef !== null) {
-      showToast('Please enter a valid Pi transfer reference.', 'error');
+    if (typeof (window as any).createPiPayment === 'function') {
+      (window as any).createPiPayment(49.99, "Sirwise AI WEB3 Academy Full Access");
+    } else if (typeof (window as any).showPiGuideReal === 'function') {
+      (window as any).showPiGuideReal();
+    } else {
+      showToast('Open https://gasv.store inside Pi Browser app to pay with Pi Network', 'info');
     }
   };
 
