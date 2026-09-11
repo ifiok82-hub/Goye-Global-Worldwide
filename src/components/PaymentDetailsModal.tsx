@@ -29,6 +29,19 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
   const [verifying, setVerifying] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
+  let rawCrypto = localStorage.getItem('usdt_address') || localStorage.getItem('usdc_address') || localStorage.getItem('crypto_wallet') || RECEIVING_WALLET_ADDRESS;
+  if (!rawCrypto || rawCrypto.includes('0xaeed') || rawCrypto.includes('0x66e19')) {
+    rawCrypto = '0xdc7f804B36aB672Ec31642dF418F29e73281b040';
+  }
+  const activeCryptoAddress = rawCrypto;
+
+  let rawPi = localStorage.getItem('pi_wallet') || PI_WALLET_ADDRESS;
+  if (!rawPi || rawPi.startsWith('0x')) {
+    rawPi = 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ7XE36YFQY6LKPVO6R';
+  }
+  const activePiAddress = rawPi;
+  const activeOpayAccount = localStorage.getItem('opay_account') || OPAY_ACCOUNT_NUMBER || '9070889218';
+
   const configs: Record<
     string,
     {
@@ -46,39 +59,39 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
     usdt_bep20: {
       title: 'USDT (BNB Smart Chain / BEP20)',
       token: 'USDT',
-      address: RECEIVING_WALLET_ADDRESS,
+      address: activeCryptoAddress,
       amount: `$${amountUSD.toFixed(2)} USDT`,
       network: USDT_CONFIG.network,
       minDeposit: USDT_CONFIG.minDeposit,
-      qr: USDT_CONFIG.qr,
+      qr: USDT_CONFIG.qr || `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${activeCryptoAddress}`,
       warning: USDT_CONFIG.warning,
       instructions: `Send $${amountUSD.toFixed(2)} USDT via BNB Smart Chain (BEP20).\nPaste your Tx Hash below for instant automated unlock.`
     },
     usdc_base: {
       title: 'USDC (Base Network)',
       token: 'USDC',
-      address: RECEIVING_WALLET_ADDRESS,
+      address: activeCryptoAddress,
       amount: `$${amountUSD.toFixed(2)} USDC`,
       network: USDC_CONFIG.network,
       minDeposit: USDC_CONFIG.minDeposit,
-      qr: USDC_CONFIG.qr,
+      qr: USDC_CONFIG.qr || `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${activeCryptoAddress}`,
       warning: USDC_CONFIG.warning,
       instructions: `Send $${amountUSD.toFixed(2)} USDC via Base Network.\nPaste your Tx Hash below for instant automated unlock.`
     },
     opay: {
       title: 'Bank Transfer / OPay',
       token: 'NGN / USD',
-      address: OPAY_ACCOUNT_NUMBER,
+      address: activeOpayAccount,
       amount: `₦${priceNGN.toLocaleString()} or $${amountUSD.toFixed(2)}`,
       network: `OPay • ${OPAY_ACCOUNT_NAME}`,
       qr: '',
-      warning: `Bank: OPay\nAccount Number: ${OPAY_ACCOUNT_NUMBER}\nAccount Name: ${OPAY_ACCOUNT_NAME}`,
-      instructions: `Transfer ₦${priceNGN.toLocaleString()} to OPay Account ${OPAY_ACCOUNT_NUMBER}.\nThen paste your Session ID or Transaction Reference below for instant automated verification.`
+      warning: `Bank: OPay\nAccount Number: ${activeOpayAccount}\nAccount Name: ${OPAY_ACCOUNT_NAME}`,
+      instructions: `Transfer ₦${priceNGN.toLocaleString()} to OPay Account ${activeOpayAccount}.\nThen paste your Session ID or Transaction Reference below for instant automated verification.`
     },
     pi: {
       title: 'Pi Network GCV $314,159',
       token: 'Pi',
-      address: PI_WALLET_ADDRESS,
+      address: activePiAddress,
       amount: '0.000159 Pi',
       network: PI_CONFIG.network,
       qr: '',
@@ -270,18 +283,29 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
           </div>
         )}
 
-        <div style={{ background: 'black', border: '1px solid #333', borderRadius: '12px', padding: '12px', margin: '12px 0' }}>
-          <p style={{ color: '#888', fontSize: '11px', margin: '0 0 4px 0' }}>Address / Account Number:</p>
-          <p style={{ color: 'white', fontWeight: 700, wordBreak: 'break-all', fontSize: '13px', margin: 0, fontFamily: 'monospace' }}>{cfg.address}</p>
+        <div className="address-container" style={{ background: '#0d0d0d', border: '1px solid #333', borderRadius: '12px', padding: '14px', margin: '12px 0' }}>
+          <label className="address-label" style={{ color: '#aaa', fontSize: '12px', fontWeight: 700, display: 'block', marginBottom: '8px' }}>
+            Address / Account Number:
+          </label>
+          
+          {/* Visible address display box */}
+          <div className="address-display-box" style={{ background: '#1a1a1a', border: '1px solid #FFD700', borderRadius: '8px', padding: '12px', marginBottom: '10px', textAlign: 'center', boxShadow: 'inset 0 0 8px rgba(0,0,0,0.8)' }}>
+            <span className="wallet-address" style={{ color: '#00FF88', fontWeight: 800, fontSize: '13px', wordBreak: 'break-all', fontFamily: 'monospace', letterSpacing: '0.5px', display: 'block' }}>
+              {cfg.address || '0xdc7f804B36aB672Ec31642dF418F29e73281b040'}
+            </span>
+          </div>
+
           <button
+            className="copy-btn"
             onClick={() => {
-              navigator.clipboard.writeText(cfg.address);
-              alert('Copied to clipboard: ' + cfg.address);
+              const targetAddr = cfg.address || '0xdc7f804B36aB672Ec31642dF418F29e73281b040';
+              navigator.clipboard.writeText(targetAddr);
+              alert('Copied to clipboard:\n' + targetAddr);
               if ((window as any).trackClick) {
-                (window as any).trackClick(type + '_copy_address', { address: cfg.address });
+                (window as any).trackClick(type + '_copy_address', { address: targetAddr });
               }
             }}
-            style={{ background: '#FFD700', color: 'black', width: '100%', padding: '12px', borderRadius: '8px', fontWeight: 900, marginTop: '8px', cursor: 'pointer', border: 'none' }}
+            style={{ background: '#FFD700', color: 'black', width: '100%', padding: '14px', borderRadius: '8px', fontWeight: 900, fontSize: '14px', cursor: 'pointer', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 15px rgba(255,215,0,0.25)' }}
           >
             📋 Copy Address / Account
           </button>

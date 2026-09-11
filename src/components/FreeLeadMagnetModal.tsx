@@ -70,7 +70,7 @@ Your Free Blueprint is only 10% of the puzzle. Unlock the remaining 90% today!
 🎓 SIRWISE AI WEB3 ACADEMY - 8 FULL GLOBAL MODULES
 - Price: $49.99 USD = ₦74,985 Lifetime Access (190+ Countries)
 - Special Link: https://www.gasv.store/#academy?from=blueprint
-- USDC ERC20 Address: 0xaeed4e48f2146aadd07e85219f209053616e4e71
+- USDC Base Address: 0xdc7f804B36aB672Ec31642dF418F29e73281b040
 - OPay Bank Transfer: Account 6113541882 GOYEDAGOSMESS ENTERPRISE
 - Global Cards: Paystack & Flutterwave Supported
 - 100% Secure SSL | Official Contact: goyedagosmess@gmail.com | RC BN3583773

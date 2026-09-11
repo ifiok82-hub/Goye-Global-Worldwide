@@ -290,7 +290,7 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ onClos
               <input type="radio" name="payment_option" checked={selected === 'usdt'} onChange={() => setSelected('usdt')} />
               <div>
                 <div style={{ color: 'white', fontWeight: 700, fontSize: '14px' }}>🟡 USDT (BEP20 BSC)</div>
-                <div style={{ color: '#888', fontSize: '11px' }}>0x66e19089f...ffe96</div>
+                <div style={{ color: '#888', fontSize: '11px' }}>0xdc7f804B...b040</div>
               </div>
             </div>
             <span style={{ background: '#26A17B', color: 'white', fontSize: '10px', fontWeight: 900, padding: '3px 8px', borderRadius: '6px' }}>CRYPTO</span>
@@ -303,8 +303,8 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ onClos
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <input type="radio" name="payment_option" checked={selected === 'usdc'} onChange={() => setSelected('usdc')} />
               <div>
-                <div style={{ color: 'white', fontWeight: 700, fontSize: '14px' }}>🔵 USDC (Base / BSC)</div>
-                <div style={{ color: '#888', fontSize: '11px' }}>0x66e19089f...ffe96</div>
+                <div style={{ color: 'white', fontWeight: 700, fontSize: '14px' }}>🔵 USDC (Base Network)</div>
+                <div style={{ color: '#888', fontSize: '11px' }}>0xdc7f804B...b040</div>
               </div>
             </div>
             <span style={{ background: '#2775CA', color: 'white', fontSize: '10px', fontWeight: 900, padding: '3px 8px', borderRadius: '6px' }}>CRYPTO</span>

@@ -1898,7 +1898,7 @@ export default function App() {
             </button>
 
             <p className="text-gray-500 text-[9px] text-center mt-2.5 leading-relaxed">
-              This button is only for Pi Developer Portal checklist. Customers use real payment methods above (Paystack, Flutterwave, USDT BEP20 0x66e190..., USDC, OPay 6113541882, Pi GCV). RC BN3583773
+              This button is only for Pi Developer Portal checklist. Customers use real payment methods above (Paystack, Flutterwave, USDT BEP20 0xdc7f804B..., USDC, OPay 6113541882, Pi GCV). RC BN3583773
             </p>
           </div>
         </div>

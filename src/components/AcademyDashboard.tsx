@@ -273,7 +273,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           subject: 'New USDT BEP20 Payment $49.99 - ' + email + ' - ' + tx,
-          message: 'USDT BEP20 Payment Received\nEmail: ' + email + '\nTx: ' + tx + '\nAmount: $49.99\nAddress: 0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96\nVerify: https://bscscan.io/tx/' + tx
+          message: 'USDT BEP20 Payment Received\nEmail: ' + email + '\nTx: ' + tx + '\nAmount: $49.99\nAddress: 0xdc7f804B36aB672Ec31642dF418F29e73281b040\nVerify: https://bscscan.io/tx/' + tx
         })
       });
     } catch (e) {}
@@ -522,7 +522,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
   const payWithUSDT = () => {
     if (!validateCustomerEmail(customerEmail)) return;
     const email = customerEmail.trim();
-    const txHash = prompt('Send $49.99 USDT (BEP20 - BNB Smart Chain) to address:\n0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96\n\nEnter your Transaction Hash / ID below:');
+    const txHash = prompt('Send $49.99 USDT (BEP20 - BNB Smart Chain) to address:\n0xdc7f804B36aB672Ec31642dF418F29e73281b040\n\nEnter your Transaction Hash / ID below:');
     if (txHash && txHash.trim().length > 5) {
       if ((window as any).unlockAcademyAccess) {
         (window as any).unlockAcademyAccess('USDT BEP20', email, 'USDT_' + txHash.trim());
@@ -676,7 +676,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
               🚀 UPGRADE NOW - BUY & UNLOCK $49.99
             </button>
             <p style={{ fontSize: '11px', marginTop: '10px', fontWeight: 'bold', color: 'black' }}>
-              USDT BEP20: 0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96 | OPay 6113541882 | Paystack Global
+              USDT BEP20: 0xdc7f804B36aB672Ec31642dF418F29e73281b040 | OPay 6113541882 | Paystack Global
             </p>
           </div>
         );

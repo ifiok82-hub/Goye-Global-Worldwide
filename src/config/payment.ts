@@ -2,15 +2,24 @@
 // Environment variables and DB settings take precedence. Defaults strictly to empty string ("").
 
 export const RECEIVING_WALLET_ADDRESS =
-  (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_RECEIVING_WALLET_ADDRESS) || '';
+  (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_RECEIVING_WALLET_ADDRESS) ||
+  (typeof window !== 'undefined' && (window as any).env?.NEXT_PUBLIC_RECEIVING_WALLET_ADDRESS) ||
+  '0xdc7f804B36aB672Ec31642dF418F29e73281b040';
 
 export const PI_WALLET_ADDRESS =
-  (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_PI_WALLET_ADDRESS) || '';
+  (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_PI_WALLET_ADDRESS) ||
+  (typeof window !== 'undefined' && (window as any).env?.NEXT_PUBLIC_PI_WALLET_ADDRESS) ||
+  'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ7XE36YFQY6LKPVO6R';
 
 export const OPAY_ACCOUNT_NUMBER =
-  (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_OPAY_ACCOUNT_NUMBER) || '';
+  (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_OPAY_ACCOUNT_NUMBER) ||
+  (typeof window !== 'undefined' && (window as any).env?.NEXT_PUBLIC_OPAY_ACCOUNT_NUMBER) ||
+  '9070889218';
+
 export const OPAY_ACCOUNT_NAME =
-  (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_OPAY_ACCOUNT_NAME) || '';
+  (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_OPAY_ACCOUNT_NAME) ||
+  (typeof window !== 'undefined' && (window as any).env?.NEXT_PUBLIC_OPAY_ACCOUNT_NAME) ||
+  'GOYEDAGOSMESS ENTERPRISE';
 
 export const USDT_CONFIG = {
   token: 'USDT',

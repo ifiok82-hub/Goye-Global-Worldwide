@@ -87,9 +87,9 @@ let savedKeys = {
 try {
   if (fs.existsSync('./keys.json')) {
     const loaded = JSON.parse(fs.readFileSync('./keys.json', 'utf8'));
-    if (loaded.usdt === '0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96') loaded.usdt = '';
-    if (loaded.usdc === '0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96') loaded.usdc = '';
-    if (loaded.pi_wallet && loaded.pi_wallet.includes('GBR4B47WY7')) loaded.pi_wallet = '';
+    if (loaded.usdt === '0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96') loaded.usdt = '0xdc7f804B36aB672Ec31642dF418F29e73281b040';
+    if (loaded.usdc === '0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96') loaded.usdc = '0xdc7f804B36aB672Ec31642dF418F29e73281b040';
+    if (!loaded.pi_wallet || loaded.pi_wallet.startsWith('0x')) loaded.pi_wallet = 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ7XE36YFQY6LKPVO6R';
     savedKeys = { ...savedKeys, ...loaded };
   }
 } catch(e) {}
@@ -3578,8 +3578,8 @@ app.get('/api/admin/get-gateway-keys', (req, res) => {
     const paystackSecret = getPaystackSecretKey(req) || cfg.PAYSTACK_SECRET_KEY || '';
     const flutterwavePublic = cfg.FLUTTERWAVE_PUBLIC_KEY || process.env.FLUTTERWAVE_PUBLIC_KEY || 'FLWPUBK-cbb518a9b8f74421e8871';
     const flutterwaveSecret = getFlutterwaveSecretKey(req) || cfg.FLUTTERWAVE_SECRET_KEY || '';
-    const cryptoWallet = cfg.CRYPTO_WALLET || process.env.CRYPTO_WALLET || '0xaed4e48f2146aadd07e85219f20';
-    const piWallet = cfg.PI_WALLET || process.env.PI_WALLET || 'GBR4B47WY7JDK2JKUUQQTWWI';
+    const cryptoWallet = cfg.CRYPTO_WALLET || process.env.CRYPTO_WALLET || '0xdc7f804B36aB672Ec31642dF418F29e73281b040';
+    const piWallet = cfg.PI_WALLET || process.env.PI_WALLET || 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ7XE36YFQY6LKPVO6R';
 
     return res.json({
       success: true,
