@@ -318,13 +318,6 @@ export default function App() {
 
   const handlePiTestnetDirect = async () => {
     const email = localStorage.getItem('userEmail') || localStorage.getItem('user_email') || localStorage.getItem('customer_email') || prompt('Email for instant delivery:') || 'testnet@gasv.store';
-    const piKey = localStorage.getItem('PI_API_KEY') || localStorage.getItem('pi_api_key');
-    if (!piKey) {
-      alert('⚠️ First paste PI_API_KEY in #admin-settings - Go to gasv.store/#admin-settings');
-      window.location.hash = 'admin-settings';
-      setTab('admin-settings');
-      return;
-    }
     if (!(window as any).Pi) {
       alert('Open gasv.store in Pi Browser App to test - Pi Browser required for Testnet 10/10');
       return;
@@ -337,7 +330,7 @@ export default function App() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ paymentId: inc.identifier, txid: inc.transaction?.txid, email, productName: 'Pi Testnet Payment Test' })
-        });
+        }).catch(() => {});
       });
       await Pi.createPayment(
         {
@@ -348,21 +341,19 @@ export default function App() {
         {
           onReadyForServerApproval: async (id: string) => {
             console.log('[Pi Direct] Approval requested:', id);
-            const piApiKey = (localStorage.getItem('PI_API_KEY') || localStorage.getItem('pi_api_key') || '').trim();
             await fetch('/api/pi/approve', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'x-pi-api-key': piApiKey },
-              body: JSON.stringify({ paymentId: id, apiKey: piApiKey, environment: 'testnet' })
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ paymentId: id, environment: 'testnet' })
             }).catch(e => console.error('[Pi Direct] Approve fetch error:', e));
           },
           onReadyForServerCompletion: async (id: string, txid: string) => {
             console.log('[Pi Direct] Completion requested:', id, txid);
-            const piApiKey = (localStorage.getItem('PI_API_KEY') || localStorage.getItem('pi_api_key') || '').trim();
             try {
               const response = await fetch('/api/pi/complete', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'x-pi-api-key': piApiKey },
-                body: JSON.stringify({ paymentId: id, txid, email, productName: 'Pi Testnet Payment Test', amount: 0.0001, environment: 'testnet', apiKey: piApiKey })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ paymentId: id, txid, email, productName: 'Pi Testnet Payment Test', amount: 0.0001, environment: 'testnet' })
               });
               const result = await response.json();
               if (typeof (window as any).unlockAcademy === 'function') {
@@ -389,11 +380,13 @@ export default function App() {
             }).catch(() => {});
           },
           onError: (e: any) => {
-            alert('Pi Testnet Error: ' + JSON.stringify(e) + '\nCheck PI_API_KEY saved in #admin-settings and validation-key.txt returns only key');
+            console.error('Pi Testnet Error:', e);
+            alert('Pi Testnet Note: ' + (e?.message || JSON.stringify(e)));
           }
         }
       );
     } catch (err: any) {
+      console.error('Pi Testnet Direct exception:', err);
       alert('Pi Testnet Error: ' + (err?.message || err));
     }
   };
@@ -1837,13 +1830,6 @@ export default function App() {
             <button 
               onClick={async () => {
                 const email = localStorage.getItem('userEmail') || localStorage.getItem('user_email') || localStorage.getItem('customer_email') || 'testnet@gasv.store';
-                const piKey = localStorage.getItem('PI_API_KEY') || localStorage.getItem('pi_api_key');
-                if (!piKey) { 
-                  alert('Paste PI_API_KEY in #admin-settings first'); 
-                  window.location.hash = 'admin-settings'; 
-                  setTab('admin-settings');
-                  return; 
-                }
                 if (!(window as any).Pi) { 
                   alert('Open gasv.store inside Pi Browser app to test Pi Testnet'); 
                   return; 
@@ -1856,7 +1842,7 @@ export default function App() {
                       method: 'POST', 
                       headers: { 'Content-Type': 'application/json' }, 
                       body: JSON.stringify({ paymentId: inc.identifier, txid: inc.transaction?.txid, email, productName: 'Pi Testnet Payment Test' })
-                    }); 
+                    }).catch(() => {}); 
                   });
                   await Pi.createPayment({
                     amount: 0.01, 
@@ -1865,19 +1851,17 @@ export default function App() {
                   }, {
                     onReadyForServerApproval: async (id: string) => { 
                       console.log('Testnet approve', id); 
-                      const piApiKey = (localStorage.getItem('PI_API_KEY') || localStorage.getItem('pi_api_key') || '').trim();
                       await fetch('/api/pi/approve', {
                         method: 'POST', 
-                        headers: { 'Content-Type': 'application/json', 'x-pi-api-key': piApiKey }, 
-                        body: JSON.stringify({ paymentId: id, apiKey: piApiKey, environment: 'testnet' })
+                        headers: { 'Content-Type': 'application/json' }, 
+                        body: JSON.stringify({ paymentId: id, environment: 'testnet' })
                       }).catch(e => console.error('Approve fetch error:', e));
                     },
                     onReadyForServerCompletion: async (id: string, txid: string) => { 
-                      const piApiKey = (localStorage.getItem('PI_API_KEY') || localStorage.getItem('pi_api_key') || '').trim();
                       await fetch('/api/pi/complete', {
                         method: 'POST', 
-                        headers: { 'Content-Type': 'application/json', 'x-pi-api-key': piApiKey }, 
-                        body: JSON.stringify({ paymentId: id, txid, email, productName: 'Pi Testnet Payment Test', apiKey: piApiKey, environment: 'testnet' })
+                        headers: { 'Content-Type': 'application/json' }, 
+                        body: JSON.stringify({ paymentId: id, txid, email, productName: 'Pi Testnet Payment Test', environment: 'testnet' })
                       }).catch(e => console.error('Complete fetch error:', e)); 
                       localStorage.setItem('pi_testnet_paid', 'true'); 
                       alert('✅ Pi Testnet 10/10 SUCCESS!\n\nPayment ID: ' + id + '\nTXID: ' + txid + '\nAmount: 0.01 Pi Testnet (Test Pi only)\n\nCheck develop.pi dashboard - PI TESTNET 10/10 should now be GREEN ✅\n\nRC BN3583773'); 
@@ -1888,6 +1872,7 @@ export default function App() {
                     onError: (e: any) => alert('Testnet Error: ' + JSON.stringify(e))
                   });
                 } catch (err: any) { 
+                  console.error('Testnet Exception:', err);
                   alert('Testnet Error: ' + (err?.message || err)); 
                 }
               }} 

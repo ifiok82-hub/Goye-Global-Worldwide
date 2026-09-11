@@ -216,7 +216,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
   const initializePaystackServerRedirect = async (userEmail: string) => {
     try {
       if (onToast) onToast('Initializing Paystack secure checkout...');
-      const res = await fetch('/api/payments/paystack/initialize', {
+      const res = await fetch('/api/paystack/initialize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -239,87 +239,95 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
     }
   };
 
-  const handlePaystackPayment = () => {
-    const emailInput = getValidatedEmail();
-    if (!emailInput) {
-      showToast('Please enter your email address before proceeding with payment.', 'error');
-      const inputEl = document.querySelector('input[type="email"]') as HTMLInputElement;
-      if (inputEl) {
-        inputEl.focus();
-        inputEl.style.border = '2px solid #ef4444';
+  const handlePaystackPayment = async () => {
+    try {
+      const emailInput = getValidatedEmail();
+      if (!emailInput) {
+        showToast('Please enter your email address before proceeding with payment.', 'error');
+        const inputEl = document.querySelector('input[type="email"]') as HTMLInputElement;
+        if (inputEl) {
+          inputEl.focus();
+          inputEl.style.border = '2px solid #ef4444';
+        }
+        return;
       }
-      return;
-    }
-    localStorage.setItem('user_email', emailInput);
-    localStorage.setItem('customer_email', emailInput);
-    trackUserClick('Paystack Payment Click', 'CheckoutModal', product?.id || 'academy');
+      localStorage.setItem('user_email', emailInput);
+      localStorage.setItem('customer_email', emailInput);
+      trackUserClick('Paystack Payment Click', 'CheckoutModal', product?.id || 'academy');
 
-    let paystackPublicKey = (
-      (import.meta.env && import.meta.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY) || 
-      (import.meta.env && import.meta.env.VITE_PAYSTACK_PUBLIC_KEY) || 
-      (window as any).env?.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || 
-      (window as any).env?.VITE_PAYSTACK_PUBLIC_KEY || 
-      paymentConfig?.paystack || 
-      localStorage.getItem('NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY') || 
-      localStorage.getItem('paystack_public_key') || 
-      localStorage.getItem('PAYSTACK_PUBLIC_KEY') || 
-      ''
-    ).trim();
-
-    const isValidFormat = (k: string) => (k.startsWith('pk_live_') || k.startsWith('pk_test_')) && k.length >= 32;
-
-    if (!isValidFormat(paystackPublicKey)) {
-      console.log('Paystack client key not available/valid. Using automated server initialization...');
-      initializePaystackServerRedirect(emailInput);
-      return;
-    }
-
-    const nairaPrice = Math.round(priceNGN);
-    const amountInKobo = nairaPrice * 100; // e.g., 250000 kobo for NGN 2,500
-
-    if (typeof (window as any).PaystackPop !== 'undefined' && typeof (window as any).PaystackPop.setup === 'function') {
-      try {
-        const handler = (window as any).PaystackPop.setup({
-          key: paystackPublicKey,
-          email: emailInput,
-          amount: amountInKobo,
-          currency: 'NGN',
-          ref: 'GOYE_' + Math.floor((Math.random() * 1000000000) + 1),
-          metadata: {
-            custom_fields: [
-              { display_name: "Product", variable_name: "product", value: cleanProductName },
-              { display_name: "RC", variable_name: "rc", value: "BN3583773 GOYEDAGOSMESS ENTERPRISE" }
-            ]
-          },
-          onClose: function() {
-            console.log('Paystack closed - Not counting');
-            if (onToast) onToast('Paystack checkout window closed - No order recorded');
-          },
-          onCancel: function() {
-            console.log('Paystack cancelled - Not counting');
-            if (onToast) onToast('Payment cancelled - No charge');
-          },
-          callback: function(response: any) {
-            console.log('Paystack success', response);
-            const ref = response?.reference || response?.trxref || ('PSK_' + Date.now());
-            if (typeof (window as any).verifyPaystackPayment === 'function') {
-              (window as any).verifyPaystackPayment(ref);
-            }
-            if (response && response.reference) {
-              window.location.href = `/payment/verify?reference=${encodeURIComponent(response.reference)}`;
-            } else {
-              handleSuccess(ref, 'Paystack (Global Cards)');
-            }
-          }
-        });
-        handler.openIframe();
-      } catch (e: any) {
-        console.error('Paystack popup setup error, falling back to server redirect:', e);
-        initializePaystackServerRedirect(emailInput);
+      // Ensure Paystack Inline SDK script tag is present in head
+      if (!document.querySelector('script[src*="paystack.co/v1/inline.js"]')) {
+        const script = document.createElement('script');
+        script.src = 'https://js.paystack.co/v1/inline.js';
+        script.async = true;
+        document.head.appendChild(script);
       }
-    } else {
-      console.warn('PaystackPop inline SDK not loaded, redirecting via server API...');
-      initializePaystackServerRedirect(emailInput);
+
+      let paystackPublicKey = (
+        (import.meta.env && import.meta.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY) || 
+        (import.meta.env && import.meta.env.VITE_PAYSTACK_PUBLIC_KEY) || 
+        (window as any).env?.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || 
+        (window as any).env?.VITE_PAYSTACK_PUBLIC_KEY || 
+        paymentConfig?.paystack || 
+        localStorage.getItem('NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY') || 
+        localStorage.getItem('paystack_public_key') || 
+        localStorage.getItem('PAYSTACK_PUBLIC_KEY') || 
+        ''
+      ).trim();
+
+      const isValidFormat = (k: string) => (k.startsWith('pk_live_') || k.startsWith('pk_test_')) && k.length >= 20;
+
+      const nairaPrice = Math.round(priceNGN);
+      const amountInKobo = nairaPrice * 100; // e.g., 250000 kobo for NGN 2,500
+
+      if (isValidFormat(paystackPublicKey) && typeof (window as any).PaystackPop !== 'undefined' && typeof (window as any).PaystackPop.setup === 'function') {
+        try {
+          const handler = (window as any).PaystackPop.setup({
+            key: paystackPublicKey,
+            email: emailInput,
+            amount: amountInKobo,
+            currency: 'NGN',
+            ref: 'GOYE_' + Math.floor((Math.random() * 1000000000) + 1),
+            metadata: {
+              custom_fields: [
+                { display_name: "Product", variable_name: "product", value: cleanProductName },
+                { display_name: "RC", variable_name: "rc", value: "BN3583773 GOYEDAGOSMESS ENTERPRISE" }
+              ]
+            },
+            onClose: function() {
+              console.log('Paystack closed - Not counting');
+              if (onToast) onToast('Paystack checkout window closed - No order recorded');
+            },
+            onCancel: function() {
+              console.log('Paystack cancelled - Not counting');
+              if (onToast) onToast('Payment cancelled - No charge');
+            },
+            callback: function(response: any) {
+              console.log('Paystack success', response);
+              const ref = response?.reference || response?.trxref || ('PSK_' + Date.now());
+              if (typeof (window as any).verifyPaystackPayment === 'function') {
+                (window as any).verifyPaystackPayment(ref);
+              }
+              if (response && response.reference) {
+                window.location.href = `/payment/verify?reference=${encodeURIComponent(response.reference)}`;
+              } else {
+                handleSuccess(ref, 'Paystack (Global Cards)');
+              }
+            }
+          });
+          handler.openIframe();
+        } catch (e: any) {
+          console.error('Paystack popup setup error, falling back to server redirect:', e);
+          await initializePaystackServerRedirect(emailInput);
+        }
+      } else {
+        console.warn('PaystackPop inline SDK not loaded or key unconfigured, initializing server redirect fallback...');
+        await initializePaystackServerRedirect(emailInput);
+      }
+    } catch (err: any) {
+      console.error('Paystack payment handler exception, falling back to server init:', err);
+      const emailInput = getValidatedEmail() || 'customer@gasv.store';
+      await initializePaystackServerRedirect(emailInput);
     }
   };
 
@@ -734,11 +742,23 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
 
                 <button 
                   onClick={() => {
-                    if (typeof (window as any).createPiPayment === 'function') {
-                      const amountToPay = product?.id === 'pi-testnet-test' ? 0.0001 : priceUSD;
-                      (window as any).createPiPayment(amountToPay, product?.name || 'Pi Network Order');
-                    } else {
-                      alert('Pi Network payment initializer loading...');
+                    try {
+                      const userEmail = getValidatedEmail() || 'customer@gasv.store';
+                      if (typeof (window as any).createPiPayment === 'function') {
+                        const amountToPay = product?.id === 'pi-testnet-test' ? 0.0001 : priceUSD;
+                        (window as any).createPiPayment(amountToPay, product?.name || 'Pi Network Order');
+                      } else if (typeof (window as any).payWithPi === 'function') {
+                        const amountToPay = product?.id === 'pi-testnet-test' ? 0.0001 : priceUSD;
+                        (window as any).payWithPi(userEmail, amountToPay);
+                      } else {
+                        if (typeof (window as any).showPiGuideReal === 'function') {
+                          (window as any).showPiGuideReal();
+                        } else {
+                          alert('Open https://www.gasv.store inside Pi Browser app to pay with Pi SDK!');
+                        }
+                      }
+                    } catch (err: any) {
+                      console.error('Pi Payment click error:', err);
                     }
                   }} 
                   className="w-full h-[56px] bg-[#7D2AE7] hover:bg-[#6821c6] text-white font-black rounded-xl my-3 cursor-pointer transition text-base shadow-lg active:scale-[0.98]"
@@ -1026,19 +1046,27 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
               {/* Native Pi SDK 1-Click Button */}
               <button 
                 onClick={() => {
-                  const userEmail = email.trim();
-                  if (!userEmail || !userEmail.includes('@')) {
-                    alert('Please enter your email address first!');
-                    return;
-                  }
-                  if (typeof (window as any).createPiPayment === 'function') {
-                    const amountToPay = product?.id === 'pi-testnet-test' ? 0.0001 : priceUSD;
-                    (window as any).createPiPayment(amountToPay, product?.name || 'Pi Network Order');
-                  } else if (typeof (window as any).payWithPi === 'function') {
-                    const amountToPay = product?.id === 'pi-testnet-test' ? 0.0001 : priceUSD;
-                    (window as any).payWithPi(userEmail, amountToPay);
-                  } else {
-                    alert('Please open https://www.gasv.store in the Pi Browser app to pay with Pi SDK!');
+                  try {
+                    const userEmail = email.trim() || getValidatedEmail() || 'customer@gasv.store';
+                    if (!userEmail || !userEmail.includes('@')) {
+                      alert('Please enter your email address first!');
+                      return;
+                    }
+                    if (typeof (window as any).createPiPayment === 'function') {
+                      const amountToPay = product?.id === 'pi-testnet-test' ? 0.0001 : priceUSD;
+                      (window as any).createPiPayment(amountToPay, product?.name || 'Pi Network Order');
+                    } else if (typeof (window as any).payWithPi === 'function') {
+                      const amountToPay = product?.id === 'pi-testnet-test' ? 0.0001 : priceUSD;
+                      (window as any).payWithPi(userEmail, amountToPay);
+                    } else {
+                      if (typeof (window as any).showPiGuideReal === 'function') {
+                        (window as any).showPiGuideReal();
+                      } else {
+                        alert('Please open https://www.gasv.store in the Pi Browser app to pay with Pi SDK!');
+                      }
+                    }
+                  } catch (err: any) {
+                    console.error('Pi Payment click error:', err);
                   }
                 }} 
                 style={{
