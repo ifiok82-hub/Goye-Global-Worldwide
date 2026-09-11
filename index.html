@@ -1003,10 +1003,24 @@ window.openUserMenu = function() {
 window.initPiSafe=function(){
   try{
     if(typeof Pi!=='undefined'){
-      try{ Pi.init({version:"2.0", sandbox:false}); console.log('Pi Mainnet ready'); }catch(e){ console.log('Pi init fallback', e); }
+      try{ 
+        var isSandbox = localStorage.getItem('PI_SANDBOX') !== 'false';
+        Pi.init({version:"2.0", sandbox: isSandbox}); 
+        console.log('Pi SDK initialized - sandbox:', isSandbox); 
+      }catch(e){ console.log('Pi init fallback', e); }
     }
   }catch(e){ console.log('Pi SDK not blocking', e); }
 };
+// Register service worker for PWA
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/sw.js').catch(function() {
+      navigator.serviceWorker.register('/service-worker.js').catch(function(err) {
+        console.warn('SW registration failed:', err);
+      });
+    });
+  });
+}
 // Don't block page load with Pi
 setTimeout(initPiSafe, 2000);
 

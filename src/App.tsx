@@ -546,9 +546,7 @@ export default function App() {
         const cleanEmail = email.trim();
         const cleanName = name?.trim() || 'Valued Customer';
 
-        setTimeout(() => {
-          alert(`🎉 AUTO REPLY SENT TO YOUR EMAIL (${cleanEmail}):\n\nHi ${cleanName}!\n\nThank you for choosing Goye Store Global & Sirwise AI WEB3 Academy (RC BN3583773)!\n\nYour 5-Minute AI Prompt Blueprint access is confirmed.\n\n⚡ SPECIAL OFFER: Upgrade to Full Academy - $49.99 (8 Modules, Blockchain Certificate, 190+ Countries)\n\nEnroll link: https://www.gasv.store/#shop\nSupport: goyedagosmess@gmail.com`);
-        }, 300);
+        showToast(`📧 Blueprint & Offer Sent to ${cleanEmail}`, 'info');
 
         try {
           const formData = new FormData();
@@ -1183,6 +1181,24 @@ export default function App() {
 
             {tab === 'home' && (
               <>
+                {/* PWA INSTALL APP BANNER */}
+                <div className="bg-gradient-to-r from-yellow-950/80 via-black to-purple-950/80 border-2 border-[#FFD700] rounded-2xl p-3.5 sm:p-4 mb-4 flex items-center justify-between gap-3 shadow-[0_0_20px_rgba(255,215,0,0.25)] relative overflow-hidden">
+                  <div className="flex items-center gap-3">
+                    <img src="/icon-192.png" alt="Sirwise AI" className="w-10 h-10 rounded-xl border border-[#FFD700] shrink-0 object-cover" />
+                    <div>
+                      <h3 className="text-[#FFD700] font-black text-xs sm:text-sm uppercase tracking-wide">Sirwise AI WEB3 ACADEMY</h3>
+                      <p className="text-gray-200 text-[11px] font-medium">Install official app for instant offline access & downloads</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleInstallClick}
+                    className="bg-[#FFD700] hover:bg-yellow-400 text-black font-black text-xs px-4 py-2.5 rounded-xl shrink-0 transition active:scale-95 shadow-lg cursor-pointer flex items-center gap-1.5 border border-yellow-200"
+                  >
+                    <Smartphone size={16} />
+                    <span>Install App</span>
+                  </button>
+                </div>
+
                 {/* 1. TRIPWIRE MICRO-OFFER CARD AT TOP OF HOMEPAGE */}
                 <div className="bg-[#0f0f0f] border-2 border-[#FFD700] rounded-2xl p-4 sm:p-5 mb-6 text-left shadow-[0_0_30px_rgba(255,215,0,0.25)] relative overflow-hidden">
                   <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">

@@ -394,7 +394,7 @@ export default function AdminSettings() {
 
           <div>
             <label className="text-xs font-bold text-gray-300 block mb-1">
-              USDC Crypto Wallet Address (Base / ERC20)
+              USDC Wallet Address (Base Network)
             </label>
             <div className="relative">
               <input

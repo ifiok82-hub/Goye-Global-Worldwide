@@ -57,7 +57,7 @@ export default function SirwiseAITeacher({ isOpen, onClose }: any) {
     const lower = userMessage.toLowerCase();
     
     if (lower.includes("pay") || lower.includes("free") || lower.includes("cost") || lower.includes("price") || lower.includes("fee") || lower.includes("how much") || lower.includes("enroll") || lower.includes("unlock")) {
-      return "Sirwise AI Web3 Academy offers Lifetime Access to all 8 Global Modules for just $49.99 USD (NGN 74,985) — Compare to $299 elsewhere!\n\n🌐 We support 100% SECURE SSL ENCRYPTED payments worldwide:\n- Paystack (Debit/Credit Cards & Bank Transfer)\n- Flutterwave (African & Global Cards)\n- PayPal (Instant USD Transfer)\n- Crypto USDC (Ethereum / TRC20)\n- Pi Network GCV $314,159\n- Direct OPay Bank Transfer (Account: 611 354 1882 GOYEDAGOSMESS ENTERPRISE)\n\nSupport Email: goyedagosmess@gmail.com\nClick 'Unlock Now' to enrol instantly!";
+      return "Sirwise AI Web3 Academy offers Lifetime Access to all 8 Global Modules for just $49.99 USD (NGN 74,985) — Compare to $299 elsewhere!\n\n🌐 We support 100% SECURE SSL ENCRYPTED payments worldwide:\n- Paystack (Debit/Credit Cards & Bank Transfer)\n- Flutterwave (African & Global Cards)\n- PayPal (Instant USD Transfer)\n- Crypto USDC (Base Network) / USDT (BNB Smart Chain - BEP20)\n- Pi Network GCV $314,159\n- Direct OPay Bank Transfer (Account: 611 354 1882 GOYEDAGOSMESS ENTERPRISE)\n\nSupport Email: goyedagosmess@gmail.com\nClick 'Unlock Now' to enrol instantly!";
     }
 
     if (lower.includes("pidgin")) return sirwiseKnowledge["pidgin"];

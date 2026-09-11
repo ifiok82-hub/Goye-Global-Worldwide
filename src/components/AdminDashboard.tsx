@@ -123,8 +123,9 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
     paystackSecret: localStorage.getItem('paystack_secret_key') || localStorage.getItem('paystack_admin_sk') || '',
     flutterwave: localStorage.getItem('flutterwave_public_key') || '',
     flutterwaveSecret: localStorage.getItem('flutterwave_secret_key') || '',
-    crypto: localStorage.getItem('crypto_wallet') || '',
-    pi: localStorage.getItem('pi_wallet') || ''
+    usdcBase: localStorage.getItem('usdc_base_address') || localStorage.getItem('USDC_ADDRESS') || localStorage.getItem('crypto_wallet') || '',
+    usdtBep20: localStorage.getItem('usdt_bep20_address') || localStorage.getItem('USDT_ADDRESS') || '',
+    pi: localStorage.getItem('pi_wallet') || localStorage.getItem('PI_WALLET_ADDRESS') || ''
   });
 
   const [showPaystackSecret, setShowPaystackSecret] = useState(false);
@@ -570,8 +571,13 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
       localStorage.setItem('paystack_admin_sk', paymentConfig.paystackSecret.trim());
       localStorage.setItem('flutterwave_public_key', paymentConfig.flutterwave.trim());
       localStorage.setItem('flutterwave_secret_key', paymentConfig.flutterwaveSecret.trim());
-      localStorage.setItem('crypto_wallet', paymentConfig.crypto.trim());
+      localStorage.setItem('usdc_base_address', paymentConfig.usdcBase.trim());
+      localStorage.setItem('USDC_ADDRESS', paymentConfig.usdcBase.trim());
+      localStorage.setItem('usdt_bep20_address', paymentConfig.usdtBep20.trim());
+      localStorage.setItem('USDT_ADDRESS', paymentConfig.usdtBep20.trim());
+      localStorage.setItem('crypto_wallet', paymentConfig.usdcBase.trim() || paymentConfig.usdtBep20.trim());
       localStorage.setItem('pi_wallet', paymentConfig.pi.trim());
+      localStorage.setItem('PI_WALLET_ADDRESS', paymentConfig.pi.trim());
 
       await fetch('/api/admin/save-gateway-keys', {
         method: 'POST',
@@ -585,9 +591,28 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
           paystackSecretKey: paymentConfig.paystackSecret.trim(),
           flutterwavePublicKey: paymentConfig.flutterwave.trim(),
           flutterwaveSecretKey: paymentConfig.flutterwaveSecret.trim(),
-          cryptoWallet: paymentConfig.crypto.trim(),
+          usdcAddress: paymentConfig.usdcBase.trim(),
+          usdtAddress: paymentConfig.usdtBep20.trim(),
+          cryptoWallet: paymentConfig.usdcBase.trim(),
           piWallet: paymentConfig.pi.trim(),
           adminPassword: 'GoyeBN3583773'
+        })
+      }).catch(e => {});
+
+      await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-password': 'GoyeBN3583773'
+        },
+        body: JSON.stringify({
+          paystack: paymentConfig.paystack.trim(),
+          paystack_secret: paymentConfig.paystackSecret.trim(),
+          flutterwave: paymentConfig.flutterwave.trim(),
+          flutterwave_secret: paymentConfig.flutterwaveSecret.trim(),
+          usdc: paymentConfig.usdcBase.trim(),
+          usdt: paymentConfig.usdtBep20.trim(),
+          pi_wallet: paymentConfig.pi.trim()
         })
       }).catch(e => {});
 
@@ -1423,15 +1448,26 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
                   </div>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-4 md:grid-cols-3">
                   <div>
-                    <label className="text-xs text-gray-300 font-bold block mb-1">USDC Crypto Wallet Address (TRC20/ERC20)</label>
+                    <label className="text-xs text-gray-300 font-bold block mb-1">USDC Wallet Address (Base Network)</label>
                     <input
                       type="text"
                       className="w-full bg-[#111] border border-[#333] rounded-xl p-3 text-white text-xs font-mono focus:border-[#FFD700] outline-none transition"
-                      value={paymentConfig.crypto}
-                      onChange={e => setPaymentConfig({ ...paymentConfig, crypto: e.target.value })}
-                      placeholder="0x..."
+                      value={paymentConfig.usdcBase}
+                      onChange={e => setPaymentConfig({ ...paymentConfig, usdcBase: e.target.value })}
+                      placeholder="0x... (Base Network)"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs text-gray-300 font-bold block mb-1">USDT Wallet Address (BNB Smart Chain - BEP20)</label>
+                    <input
+                      type="text"
+                      className="w-full bg-[#111] border border-[#333] rounded-xl p-3 text-white text-xs font-mono focus:border-[#FFD700] outline-none transition"
+                      value={paymentConfig.usdtBep20}
+                      onChange={e => setPaymentConfig({ ...paymentConfig, usdtBep20: e.target.value })}
+                      placeholder="0x... (BEP20 / BSC)"
                     />
                   </div>
 
@@ -1442,7 +1478,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
                       className="w-full bg-[#111] border border-[#333] rounded-xl p-3 text-white text-xs font-mono focus:border-[#FFD700] outline-none transition"
                       value={paymentConfig.pi}
                       onChange={e => setPaymentConfig({ ...paymentConfig, pi: e.target.value })}
-                      placeholder="G..."
+                      placeholder="G... (Pi Wallet)"
                     />
                   </div>
                 </div>
