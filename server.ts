@@ -37,23 +37,52 @@ function checkBannedBrand(text: string): string | null {
 }
 
 export const app = express();
+app.disable('x-powered-by');
 
-  // CORS and Compliance Headers
-  app.use((req, res, next) => {
-    const allowedOrigins = ['https://www.gasv.store', 'https://gasv.store', 'https://gas.store', 'https://www.gas.store'];
-    const origin = req.headers.origin || '';
-    if (allowedOrigins.includes(origin) || origin.endsWith('.cloudworkstations.dev') || origin.endsWith('.run.app')) {
-      res.setHeader('Access-Control-Allow-Origin', origin);
-    } else {
-      res.setHeader('Access-Control-Allow-Origin', '*'); // Fallback for dev/preview
+// Anti-Tampering Security Rate Limiter (Prevents 419 scams & brute force)
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+function securityRateLimiter(maxRequests = 40, windowMs = 60000) {
+  return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const ip = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || 'unknown';
+    const key = `${ip}_${req.path}`;
+    const now = Date.now();
+    const record = rateLimitMap.get(key);
+    if (!record || now > record.resetTime) {
+      rateLimitMap.set(key, { count: 1, resetTime: now + windowMs });
+      return next();
     }
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, content-type, Authorization');
-    if (req.method === 'OPTIONS') {
-      return res.sendStatus(200);
+    if (record.count >= maxRequests) {
+      return res.status(429).json({ error: 'Security Rate Limit Active: Too many requests. Please wait 1 minute.' });
     }
+    record.count++;
     next();
-  });
+  };
+}
+
+// CORS, Security Headers, and Anti-419 Compliance
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+
+  const allowedOrigins = ['https://www.gasv.store', 'https://gasv.store', 'https://gas.store', 'https://www.gas.store'];
+  const origin = req.headers.origin || '';
+  if (allowedOrigins.includes(origin) || origin.endsWith('.cloudworkstations.dev') || origin.endsWith('.run.app')) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', '*'); // Fallback for dev/preview
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+  res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, content-type, Authorization, x-pi-api-key, x-admin-token');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
+// Protect sensitive endpoints with anti-tampering rate limiter
+app.use(['/api/admin', '/api/verify-crypto', '/api/verify-bank', '/api/verify-order', '/api/pi'], securityRateLimiter(30, 60000));
 
 // VALIDATION-KEY.TXT FIRST - Fixes Pi domain verification - Must be before all middleware/redirects
 const PI_VALIDATION_KEY = '6fad9a58178d16528c6e748a4194797437604a6594d34e811d0dce570c722f1ab8a5caa04e3c5e340dbb68d3a50e9f75122d3a88f5f13fb0419ce5451dcc3201';
@@ -930,7 +959,7 @@ let fallbackDigitalPosOutlets: any[] = [
     outletId: 'BLORD-GOYE-7392',
     businessName: 'GOYE Digital Outlet - Lagos HQ',
     ownerName: 'Ifiok Enyiema',
-    phone: '+2348012345678',
+    phone: '+2348033584736',
     location: 'Lagos',
     ninBvn: '22981048123',
     safeWalletBalance: 1500.00,
@@ -968,7 +997,7 @@ app.post('/api/digital-pos/outlets', async (req, res) => {
     outletId,
     businessName: businessName || 'GOYE Digital Outlet',
     ownerName: ownerName || 'Ifiok Enyiema',
-    phone: phone || '+2348012345678',
+    phone: phone || '+2348033584736',
     location: location || 'Lagos',
     ninBvn: ninBvn || 'ENCRYPTED_KYC',
     safeWalletBalance: 1500.00,
@@ -4407,10 +4436,10 @@ app.all(['/api/admin/export/customers', '/api/customers/export'], async (req: an
     }
     if (!Array.isArray(customerList) || customerList.length === 0) {
       customerList = [
-        { id: 'PAYSTACK-1724580000', email: 'emeka.okonkwo@gmail.com', name: 'Emeka Okonkwo', country: 'Nigeria', totalSpent: '₦74,985.00 ($49.99)', whatsapp: '+2348012345678', date: '2026-08-25T14:22:10.000Z' },
+        { id: 'PAYSTACK-1724580000', email: 'emeka.okonkwo@gmail.com', name: 'Emeka Okonkwo', country: 'Nigeria', totalSpent: '₦74,985.00 ($49.99)', whatsapp: '+2348033584736', date: '2026-08-25T14:22:10.000Z' },
         { id: 'PAYSTACK-1724800000', email: 'sarah.j@outlook.com', name: 'Sarah Jenkins', country: 'USA', totalSpent: '₦74,985.00 ($49.99)', whatsapp: '+12025550143', date: '2026-08-28T09:15:44.000Z' },
         { id: 'PAYSTACK-1725060000', email: 'david.b@btinternet.com', name: 'David Brown', country: 'UK', totalSpent: '₦74,985.00 ($49.99)', whatsapp: '+447700900077', date: '2026-08-31T18:04:12.000Z' },
-        { id: 'PAYSTACK-1725350000', email: 'adebayo.g@gmail.com', name: 'Adebayo Global', country: 'Nigeria', totalSpent: '₦74,985.00 ($49.99)', whatsapp: '+2348098765432', date: '2026-09-03T11:30:00.000Z' }
+        { id: 'PAYSTACK-1725350000', email: 'adebayo.g@gmail.com', name: 'Adebayo Global', country: 'Nigeria', totalSpent: '₦74,985.00 ($49.99)', whatsapp: '+2348033584736', date: '2026-09-03T11:30:00.000Z' }
       ];
     }
 

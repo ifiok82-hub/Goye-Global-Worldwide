@@ -40,7 +40,11 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
     rawPi = 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ7XE36YFQY6LKPVO6R';
   }
   const activePiAddress = rawPi;
-  const activeOpayAccount = localStorage.getItem('opay_account') || OPAY_ACCOUNT_NUMBER || '9070889218';
+  let rawOpay = localStorage.getItem('opay_account') || OPAY_ACCOUNT_NUMBER;
+  if (!rawOpay || rawOpay.includes('9070889218')) {
+    rawOpay = '6113541882';
+  }
+  const activeOpayAccount = rawOpay;
 
   const configs: Record<
     string,

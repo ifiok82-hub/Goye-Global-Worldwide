@@ -14,7 +14,7 @@ export const PI_WALLET_ADDRESS =
 export const OPAY_ACCOUNT_NUMBER =
   (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_OPAY_ACCOUNT_NUMBER) ||
   (typeof window !== 'undefined' && (window as any).env?.NEXT_PUBLIC_OPAY_ACCOUNT_NUMBER) ||
-  '9070889218';
+  '6113541882';
 
 export const OPAY_ACCOUNT_NAME =
   (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_OPAY_ACCOUNT_NAME) ||
