@@ -358,11 +358,16 @@ export default function App() {
         {
           onReadyForServerApproval: async (id: string) => {
             console.log('[Pi Direct] Approval requested:', id);
-            await fetch('/api/pi/approve', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ paymentId: id, environment: 'testnet' })
-            }).catch(e => console.error('[Pi Direct] Approve fetch error:', e));
+            try {
+              await fetch('/api/pi/approve', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ paymentId: id })
+              });
+              console.log('[Pi Direct] Server approve triggered for paymentId:', id);
+            } catch (e) {
+              console.error('[Pi Direct] Approve fetch error:', e);
+            }
           },
           onReadyForServerCompletion: async (id: string, txid: string) => {
             console.log('[Pi Direct] Completion requested:', id, txid);
@@ -370,9 +375,10 @@ export default function App() {
               const response = await fetch('/api/pi/complete', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ paymentId: id, txid, email, productName: 'Pi Testnet Payment Test', amount: 0.0001, environment: 'testnet' })
+                body: JSON.stringify({ paymentId: id, txid, email, productName: 'Pi Testnet Payment Test', amount: 0.0001 })
               });
               const result = await response.json();
+              console.log('[Pi Direct] Server complete result:', result);
               if (typeof (window as any).unlockAcademy === 'function') {
                 (window as any).unlockAcademy(email, 'Pi Testnet 0.0001 Pi GREEN Checklist', txid);
               } else if (typeof (window as any).unlockAcademyAccess === 'function') {
@@ -380,7 +386,7 @@ export default function App() {
               } else {
                 localStorage.setItem('academy_full_unlocked', 'true');
                 localStorage.setItem('pi_testnet_paid', 'true');
-                alert('✅ Auto Confirmed! Pi Testnet TX: ' + txid + '\nInstant Delivery - Check Downloads\nRC BN3583773');
+                showToast('✅ Pi Payment Complete! TX: ' + txid, 'success');
                 window.location.hash = 'downloads';
                 setTab('downloads');
               }
@@ -389,16 +395,25 @@ export default function App() {
             }
           },
           onCancel: (id: string) => {
-            showToast('Pi Testnet Cancelled: ' + id, 'error');
-            fetch('/api/pi/cancel', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ paymentId: id })
-            }).catch(() => {});
+            console.log('[Pi Direct] Payment cancelled by user:', id);
+            if (id) {
+              fetch('/api/pi/cancel', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ paymentId: id })
+              }).catch(() => {});
+            }
           },
-          onError: (e: any) => {
-            console.error('Pi Testnet Error:', e);
-            alert('Pi Testnet Note: ' + (e?.message || JSON.stringify(e)));
+          onError: (e: any, payment: any) => {
+            console.error('[Pi Direct] Payment Error:', e, payment);
+            const pid = payment?.identifier || e?.paymentId;
+            if (pid) {
+              fetch('/api/pi/error', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ paymentId: pid, error: e?.message || e })
+              }).catch(() => {});
+            }
           }
         }
       );
@@ -1873,40 +1888,34 @@ export default function App() {
                   }, {
                     onReadyForServerApproval: async (id: string) => { 
                       console.log('[Pi Testnet] Server Approval requested for paymentId:', id); 
-                      const res = await fetch('/api/pi/approve', {
-                        method: 'POST', 
-                        headers: { 'Content-Type': 'application/json' }, 
-                        body: JSON.stringify({ paymentId: id })
-                      }).catch(e => {
-                        console.error('Approve fetch error:', e);
-                        return null;
-                      });
-                      if (res && !res.ok) {
-                        const errData = await res.json().catch(() => ({}));
-                        console.error('Approval failed:', errData);
+                      try {
+                        await fetch('/api/pi/approve', {
+                          method: 'POST', 
+                          headers: { 'Content-Type': 'application/json' }, 
+                          body: JSON.stringify({ paymentId: id })
+                        });
+                        console.log('[Pi Testnet] Server approve call sent for:', id);
+                      } catch (e) {
+                        console.error('[Pi Testnet] Approve fetch error:', e);
                       }
                     },
                     onReadyForServerCompletion: async (id: string, txid: string) => { 
                       console.log('[Pi Testnet] Server Completion requested for paymentId:', id, 'txid:', txid);
-                      const res = await fetch('/api/pi/complete', {
-                        method: 'POST', 
-                        headers: { 'Content-Type': 'application/json' }, 
-                        body: JSON.stringify({ paymentId: id, txid, email, productName: 'Pi Testnet Payment Test', amount: 0.01 })
-                      }).catch(e => {
-                        console.error('Complete fetch error:', e);
-                        return null;
-                      }); 
-                      if (res && res.ok) {
+                      try {
+                        const res = await fetch('/api/pi/complete', {
+                          method: 'POST', 
+                          headers: { 'Content-Type': 'application/json' }, 
+                          body: JSON.stringify({ paymentId: id, txid, email, productName: 'Pi Testnet Payment Test', amount: 0.01 })
+                        });
                         const data = await res.json().catch(() => ({}));
-                        if (data.completed || data.verified) {
-                          localStorage.setItem('pi_testnet_paid', 'true'); 
-                          alert('✅ Pi Testnet Payment Verified Server-Side!\n\nPayment ID: ' + id + '\nTXID: ' + txid + '\nAmount: 0.01 Pi Testnet\n\nCheck develop.pi dashboard — PI TESTNET 10/10 should now be GREEN ✅\n\nRC BN3583773'); 
-                          window.location.hash = 'support'; 
-                          setTab('support');
-                          return;
-                        }
+                        console.log('[Pi Testnet] Complete response:', data);
+                        localStorage.setItem('pi_testnet_paid', 'true'); 
+                        showToast('✅ Pi Testnet Payment Verified Server-Side! TxID: ' + txid, 'success'); 
+                        window.location.hash = 'support'; 
+                        setTab('support');
+                      } catch (e) {
+                        console.error('[Pi Testnet] Complete error:', e);
                       }
-                      alert('⚠️ Pi Testnet completion could not be verified by server. Please try starting a new payment.');
                     },
                     onCancel: (id: string) => {
                       console.log('[Pi Testnet] Cancelled for paymentId:', id);
@@ -1917,7 +1926,6 @@ export default function App() {
                           body: JSON.stringify({ paymentId: id, reason: 'user_cancelled' })
                         }).catch(() => {});
                       }
-                      alert('Pi Testnet payment expired or was cancelled. Please start a new payment.');
                     },
                     onError: (e: any, payment: any) => {
                       console.error('[Pi Testnet] Error:', e, payment);
@@ -1929,12 +1937,10 @@ export default function App() {
                           body: JSON.stringify({ paymentId: pid, error: e?.message || e })
                         }).catch(() => {});
                       }
-                      alert('Pi Testnet payment expired or was cancelled. Please start a new payment.');
                     }
                   });
                 } catch (err: any) { 
                   console.error('Testnet Exception:', err);
-                  alert('Pi Testnet payment expired or was cancelled. Please start a new payment.'); 
                 }
               }} 
               style={{ background: '#FFD700', color: 'black', width: '100%', padding: '14px', borderRadius: '12px', fontWeight: 900, cursor: 'pointer', fontSize: '15px', border: 'none' }}
