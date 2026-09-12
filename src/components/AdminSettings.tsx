@@ -4,6 +4,8 @@ import { ShieldCheck, Eye, EyeOff, Lock, Save, Key, Wallet, RefreshCw, AlertTria
 export default function AdminSettings() {
   const [piApiKey, setPiApiKey] = useState('');
   const [piWalletAddress, setPiWalletAddress] = useState('');
+  const [piMainnetWalletAddress, setPiMainnetWalletAddress] = useState('');
+  const [piTestnetWalletAddress, setPiTestnetWalletAddress] = useState('');
   const [piSandbox, setPiSandbox] = useState('true');
   const [paystackKey, setPaystackKey] = useState('');
   const [paystackSecret, setPaystackSecret] = useState('');
@@ -19,6 +21,8 @@ export default function AdminSettings() {
   // Field Visibility Masking States (Default ALL to FALSE -> MASKED PASSWORD TYPE)
   const [showPiApiKey, setShowPiApiKey] = useState(false);
   const [showPiWallet, setShowPiWallet] = useState(false);
+  const [showPiMainnetWallet, setShowPiMainnetWallet] = useState(false);
+  const [showPiTestnetWallet, setShowPiTestnetWallet] = useState(false);
   const [showPaystackKey, setShowPaystackKey] = useState(false);
   const [showPaystackSecret, setShowPaystackSecret] = useState(false);
   const [showFlutterwaveKey, setShowFlutterwaveKey] = useState(false);
@@ -30,8 +34,10 @@ export default function AdminSettings() {
   useEffect(() => {
     // Load local storage keys - Defaults strictly to empty string "" (No hardcoded wallet addresses)
     localStorage.removeItem('PI_API_KEY'); // Ensure old key is completely cleared from browser storage
-    const piWallet = localStorage.getItem('PI_WALLET_ADDRESS') || '';
-    const sandbox = localStorage.getItem('PI_SANDBOX') || 'true';
+    const piMainnet = localStorage.getItem('PI_MAINNET_WALLET_ADDRESS') || localStorage.getItem('pi_mainnet_wallet') || '';
+    const piTestnet = localStorage.getItem('PI_TESTNET_WALLET_ADDRESS') || localStorage.getItem('pi_testnet_wallet') || '';
+    const piWallet = localStorage.getItem('PI_WALLET_ADDRESS') || localStorage.getItem('pi_wallet') || '';
+    const sandbox = localStorage.getItem('PI_SANDBOX') || localStorage.getItem('pi_sandbox') || 'true';
     const paystack = localStorage.getItem('PAYSTACK_KEY') || localStorage.getItem('PAYSTACK_PUBLIC_KEY') || '';
     const paystackSec = localStorage.getItem('paystack_admin_sk') || localStorage.getItem('PAYSTACK_SECRET_KEY') || '';
     const flutterwave = localStorage.getItem('FLUTTERWAVE_KEY') || localStorage.getItem('FLUTTERWAVE_PUBLIC_KEY') || '';
@@ -41,7 +47,9 @@ export default function AdminSettings() {
     const opayAcc = localStorage.getItem('OPAY_ACCOUNT') || '';
     const opayNm = localStorage.getItem('OPAY_NAME') || '';
 
-    setPiWalletAddress(piWallet);
+    setPiMainnetWalletAddress(piMainnet || piWallet);
+    setPiTestnetWalletAddress(piTestnet || piWallet);
+    setPiWalletAddress(piWallet || piMainnet || piTestnet);
     setPiSandbox(sandbox);
     setPaystackKey(paystack);
     setPaystackSecret(paystackSec);
@@ -68,6 +76,8 @@ export default function AdminSettings() {
       .then(data => {
         const d = data.settings || data;
         if (d && typeof d === 'object') {
+          if (d.pi_mainnet_wallet !== undefined) setPiMainnetWalletAddress(d.pi_mainnet_wallet || '');
+          if (d.pi_testnet_wallet !== undefined) setPiTestnetWalletAddress(d.pi_testnet_wallet || '');
           if (d.pi_wallet !== undefined) setPiWalletAddress(d.pi_wallet || '');
           if (d.pi_sandbox) setPiSandbox(d.pi_sandbox);
           if (d.paystack) setPaystackKey(d.paystack);
@@ -88,8 +98,15 @@ export default function AdminSettings() {
 
   const handleSaveAllKeys = async () => {
     localStorage.removeItem('PI_API_KEY');
-    localStorage.setItem('PI_WALLET_ADDRESS', piWalletAddress);
+    localStorage.setItem('PI_MAINNET_WALLET_ADDRESS', piMainnetWalletAddress);
+    localStorage.setItem('pi_mainnet_wallet', piMainnetWalletAddress);
+    localStorage.setItem('PI_TESTNET_WALLET_ADDRESS', piTestnetWalletAddress);
+    localStorage.setItem('pi_testnet_wallet', piTestnetWalletAddress);
+    const activePi = piSandbox === 'false' ? (piMainnetWalletAddress || piWalletAddress) : (piTestnetWalletAddress || piWalletAddress);
+    localStorage.setItem('PI_WALLET_ADDRESS', activePi);
+    localStorage.setItem('pi_wallet', activePi);
     localStorage.setItem('PI_SANDBOX', piSandbox);
+    localStorage.setItem('pi_sandbox', piSandbox);
     localStorage.setItem('PAYSTACK_KEY', paystackKey);
     localStorage.setItem('PAYSTACK_PUBLIC_KEY', paystackKey);
     if (paystackSecret) localStorage.setItem('paystack_admin_sk', paystackSecret);
@@ -102,7 +119,9 @@ export default function AdminSettings() {
     localStorage.setItem('OPAY_NAME', opayName);
 
     const payload = {
-      pi_wallet: piWalletAddress,
+      pi_mainnet_wallet: piMainnetWalletAddress,
+      pi_testnet_wallet: piTestnetWalletAddress,
+      pi_wallet: activePi,
       pi_sandbox: piSandbox,
       paystack: paystackKey,
       paystack_secret: paystackSecret,
@@ -190,27 +209,56 @@ export default function AdminSettings() {
             To prevent secret exposure, <code className="bg-black/60 px-1.5 py-0.5 rounded text-[#FFD700]">PI_API_KEY</code> is managed exclusively on the backend server via Environment Variables (<code className="bg-black/60 px-1.5 py-0.5 rounded text-[#FFD700]">PI_API_KEY</code>). Client-side storing or editing is disabled for safety.
           </div>
 
-          <div>
-            <label className="text-xs font-bold text-gray-300 block mb-1">
-              Pi Network Wallet Address (Starts with G...)
-            </label>
-            <div className="relative">
-              <input
-                id="pi_wallet_address"
-                type={showPiWallet ? 'text' : 'password'}
-                autoComplete="new-password"
-                value={piWalletAddress}
-                onChange={(e) => setPiWalletAddress(e.target.value)}
-                placeholder="Empty by default - Paste verified Pi wallet address"
-                className="w-full bg-black border border-[#333] focus:border-[#FFD700] rounded-xl px-4 py-3 text-sm text-white pr-10 font-mono"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPiWallet(!showPiWallet)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
-              >
-                {showPiWallet ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-bold text-emerald-400 block mb-1">
+                Pi Mainnet Wallet Address (Starts with G...)
+              </label>
+              <div className="relative">
+                <input
+                  id="pi_mainnet_wallet_address"
+                  type={showPiMainnetWallet ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  value={piMainnetWalletAddress}
+                  onChange={(e) => {
+                    setPiMainnetWalletAddress(e.target.value);
+                    setPiWalletAddress(e.target.value);
+                  }}
+                  placeholder="Paste verified Pi Mainnet destination address"
+                  className="w-full bg-black border border-emerald-900/60 focus:border-emerald-500 rounded-xl px-4 py-3 text-sm text-white pr-10 font-mono"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPiMainnetWallet(!showPiMainnetWallet)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                >
+                  {showPiMainnetWallet ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-amber-400 block mb-1">
+                Pi Testnet Wallet Address (Starts with G...)
+              </label>
+              <div className="relative">
+                <input
+                  id="pi_testnet_wallet_address"
+                  type={showPiTestnetWallet ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  value={piTestnetWalletAddress}
+                  onChange={(e) => setPiTestnetWalletAddress(e.target.value)}
+                  placeholder="Paste verified Pi Testnet sandbox address"
+                  className="w-full bg-black border border-amber-900/60 focus:border-amber-500 rounded-xl px-4 py-3 text-sm text-white pr-10 font-mono"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPiTestnetWallet(!showPiTestnetWallet)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                >
+                  {showPiTestnetWallet ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
           </div>
 

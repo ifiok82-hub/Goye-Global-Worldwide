@@ -35,7 +35,10 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
   }
   const activeCryptoAddress = rawCrypto;
 
-  let rawPi = localStorage.getItem('pi_wallet') || PI_WALLET_ADDRESS;
+  const isSandbox = localStorage.getItem('PI_SANDBOX') !== 'false' && localStorage.getItem('pi_sandbox') !== 'false';
+  let rawPi = isSandbox
+    ? (localStorage.getItem('pi_testnet_wallet') || localStorage.getItem('PI_TESTNET_WALLET_ADDRESS') || localStorage.getItem('pi_wallet') || PI_WALLET_ADDRESS)
+    : (localStorage.getItem('pi_mainnet_wallet') || localStorage.getItem('PI_MAINNET_WALLET_ADDRESS') || localStorage.getItem('pi_wallet') || PI_WALLET_ADDRESS);
   if (!rawPi || rawPi.startsWith('0x')) {
     rawPi = 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ7XE36YFQY6LKPVO6R';
   }

@@ -125,6 +125,8 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
     flutterwaveSecret: localStorage.getItem('flutterwave_secret_key') || '',
     usdcBase: localStorage.getItem('usdc_base_address') || localStorage.getItem('USDC_ADDRESS') || localStorage.getItem('crypto_wallet') || '',
     usdtBep20: localStorage.getItem('usdt_bep20_address') || localStorage.getItem('USDT_ADDRESS') || '',
+    piMainnet: localStorage.getItem('pi_mainnet_wallet') || localStorage.getItem('PI_MAINNET_WALLET_ADDRESS') || localStorage.getItem('pi_wallet') || '',
+    piTestnet: localStorage.getItem('pi_testnet_wallet') || localStorage.getItem('PI_TESTNET_WALLET_ADDRESS') || localStorage.getItem('pi_wallet') || '',
     pi: localStorage.getItem('pi_wallet') || localStorage.getItem('PI_WALLET_ADDRESS') || ''
   });
 
@@ -576,8 +578,13 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
       localStorage.setItem('usdt_bep20_address', paymentConfig.usdtBep20.trim());
       localStorage.setItem('USDT_ADDRESS', paymentConfig.usdtBep20.trim());
       localStorage.setItem('crypto_wallet', paymentConfig.usdcBase.trim() || paymentConfig.usdtBep20.trim());
-      localStorage.setItem('pi_wallet', paymentConfig.pi.trim());
-      localStorage.setItem('PI_WALLET_ADDRESS', paymentConfig.pi.trim());
+      localStorage.setItem('pi_mainnet_wallet', paymentConfig.piMainnet.trim());
+      localStorage.setItem('PI_MAINNET_WALLET_ADDRESS', paymentConfig.piMainnet.trim());
+      localStorage.setItem('pi_testnet_wallet', paymentConfig.piTestnet.trim());
+      localStorage.setItem('PI_TESTNET_WALLET_ADDRESS', paymentConfig.piTestnet.trim());
+      const activePiWallet = paymentConfig.piMainnet.trim() || paymentConfig.piTestnet.trim() || paymentConfig.pi.trim();
+      localStorage.setItem('pi_wallet', activePiWallet);
+      localStorage.setItem('PI_WALLET_ADDRESS', activePiWallet);
 
       await fetch('/api/admin/save-gateway-keys', {
         method: 'POST',
@@ -594,7 +601,9 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
           usdcAddress: paymentConfig.usdcBase.trim(),
           usdtAddress: paymentConfig.usdtBep20.trim(),
           cryptoWallet: paymentConfig.usdcBase.trim(),
-          piWallet: paymentConfig.pi.trim(),
+          piMainnetWallet: paymentConfig.piMainnet.trim(),
+          piTestnetWallet: paymentConfig.piTestnet.trim(),
+          piWallet: activePiWallet,
           adminPassword: 'GoyeBN3583773'
         })
       }).catch(e => {});
@@ -612,7 +621,9 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
           flutterwave_secret: paymentConfig.flutterwaveSecret.trim(),
           usdc: paymentConfig.usdcBase.trim(),
           usdt: paymentConfig.usdtBep20.trim(),
-          pi_wallet: paymentConfig.pi.trim()
+          pi_mainnet_wallet: paymentConfig.piMainnet.trim(),
+          pi_testnet_wallet: paymentConfig.piTestnet.trim(),
+          pi_wallet: activePiWallet
         })
       }).catch(e => {});
 
@@ -1448,7 +1459,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
                   </div>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-3">
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                   <div>
                     <label className="text-xs text-gray-300 font-bold block mb-1">USDC Wallet Address (Base Network)</label>
                     <input
@@ -1472,13 +1483,24 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
                   </div>
 
                   <div>
-                    <label className="text-xs text-gray-300 font-bold block mb-1">Pi Network Wallet Address</label>
+                    <label className="text-xs text-emerald-400 font-bold block mb-1">Pi Mainnet Wallet Address</label>
                     <input
                       type="text"
-                      className="w-full bg-[#111] border border-[#333] rounded-xl p-3 text-white text-xs font-mono focus:border-[#FFD700] outline-none transition"
-                      value={paymentConfig.pi}
-                      onChange={e => setPaymentConfig({ ...paymentConfig, pi: e.target.value })}
-                      placeholder="G... (Pi Wallet)"
+                      className="w-full bg-[#111] border border-emerald-900/50 focus:border-emerald-500 rounded-xl p-3 text-white text-xs font-mono outline-none transition"
+                      value={paymentConfig.piMainnet}
+                      onChange={e => setPaymentConfig({ ...paymentConfig, piMainnet: e.target.value, pi: e.target.value })}
+                      placeholder="G... (Pi Mainnet Destination)"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs text-amber-400 font-bold block mb-1">Pi Testnet Wallet Address</label>
+                    <input
+                      type="text"
+                      className="w-full bg-[#111] border border-amber-900/50 focus:border-amber-500 rounded-xl p-3 text-white text-xs font-mono outline-none transition"
+                      value={paymentConfig.piTestnet}
+                      onChange={e => setPaymentConfig({ ...paymentConfig, piTestnet: e.target.value })}
+                      placeholder="G... (Pi Testnet Sandbox)"
                     />
                   </div>
                 </div>

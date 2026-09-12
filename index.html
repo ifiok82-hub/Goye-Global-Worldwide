@@ -315,13 +315,14 @@ let piReady = false;
 window.initPiSDK = function() {
   try {
     if (typeof Pi !== 'undefined') {
+      var isSandbox = localStorage.getItem('PI_SANDBOX') !== 'false' && localStorage.getItem('pi_sandbox') !== 'false';
       try {
-        Pi.init({ version: "2.0", sandbox: true });
+        Pi.init({ version: "2.0", sandbox: isSandbox });
         piReady = true;
-        console.log('Pi SDK Testnet ready');
+        console.log('Pi SDK ready - Sandbox:', isSandbox);
       } catch(e) {
         try {
-          Pi.init({ version: "2.0", sandbox: true });
+          Pi.init({ version: "2.0", sandbox: isSandbox });
           piReady = true;
         } catch(e2) {}
       }

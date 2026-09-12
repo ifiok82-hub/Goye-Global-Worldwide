@@ -100,6 +100,8 @@ app.use(['/validation-key.txt', '/.well-known/validation-key.txt', '/validation-
 // Security Config: Default all wallet addresses strictly to empty strings ("") or process.env overrides
 let savedKeys = {
   pi_wallet: process.env.PI_WALLET || '',
+  pi_mainnet_wallet: process.env.PI_MAINNET_WALLET || process.env.PI_WALLET || '',
+  pi_testnet_wallet: process.env.PI_TESTNET_WALLET || process.env.PI_WALLET || '',
   pi_sandbox: process.env.PI_SANDBOX || 'true',
   paystack: process.env.PAYSTACK_PUBLIC_KEY || '',
   paystack_secret: process.env.PAYSTACK_SECRET_KEY || '',
@@ -1237,13 +1239,19 @@ app.get('/api/payment-config', (req, res) => {
   const paystackPublic = cfg.PAYSTACK_PUBLIC_KEY || process.env.PAYSTACK_PUBLIC_KEY || process.env.VITE_PAYSTACK_PUBLIC_KEY || 'pk_live_9f7e06b21fa6dc4e3e94cc0';
   const flutterwavePublic = cfg.FLUTTERWAVE_PUBLIC_KEY || process.env.FLUTTERWAVE_PUBLIC_KEY || process.env.VITE_FLUTTERWAVE_PUBLIC_KEY || 'FLWPUBK-cbb518a9b8f74421e887f4a1ec911ea7-X';
   const cryptoWallet = cfg.CRYPTO_WALLET || process.env.CRYPTO_WALLET || '0xdc7f804B36aB672Ec31642dF418F29e73281b040';
-  const piWallet = cfg.PI_WALLET || process.env.PI_WALLET || 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ7XE36YFQY6LKPVO6R';
+  const isSandbox = (cfg.PI_SANDBOX || savedKeys.pi_sandbox || process.env.PI_SANDBOX || 'true') !== 'false';
+  const piMainnetWallet = cfg.PI_MAINNET_WALLET || savedKeys.pi_mainnet_wallet || process.env.PI_MAINNET_WALLET || cfg.PI_WALLET || process.env.PI_WALLET || 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ7XE36YFQY6LKPVO6R';
+  const piTestnetWallet = cfg.PI_TESTNET_WALLET || savedKeys.pi_testnet_wallet || process.env.PI_TESTNET_WALLET || cfg.PI_WALLET || process.env.PI_WALLET || 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ7XE36YFQY6LKPVO6R';
+  const activePiWallet = isSandbox ? piTestnetWallet : piMainnetWallet;
 
   res.json({
     paystack: paystackPublic,
     flutterwave: flutterwavePublic,
     crypto: cryptoWallet,
-    pi: piWallet,
+    pi: activePiWallet,
+    piMainnetWallet,
+    piTestnetWallet,
+    sandbox: isSandbox,
     hasPaystackSecret: Boolean(getPaystackSecretKey(req)),
     hasFlutterwaveSecret: Boolean(getFlutterwaveSecretKey(req))
   });
@@ -3647,7 +3655,9 @@ app.get('/api/admin/get-gateway-keys', (req, res) => {
     const flutterwavePublic = cfg.FLUTTERWAVE_PUBLIC_KEY || process.env.FLUTTERWAVE_PUBLIC_KEY || 'FLWPUBK-cbb518a9b8f74421e8871';
     const flutterwaveSecret = getFlutterwaveSecretKey(req) || cfg.FLUTTERWAVE_SECRET_KEY || '';
     const cryptoWallet = cfg.CRYPTO_WALLET || process.env.CRYPTO_WALLET || '0xdc7f804B36aB672Ec31642dF418F29e73281b040';
-    const piWallet = cfg.PI_WALLET || process.env.PI_WALLET || 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ7XE36YFQY6LKPVO6R';
+    const piMainnetWallet = cfg.PI_MAINNET_WALLET || savedKeys.pi_mainnet_wallet || process.env.PI_MAINNET_WALLET || cfg.PI_WALLET || process.env.PI_WALLET || '';
+    const piTestnetWallet = cfg.PI_TESTNET_WALLET || savedKeys.pi_testnet_wallet || process.env.PI_TESTNET_WALLET || cfg.PI_WALLET || process.env.PI_WALLET || '';
+    const piWallet = cfg.PI_WALLET || process.env.PI_WALLET || piMainnetWallet || piTestnetWallet || '';
 
     return res.json({
       success: true,
@@ -3657,6 +3667,8 @@ app.get('/api/admin/get-gateway-keys', (req, res) => {
       flutterwaveSecretKey: flutterwaveSecret,
       cryptoWallet,
       piWallet,
+      piMainnetWallet,
+      piTestnetWallet,
       hasPaystackSecretKey: Boolean(paystackSecret),
       hasFlutterwaveSecretKey: Boolean(flutterwaveSecret)
     });
@@ -3668,7 +3680,7 @@ app.get('/api/admin/get-gateway-keys', (req, res) => {
 // POST /api/admin/save-gateway-keys - Bulk save all public and secret gateway keys on server
 app.post('/api/admin/save-gateway-keys', (req, res) => {
   try {
-    const { paystackPublicKey, paystackSecretKey, flutterwavePublicKey, flutterwaveSecretKey, cryptoWallet, piWallet, adminPassword } = req.body || {};
+    const { paystackPublicKey, paystackSecretKey, flutterwavePublicKey, flutterwaveSecretKey, cryptoWallet, piWallet, piMainnetWallet, piTestnetWallet, adminPassword } = req.body || {};
     
     if (adminPassword && adminPassword !== 'GoyeBN3583773') {
       return res.status(401).json({ success: false, error: 'Invalid admin authorization password.' });
@@ -3704,6 +3716,16 @@ app.post('/api/admin/save-gateway-keys', (req, res) => {
       cfg.PI_WALLET = piWallet.trim();
       process.env.PI_WALLET = piWallet.trim();
     }
+    if (piMainnetWallet) {
+      cfg.PI_MAINNET_WALLET = piMainnetWallet.trim();
+      process.env.PI_MAINNET_WALLET = piMainnetWallet.trim();
+      savedKeys.pi_mainnet_wallet = piMainnetWallet.trim();
+    }
+    if (piTestnetWallet) {
+      cfg.PI_TESTNET_WALLET = piTestnetWallet.trim();
+      process.env.PI_TESTNET_WALLET = piTestnetWallet.trim();
+      savedKeys.pi_testnet_wallet = piTestnetWallet.trim();
+    }
 
     try {
       fs.writeFileSync(configPath, JSON.stringify(cfg, null, 2));
@@ -3713,7 +3735,7 @@ app.post('/api/admin/save-gateway-keys', (req, res) => {
 
     return res.json({
       success: true,
-      message: 'Payment Gateway keys and secret keys saved to server successfully!',
+      message: 'Payment Gateway keys and wallet addresses saved to server successfully!',
       hasPaystackSecretKey: Boolean(process.env.PAYSTACK_SECRET_KEY),
       hasFlutterwaveSecretKey: Boolean(process.env.FLUTTERWAVE_SECRET_KEY)
     });

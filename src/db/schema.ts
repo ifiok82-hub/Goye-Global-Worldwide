@@ -71,6 +71,8 @@ export const adminSettings = pgTable('admin_settings', {
   keyName: text('key_name').notNull().unique(), // 'payment_settings'
   piApiKey: text('pi_api_key'),
   piWallet: text('pi_wallet'),
+  piMainnetWallet: text('pi_mainnet_wallet'),
+  piTestnetWallet: text('pi_testnet_wallet'),
   piSandbox: text('pi_sandbox').default('true'),
   paystackPublicKey: text('paystack_public_key'),
   paystackSecretKey: text('paystack_secret_key'),
