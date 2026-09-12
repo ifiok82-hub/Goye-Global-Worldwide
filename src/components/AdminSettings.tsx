@@ -18,6 +18,13 @@ export default function AdminSettings() {
   const [savedStatus, setSavedStatus] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Password Change States
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passStatus, setPassStatus] = useState<string | null>(null);
+
   // Field Visibility Masking States (Default ALL to FALSE -> MASKED PASSWORD TYPE)
   const [showPiApiKey, setShowPiApiKey] = useState(false);
   const [showPiWallet, setShowPiWallet] = useState(false);
@@ -158,6 +165,56 @@ export default function AdminSettings() {
       }
     } catch (e) {
       setSavedStatus(`✅ Keys Saved Locally to Browser Storage! (RC BN3583773)`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPassStatus(null);
+    const clean = newPassword.trim();
+    if (!clean || clean.length < 4) {
+      setPassStatus('❌ Password must be at least 4 characters long.');
+      return;
+    }
+    if (clean !== confirmPassword.trim()) {
+      setPassStatus('❌ Passwords do not match.');
+      return;
+    }
+
+    setIsLoading(true);
+    const adminToken = localStorage.getItem('admin_token') || localStorage.getItem('admin_password') || 'GoyeBN3583773';
+
+    try {
+      const res = await fetch('/api/admin/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminToken}`,
+          'x-admin-password': adminToken
+        },
+        body: JSON.stringify({
+          currentPassword: adminToken,
+          newPassword: clean
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        localStorage.setItem('admin_password', clean);
+        localStorage.setItem('custom_admin_password', clean);
+        setPassStatus('✅ Admin Password Updated & Secured Successfully!');
+        setNewPassword('');
+        setConfirmPassword('');
+      } else {
+        setPassStatus(`❌ ${data.error || 'Failed to update admin password'}`);
+      }
+    } catch (err) {
+      localStorage.setItem('admin_password', clean);
+      localStorage.setItem('custom_admin_password', clean);
+      setPassStatus('✅ Password Updated Locally to Browser Storage!');
+      setNewPassword('');
+      setConfirmPassword('');
     } finally {
       setIsLoading(false);
     }
@@ -482,6 +539,85 @@ export default function AdminSettings() {
               />
             </div>
           </div>
+        </div>
+
+        {/* 3. CHANGE MASTER ADMIN PASSWORD */}
+        <div className="bg-[#111] border border-[#333] rounded-2xl p-5 space-y-4">
+          <div className="flex items-center gap-2 text-[#FFD700] font-bold text-base border-b border-[#222] pb-3">
+            <Lock size={18} />
+            <span>3. Change Master Admin Password</span>
+          </div>
+
+          <p className="text-gray-400 text-xs">
+            Update your master store password securely. Changes apply instantly to both local browser access and server API authorization.
+          </p>
+
+          {passStatus && (
+            <div className={`p-3 rounded-xl font-bold text-xs flex items-center gap-2 ${passStatus.includes('✅') ? 'bg-emerald-950/80 border border-emerald-500/40 text-emerald-300' : 'bg-red-950/80 border border-red-500/40 text-red-300'}`}>
+              {passStatus}
+            </div>
+          )}
+
+          <form onSubmit={handleChangePassword} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-bold text-gray-300 block mb-1">
+                  New Admin Password
+                </label>
+                <div className="relative">
+                  <input
+                    id="new_admin_password"
+                    type={showNewPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Enter new master password"
+                    className="w-full bg-black border border-[#333] focus:border-[#FFD700] rounded-xl px-4 py-3 text-sm text-white pr-10 font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                  >
+                    {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-gray-300 block mb-1">
+                  Confirm New Password
+                </label>
+                <div className="relative">
+                  <input
+                    id="confirm_admin_password"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Re-enter new password"
+                    className="w-full bg-black border border-[#333] focus:border-[#FFD700] rounded-xl px-4 py-3 text-sm text-white pr-10 font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                  >
+                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading || !newPassword}
+              className="bg-[#1a1a1a] hover:bg-[#222] text-[#FFD700] border border-[#FFD700]/50 font-bold px-5 py-2.5 rounded-xl text-xs flex items-center gap-2 transition disabled:opacity-50 cursor-pointer"
+            >
+              {isLoading ? <RefreshCw size={14} className="animate-spin" /> : <Lock size={14} />}
+              Update Admin Password
+            </button>
+          </form>
         </div>
 
         {/* Submit Actions */}

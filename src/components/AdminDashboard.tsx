@@ -64,7 +64,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
         },
         body: JSON.stringify({
           secretKey: keyToSave,
-          adminPassword: inputAdminPass || 'GoyeBN3583773'
+          adminPassword: inputAdminPass || localStorage.getItem('admin_password') || localStorage.getItem('admin_token') || 'GoyeBN3583773'
         })
       });
 
@@ -615,15 +615,17 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
           piSandboxMode: paymentConfig.piSandboxMode,
           piSandbox: paymentConfig.piSandboxMode,
           piWallet: activePiWallet,
-          adminPassword: 'GoyeBN3583773'
+          adminPassword: localStorage.getItem('admin_password') || localStorage.getItem('admin_token') || 'GoyeBN3583773'
         })
       }).catch(e => {});
 
+      const activeToken = localStorage.getItem('admin_password') || localStorage.getItem('admin_token') || 'GoyeBN3583773';
       await fetch('/api/admin/settings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-admin-password': 'GoyeBN3583773'
+          'x-admin-password': activeToken,
+          'Authorization': `Bearer ${activeToken}`
         },
         body: JSON.stringify({
           paystack: paymentConfig.paystack.trim(),
@@ -1030,7 +1032,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
                       <label className="block text-[11px] font-bold text-gray-300 uppercase mb-1.5">Admin Password</label>
                       <input
                         type="password"
-                        placeholder="GoyeBN3583773"
+                        placeholder="Enter Admin Password"
                         value={inputAdminPass}
                         onChange={e => setInputAdminPass(e.target.value)}
                         className="w-full bg-black border border-[#333] focus:border-[#FFD700] text-white px-3.5 py-2.5 rounded-xl font-mono text-xs outline-none transition"

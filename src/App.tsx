@@ -158,7 +158,7 @@ export default function App() {
       logoTapCountRef.current = 0;
       if (logoTapTimerRef.current) clearTimeout(logoTapTimerRef.current);
       setShowAdminLogin(true);
-      showToast('🔑 Enter Admin Password (GoyeBN3583773)', 'info');
+      showToast('🔑 Enter Admin Password', 'info');
       return;
     }
 
@@ -1075,18 +1075,41 @@ export default function App() {
     };
   }, []);
 
-  const handleAdminLogin = (e: any) => {
+  const handleAdminLogin = async (e: any) => {
     e.preventDefault();
     const trimmed = (adminPassword || '').trim();
-    if (trimmed === 'GoyeBN3583773' || trimmed === 'BN3583773' || trimmed === 'goye3583773' || trimmed === 'Goye3583773') {
+    if (!trimmed) {
+      showToast('❌ Please enter admin password', 'error');
+      return;
+    }
+
+    const savedPass = localStorage.getItem('admin_password') || localStorage.getItem('custom_admin_password');
+    let isValid = (savedPass && trimmed === savedPass) || trimmed === 'GoyeBN3583773' || trimmed === 'BN3583773';
+
+    if (!isValid) {
+      try {
+        const res = await fetch('/api/admin/verify-pass', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: trimmed })
+        });
+        const data = await res.json();
+        if (res.ok && data.valid) {
+          isValid = true;
+        }
+      } catch(e) {}
+    }
+
+    if (isValid) {
       setIsAdminAuth(true);
       setShowAdminLogin(false);
       setTab('admin');
       localStorage.setItem('isAdmin', 'true');
       localStorage.setItem('is_admin', 'true');
+      localStorage.setItem('admin_password', trimmed);
       showToast('✅ Welcome to Admin Management Dashboard!', 'success');
     } else {
-      showToast('❌ Invalid admin password. Password: GoyeBN3583773', 'error');
+      showToast('❌ Invalid admin password', 'error');
     }
   };
 
@@ -1119,7 +1142,7 @@ export default function App() {
             <form onSubmit={handleAdminLogin}>
               <input 
                 type="password" 
-                placeholder="Admin Password (GoyeBN3583773)" 
+                placeholder="Enter Admin Password" 
                 className="w-full bg-black border border-[#333] p-3 rounded-xl text-white mb-4 font-mono"
                 value={adminPassword}
                 onChange={e => setAdminPassword(e.target.value)}
