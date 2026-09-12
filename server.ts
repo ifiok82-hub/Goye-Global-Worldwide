@@ -1269,6 +1269,31 @@ app.post('/api/products/add', async (req, res) => {
 // API Endpoints: Real Payment Gateway Integrations & Verification
 // -------------------------------------------------------------------------
 
+// Public Payment Gateway Configuration
+app.get('/api/payment-config', (req, res) => {
+  let cfg: Record<string, any> = {};
+  try {
+    const configPath = path.join(process.cwd(), '.server-config.json');
+    if (fs.existsSync(configPath)) {
+      cfg = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    }
+  } catch (e) {}
+
+  const paystackPublic = cfg.PAYSTACK_PUBLIC_KEY || process.env.PAYSTACK_PUBLIC_KEY || process.env.VITE_PAYSTACK_PUBLIC_KEY || 'pk_live_9f7e06b21fa6dc4e3e94cc0';
+  const flutterwavePublic = cfg.FLUTTERWAVE_PUBLIC_KEY || process.env.FLUTTERWAVE_PUBLIC_KEY || process.env.VITE_FLUTTERWAVE_PUBLIC_KEY || 'FLWPUBK-cbb518a9b8f74421e887f4a1ec911ea7-X';
+  const cryptoWallet = cfg.CRYPTO_WALLET || process.env.CRYPTO_WALLET || '0xdc7f804B36aB672Ec31642dF418F29e73281b040';
+  const piWallet = cfg.PI_WALLET || process.env.PI_WALLET || 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ7XE36YFQY6LKPVO6R';
+
+  res.json({
+    paystack: paystackPublic,
+    flutterwave: flutterwavePublic,
+    crypto: cryptoWallet,
+    pi: piWallet,
+    hasPaystackSecret: Boolean(getPaystackSecretKey(req)),
+    hasFlutterwaveSecret: Boolean(getFlutterwaveSecretKey(req))
+  });
+});
+
 // 5. Paystack Checkout Session Initialization
 app.post(['/api/paystack/initialize', '/api/payments/paystack/initialize'], async (req, res) => {
   const { email, customerEmail, amountUsd, amount, currencyCode, currency } = req.body || {};

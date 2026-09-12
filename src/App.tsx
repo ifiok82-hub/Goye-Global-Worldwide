@@ -149,6 +149,8 @@ export default function App() {
     pi: localStorage.getItem('pi_wallet') || 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ'
   });
 
+  const [showInstallGuideModal, setShowInstallGuideModal] = useState(false);
+
   useEffect(() => {
     try {
       const stored = localStorage.getItem('PAYMENT_CONFIG');
@@ -156,6 +158,21 @@ export default function App() {
         setPaymentConfig(safeParse('PAYMENT_CONFIG', {}));
       }
     } catch (e) {}
+
+    fetch('/api/payment-config')
+      .then(r => r.json())
+      .then(data => {
+        if (data) {
+          setPaymentConfig((prev: any) => ({
+            ...prev,
+            paystack: data.paystack || prev?.paystack,
+            flutterwave: data.flutterwave || prev?.flutterwave,
+            crypto: data.crypto || prev?.crypto,
+            pi: data.pi || prev?.pi
+          }));
+        }
+      })
+      .catch(() => {});
   }, []);
 
 
@@ -930,21 +947,24 @@ export default function App() {
 
   const handleInstallClick = async () => {
     if (deferredPrompt) {
-      deferredPrompt.prompt();
       try {
+        deferredPrompt.prompt();
         const choiceResult = await deferredPrompt.userChoice;
         if (choiceResult?.outcome === 'accepted') {
           console.log('User accepted the install prompt');
           setIsAppInstalled(true);
           localStorage.setItem('pwa_installed', 'true');
         } else {
-          console.log('User dismissed the install prompt');
+          setShowInstallGuideModal(true);
         }
       } catch (err) {
         console.error('PWA install error:', err);
+        setShowInstallGuideModal(true);
       }
       setDeferredPrompt(null);
       setIsInstallable(false);
+    } else {
+      setShowInstallGuideModal(true);
     }
   };
 
@@ -1205,7 +1225,7 @@ export default function App() {
             {tab === 'home' && (
               <>
                 {/* PWA INSTALL APP BANNER */}
-                {deferredPrompt && !isAppInstalled && (
+                {!isAppInstalled && (
                   <div className="bg-gradient-to-r from-yellow-950/80 via-black to-purple-950/80 border-2 border-[#FFD700] rounded-2xl p-3.5 sm:p-4 mb-4 flex items-center justify-between gap-3 shadow-[0_0_20px_rgba(255,215,0,0.25)] relative overflow-hidden">
                     <div className="flex items-center gap-3">
                       <img src="/icon-192.png" alt="Sirwise AI" className="w-10 h-10 rounded-xl border border-[#FFD700] shrink-0 object-cover" />
@@ -1971,6 +1991,59 @@ export default function App() {
         }}
       />
 
+
+      {showInstallGuideModal && (
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-[99999] flex items-center justify-center p-4">
+          <div className="bg-[#0b0e14] border-2 border-[#FFD700] rounded-2xl max-w-md w-full p-6 text-white relative shadow-[0_0_50px_rgba(255,215,0,0.35)] animate-in fade-in zoom-in-95">
+            <button 
+              onClick={() => setShowInstallGuideModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white bg-white/10 rounded-full w-8 h-8 flex items-center justify-center transition"
+            >
+              ✕
+            </button>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-yellow-500/10 rounded-xl border border-[#FFD700] flex items-center justify-center text-[#FFD700] font-bold text-xl shrink-0">
+                📲
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-[#FFD700]">Install Sirwise AI App</h3>
+                <p className="text-xs text-gray-300">Fast, offline-ready & instant access</p>
+              </div>
+            </div>
+
+            <div className="space-y-4 mb-6 text-sm text-gray-200">
+              <div className="bg-[#121620] border border-[#FFD700]/30 rounded-xl p-3.5">
+                <div className="font-bold text-[#FFD700] text-xs uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                  🍎 iPhone / iPad (Safari)
+                </div>
+                <ol className="list-decimal list-inside space-y-1.5 text-xs text-gray-300">
+                  <li>Tap the <span className="text-[#FFD700] font-bold">Share</span> button (Square with ↑) in Safari bottom toolbar.</li>
+                  <li>Scroll down and tap <span className="text-[#FFD700] font-bold">Add to Home Screen</span>.</li>
+                  <li>Tap <span className="text-[#FFD700] font-bold">Add</span> in top right corner.</li>
+                </ol>
+              </div>
+
+              <div className="bg-[#121620] border border-[#FFD700]/30 rounded-xl p-3.5">
+                <div className="font-bold text-[#FFD700] text-xs uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                  🤖 Android / Chrome / Edge / Pi Browser
+                </div>
+                <ol className="list-decimal list-inside space-y-1.5 text-xs text-gray-300">
+                  <li>Tap browser menu (<span className="text-[#FFD700] font-bold">⋮</span> or <span className="text-[#FFD700] font-bold">⋯</span>) in top or bottom corner.</li>
+                  <li>Select <span className="text-[#FFD700] font-bold">Install App</span> or <span className="text-[#FFD700] font-bold">Add to Home screen</span>.</li>
+                  <li>Confirm <span className="text-[#FFD700] font-bold">Install</span>.</li>
+                </ol>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowInstallGuideModal(false)}
+              className="w-full bg-[#FFD700] hover:bg-yellow-400 text-black font-black py-3 rounded-xl transition text-center text-sm shadow-lg border border-yellow-200 cursor-pointer"
+            >
+              Got it!
+            </button>
+          </div>
+        </div>
+      )}
 
       {showEsimVideoModal && <EsimVideoModal onClose={() => setShowEsimVideoModal(false)} />}
       

@@ -272,15 +272,32 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
         localStorage.getItem('NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY') || 
         localStorage.getItem('paystack_public_key') || 
         localStorage.getItem('PAYSTACK_PUBLIC_KEY') || 
-        ''
+        'pk_live_9f7e06b21fa6dc4e3e94cc0'
       ).trim();
 
-      const isValidFormat = (k: string) => (k.startsWith('pk_live_') || k.startsWith('pk_test_')) && k.length >= 20;
+      if (!paystackPublicKey || paystackPublicKey.length < 10) {
+        paystackPublicKey = 'pk_live_9f7e06b21fa6dc4e3e94cc0';
+      }
 
-      const nairaPrice = Math.round(priceNGN);
+      // Ensure script is present or wait for SDK
+      if (typeof (window as any).PaystackPop === 'undefined') {
+        if (!document.querySelector('script[src*="paystack.co/v1/inline.js"]')) {
+          const script = document.createElement('script');
+          script.src = 'https://js.paystack.co/v1/inline.js';
+          script.async = true;
+          document.head.appendChild(script);
+        }
+        let attempts = 0;
+        while (attempts < 10 && typeof (window as any).PaystackPop === 'undefined') {
+          await new Promise(r => setTimeout(r, 150));
+          attempts++;
+        }
+      }
+
+      const nairaPrice = Math.round(priceNGN || (priceUSD ? priceUSD * 1550 : 74985));
       const amountInKobo = nairaPrice * 100; // e.g., 250000 kobo for NGN 2,500
 
-      if (isValidFormat(paystackPublicKey) && typeof (window as any).PaystackPop !== 'undefined' && typeof (window as any).PaystackPop.setup === 'function') {
+      if (typeof (window as any).PaystackPop !== 'undefined' && typeof (window as any).PaystackPop.setup === 'function') {
         try {
           const handler = (window as any).PaystackPop.setup({
             key: paystackPublicKey,
@@ -295,33 +312,33 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
               ]
             },
             onClose: function() {
-              console.log('Paystack closed - Not counting');
-              if (onToast) onToast('Paystack checkout window closed - No order recorded');
+              console.log('Paystack closed');
+              if (onToast) onToast('Paystack checkout window closed');
             },
             onCancel: function() {
-              console.log('Paystack cancelled - Not counting');
-              if (onToast) onToast('Payment cancelled - No charge');
+              console.log('Paystack cancelled');
+              if (onToast) onToast('Payment cancelled');
             },
             callback: function(response: any) {
               console.log('Paystack success', response);
               const ref = response?.reference || response?.trxref || ('PSK_' + Date.now());
-              if (typeof (window as any).verifyPaystackPayment === 'function') {
+              if (typeof (window as any).unlockAcademyAccess === 'function') {
+                (window as any).unlockAcademyAccess('Paystack', emailInput, ref);
+              } else if (typeof (window as any).verifyPaystackPayment === 'function') {
                 (window as any).verifyPaystackPayment(ref);
-              }
-              if (response && response.reference) {
-                window.location.href = `/payment/verify?reference=${encodeURIComponent(response.reference)}`;
               } else {
                 handleSuccess(ref, 'Paystack (Global Cards)');
               }
             }
           });
           handler.openIframe();
+          return;
         } catch (e: any) {
           console.error('Paystack popup setup error, falling back to server redirect:', e);
           await initializePaystackServerRedirect(emailInput);
         }
       } else {
-        console.warn('PaystackPop inline SDK not loaded or key unconfigured, initializing server redirect fallback...');
+        console.warn('PaystackPop inline SDK not loaded, initializing server redirect fallback...');
         await initializePaystackServerRedirect(emailInput);
       }
     } catch (err: any) {
