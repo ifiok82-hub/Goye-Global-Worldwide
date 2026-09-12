@@ -35,7 +35,7 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
   }
   const activeCryptoAddress = rawCrypto;
 
-  const isSandbox = localStorage.getItem('PI_SANDBOX') !== 'false' && localStorage.getItem('pi_sandbox') !== 'false';
+  const isSandbox = (localStorage.getItem('PI_SANDBOX_MODE') || localStorage.getItem('PI_SANDBOX') || 'true') !== 'false';
   let rawPi = isSandbox
     ? (localStorage.getItem('pi_testnet_wallet') || localStorage.getItem('PI_TESTNET_WALLET_ADDRESS') || localStorage.getItem('pi_wallet') || PI_WALLET_ADDRESS)
     : (localStorage.getItem('pi_mainnet_wallet') || localStorage.getItem('PI_MAINNET_WALLET_ADDRESS') || localStorage.getItem('pi_wallet') || PI_WALLET_ADDRESS);

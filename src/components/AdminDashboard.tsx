@@ -125,8 +125,9 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
     flutterwaveSecret: localStorage.getItem('flutterwave_secret_key') || '',
     usdcBase: localStorage.getItem('usdc_base_address') || localStorage.getItem('USDC_ADDRESS') || localStorage.getItem('crypto_wallet') || '',
     usdtBep20: localStorage.getItem('usdt_bep20_address') || localStorage.getItem('USDT_ADDRESS') || '',
-    piMainnet: localStorage.getItem('pi_mainnet_wallet') || localStorage.getItem('PI_MAINNET_WALLET_ADDRESS') || localStorage.getItem('pi_wallet') || '',
-    piTestnet: localStorage.getItem('pi_testnet_wallet') || localStorage.getItem('PI_TESTNET_WALLET_ADDRESS') || localStorage.getItem('pi_wallet') || '',
+    piMainnet: localStorage.getItem('pi_mainnet_wallet') || localStorage.getItem('PI_MAINNET_WALLET_ADDRESS') || '',
+    piTestnet: localStorage.getItem('pi_testnet_wallet') || localStorage.getItem('PI_TESTNET_WALLET_ADDRESS') || '',
+    piSandboxMode: localStorage.getItem('PI_SANDBOX_MODE') || localStorage.getItem('PI_SANDBOX') || 'true',
     pi: localStorage.getItem('pi_wallet') || localStorage.getItem('PI_WALLET_ADDRESS') || ''
   });
 
@@ -582,7 +583,15 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
       localStorage.setItem('PI_MAINNET_WALLET_ADDRESS', paymentConfig.piMainnet.trim());
       localStorage.setItem('pi_testnet_wallet', paymentConfig.piTestnet.trim());
       localStorage.setItem('PI_TESTNET_WALLET_ADDRESS', paymentConfig.piTestnet.trim());
-      const activePiWallet = paymentConfig.piMainnet.trim() || paymentConfig.piTestnet.trim() || paymentConfig.pi.trim();
+      localStorage.setItem('PI_SANDBOX_MODE', paymentConfig.piSandboxMode);
+      localStorage.setItem('PI_SANDBOX', paymentConfig.piSandboxMode);
+      localStorage.setItem('pi_sandbox', paymentConfig.piSandboxMode);
+      
+      const isSandbox = paymentConfig.piSandboxMode !== 'false';
+      const activePiWallet = isSandbox 
+        ? (paymentConfig.piTestnet.trim() || paymentConfig.piMainnet.trim() || paymentConfig.pi.trim())
+        : (paymentConfig.piMainnet.trim() || paymentConfig.piTestnet.trim() || paymentConfig.pi.trim());
+        
       localStorage.setItem('pi_wallet', activePiWallet);
       localStorage.setItem('PI_WALLET_ADDRESS', activePiWallet);
 
@@ -603,6 +612,8 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
           cryptoWallet: paymentConfig.usdcBase.trim(),
           piMainnetWallet: paymentConfig.piMainnet.trim(),
           piTestnetWallet: paymentConfig.piTestnet.trim(),
+          piSandboxMode: paymentConfig.piSandboxMode,
+          piSandbox: paymentConfig.piSandboxMode,
           piWallet: activePiWallet,
           adminPassword: 'GoyeBN3583773'
         })
@@ -623,6 +634,8 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
           usdt: paymentConfig.usdtBep20.trim(),
           pi_mainnet_wallet: paymentConfig.piMainnet.trim(),
           pi_testnet_wallet: paymentConfig.piTestnet.trim(),
+          pi_sandbox_mode: paymentConfig.piSandboxMode,
+          pi_sandbox: paymentConfig.piSandboxMode,
           pi_wallet: activePiWallet
         })
       }).catch(e => {});
@@ -1459,9 +1472,9 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
                   </div>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
                   <div>
-                    <label className="text-xs text-gray-300 font-bold block mb-1">USDC Wallet Address (Base Network)</label>
+                    <label className="text-xs text-gray-300 font-bold block mb-1">USDC Wallet (Base)</label>
                     <input
                       type="text"
                       className="w-full bg-[#111] border border-[#333] rounded-xl p-3 text-white text-xs font-mono focus:border-[#FFD700] outline-none transition"
@@ -1472,7 +1485,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
                   </div>
 
                   <div>
-                    <label className="text-xs text-gray-300 font-bold block mb-1">USDT Wallet Address (BNB Smart Chain - BEP20)</label>
+                    <label className="text-xs text-gray-300 font-bold block mb-1">USDT Wallet (BEP20)</label>
                     <input
                       type="text"
                       className="w-full bg-[#111] border border-[#333] rounded-xl p-3 text-white text-xs font-mono focus:border-[#FFD700] outline-none transition"
@@ -1483,13 +1496,25 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
                   </div>
 
                   <div>
+                    <label className="text-xs text-purple-400 font-bold block mb-1">Pi Network Mode (PI_SANDBOX_MODE)</label>
+                    <select
+                      className="w-full bg-[#111] border border-purple-900/50 focus:border-purple-500 rounded-xl p-3 text-white text-xs font-bold outline-none transition"
+                      value={paymentConfig.piSandboxMode}
+                      onChange={e => setPaymentConfig({ ...paymentConfig, piSandboxMode: e.target.value })}
+                    >
+                      <option value="true">🧪 Testnet (Sandbox Mode - True)</option>
+                      <option value="false">🚀 Mainnet (Production Mode - False)</option>
+                    </select>
+                  </div>
+
+                  <div>
                     <label className="text-xs text-emerald-400 font-bold block mb-1">Pi Mainnet Wallet Address</label>
                     <input
                       type="text"
                       className="w-full bg-[#111] border border-emerald-900/50 focus:border-emerald-500 rounded-xl p-3 text-white text-xs font-mono outline-none transition"
                       value={paymentConfig.piMainnet}
-                      onChange={e => setPaymentConfig({ ...paymentConfig, piMainnet: e.target.value, pi: e.target.value })}
-                      placeholder="G... (Pi Mainnet Destination)"
+                      onChange={e => setPaymentConfig({ ...paymentConfig, piMainnet: e.target.value })}
+                      placeholder="G... (Pi Mainnet KYC Wallet)"
                     />
                   </div>
 

@@ -105,6 +105,8 @@ export default function AdminSettings() {
     const activePi = piSandbox === 'false' ? (piMainnetWalletAddress || piWalletAddress) : (piTestnetWalletAddress || piWalletAddress);
     localStorage.setItem('PI_WALLET_ADDRESS', activePi);
     localStorage.setItem('pi_wallet', activePi);
+    localStorage.setItem('PI_SANDBOX_MODE', piSandbox);
+    localStorage.setItem('pi_sandbox_mode', piSandbox);
     localStorage.setItem('PI_SANDBOX', piSandbox);
     localStorage.setItem('pi_sandbox', piSandbox);
     localStorage.setItem('PAYSTACK_KEY', paystackKey);

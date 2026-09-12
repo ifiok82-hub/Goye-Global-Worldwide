@@ -10,11 +10,11 @@
 <script src="https://checkout.flutterwave.com/v3.js"></script>
 <script>
 window.addEventListener('load', function(){
-  var sandbox = localStorage.getItem('PI_SANDBOX') || 'true';
+  var isSandbox = (localStorage.getItem('PI_SANDBOX_MODE') || localStorage.getItem('PI_SANDBOX') || 'true') !== 'false';
   if(window.Pi){
     try{
-      Pi.init({version:"2.0", sandbox: sandbox === 'true'});
-      console.log('Pi SDK Ready - Sandbox:', sandbox, '- gasv.store RC BN3583773');
+      Pi.init({version:"2.0", sandbox: isSandbox});
+      console.log('Pi SDK Ready - Sandbox:', isSandbox, '- gasv.store RC BN3583773');
     }catch(e){
       console.error('Pi init error:', e);
     }
@@ -315,11 +315,11 @@ let piReady = false;
 window.initPiSDK = function() {
   try {
     if (typeof Pi !== 'undefined') {
-      var isSandbox = localStorage.getItem('PI_SANDBOX') !== 'false' && localStorage.getItem('pi_sandbox') !== 'false';
+      var isSandbox = (localStorage.getItem('PI_SANDBOX_MODE') || localStorage.getItem('PI_SANDBOX') || 'true') !== 'false';
       try {
         Pi.init({ version: "2.0", sandbox: isSandbox });
         piReady = true;
-        console.log('Pi SDK ready - Sandbox:', isSandbox);
+        console.log('Pi SDK ready - Sandbox Mode:', isSandbox);
       } catch(e) {
         try {
           Pi.init({ version: "2.0", sandbox: isSandbox });
@@ -484,26 +484,30 @@ window.createPiPayment = async function(inputAmount, itemTitle) {
       },
       onCancel: function(id) {
         console.log('[Pi SDK index.html] Payment cancelled by user:', id);
+        var isSandbox = (localStorage.getItem('PI_SANDBOX_MODE') || localStorage.getItem('PI_SANDBOX') || 'true') !== 'false';
+        var networkLabel = isSandbox ? 'Pi Testnet' : 'Pi Mainnet';
         if (id) {
           fetch('/api/pi/cancel', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ paymentId: id, reason: 'user_cancelled' })
+            body: JSON.stringify({ paymentId: id, reason: 'user_cancelled', isSandbox: isSandbox })
           }).catch(() => {});
         }
-        showToast('Pi Testnet payment expired or was cancelled. Please start a new payment.', 'info');
+        showToast(networkLabel + ' payment expired or was cancelled. Please start a new payment.', 'info');
       },
       onError: function(err, payment) {
         console.error('[Pi SDK index.html] Payment error:', err, payment);
+        var isSandbox = (localStorage.getItem('PI_SANDBOX_MODE') || localStorage.getItem('PI_SANDBOX') || 'true') !== 'false';
+        var networkLabel = isSandbox ? 'Pi Testnet' : 'Pi Mainnet';
         const pid = (payment && payment.identifier) || (err && err.paymentId);
         if (pid) {
           fetch('/api/pi/error', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ paymentId: pid, error: err?.message || err })
+            body: JSON.stringify({ paymentId: pid, error: err?.message || err, isSandbox: isSandbox })
           }).catch(() => {});
         }
-        showToast('Pi Testnet payment expired or was cancelled. Please start a new payment.', 'info');
+        showToast(networkLabel + ' payment error. Please try again.', 'info');
       }
     };
     await Pi.createPayment(paymentData, callbacks);

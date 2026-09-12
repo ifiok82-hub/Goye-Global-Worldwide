@@ -1111,10 +1111,10 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
 
               <p className="text-gray-400 text-xs mb-2">Send Pi payment to official wallet:</p>
               {(() => {
-                const isSandbox = localStorage.getItem('PI_SANDBOX') !== 'false' && localStorage.getItem('pi_sandbox') !== 'false';
-                const activeAddress = paymentConfig?.pi || (isSandbox 
-                  ? (localStorage.getItem('pi_testnet_wallet') || localStorage.getItem('PI_TESTNET_WALLET_ADDRESS') || localStorage.getItem('pi_wallet') || 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ7XE36YFQY6LKPVO6R')
-                  : (localStorage.getItem('pi_mainnet_wallet') || localStorage.getItem('PI_MAINNET_WALLET_ADDRESS') || localStorage.getItem('pi_wallet') || 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ7XE36YFQY6LKPVO6R'));
+                const isSandbox = (localStorage.getItem('PI_SANDBOX_MODE') || localStorage.getItem('PI_SANDBOX') || 'true') !== 'false';
+                const activeAddress = isSandbox 
+                  ? (localStorage.getItem('pi_testnet_wallet') || localStorage.getItem('PI_TESTNET_WALLET_ADDRESS') || paymentConfig?.pi || 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ7XE36YFQY6LKPVO6R')
+                  : (localStorage.getItem('pi_mainnet_wallet') || localStorage.getItem('PI_MAINNET_WALLET_ADDRESS') || paymentConfig?.pi || 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ7XE36YFQY6LKPVO6R');
                 return (
                   <div className="bg-black p-3 rounded-xl border border-[#333] flex justify-between items-center mb-4">
                     <span className="text-white text-xs font-mono truncate">{activeAddress}</span>
