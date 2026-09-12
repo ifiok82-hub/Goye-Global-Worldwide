@@ -228,7 +228,7 @@ export async function saveGlobalClick(type: string = 'page_view', product: strin
   const isUserAdmin = isAdminClick(name, email) || localStorage.getItem('is_admin') === 'true' || localStorage.getItem('is_owner') === 'true';
 
   // IF EXCLUDE ON AND IS ADMIN - EARLY RETURN - DO NOT INCREMENT CLICKS OR LOG TRAFFIC
-  if (isExcludeActive && (isUserAdmin || excludeAdminSetting)) {
+  if (isExcludeActive && isUserAdmin) {
     console.log('Admin click EXCLUDED - Early Return -', name, email);
     let excludedLog = safeParse('excluded_admin_clicks', []);
     const isMobile = /Mobi|Android/i.test(navigator.userAgent);

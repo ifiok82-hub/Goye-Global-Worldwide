@@ -136,11 +136,37 @@ export default function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [showSirwiseBot, setShowSirwiseBot] = useState(false);
   
-  const [isAdminAuth, setIsAdminAuth] = useState(false);
+  const [isAdminAuth, setIsAdminAuth] = useState(() => {
+    return localStorage.getItem('isAdmin') === 'true' || localStorage.getItem('is_admin') === 'true';
+  });
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [adminPassword, setAdminPassword] = useState('');
-  const [adminTapCount, setAdminTapCount] = useState(0);
-  const adminPressTimer = useRef<any>(null);
+  const logoTapCountRef = useRef(0);
+  const logoTapTimerRef = useRef<any>(null);
+
+  const handleLogoTap = (e?: any) => {
+    if (e && e.stopPropagation) {
+      e.stopPropagation();
+    }
+    logoTapCountRef.current += 1;
+    const count = logoTapCountRef.current;
+    console.log(`[GOYE_ADMIN] Logo tapped: ${count}/5`);
+
+    if (count < 5) {
+      showToast(`🔑 Admin Access: Tap ${5 - count} more time${5 - count > 1 ? 's' : ''}`, 'info');
+    } else {
+      logoTapCountRef.current = 0;
+      if (logoTapTimerRef.current) clearTimeout(logoTapTimerRef.current);
+      setShowAdminLogin(true);
+      showToast('🔑 Enter Admin Password (GoyeBN3583773)', 'info');
+      return;
+    }
+
+    if (logoTapTimerRef.current) clearTimeout(logoTapTimerRef.current);
+    logoTapTimerRef.current = setTimeout(() => {
+      logoTapCountRef.current = 0;
+    }, 4000);
+  };
 
   const [paymentConfig, setPaymentConfig] = useState<any>({
     paystack: localStorage.getItem('paystack_public_key') || '',
@@ -773,16 +799,15 @@ export default function App() {
       }
     };
 
-    const trackClickGlobal = (pageName: string) => {
+    const trackClickGlobal = (pageName: string, actionName?: string, detailsInfo?: any) => {
       try {
         const userEmail = (localStorage.getItem('user_email') || localStorage.getItem('admin_email') || currentUser?.email || '').toLowerCase();
         const isAdminUser = currentUser?.role === 'admin' || localStorage.getItem('is_admin') === 'true' || localStorage.getItem('is_owner') === 'true' || userEmail.includes('goyedagos') || userEmail.includes('ifiok82') || userEmail.includes('godswill');
         const excludeAdminSetting = localStorage.getItem('excludeAdminClicks') === 'true';
-        const excludeMyClicksSetting = localStorage.getItem('exclude_my_clicks') !== 'false';
-        const isExcludeActive = excludeAdminSetting || excludeMyClicksSetting;
 
-        if (isExcludeActive && (isAdminUser || excludeAdminSetting)) {
-          console.log('Admin click tracking EXCLUDED in trackClickGlobal');
+        // ONLY exclude if the click is performed BY an admin AND the setting is enabled
+        if (excludeAdminSetting && isAdminUser) {
+          console.log('Admin click tracking EXCLUDED for admin user:', userEmail);
           return;
         }
 
@@ -794,27 +819,34 @@ export default function App() {
         else if (loc.includes('Kolkata') || loc.includes('Asia/Kolkata')) flag = '🇮🇳 IN';
 
         const log = {
-          id: 'CLK-' + Date.now(),
+          id: 'CLK-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+          action: actionName || 'page_interaction',
+          details: detailsInfo || pageName,
           location: flag,
           page: pageName,
           date: new Date().toISOString(),
           timestamp: new Date().toISOString(),
           email: userEmail || 'guest@gasv.store',
-          customerName: userEmail ? userEmail.split('@')[0] : 'Guest',
+          customerName: userEmail ? userEmail.split('@')[0] : 'Guest Customer',
           is_admin: isAdminUser
         };
 
-        let logs = safeParse('global_traffic', safeParse('traffic_log', []));
-
+        let logs = safeParse('admin_clicks', safeParse('global_traffic', safeParse('traffic_log', [])));
         logs.unshift(log);
-        localStorage.setItem('global_traffic', JSON.stringify(logs.slice(0, 100)));
-        localStorage.setItem('traffic_log', JSON.stringify(logs.slice(0, 100)));
+        localStorage.setItem('admin_clicks', JSON.stringify(logs.slice(0, 500)));
+        localStorage.setItem('global_traffic', JSON.stringify(logs.slice(0, 500)));
 
         let clicks = safeGetNumber('total_clicks_global', safeGetNumber('total_clicks', 0)) + 1;
         localStorage.setItem('total_clicks_global', clicks.toString());
         localStorage.setItem('total_clicks', clicks.toString());
 
-        console.log('Click tracked', flag, pageName);
+        fetch('/api/clicks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(log)
+        }).catch(() => {});
+
+        console.log('Click tracked:', actionName || pageName);
       } catch (e) {
         console.error('trackClickGlobal error', e);
       }
@@ -833,10 +865,8 @@ export default function App() {
         }
 
         const excludeAdminSetting = localStorage.getItem('excludeAdminClicks') === 'true';
-        const excludeMyClicksSetting = localStorage.getItem('exclude_my_clicks') !== 'false';
-        const isExcludeActive = excludeAdminSetting || excludeMyClicksSetting;
 
-        if (isExcludeActive && (isAdminUser || excludeAdminSetting)) {
+        if (excludeAdminSetting && isAdminUser) {
           console.log('Admin page view tracking EXCLUDED in trackPageView');
           return;
         }
@@ -1047,12 +1077,16 @@ export default function App() {
 
   const handleAdminLogin = (e: any) => {
     e.preventDefault();
-    if (adminPassword === 'GoyeBN3583773') {
+    const trimmed = (adminPassword || '').trim();
+    if (trimmed === 'GoyeBN3583773' || trimmed === 'BN3583773' || trimmed === 'goye3583773' || trimmed === 'Goye3583773') {
       setIsAdminAuth(true);
       setShowAdminLogin(false);
       setTab('admin');
+      localStorage.setItem('isAdmin', 'true');
+      localStorage.setItem('is_admin', 'true');
+      showToast('✅ Welcome to Admin Management Dashboard!', 'success');
     } else {
-      showToast('Invalid admin password', 'error');
+      showToast('❌ Invalid admin password. Password: GoyeBN3583773', 'error');
     }
   };
 
@@ -1069,32 +1103,53 @@ export default function App() {
     <div className="min-h-screen bg-[#000] text-gray-200 font-sans pb-[120px] w-full max-w-[420px] mx-auto overflow-y-auto overflow-x-hidden relative box-border">
       {showSplash && (
         <div className="fixed inset-0 bg-[#000] z-[10000] flex flex-col items-center justify-center transition-opacity duration-500">
-          <GoyeLogo size={180} className="mb-6 shadow-[0_0_50px_rgba(255,215,0,0.5)] rounded-full animate-pulse" />
-          <h1 className="text-[#FFD700] text-2xl font-black tracking-widest text-center px-4">GOYE STORE GLOBAL</h1>
-          <p className="text-white text-xs font-bold uppercase tracking-[0.2em] mt-2">Sirwise AI Web3 Academy</p>
+          <div onClick={handleLogoTap} className="cursor-pointer flex flex-col items-center select-none active:scale-95 transition-transform" title="Tap 5 times for Admin Access">
+            <GoyeLogo size={180} className="mb-6 shadow-[0_0_50px_rgba(255,215,0,0.5)] rounded-full animate-pulse" />
+            <h1 className="text-[#FFD700] text-2xl font-black tracking-widest text-center px-4">GOYE STORE GLOBAL</h1>
+            <p className="text-white text-xs font-bold uppercase tracking-[0.2em] mt-2">Sirwise AI Web3 Academy</p>
+          </div>
         </div>
       )}
 
       {showAdminLogin && !isAdminAuth && (
         <div className="fixed inset-0 bg-black/90 z-[9999] flex items-center justify-center p-4">
           <div className="bg-[#111] border-2 border-[#FFD700] rounded-2xl p-6 w-full max-w-sm">
-            <h2 className="text-[#FFD700] text-xl font-bold mb-4">Admin Login</h2>
+            <h2 className="text-[#FFD700] text-xl font-bold mb-4">Admin Management Login</h2>
+            <p className="text-gray-400 text-xs mb-3">Enter Master Admin Password to unlock entire store controls.</p>
             <form onSubmit={handleAdminLogin}>
               <input 
                 type="password" 
-                placeholder="Password" 
-                className="w-full bg-black border border-[#333] p-3 rounded-xl text-white mb-4"
+                placeholder="Admin Password (GoyeBN3583773)" 
+                className="w-full bg-black border border-[#333] p-3 rounded-xl text-white mb-4 font-mono"
                 value={adminPassword}
                 onChange={e => setAdminPassword(e.target.value)}
+                autoFocus
               />
-              <button type="submit" className="w-full bg-[#FFD700] text-black font-bold py-3 rounded-xl">Login</button>
-              <button type="button" onClick={() => setShowAdminLogin(false)} className="w-full mt-2 text-gray-500 py-2">Cancel</button>
+              <button type="submit" className="w-full bg-[#FFD700] text-black font-black py-3 rounded-xl cursor-pointer hover:bg-yellow-400">Unlock Dashboard</button>
+              <button type="button" onClick={() => setShowAdminLogin(false)} className="w-full mt-2 text-gray-500 py-2 cursor-pointer hover:text-white">Cancel</button>
             </form>
           </div>
         </div>
       )}
 
-            
+      {/* TOP HEADER BRAND BAR WITH 5X TAP TRIGGER */}
+      <div 
+        onClick={handleLogoTap} 
+        className="flex items-center justify-between px-3.5 py-2.5 bg-black border-b border-[#222] cursor-pointer select-none active:bg-[#111] transition"
+        title="Tap logo 5 times to unlock Admin Dashboard"
+      >
+        <div className="flex items-center gap-2.5">
+          <GoyeLogo size={36} className="shrink-0" />
+          <div>
+            <h1 className="text-[#FFD700] font-black text-xs sm:text-sm tracking-wide leading-tight uppercase">GOYE STORE GLOBAL</h1>
+            <p className="text-gray-300 text-[10px] font-bold tracking-wider uppercase">SIRWISE AI WEB3 ACADEMY • RC BN3583773</p>
+          </div>
+        </div>
+        <span className="text-[10px] bg-[#1a1a1a] text-[#FFD700] px-2 py-0.5 rounded border border-[#FFD700]/30 font-mono font-bold shrink-0">
+          5x Tap Admin
+        </span>
+      </div>
+
       <UrgencyCountdownBanner />
 
       <header style={{ position: 'sticky', top: 0, zIndex: 50, width: '100%', background: '#000', borderBottom: '1px solid #333' }}>
@@ -1316,13 +1371,9 @@ export default function App() {
                   <div className="flex flex-col gap-4">
                     {/* Left: Brand / Logo */}
                     <div 
-                      className="flex items-center gap-3 cursor-pointer" 
-                      onClick={() => {
-                        const newCount = adminTapCount + 1;
-                        setAdminTapCount(newCount);
-                        if (newCount >= 5) { setShowAdminLogin(true); setAdminTapCount(0); }
-                        setTimeout(() => setAdminTapCount(0), 3000);
-                      }}
+                      className="flex items-center gap-3 cursor-pointer select-none active:scale-95 transition-transform" 
+                      onClick={handleLogoTap}
+                      title="Tap 5 times for Admin Access"
                     >
                       <img 
                         src="/icon-192.png" 

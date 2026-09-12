@@ -226,8 +226,26 @@ let leadsDB: any[] = [];
 let clicksDB: any[] = [];
 app.post('/api/leads', express.json(), (req, res) => { leadsDB.unshift({ ...req.body, id: Date.now(), date: new Date().toLocaleString('en-NG', { timeZone: 'Africa/Lagos' }) }); try { fs.writeFileSync('./leads.json', JSON.stringify(leadsDB.slice(0, 500))); } catch (e) {} res.json({ success: true }); });
 app.get('/api/leads', (req, res) => res.json(leadsDB));
-app.post('/api/clicks', express.json(), (req, res) => { clicksDB.unshift({ ...req.body, id: Date.now() }); res.json({ success: true }); });
-app.get('/api/clicks', (req, res) => res.json(clicksDB));
+app.post('/api/clicks', express.json(), (req, res) => { 
+  const clickObj = {
+    id: req.body.id || ('CLK-' + Date.now() + '-' + Math.floor(Math.random() * 1000)),
+    date: req.body.date || new Date().toISOString(),
+    ...req.body
+  };
+  clicksDB.unshift(clickObj);
+  if (clicksDB.length > 2000) clicksDB.pop();
+  try { fs.writeFileSync('./clicks.json', JSON.stringify(clicksDB.slice(0, 1000))); } catch (e) {}
+  res.json({ success: true, count: clicksDB.length });
+});
+
+app.get('/api/clicks', (req, res) => {
+  try {
+    if (clicksDB.length === 0 && fs.existsSync('./clicks.json')) {
+      clicksDB = JSON.parse(fs.readFileSync('./clicks.json', 'utf8'));
+    }
+  } catch(e) {}
+  res.json({ success: true, clicks: clicksDB });
+});
 
 app.post('/api/pi/verify', express.json(), (req, res) => {
   const { paymentId, txid, email, amount } = req.body;
