@@ -137,35 +137,45 @@ export default function App() {
   const [showSirwiseBot, setShowSirwiseBot] = useState(false);
   
   const [isAdminAuth, setIsAdminAuth] = useState(() => {
-    return localStorage.getItem('isAdmin') === 'true' || localStorage.getItem('is_admin') === 'true';
+    if (typeof window === 'undefined') return false;
+    return (localStorage.getItem('isAdmin') === 'true' || localStorage.getItem('is_admin') === 'true') &&
+           Boolean(localStorage.getItem('admin_token') || localStorage.getItem('admin_session'));
   });
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [adminPassword, setAdminPassword] = useState('');
+  const [isVerifyingPass, setIsVerifyingPass] = useState(false);
   const logoTapCountRef = useRef(0);
   const logoTapTimerRef = useRef<any>(null);
+  const lastTapTimeRef = useRef(0);
 
   const handleLogoTap = (e?: any) => {
     if (e && e.stopPropagation) {
       e.stopPropagation();
     }
+
+    const now = Date.now();
+    if (now - lastTapTimeRef.current < 150) {
+      return;
+    }
+    lastTapTimeRef.current = now;
+
+    if (logoTapTimerRef.current) {
+      clearTimeout(logoTapTimerRef.current);
+    }
+
     logoTapCountRef.current += 1;
     const count = logoTapCountRef.current;
-    console.log(`[GOYE_ADMIN] Logo tapped: ${count}/5`);
+    console.log(`[GOYE_ADMIN] Logo tap registered: ${count}/5`);
 
-    if (count < 5) {
-      showToast(`🔑 Admin Access: Tap ${5 - count} more time${5 - count > 1 ? 's' : ''}`, 'info');
-    } else {
+    logoTapTimerRef.current = setTimeout(() => {
+      logoTapCountRef.current = 0;
+    }, 3000);
+
+    if (count >= 5) {
       logoTapCountRef.current = 0;
       if (logoTapTimerRef.current) clearTimeout(logoTapTimerRef.current);
       setShowAdminLogin(true);
-      showToast('🔑 Enter Admin Password', 'info');
-      return;
     }
-
-    if (logoTapTimerRef.current) clearTimeout(logoTapTimerRef.current);
-    logoTapTimerRef.current = setTimeout(() => {
-      logoTapCountRef.current = 0;
-    }, 4000);
   };
 
   const [paymentConfig, setPaymentConfig] = useState<any>({
@@ -1026,11 +1036,27 @@ export default function App() {
   useEffect(() => {
     const handleHashChange = () => {
       try {
-        setTab(window.location.hash.replace('#', '') || 'home');
+        const rawHash = (window.location.hash || '').replace('#', '').trim().toLowerCase();
+        if (rawHash === 'admin' || rawHash === 'admin-settings' || rawHash === 'admin_settings' || rawHash === 'admin-dashboard') {
+          const hasSavedToken = Boolean(localStorage.getItem('admin_token') || localStorage.getItem('admin_session'));
+          const savedAdmin = (localStorage.getItem('isAdmin') === 'true' || localStorage.getItem('is_admin') === 'true') && hasSavedToken;
+          if (!savedAdmin && !isAdminAuth) {
+            setIsAdminAuth(false);
+            setShowAdminLogin(true);
+          } else {
+            setIsAdminAuth(true);
+          }
+          setTab('admin');
+        } else if (rawHash) {
+          setTab(rawHash);
+        } else {
+          setTab('home');
+        }
       } catch (e) {}
     };
 
     if (typeof window !== 'undefined') {
+      handleHashChange();
       window.addEventListener('hashchange', handleHashChange);
     }
     
@@ -1043,7 +1069,10 @@ export default function App() {
     // Check if URL is /admin
     try {
       if (typeof window !== 'undefined' && window.location.pathname === '/admin') {
-        setShowAdminLogin(true);
+        const hasSavedToken = Boolean(localStorage.getItem('admin_token') || localStorage.getItem('admin_session'));
+        if (!isAdminAuth && !hasSavedToken) {
+          setShowAdminLogin(true);
+        }
       }
     } catch (e) {}
 
@@ -1073,18 +1102,32 @@ export default function App() {
         window.removeEventListener('piAuthSuccess', handlePiAuthSuccess);
       }
     };
-  }, []);
+  }, [isAdminAuth]);
 
   const handleAdminLogin = async (e: any) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     const trimmed = (adminPassword || '').trim();
     if (!trimmed) {
       showToast('❌ Please enter admin password', 'error');
       return;
     }
 
-    const savedPass = localStorage.getItem('admin_password') || localStorage.getItem('custom_admin_password');
-    let isValid = (savedPass && trimmed === savedPass) || trimmed === 'GoyeBN3583773' || trimmed === 'BN3583773';
+    setIsVerifyingPass(true);
+    let isValid = false;
+    let token = '';
+
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: trimmed })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        isValid = true;
+        token = data.token || 'authenticated_session';
+      }
+    } catch(e) {}
 
     if (!isValid) {
       try {
@@ -1096,20 +1139,35 @@ export default function App() {
         const data = await res.json();
         if (res.ok && data.valid) {
           isValid = true;
+          token = 'verified_session';
         }
       } catch(e) {}
     }
+
+    if (!isValid) {
+      const savedPass = localStorage.getItem('admin_password') || localStorage.getItem('custom_admin_password');
+      if ((savedPass && trimmed === savedPass) || trimmed === 'GoyeBN3583773' || trimmed === 'BN3583773') {
+        isValid = true;
+        token = 'legacy_session';
+      }
+    }
+
+    setIsVerifyingPass(false);
 
     if (isValid) {
       setIsAdminAuth(true);
       setShowAdminLogin(false);
       setTab('admin');
+      window.location.hash = 'admin';
       localStorage.setItem('isAdmin', 'true');
       localStorage.setItem('is_admin', 'true');
+      localStorage.setItem('admin_token', token || 'authenticated_session');
       localStorage.setItem('admin_password', trimmed);
-      showToast('✅ Welcome to Admin Management Dashboard!', 'success');
+      setAdminPassword('');
+      showToast('✅ Admin Management Dashboard Unlocked!', 'success');
     } else {
-      showToast('❌ Invalid admin password', 'error');
+      showToast('❌ Incorrect password', 'error');
+      setIsAdminAuth(false);
     }
   };
 
@@ -1169,7 +1227,7 @@ export default function App() {
           </div>
         </div>
         <span className="text-[10px] bg-[#1a1a1a] text-[#FFD700] px-2 py-0.5 rounded border border-[#FFD700]/30 font-mono font-bold shrink-0">
-          5x Tap Admin
+          OFFICIAL STORE
         </span>
       </div>
 
@@ -1308,8 +1366,25 @@ export default function App() {
            />
         ) : null}
         
-        {(tab === 'admin-settings' || tab === 'admin_settings') && (
-          <AdminSettings />
+        {(tab === 'admin' || tab === 'admin-settings' || tab === 'admin_settings' || tab === 'admin-dashboard') && (
+          isAdminAuth ? (
+            <AdminDashboard showToast={showToast} />
+          ) : (
+            <div className="min-h-[60vh] flex flex-col items-center justify-center p-6 text-center">
+              <div className="bg-[#111] border-2 border-[#FFD700] rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+                <h2 className="text-[#FFD700] text-xl font-black mb-2 flex items-center justify-center gap-2">
+                  <ShieldCheck size={20} /> ADMIN LOGIN REQUIRED
+                </h2>
+                <p className="text-gray-400 text-xs mb-4">Please enter the Master Admin Password to access Store Controls.</p>
+                <button 
+                  onClick={() => setShowAdminLogin(true)} 
+                  className="w-full bg-[#FFD700] hover:bg-yellow-400 text-black font-black py-3 rounded-xl cursor-pointer text-sm shadow-lg transition active:scale-95"
+                >
+                  Open Admin Login
+                </button>
+              </div>
+            </div>
+          )
         )}
 
         {(tab !== 'admin' && tab !== 'support' && tab !== 'admin-settings' && tab !== 'admin_settings') && (
@@ -1447,14 +1522,14 @@ export default function App() {
                       <p className="text-gray-400 text-xs">Instant QR Delivery via WhatsApp • 190+ Countries</p>
                     </div>
                     <span className="text-xs font-mono font-bold text-[#FFD700] bg-[#111] px-3 py-1 rounded-full border border-[#FFD700]/40">
-                      Total Active Products: {products.filter((p: any) => p.status === 'ACTIVE' && p.visible !== false && !p.isDeleted && p.id !== 'pi-testnet-test').length}
+                      Total Active Products: {products.filter((p: any) => p.status === 'ACTIVE' && p.visible !== false && !p.isDeleted && p.id !== 'pi-testnet-test' && p.id !== 'pi-testnet-10-10' && p.category !== 'developer').length}
                     </span>
                   </div>
 
                   {/* Category Filter Pills - Clean text only, no overlapping emoji */}
                   <div className="flex items-center gap-2 overflow-x-auto pb-2 hide-scrollbar mb-4">
                     {[
-                      { id: 'all', label: `ALL (${products.filter((p: any) => p.status === 'ACTIVE' && p.visible !== false && !p.isDeleted && p.id !== 'pi-testnet-test').length})` },
+                      { id: 'all', label: `ALL (${products.filter((p: any) => p.status === 'ACTIVE' && p.visible !== false && !p.isDeleted && p.id !== 'pi-testnet-test' && p.id !== 'pi-testnet-10-10' && p.category !== 'developer').length})` },
                       { id: 'dubai', label: 'DUBAI' },
                       { id: 'esim', label: 'ESIM' },
                       { id: 'prompts', label: 'PROMPTS' },
@@ -1720,14 +1795,14 @@ export default function App() {
                        'Store & eSIM Hub'}
                     </h2>
                     <span className="text-xs font-mono font-bold text-[#FFD700] bg-[#111] px-3.5 py-1.5 rounded-full border border-[#FFD700]/40 shadow-sm">
-                      Total Active Products: {products.filter((p: any) => p.status === 'ACTIVE' && p.visible !== false && !p.isDeleted && p.id !== 'pi-testnet-test').length}
+                      Total Active Products: {products.filter((p: any) => p.status === 'ACTIVE' && p.visible !== false && !p.isDeleted && p.id !== 'pi-testnet-test' && p.id !== 'pi-testnet-10-10' && p.category !== 'developer').length}
                     </span>
                   </div>
 
                   {/* Category Filter Pills */}
                   <div className="flex items-center gap-2 overflow-x-auto pb-2 hide-scrollbar mb-4">
                     {[
-                      { id: 'all', label: `ALL (${products.filter((p: any) => p.status === 'ACTIVE' && p.visible !== false && !p.isDeleted && p.id !== 'pi-testnet-test').length})` },
+                      { id: 'all', label: `ALL (${products.filter((p: any) => p.status === 'ACTIVE' && p.visible !== false && !p.isDeleted && p.id !== 'pi-testnet-test' && p.id !== 'pi-testnet-10-10' && p.category !== 'developer').length})` },
                       { id: 'dubai', label: 'DUBAI' },
                       { id: 'esim', label: 'ESIM' },
                       { id: 'prompts', label: 'PROMPTS' },
@@ -1911,10 +1986,6 @@ export default function App() {
               </div>
             )}
           </div>
-        )}
-
-        {isAdminAuth && tab === 'admin' && (
-          <AdminDashboard showToast={showToast} />
         )}
 
         {/* DEVELOPER ONLY - PI NETWORK TESTNET CHECKLIST 10/10 - HIDDEN SECTION AT BOTTOM */}

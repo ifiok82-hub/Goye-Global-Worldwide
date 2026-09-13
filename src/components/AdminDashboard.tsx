@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { CreditCard, Users, ShoppingCart, Package, DollarSign, Settings, Download, Edit, Trash2, CheckCircle, XCircle, Activity, Globe, Eye, UserPlus, RefreshCw, Mail, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { CreditCard, Users, ShoppingCart, Package, DollarSign, Settings, Download, Edit, Trash2, CheckCircle, XCircle, Activity, Globe, Eye, UserPlus, RefreshCw, Mail, ShieldCheck, AlertTriangle, Key, LogOut } from 'lucide-react';
 import { ALL_PRODUCTS } from '../data';
 import { SEED_CUSTOMERS, SEED_ORDERS, isAdminClick } from '../utils/analytics';
 import { safeParse, safeGetNumber } from '../utils/safeParse';
+import AdminSettings from './AdminSettings';
 
 export default function AdminDashboard({ showToast }: { showToast: (m: string, t?: string) => void }) {
   const [activeTab, setActiveTab] = useState('analytics');
@@ -903,6 +904,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
 
   const TABS = [
     { id: 'analytics', icon: Activity, label: 'Analytics Overview' },
+    { id: 'gateways', icon: Key, label: 'Pi & Payment Gateways' },
     { id: 'leads', icon: Mail, label: 'Leads & Reminders' },
     { id: 'clicks', icon: Eye, label: 'Click Log' },
     { id: 'payments', icon: CreditCard, label: 'Payments' },
@@ -913,6 +915,15 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
     { id: 'settings', icon: Settings, label: 'Site Settings' },
   ];
 
+  const handleAdminLogout = () => {
+    localStorage.removeItem('isAdmin');
+    localStorage.removeItem('is_admin');
+    localStorage.removeItem('admin_token');
+    localStorage.removeItem('admin_password');
+    window.location.hash = 'home';
+    window.location.reload();
+  };
+
   return (
     <div className="max-w-6xl mx-auto px-4 mt-8 animate-in fade-in duration-500 pb-20">
       <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -920,14 +931,21 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
           <h2 className="text-3xl font-black text-white">Store Management Suite</h2>
           <p className="text-gray-400 text-sm">Real-time store management, completed sales tracking, & access control.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
           <button 
             onClick={refreshOrders} 
             disabled={isLoadingOrders || isAuditing}
-            className="flex items-center gap-2 bg-[#111] hover:bg-white/10 text-[#FFD700] border border-[#FFD700]/40 px-4 py-2 rounded-xl text-sm font-bold transition"
+            className="flex items-center gap-2 bg-[#111] hover:bg-white/10 text-[#FFD700] border border-[#FFD700]/40 px-4 py-2 rounded-xl text-sm font-bold transition cursor-pointer"
           >
             <RefreshCw size={16} className={(isLoadingOrders || isAuditing) ? 'animate-spin' : ''} />
             {isLoadingOrders || isAuditing ? 'Auditing Paystack...' : 'Sync Live Orders'}
+          </button>
+          <button
+            onClick={handleAdminLogout}
+            className="flex items-center gap-2 bg-red-950/80 hover:bg-red-900 text-red-300 border border-red-700/60 px-4 py-2 rounded-xl text-sm font-bold transition cursor-pointer"
+          >
+            <LogOut size={16} />
+            Logout
           </button>
         </div>
       </div>
@@ -948,6 +966,12 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
           )
         })}
       </div>
+
+      {activeTab === 'gateways' && (
+        <div className="animate-in fade-in">
+          <AdminSettings />
+        </div>
+      )}
 
       {activeTab === 'analytics' && (
         <div className="space-y-6 animate-in fade-in">

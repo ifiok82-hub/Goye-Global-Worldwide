@@ -315,19 +315,21 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ onClos
             <span style={{ background: '#2775CA', color: 'white', fontSize: '10px', fontWeight: 900, padding: '3px 8px', borderRadius: '6px' }}>CRYPTO</span>
           </label>
 
-          <label 
-            onClick={() => setSelected('pi')}
-            style={{ border: selected === 'pi' ? '2px solid #FFD700' : '1px solid #333', borderRadius: '12px', padding: '12px', cursor: 'pointer', background: selected === 'pi' ? '#222' : '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <input type="radio" name="payment_option" checked={selected === 'pi'} onChange={() => setSelected('pi')} />
-              <div>
-                <div style={{ color: 'white', fontWeight: 700, fontSize: '14px' }}>💜 Pi Network GCV</div>
-                <div style={{ color: '#888', fontSize: '11px' }}>0.000159 Pi ≈ $49.99 (GCV $314,159)</div>
+          {(localStorage.getItem('ENABLE_PI_PAYMENT') === 'true' || localStorage.getItem('enable_pi') === 'true') && (
+            <label 
+              onClick={() => setSelected('pi')}
+              style={{ border: selected === 'pi' ? '2px solid #FFD700' : '1px solid #333', borderRadius: '12px', padding: '12px', cursor: 'pointer', background: selected === 'pi' ? '#222' : '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <input type="radio" name="payment_option" checked={selected === 'pi'} onChange={() => setSelected('pi')} />
+                <div>
+                  <div style={{ color: 'white', fontWeight: 700, fontSize: '14px' }}>💜 Pi Network GCV</div>
+                  <div style={{ color: '#888', fontSize: '11px' }}>0.000159 Pi ≈ $49.99 (GCV $314,159)</div>
+                </div>
               </div>
-            </div>
-            <span style={{ background: '#7A3ED6', color: 'white', fontSize: '10px', fontWeight: 900, padding: '3px 8px', borderRadius: '6px' }}>PI BROWSER</span>
-          </label>
+              <span style={{ background: '#7A3ED6', color: 'white', fontSize: '10px', fontWeight: 900, padding: '3px 8px', borderRadius: '6px' }}>PI BROWSER</span>
+            </label>
+          )}
 
           <label 
             onClick={() => setSelected('bank')}

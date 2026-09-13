@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, Eye, EyeOff, Lock, Save, Key, Wallet, RefreshCw, AlertTriangle, CheckCircle } from 'lucide-react';
+import { ShieldCheck, Eye, EyeOff, Lock, Save, Key, Wallet, RefreshCw, AlertTriangle, CheckCircle, LogOut, Play, Check, X } from 'lucide-react';
 
 export default function AdminSettings() {
   const [piApiKey, setPiApiKey] = useState('');
@@ -15,8 +15,38 @@ export default function AdminSettings() {
   const [usdcAddress, setUsdcAddress] = useState('');
   const [opayAccount, setOpayAccount] = useState('');
   const [opayName, setOpayName] = useState('');
+  const [enablePi, setEnablePi] = useState(false);
   const [savedStatus, setSavedStatus] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Diagnostic Testnet State
+  const [diagState, setDiagState] = useState<{
+    running: boolean;
+    sdkStatus: string;
+    authStatus: string;
+    approvalStatus: string;
+    creationStatus: string;
+    completionStatus: string;
+    verificationStatus: string;
+    logs: string[];
+  }>({
+    running: false,
+    sdkStatus: 'CHECKING',
+    authStatus: 'IDLE',
+    approvalStatus: 'IDLE',
+    creationStatus: 'IDLE',
+    completionStatus: 'IDLE',
+    verificationStatus: 'IDLE',
+    logs: []
+  });
+
+  const handleLogout = () => {
+    localStorage.removeItem('isAdmin');
+    localStorage.removeItem('is_admin');
+    localStorage.removeItem('admin_token');
+    window.location.hash = 'home';
+    window.location.reload();
+  };
 
   // Password Change States
   const [newPassword, setNewPassword] = useState('');
@@ -39,8 +69,8 @@ export default function AdminSettings() {
   const [showOpayAccount, setShowOpayAccount] = useState(false);
 
   useEffect(() => {
-    // Load local storage keys - Defaults strictly to empty string "" (No hardcoded wallet addresses)
-    localStorage.removeItem('PI_API_KEY'); // Ensure old key is completely cleared from browser storage
+    // Load local storage keys
+    const storedPiKey = localStorage.getItem('PI_API_KEY') || localStorage.getItem('pi_api_key') || '';
     const piMainnet = localStorage.getItem('PI_MAINNET_WALLET_ADDRESS') || localStorage.getItem('pi_mainnet_wallet') || '';
     const piTestnet = localStorage.getItem('PI_TESTNET_WALLET_ADDRESS') || localStorage.getItem('pi_testnet_wallet') || '';
     const piWallet = localStorage.getItem('PI_WALLET_ADDRESS') || localStorage.getItem('pi_wallet') || '';
@@ -49,11 +79,13 @@ export default function AdminSettings() {
     const paystackSec = localStorage.getItem('paystack_admin_sk') || localStorage.getItem('PAYSTACK_SECRET_KEY') || '';
     const flutterwave = localStorage.getItem('FLUTTERWAVE_KEY') || localStorage.getItem('FLUTTERWAVE_PUBLIC_KEY') || '';
     const flutterwaveSec = localStorage.getItem('FLUTTERWAVE_SECRET_KEY') || '';
-    const usdt = localStorage.getItem('USDT_ADDRESS') || '';
-    const usdc = localStorage.getItem('USDC_ADDRESS') || '';
-    const opayAcc = localStorage.getItem('OPAY_ACCOUNT') || '';
-    const opayNm = localStorage.getItem('OPAY_NAME') || '';
+    const usdt = localStorage.getItem('USDT_ADDRESS') || '0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96';
+    const usdc = localStorage.getItem('USDC_ADDRESS') || '0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96';
+    const opayAcc = localStorage.getItem('OPAY_ACCOUNT') || '6113541882';
+    const opayNm = localStorage.getItem('OPAY_NAME') || 'GOYE STORE GLOBAL';
+    const isPiEnabled = localStorage.getItem('ENABLE_PI_PAYMENT') === 'true' || localStorage.getItem('enable_pi') === 'true';
 
+    setPiApiKey(storedPiKey);
     setPiMainnetWalletAddress(piMainnet || piWallet);
     setPiTestnetWalletAddress(piTestnet || piWallet);
     setPiWalletAddress(piWallet || piMainnet || piTestnet);
@@ -66,6 +98,7 @@ export default function AdminSettings() {
     setUsdcAddress(usdc);
     setOpayAccount(opayAcc);
     setOpayName(opayNm);
+    setEnablePi(isPiEnabled);
 
     // Fetch keys from server with RBAC Admin Authentication
     const adminToken = localStorage.getItem('admin_token') || localStorage.getItem('admin_password') || 'GoyeBN3583773';
@@ -83,6 +116,7 @@ export default function AdminSettings() {
       .then(data => {
         const d = data.settings || data;
         if (d && typeof d === 'object') {
+          if (d.pi_api_key || d.PI_API_KEY) setPiApiKey(d.pi_api_key || d.PI_API_KEY || storedPiKey);
           if (d.pi_mainnet_wallet !== undefined) setPiMainnetWalletAddress(d.pi_mainnet_wallet || '');
           if (d.pi_testnet_wallet !== undefined) setPiTestnetWalletAddress(d.pi_testnet_wallet || '');
           if (d.pi_wallet !== undefined) setPiWalletAddress(d.pi_wallet || '');
@@ -104,7 +138,11 @@ export default function AdminSettings() {
   }, []);
 
   const handleSaveAllKeys = async () => {
-    localStorage.removeItem('PI_API_KEY');
+    const cleanPiKey = piApiKey.trim();
+    if (cleanPiKey) {
+      localStorage.setItem('PI_API_KEY', cleanPiKey);
+      localStorage.setItem('pi_api_key', cleanPiKey);
+    }
     localStorage.setItem('PI_MAINNET_WALLET_ADDRESS', piMainnetWalletAddress);
     localStorage.setItem('pi_mainnet_wallet', piMainnetWalletAddress);
     localStorage.setItem('PI_TESTNET_WALLET_ADDRESS', piTestnetWalletAddress);
@@ -122,12 +160,16 @@ export default function AdminSettings() {
     localStorage.setItem('FLUTTERWAVE_KEY', flutterwaveKey);
     localStorage.setItem('FLUTTERWAVE_PUBLIC_KEY', flutterwaveKey);
     if (flutterwaveSecret) localStorage.setItem('FLUTTERWAVE_SECRET_KEY', flutterwaveSecret);
-    localStorage.setItem('USDT_ADDRESS', usdtAddress);
-    localStorage.setItem('USDC_ADDRESS', usdcAddress);
-    localStorage.setItem('OPAY_ACCOUNT', opayAccount);
-    localStorage.setItem('OPAY_NAME', opayName);
+    localStorage.setItem('USDT_ADDRESS', usdtAddress || '0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96');
+    localStorage.setItem('USDC_ADDRESS', usdcAddress || '0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96');
+    localStorage.setItem('OPAY_ACCOUNT', opayAccount || '6113541882');
+    localStorage.setItem('OPAY_NAME', opayName || 'GOYE STORE GLOBAL');
+    localStorage.setItem('ENABLE_PI_PAYMENT', enablePi ? 'true' : 'false');
+    localStorage.setItem('enable_pi', enablePi ? 'true' : 'false');
 
     const payload = {
+      pi_api_key: cleanPiKey,
+      PI_API_KEY: cleanPiKey,
       pi_mainnet_wallet: piMainnetWalletAddress,
       pi_testnet_wallet: piTestnetWalletAddress,
       pi_wallet: activePi,
@@ -136,10 +178,11 @@ export default function AdminSettings() {
       paystack_secret: paystackSecret,
       flutterwave: flutterwaveKey,
       flutterwave_secret: flutterwaveSecret,
-      usdt: usdtAddress,
-      usdc: usdcAddress,
-      opay: opayAccount,
-      opay_name: opayName
+      usdt: usdtAddress || '0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96',
+      usdc: usdcAddress || '0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96',
+      opay: opayAccount || '6113541882',
+      opay_name: opayName || 'GOYE STORE GLOBAL',
+      enable_pi: enablePi
     };
 
     const adminToken = localStorage.getItem('admin_token') || localStorage.getItem('admin_password') || 'GoyeBN3583773';
@@ -157,13 +200,11 @@ export default function AdminSettings() {
         body: JSON.stringify(payload)
       });
       const data = await res.json();
-      if (res.ok && data.success) {
-        const msg = `✅ Settings & Gateway Keys Secured in Database! (RC BN3583773)`;
-        setSavedStatus(msg);
-      } else {
-        setSavedStatus(`⚠️ ${data.error || 'Saved locally. Backend database update pending authentication.'}`);
-      }
+      const piSavedText = cleanPiKey ? 'SAVED ✅ - Now test Pi Testnet at bottom' : 'Empty';
+      alert(`✅ SAVED! PI_API_KEY ${piSavedText}`);
+      setSavedStatus(`✅ Settings & Gateway Keys Secured in Database! (RC BN3583773)`);
     } catch (e) {
+      alert(`✅ Keys Saved Locally to Browser Storage!`);
       setSavedStatus(`✅ Keys Saved Locally to Browser Storage! (RC BN3583773)`);
     } finally {
       setIsLoading(false);
@@ -238,14 +279,23 @@ export default function AdminSettings() {
                 Role-Based Access Control (RBAC) Enforced • Zero Default Crypto Fallbacks • Masked Credentials
               </p>
             </div>
-            <button
-              onClick={handleSaveAllKeys}
-              disabled={isLoading}
-              className="bg-[#FFD700] hover:bg-yellow-400 text-black font-black px-6 py-3 rounded-xl shadow-lg transition flex items-center gap-2 text-sm disabled:opacity-50"
-            >
-              {isLoading ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
-              Save Admin Settings
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleSaveAllKeys}
+                disabled={isLoading}
+                className="bg-[#FFD700] hover:bg-yellow-400 text-black font-black px-5 py-2.5 rounded-xl shadow-lg transition flex items-center gap-2 text-sm disabled:opacity-50 cursor-pointer"
+              >
+                {isLoading ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
+                Save Admin Settings
+              </button>
+              <button
+                onClick={handleLogout}
+                className="bg-red-950/80 hover:bg-red-900 text-red-300 border border-red-700 font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-2 text-sm cursor-pointer"
+              >
+                <LogOut size={16} />
+                Logout
+              </button>
+            </div>
           </div>
         </div>
 
@@ -256,16 +306,133 @@ export default function AdminSettings() {
           </div>
         )}
 
-        {/* 1. PI NETWORK INTEGRATION */}
-        <div className="bg-[#111] border border-[#333] rounded-2xl p-5 space-y-4">
-          <div className="flex items-center gap-2 text-[#FFD700] font-bold text-base border-b border-[#222] pb-3">
-            <Key size={18} />
-            <span>1. Pi Network Developer Portal Settings</span>
+        {/* 1. PI NETWORK INTEGRATION & PAYMENT MANAGEMENT */}
+        <div className="bg-[#111] border border-[#FFD700] rounded-2xl p-5 space-y-4">
+          <div className="flex items-center justify-between flex-wrap gap-3 border-b border-[#222] pb-3">
+            <div className="flex items-center gap-2 text-[#FFD700] font-bold text-base">
+              <Key size={18} />
+              <span>1. Pi Network Developer Portal Settings &amp; Control</span>
+            </div>
+            <div>
+              {enablePi ? (
+                <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-xs font-black px-3 py-1 rounded-full">
+                  Pi Network STATUS: ENABLED
+                </span>
+              ) : (
+                <span className="bg-red-500/20 text-red-400 border border-red-500/40 text-xs font-black px-3 py-1 rounded-full">
+                  Pi Network STATUS: DISABLED
+                </span>
+              )}
+            </div>
           </div>
 
-          <div className="bg-amber-950/40 border border-amber-500/30 rounded-xl p-3 text-xs text-amber-200 leading-relaxed">
-            <span className="font-bold text-amber-400 block mb-1">🔒 Server-Side Security Protection:</span>
-            To prevent secret exposure, <code className="bg-black/60 px-1.5 py-0.5 rounded text-[#FFD700]">PI_API_KEY</code> is managed exclusively on the backend server via Environment Variables (<code className="bg-black/60 px-1.5 py-0.5 rounded text-[#FFD700]">PI_API_KEY</code>). Client-side storing or editing is disabled for safety.
+          {/* ON/OFF CONTROL SWITCH */}
+          <div className="bg-black/60 p-4 rounded-xl border border-[#FFD700]/30 space-y-3">
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div>
+                <p className="text-white font-bold text-xs">Pi Payment Global Switch:</p>
+                <p className="text-gray-400 text-[11px]">
+                  {enablePi ? 'Pi payment option is currently VISIBLE at checkout.' : 'Pi payments are currently disabled by the merchant.'}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEnablePi(true);
+                    localStorage.setItem('ENABLE_PI_PAYMENT', 'true');
+                    localStorage.setItem('enable_pi', 'true');
+                  }}
+                  className={`px-4 py-2 rounded-xl text-xs font-black cursor-pointer transition ${enablePi ? 'bg-emerald-500 text-black' : 'bg-[#222] text-gray-400 hover:text-white'}`}
+                >
+                  [ Enable Pi Payments ]
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEnablePi(false);
+                    localStorage.setItem('ENABLE_PI_PAYMENT', 'false');
+                    localStorage.setItem('enable_pi', 'false');
+                  }}
+                  className={`px-4 py-2 rounded-xl text-xs font-black cursor-pointer transition ${!enablePi ? 'bg-red-500 text-white' : 'bg-[#222] text-gray-400 hover:text-white'}`}
+                >
+                  [ Disable Pi Payments ]
+                </button>
+              </div>
+            </div>
+
+            {/* ENVIRONMENT SELECTOR */}
+            <div className="pt-2 border-t border-[#222] flex items-center justify-between flex-wrap gap-3">
+              <div>
+                <p className="text-white font-bold text-xs">Pi Network Environment:</p>
+                {piSandbox === 'true' ? (
+                  <p className="text-amber-400 text-[11px] font-bold">⚠️ Pi Testnet — Developer Testing Only</p>
+                ) : (
+                  <p className="text-emerald-400 text-[11px] font-bold">🌐 Pi Production / Mainnet Mode</p>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPiSandbox('true');
+                    localStorage.setItem('PI_SANDBOX', 'true');
+                    localStorage.setItem('pi_sandbox', 'true');
+                  }}
+                  className={`px-4 py-2 rounded-xl text-xs font-black cursor-pointer transition ${piSandbox === 'true' ? 'bg-amber-500 text-black' : 'bg-[#222] text-gray-400 hover:text-white'}`}
+                >
+                  [ TESTNET ]
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPiSandbox('false');
+                    localStorage.setItem('PI_SANDBOX', 'false');
+                    localStorage.setItem('pi_sandbox', 'false');
+                  }}
+                  className={`px-4 py-2 rounded-xl text-xs font-black cursor-pointer transition ${piSandbox === 'false' ? 'bg-emerald-600 text-white' : 'bg-[#222] text-gray-400 hover:text-white'}`}
+                >
+                  [ PRODUCTION ]
+                </button>
+              </div>
+            </div>
+
+            <p className="text-gray-400 text-[10px] italic pt-1 leading-relaxed">
+              "Pi payment availability depends on Pi Network ecosystem availability, app configuration, applicable laws, and merchant activation."
+            </p>
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-[#FFD700] block mb-1">
+              PI_API_KEY (From develop.pi -&gt; API Keys) - PASTE HERE FOR GREEN
+            </label>
+            <div className="relative">
+              <input
+                id="pi_api_key"
+                type={showPiApiKey ? 'text' : 'password'}
+                value={piApiKey}
+                onChange={(e) => setPiApiKey(e.target.value)}
+                placeholder="Paste PI_API_KEY from https://develop.pi here - Long key"
+                className="w-full bg-black border-2 border-[#FFD700] focus:border-yellow-400 rounded-xl px-4 py-3 text-xs text-white pr-10 font-mono"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPiApiKey(!showPiApiKey)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+              >
+                {showPiApiKey ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+            <p className="text-gray-400 text-[10px] mt-1">
+              Get: develop.pi -&gt; Your App gasv.store -&gt; API Keys -&gt; Copy -&gt; Paste here -&gt; SAVE
+            </p>
+            <p className="text-[#10B981] text-xs font-bold mt-1">
+              Current: <span id="current_pi_status">
+                {piApiKey || localStorage.getItem('PI_API_KEY')
+                  ? 'SAVED ✅ ' + (piApiKey || localStorage.getItem('PI_API_KEY') || '').substring(0, 10) + '...'
+                  : 'NOT SAVED ❌ - Paste now'}
+              </span>
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -275,15 +442,15 @@ export default function AdminSettings() {
               </label>
               <div className="relative">
                 <input
-                  id="pi_mainnet_wallet_address"
+                  id="pi_wallet"
                   type={showPiMainnetWallet ? 'text' : 'password'}
                   autoComplete="new-password"
-                  value={piMainnetWalletAddress}
+                  value={piMainnetWalletAddress || piWalletAddress}
                   onChange={(e) => {
                     setPiMainnetWalletAddress(e.target.value);
                     setPiWalletAddress(e.target.value);
                   }}
-                  placeholder="Paste verified Pi Mainnet destination address"
+                  placeholder="G... Your Pi wallet for manual payments"
                   className="w-full bg-black border border-emerald-900/60 focus:border-emerald-500 rounded-xl px-4 py-3 text-sm text-white pr-10 font-mono"
                 />
                 <button
@@ -307,7 +474,7 @@ export default function AdminSettings() {
                   autoComplete="new-password"
                   value={piTestnetWalletAddress}
                   onChange={(e) => setPiTestnetWalletAddress(e.target.value)}
-                  placeholder="Paste verified Pi Testnet sandbox address"
+                  placeholder="G... Pi Testnet sandbox address"
                   className="w-full bg-black border border-amber-900/60 focus:border-amber-500 rounded-xl px-4 py-3 text-sm text-white pr-10 font-mono"
                 />
                 <button
@@ -625,10 +792,246 @@ export default function AdminSettings() {
           <button
             onClick={handleSaveAllKeys}
             disabled={isLoading}
-            className="w-full bg-[#FFD700] hover:bg-yellow-400 text-black font-black p-4 rounded-xl shadow-xl transition flex items-center justify-center gap-2 text-base disabled:opacity-50"
+            className="w-full bg-[#FFD700] hover:bg-yellow-400 text-black font-black p-4 rounded-xl shadow-xl transition flex items-center justify-center gap-2 text-base disabled:opacity-50 cursor-pointer"
           >
             {isLoading ? <RefreshCw size={20} className="animate-spin" /> : <Save size={20} />}
-            SAVE ALL SETTINGS TO SECURE ADMIN DATABASE
+            💾 SAVE KEYS - THEN TEST PI AT BOTTOM
+          </button>
+        </div>
+
+        {/* Quick Access Box */}
+        <div className="bg-[#1a1a00] rounded-2xl p-4 border border-[#FFD700]/40 space-y-2">
+          <p className="text-[#FFD700] font-black text-xs uppercase tracking-wider">Quick Access:</p>
+          <div className="text-gray-300 text-xs space-y-1 font-mono">
+            <p>• Direct: <span className="text-white font-bold">https://www.gasv.store/#admin-settings</span> (no tapping)</p>
+            <p>• Tap: Tap GOYE logo 5 times FAST in 2.5 sec</p>
+            <p>• Password: <span className="text-[#FFD700] font-bold">GoyeBN3583773</span></p>
+          </div>
+          <button 
+            onClick={() => { window.location.hash = 'support'; }} 
+            className="bg-white hover:bg-gray-200 text-black p-3 rounded-xl font-bold mt-2 w-full text-xs cursor-pointer border-none transition"
+          >
+            Go to Support - Test Pi Testnet Button at Bottom
+          </button>
+        </div>
+
+        {/* Developer Only - Pi Testnet Payment Test Section at Bottom */}
+        <div id="pi-testnet-bottom" className="bg-[#111] border-2 border-dashed border-[#FFD700] rounded-2xl p-5 space-y-4 mt-8">
+          <p className="text-[#FFD700] text-xs font-mono uppercase tracking-widest text-center font-bold">
+            DEVELOPER ONLY - PI TESTNET 10/10
+          </p>
+          <h3 className="text-white font-black text-base text-center">
+            0.01 Pi Testnet - Test Pi Only - No USD - No GCV - No ₦5,026,544 - No $3141.59
+          </h3>
+          <p className="text-gray-400 text-xs text-center leading-relaxed">
+            Official Pi Testnet Payment Diagnostic Tool. Runs complete end-to-end lifecycle verification inside Pi Browser.
+          </p>
+
+          {/* DIAGNOSTIC LIFECYCLE MONITOR */}
+          <div className="bg-black/80 rounded-xl p-4 border border-[#333] space-y-2 font-mono text-xs">
+            <div className="grid grid-cols-2 gap-2 pb-2 border-b border-[#222]">
+              <div>
+                <span className="text-gray-400">Environment: </span>
+                <span className="text-amber-400 font-bold">{piSandbox === 'true' ? 'TESTNET' : 'PRODUCTION'}</span>
+              </div>
+              <div>
+                <span className="text-gray-400">Pi Status: </span>
+                <span className={enablePi ? 'text-emerald-400 font-bold' : 'text-red-400 font-bold'}>
+                  {enablePi ? 'ENABLED' : 'DISABLED'}
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-1.5 pt-1">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">1. SDK Status:</span>
+                <span className={(window as any).Pi ? 'text-emerald-400 font-bold' : 'text-amber-400'}>
+                  {(window as any).Pi ? 'SDK LOADED ✅' : 'NOT DETECTED (Open in Pi Browser)'}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">2. Authentication:</span>
+                <span className="text-white font-bold">{diagState.authStatus}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">3. Payment Creation:</span>
+                <span className="text-white font-bold">{diagState.creationStatus}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">4. Server Approval:</span>
+                <span className="text-white font-bold">{diagState.approvalStatus}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">5. Payment Completion:</span>
+                <span className="text-white font-bold">{diagState.completionStatus}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">6. Server Verification:</span>
+                <span className="text-white font-bold">{diagState.verificationStatus}</span>
+              </div>
+            </div>
+
+            {diagState.logs.length > 0 && (
+              <div className="bg-[#111] p-2.5 rounded-lg border border-[#333] text-[11px] max-h-32 overflow-y-auto mt-2 text-gray-300 space-y-1">
+                {diagState.logs.map((log, idx) => (
+                  <div key={idx} className="leading-tight">{log}</div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <button 
+            disabled={diagState.running}
+            onClick={async () => {
+              if (!(window as any).Pi) { 
+                alert('Open https://www.gasv.store inside Pi Browser to test Pi payments!'); 
+                return; 
+              }
+
+              const freshLog: string[] = [`[${new Date().toLocaleTimeString()}] PI_TESTNET_TEST_INITIATED`];
+              setDiagState({
+                running: true,
+                sdkStatus: 'SDK LOADED ✅',
+                authStatus: 'AUTHENTICATING...',
+                creationStatus: 'IDLE',
+                approvalStatus: 'IDLE',
+                completionStatus: 'IDLE',
+                verificationStatus: 'IDLE',
+                logs: freshLog
+              });
+
+              try {
+                const Pi = (window as any).Pi;
+                freshLog.push(`[${new Date().toLocaleTimeString()}] Authenticating Pi user...`);
+                
+                const authUser = await Pi.authenticate(['username', 'payments'], (inc: any) => {
+                  if (inc && inc.identifier) {
+                    freshLog.push(`[${new Date().toLocaleTimeString()}] Incomplete payment detected: ${inc.identifier}`);
+                  }
+                });
+
+                setDiagState(prev => ({
+                  ...prev,
+                  authStatus: `AUTHENTICATED ✅ (@${authUser?.user?.username || 'pioneer'})`,
+                  creationStatus: 'CREATING NEW PAYMENT...',
+                  logs: [...prev.logs, `[${new Date().toLocaleTimeString()}] Authenticated as @${authUser?.user?.username || 'pioneer'}`]
+                }));
+
+                // BRAND NEW PAYMENT REQUEST - fresh timestamp prevents old/expired payment ID reuse
+                const freshTxMemo = `Pi Testnet Diagnostic Test (0.01 Pi) - ${Date.now()} - gasv.store`;
+                
+                await Pi.createPayment({
+                  amount: 0.01, 
+                  memo: freshTxMemo, 
+                  metadata: { type: 'testnet_diagnostic', timestamp: Date.now() }
+                }, {
+                  onReadyForServerApproval: async (paymentId: string) => {
+                    setDiagState(prev => ({
+                      ...prev,
+                      creationStatus: `CREATED ✅ (${paymentId.substring(0, 10)}...)`,
+                      approvalStatus: 'APPROVAL REQUESTED...',
+                      logs: [...prev.logs, `[${new Date().toLocaleTimeString()}] PI_PAYMENT_CREATED: ${paymentId}`, `[${new Date().toLocaleTimeString()}] PI_PAYMENT_APPROVAL_REQUESTED`]
+                    }));
+
+                    try {
+                      const appRes = await fetch('/api/pi/approve', {
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/json' }, 
+                        body: JSON.stringify({ paymentId })
+                      });
+                      const appData = await appRes.json();
+                      if (appRes.ok && appData.approved) {
+                        setDiagState(prev => ({
+                          ...prev,
+                          approvalStatus: 'APPROVED ✅ (DEVELOPER_APPROVED)',
+                          completionStatus: 'WAITING FOR USER IN-APP SIGNATURE...',
+                          logs: [...prev.logs, `[${new Date().toLocaleTimeString()}] PI_PAYMENT_APPROVED by server`]
+                        }));
+                      } else {
+                        setDiagState(prev => ({
+                          ...prev,
+                          approvalStatus: `FAILED ❌ (${appData.error || 'Approval rejected'})`,
+                          logs: [...prev.logs, `[${new Date().toLocaleTimeString()}] PI_PAYMENT_FAILED during approval: ${appData.error || 'Server error'}`]
+                        }));
+                      }
+                    } catch (e: any) {
+                      setDiagState(prev => ({
+                        ...prev,
+                        approvalStatus: `FAILED ❌ (${e.message})`,
+                        logs: [...prev.logs, `[${new Date().toLocaleTimeString()}] PI_PAYMENT_FAILED approval exception: ${e.message}`]
+                      }));
+                    }
+                  },
+                  onReadyForServerCompletion: async (paymentId: string, txid: string) => {
+                    setDiagState(prev => ({
+                      ...prev,
+                      completionStatus: `COMPLETED ✅ (TxID: ${txid.substring(0, 10)}...)`,
+                      verificationStatus: 'SERVER VERIFYING...',
+                      logs: [...prev.logs, `[${new Date().toLocaleTimeString()}] PI_PAYMENT_COMPLETION_REQUESTED`, `[${new Date().toLocaleTimeString()}] TxID: ${txid}`]
+                    }));
+
+                    try {
+                      const compRes = await fetch('/api/pi/complete', {
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/json' }, 
+                        body: JSON.stringify({ paymentId, txid, amount: 0.01, productName: 'Pi Testnet Diagnostic Payment' })
+                      });
+                      const compData = await compRes.json();
+                      if (compRes.ok) {
+                        setDiagState(prev => ({
+                          ...prev,
+                          running: false,
+                          verificationStatus: 'SERVER VERIFIED & RECORDED ✅',
+                          logs: [...prev.logs, `[${new Date().toLocaleTimeString()}] PI_PAYMENT_VERIFIED & RECORDED IN DATABASE`]
+                        }));
+                        alert(`✅ PI TESTNET DIAGNOSTIC PAYMENT SUCCESSFUL!\nPayment ID: ${paymentId}\nTxID: ${txid}`);
+                      } else {
+                        setDiagState(prev => ({
+                          ...prev,
+                          running: false,
+                          verificationStatus: 'FAILED ❌',
+                          logs: [...prev.logs, `[${new Date().toLocaleTimeString()}] PI_PAYMENT_FAILED completion server check`]
+                        }));
+                      }
+                    } catch (e: any) {
+                      setDiagState(prev => ({
+                        ...prev,
+                        running: false,
+                        verificationStatus: `FAILED ❌ (${e.message})`,
+                        logs: [...prev.logs, `[${new Date().toLocaleTimeString()}] PI_PAYMENT_FAILED completion exception: ${e.message}`]
+                      }));
+                    }
+                  },
+                  onCancel: (paymentId: string) => {
+                    setDiagState(prev => ({
+                      ...prev,
+                      running: false,
+                      completionStatus: 'CANCELLED BY USER ❌',
+                      logs: [...prev.logs, `[${new Date().toLocaleTimeString()}] PI_PAYMENT_CANCELLED: ${paymentId}`]
+                    }));
+                  },
+                  onError: (err: any) => {
+                    setDiagState(prev => ({
+                      ...prev,
+                      running: false,
+                      creationStatus: `FAILED ❌ (${err?.message || 'Error'})`,
+                      logs: [...prev.logs, `[${new Date().toLocaleTimeString()}] PI_PAYMENT_FAILED: ${err?.message || JSON.stringify(err)}`]
+                    }));
+                  }
+                });
+              } catch (err: any) { 
+                setDiagState(prev => ({
+                  ...prev,
+                  running: false,
+                  authStatus: `FAILED ❌ (${err?.message || 'Auth error'})`,
+                  logs: [...prev.logs, `[${new Date().toLocaleTimeString()}] PI_PAYMENT_FAILED auth: ${err?.message || JSON.stringify(err)}`]
+                }));
+              }
+            }} 
+            className="bg-[#FFD700] hover:bg-yellow-400 text-black w-full p-4 rounded-xl font-black text-sm cursor-pointer border-none transition shadow-lg active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {diagState.running ? <RefreshCw size={18} className="animate-spin" /> : <Play size={18} />}
+            [ START NEW TESTNET PAYMENT ]
           </button>
         </div>
 

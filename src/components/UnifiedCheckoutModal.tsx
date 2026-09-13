@@ -699,28 +699,30 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                 >
                   <span>🔵</span> USDC (Base Network)
                 </button>
-                <button 
-                  onClick={() => setPaymentDetailsType('pi')} 
-                  style={{
-                    background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
-                    color: '#000',
-                    fontWeight: '800',
-                    fontSize: '15px',
-                    height: '56px',
-                    width: '100%',
-                    borderRadius: '16px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    pointerEvents: 'auto',
-                    zIndex: 10,
-                    position: 'relative',
-                    touchAction: 'manipulation',
-                    boxShadow: '0 4px 12px rgba(255, 215, 0, 0.3)'
-                  }}
-                  className="flex items-center justify-center gap-2 hover:brightness-110 transition active:scale-[0.98]"
-                >
-                  <span>🟣</span> Pi Network GCV $314,159
-                </button>
+                {(localStorage.getItem('ENABLE_PI_PAYMENT') === 'true' || localStorage.getItem('enable_pi') === 'true') && (
+                  <button 
+                    onClick={() => setPaymentDetailsType('pi')} 
+                    style={{
+                      background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+                      color: '#000',
+                      fontWeight: '800',
+                      fontSize: '15px',
+                      height: '56px',
+                      width: '100%',
+                      borderRadius: '16px',
+                      border: 'none',
+                      cursor: 'pointer',
+                      pointerEvents: 'auto',
+                      zIndex: 10,
+                      position: 'relative',
+                      touchAction: 'manipulation',
+                      boxShadow: '0 4px 12px rgba(255, 215, 0, 0.3)'
+                    }}
+                    className="flex items-center justify-center gap-2 hover:brightness-110 transition active:scale-[0.98]"
+                  >
+                    <span>🟣</span> Pi Network GCV $314,159
+                  </button>
+                )}
                 <button 
                   onClick={() => setPaymentDetailsType('opay')} 
                   style={{

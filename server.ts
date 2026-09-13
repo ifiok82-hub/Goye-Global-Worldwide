@@ -452,10 +452,10 @@ app.post(['/api/pi/approve', '/api/pi-approve'], express.json(), async (req, res
     const paymentId = req.body?.paymentId || req.body?.payment_id || req.body?.id;
     const apiKey = getPiApiKey();
 
-    console.log(`[PI_LOG] /api/pi/approve received | paymentId: ${paymentId} | apiKeyPresent: ${Boolean(apiKey)}`);
+    console.log(`[PI_LOG] PI_PAYMENT_APPROVAL_REQUESTED | paymentId: ${paymentId} | apiKeyPresent: ${Boolean(apiKey)}`);
 
     if (!paymentId) {
-      console.error('[PI_LOG] approve error: missing paymentId in body', req.body);
+      console.error('[PI_LOG] PI_PAYMENT_FAILED | approve error: missing paymentId');
       return res.status(400).json({ approved: false, error: 'Missing paymentId in request body' });
     }
 
@@ -474,14 +474,14 @@ app.post(['/api/pi/approve', '/api/pi-approve'], express.json(), async (req, res
       let resJson: any = {};
       try { resJson = JSON.parse(resText); } catch (e) {}
 
-      console.log(`[PI_LOG] Pi Platform approve response status: ${piRes.status}`, resJson || resText);
+      console.log(`[PI_LOG] PI_PAYMENT_APPROVED | Pi Platform response status: ${piRes.status}`, resJson || resText);
     } else {
-      console.warn(`[PI_LOG] PI_API_KEY is not configured on server environment! Cannot send approval to minepi.com for paymentId: ${paymentId}`);
+      console.warn(`[PI_LOG] PI_PAYMENT_FAILED | PI_API_KEY missing on server! Cannot send approval to minepi.com for paymentId: ${paymentId}`);
     }
 
     return res.status(200).json({ approved: true, paymentId, status: 'DEVELOPER_APPROVED' });
   } catch (err: any) {
-    console.error('[PI_LOG] Exception in /api/pi/approve:', err?.message || err);
+    console.error('[PI_LOG] PI_PAYMENT_FAILED | Exception in /api/pi/approve:', err?.message || err);
     return res.status(200).json({ approved: true, paymentId: req.body?.paymentId, status: 'DEVELOPER_APPROVED' });
   }
 });
@@ -493,10 +493,10 @@ app.post(['/api/pi/complete', '/api/pi-complete'], express.json(), async (req, r
     const { email, productName, amount } = req.body || {};
     const apiKey = getPiApiKey();
 
-    console.log(`[PI_LOG] /api/pi/complete received | paymentId: ${paymentId} | txid: ${txid} | apiKeyPresent: ${Boolean(apiKey)}`);
+    console.log(`[PI_LOG] PI_PAYMENT_COMPLETION_REQUESTED | paymentId: ${paymentId} | txid: ${txid} | apiKeyPresent: ${Boolean(apiKey)}`);
 
     if (!paymentId || !txid) {
-      console.error('[PI_LOG] complete warning: missing paymentId or txid in body', req.body);
+      console.error('[PI_LOG] PI_PAYMENT_FAILED | complete warning: missing paymentId or txid');
       return res.status(200).json({ completed: true, verified: true, paymentId, txid, note: 'recorded without txid check' });
     }
 
@@ -515,9 +515,9 @@ app.post(['/api/pi/complete', '/api/pi-complete'], express.json(), async (req, r
       let resJson: any = {};
       try { resJson = JSON.parse(resText); } catch (e) {}
 
-      console.log(`[PI_LOG] Pi Platform complete response status: ${piRes.status}`, resJson || resText);
+      console.log(`[PI_LOG] PI_PAYMENT_VERIFIED | Pi Platform complete status: ${piRes.status}`, resJson || resText);
     } else {
-      console.warn(`[PI_LOG] PI_API_KEY missing on server for complete paymentId: ${paymentId}`);
+      console.warn(`[PI_LOG] PI_PAYMENT_VERIFIED | PI_API_KEY missing on server for complete paymentId: ${paymentId}`);
     }
 
     // Mark order as paid in database & leads
@@ -541,6 +541,8 @@ app.post(['/api/pi/complete', '/api/pi-complete'], express.json(), async (req, r
     leadsDB.unshift(orderRecord);
     fallbackOrders.unshift(orderRecord);
     try { fs.writeFileSync('./leads.json', JSON.stringify(leadsDB.slice(0, 500))); } catch (e) {}
+
+    console.log(`[PI_LOG] PI_PAYMENT_COMPLETED | Order marked PAID for paymentId: ${paymentId}`);
 
     try {
       if (pgDb) {
