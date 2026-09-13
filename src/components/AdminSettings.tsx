@@ -71,16 +71,16 @@ export default function AdminSettings() {
   useEffect(() => {
     // Load local storage keys
     const storedPiKey = localStorage.getItem('PI_API_KEY') || localStorage.getItem('pi_api_key') || '';
-    const piMainnet = localStorage.getItem('PI_MAINNET_WALLET_ADDRESS') || localStorage.getItem('pi_mainnet_wallet') || '';
-    const piTestnet = localStorage.getItem('PI_TESTNET_WALLET_ADDRESS') || localStorage.getItem('pi_testnet_wallet') || '';
-    const piWallet = localStorage.getItem('PI_WALLET_ADDRESS') || localStorage.getItem('pi_wallet') || '';
+    const piMainnet = localStorage.getItem('PI_MAINNET_WALLET_ADDRESS') || localStorage.getItem('pi_mainnet_wallet') || 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ7XE36YFQY6LKPVO6R';
+    const piTestnet = localStorage.getItem('PI_TESTNET_WALLET_ADDRESS') || localStorage.getItem('pi_testnet_wallet') || 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ7XE36YFQY6LKPVO6R';
+    const piWallet = localStorage.getItem('PI_WALLET_ADDRESS') || localStorage.getItem('pi_wallet') || 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ7XE36YFQY6LKPVO6R';
     const sandbox = localStorage.getItem('PI_SANDBOX') || localStorage.getItem('pi_sandbox') || 'true';
     const paystack = localStorage.getItem('PAYSTACK_KEY') || localStorage.getItem('PAYSTACK_PUBLIC_KEY') || '';
     const paystackSec = localStorage.getItem('paystack_admin_sk') || localStorage.getItem('PAYSTACK_SECRET_KEY') || '';
     const flutterwave = localStorage.getItem('FLUTTERWAVE_KEY') || localStorage.getItem('FLUTTERWAVE_PUBLIC_KEY') || '';
     const flutterwaveSec = localStorage.getItem('FLUTTERWAVE_SECRET_KEY') || '';
-    const usdt = localStorage.getItem('USDT_ADDRESS') || '0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96';
-    const usdc = localStorage.getItem('USDC_ADDRESS') || '0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96';
+    const usdt = localStorage.getItem('USDT_ADDRESS') || '0xdc7f804B36aB672Ec31642dF418F29e73281b040';
+    const usdc = localStorage.getItem('USDC_ADDRESS') || '0xdc7f804B36aB672Ec31642dF418F29e73281b040';
     const opayAcc = localStorage.getItem('OPAY_ACCOUNT') || '6113541882';
     const opayNm = localStorage.getItem('OPAY_NAME') || 'GOYE STORE GLOBAL';
     const isPiEnabled = localStorage.getItem('ENABLE_PI_PAYMENT') === 'true' || localStorage.getItem('enable_pi') === 'true';
@@ -160,8 +160,8 @@ export default function AdminSettings() {
     localStorage.setItem('FLUTTERWAVE_KEY', flutterwaveKey);
     localStorage.setItem('FLUTTERWAVE_PUBLIC_KEY', flutterwaveKey);
     if (flutterwaveSecret) localStorage.setItem('FLUTTERWAVE_SECRET_KEY', flutterwaveSecret);
-    localStorage.setItem('USDT_ADDRESS', usdtAddress || '0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96');
-    localStorage.setItem('USDC_ADDRESS', usdcAddress || '0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96');
+    localStorage.setItem('USDT_ADDRESS', usdtAddress || '0xdc7f804B36aB672Ec31642dF418F29e73281b040');
+    localStorage.setItem('USDC_ADDRESS', usdcAddress || '0xdc7f804B36aB672Ec31642dF418F29e73281b040');
     localStorage.setItem('OPAY_ACCOUNT', opayAccount || '6113541882');
     localStorage.setItem('OPAY_NAME', opayName || 'GOYE STORE GLOBAL');
     localStorage.setItem('ENABLE_PI_PAYMENT', enablePi ? 'true' : 'false');
@@ -178,8 +178,8 @@ export default function AdminSettings() {
       paystack_secret: paystackSecret,
       flutterwave: flutterwaveKey,
       flutterwave_secret: flutterwaveSecret,
-      usdt: usdtAddress || '0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96',
-      usdc: usdcAddress || '0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96',
+      usdt: usdtAddress || '0xdc7f804B36aB672Ec31642dF418F29e73281b040',
+      usdc: usdcAddress || '0xdc7f804B36aB672Ec31642dF418F29e73281b040',
       opay: opayAccount || '6113541882',
       opay_name: opayName || 'GOYE STORE GLOBAL',
       enable_pi: enablePi

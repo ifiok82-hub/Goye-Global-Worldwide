@@ -1989,7 +1989,7 @@ export default function App() {
         )}
 
         {/* DEVELOPER ONLY - PI NETWORK TESTNET CHECKLIST 10/10 - HIDDEN SECTION AT BOTTOM */}
-        <div id="pi-testnet-developer-only" className="bg-[#0a0a0a] border-t-2 border-dashed border-[#FFD700] p-5 my-12 mb-28 rounded-2xl max-w-[500px] mx-auto text-center pointer-events-auto">
+        <div id="pi-testnet-bottom" className="bg-[#0a0a0a] border-t-2 border-dashed border-[#FFD700] p-5 my-12 mb-28 rounded-2xl max-w-[500px] mx-auto text-center pointer-events-auto">
           <div className="bg-[#111] border border-dashed border-[#444] rounded-2xl p-4">
             <p className="text-gray-500 text-[10px] font-mono uppercase tracking-widest text-center mb-1">
               DEVELOPER ONLY - PI NETWORK TESTNET CHECKLIST 10/10 - NOT FOR CUSTOMERS - HIDDEN SECTION

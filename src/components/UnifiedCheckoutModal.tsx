@@ -849,9 +849,9 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                   </p>
                   <p className="text-red-200 text-[11px] leading-relaxed">
                     {cryptoNetwork === 'usdt_bsc' ? (
-                      <>⚠️ Send ONLY via <strong>BNB Smart Chain (BEP20/BSC)</strong>. Transfers sent via Ethereum (ERC20) or other networks will be permanently lost.</>
+                      <>⚠️ Send ONLY via <strong>BNB Smart Chain (BEP20/BSC)</strong>. Transfers via Ethereum (ERC20) or other networks will be permanently lost.</>
                     ) : (
-                      <>⚠️ CRITICAL: Ensure you select the <strong>BASE NETWORK</strong> when transferring USDC. Sending via Ethereum Mainnet, Polygon, or Solana will result in lost funds.</>
+                      <>⚠️ CRITICAL: Ensure you select <strong>BASE NETWORK</strong> when transferring USDC. Sending via Ethereum Mainnet, Polygon, or Solana will result in lost funds.</>
                     )}
                   </p>
                 </div>

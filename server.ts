@@ -465,6 +465,7 @@ app.post(['/api/pi/approve', '/api/pi-approve'], express.json(), async (req, res
         method: 'POST',
         headers: {
           'Authorization': `Key ${apiKey}`,
+          'X-API-Key': apiKey,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({})
@@ -506,6 +507,7 @@ app.post(['/api/pi/complete', '/api/pi-complete'], express.json(), async (req, r
         method: 'POST',
         headers: {
           'Authorization': `Key ${apiKey}`,
+          'X-API-Key': apiKey,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ txid: txid })

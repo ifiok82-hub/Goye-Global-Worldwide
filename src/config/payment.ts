@@ -48,7 +48,7 @@ export const USDT_CONFIG = {
   network: 'BNB Smart Chain (BEP20 / BSC)',
   address: RECEIVING_WALLET_ADDRESS,
   minDeposit: '2 USDT',
-  warning: '⚠️ Send ONLY via BNB Smart Chain (BEP20/BSC). Transfers sent via Ethereum (ERC20) or other networks will be permanently lost.',
+  warning: '⚠️ Send ONLY via BNB Smart Chain (BEP20/BSC). Transfers via Ethereum (ERC20) or other networks will be permanently lost.',
   qr: RECEIVING_WALLET_ADDRESS ? `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${RECEIVING_WALLET_ADDRESS}` : ''
 };
 
@@ -57,7 +57,7 @@ export const USDC_CONFIG = {
   network: 'Base Network',
   address: RECEIVING_WALLET_ADDRESS,
   minDeposit: '2 USDC',
-  warning: '⚠️ CRITICAL: Ensure you select the BASE NETWORK when transferring USDC. Sending via Ethereum Mainnet, Polygon, or Solana will result in lost funds.',
+  warning: '⚠️ CRITICAL: Ensure you select BASE NETWORK when transferring USDC. Sending via Ethereum Mainnet, Polygon, or Solana will result in lost funds.',
   qr: RECEIVING_WALLET_ADDRESS ? `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${RECEIVING_WALLET_ADDRESS}` : ''
 };
 
