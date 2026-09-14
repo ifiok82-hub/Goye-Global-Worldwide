@@ -149,12 +149,13 @@ export default function App() {
   const lastTapTimeRef = useRef(0);
 
   const handleLogoTap = (e?: any) => {
-    if (e && e.stopPropagation) {
-      e.stopPropagation();
+    if (e) {
+      if (e.stopPropagation) e.stopPropagation();
     }
 
     const now = Date.now();
-    if (now - lastTapTimeRef.current < 150) {
+    // Allow rapid consecutive taps (down to 20ms)
+    if (now - lastTapTimeRef.current < 20) {
       return;
     }
     lastTapTimeRef.current = now;
@@ -169,12 +170,20 @@ export default function App() {
 
     logoTapTimerRef.current = setTimeout(() => {
       logoTapCountRef.current = 0;
-    }, 3000);
+    }, 4000);
 
     if (count >= 5) {
       logoTapCountRef.current = 0;
       if (logoTapTimerRef.current) clearTimeout(logoTapTimerRef.current);
+      
+      // Close splash screen if open
+      setShowSplash(false);
+      
+      // Always open Admin Password Modal first if not logged in
       setShowAdminLogin(true);
+      setTab('admin');
+      window.location.hash = 'admin';
+      showToast('🔑 Master Admin Login Requested', 'info');
     }
   };
 
@@ -1193,21 +1202,36 @@ export default function App() {
       )}
 
       {showAdminLogin && !isAdminAuth && (
-        <div className="fixed inset-0 bg-black/90 z-[9999] flex items-center justify-center p-4">
-          <div className="bg-[#111] border-2 border-[#FFD700] rounded-2xl p-6 w-full max-w-sm">
-            <h2 className="text-[#FFD700] text-xl font-bold mb-4">Admin Management Login</h2>
-            <p className="text-gray-400 text-xs mb-3">Enter Master Admin Password to unlock entire store controls.</p>
+        <div className="fixed inset-0 bg-black/95 z-[999999] flex items-center justify-center p-4 pointer-events-auto">
+          <div className="bg-[#111] border-2 border-[#FFD700] rounded-2xl p-6 w-full max-w-sm shadow-[0_0_50px_rgba(255,215,0,0.4)] relative z-10">
+            <h2 className="text-[#FFD700] text-xl font-black mb-2 flex items-center gap-2">
+              <span>🔐</span> Admin Management Login
+            </h2>
+            <p className="text-gray-300 text-xs mb-4 leading-relaxed">Enter Master Admin Password to unlock entire store controls.</p>
             <form onSubmit={handleAdminLogin}>
               <input 
+                id="admin_password_modal_input"
                 type="password" 
-                placeholder="Enter Admin Password" 
-                className="w-full bg-black border border-[#333] p-3 rounded-xl text-white mb-4 font-mono"
+                placeholder="Enter Admin Password (e.g. GoyeBN3583773)" 
+                className="w-full bg-black border border-[#333] focus:border-[#FFD700] p-3.5 rounded-xl text-white mb-4 font-mono text-sm outline-none"
                 value={adminPassword}
                 onChange={e => setAdminPassword(e.target.value)}
                 autoFocus
               />
-              <button type="submit" className="w-full bg-[#FFD700] text-black font-black py-3 rounded-xl cursor-pointer hover:bg-yellow-400">Unlock Dashboard</button>
-              <button type="button" onClick={() => setShowAdminLogin(false)} className="w-full mt-2 text-gray-500 py-2 cursor-pointer hover:text-white">Cancel</button>
+              <button 
+                type="submit" 
+                disabled={isVerifyingPass}
+                className="w-full bg-[#FFD700] hover:bg-yellow-400 text-black font-black py-3.5 rounded-xl cursor-pointer text-sm transition active:scale-95 shadow-lg flex items-center justify-center gap-2"
+              >
+                {isVerifyingPass ? 'Verifying Password...' : 'Unlock Dashboard'}
+              </button>
+              <button 
+                type="button" 
+                onClick={() => setShowAdminLogin(false)} 
+                className="w-full mt-2 text-gray-400 py-2 cursor-pointer hover:text-white text-xs font-bold"
+              >
+                Cancel
+              </button>
             </form>
           </div>
         </div>
@@ -2322,6 +2346,19 @@ export default function App() {
           }} style={{display:'inline-flex', alignItems:'center', gap:'8px', background:'#25D366', color:'#fff', padding:'12px 24px', borderRadius:'12px', border:'none', cursor:'pointer', fontSize:'14px', fontWeight:'bold'}}>
             <MessageCircle size={18}/> WhatsApp Support
           </button>
+          <div className="mt-4">
+            <button
+              id="admin-login-link"
+              onClick={() => {
+                setShowAdminLogin(true);
+                setTab('admin');
+                window.location.hash = 'admin';
+              }}
+              className="text-[11px] text-gray-500 hover:text-[#FFD700] transition underline cursor-pointer bg-transparent border-none"
+            >
+              🔒 Admin Login Access
+            </button>
+          </div>
         </div>
         
         <div style={{marginTop:'30px', borderTop:'1px solid #222', paddingTop:'20px'}}>
