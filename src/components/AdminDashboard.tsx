@@ -642,6 +642,14 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
       localStorage.setItem('PI_SANDBOX_MODE', paymentConfig.piSandboxMode);
       localStorage.setItem('PI_SANDBOX', paymentConfig.piSandboxMode);
       localStorage.setItem('pi_sandbox', paymentConfig.piSandboxMode);
+      if ((paymentConfig as any).piApiKey) {
+        localStorage.setItem('pi_api_key', (paymentConfig as any).piApiKey.trim());
+        localStorage.setItem('PI_API_KEY', (paymentConfig as any).piApiKey.trim());
+      }
+      if ((paymentConfig as any).piGcvRate) {
+        localStorage.setItem('pi_gcv_rate', (paymentConfig as any).piGcvRate.trim());
+        localStorage.setItem('PI_GCV_RATE', (paymentConfig as any).piGcvRate.trim());
+      }
       
       const isSandbox = paymentConfig.piSandboxMode !== 'false';
       const activePiWallet = isSandbox 
@@ -668,6 +676,9 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
           cryptoWallet: paymentConfig.usdcBase.trim(),
           piMainnetWallet: paymentConfig.piMainnet.trim(),
           piTestnetWallet: paymentConfig.piTestnet.trim(),
+          piApiKey: (paymentConfig as any).piApiKey ? (paymentConfig as any).piApiKey.trim() : undefined,
+          piGcvRate: (paymentConfig as any).piGcvRate ? (paymentConfig as any).piGcvRate.trim() : '314159',
+          piCustomerPaymentEnabled,
           piSandboxMode: paymentConfig.piSandboxMode,
           piSandbox: paymentConfig.piSandboxMode,
           piWallet: activePiWallet,
@@ -1619,74 +1630,153 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
                 </div>
 
                 {/* PI NETWORK MANAGEMENT SECTION */}
-                <div className="bg-[#111] border-2 border-purple-900/60 rounded-2xl p-6 mt-8 shadow-xl">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-purple-900/30 pb-4">
+                <div className="bg-[#111] border-2 border-purple-900/80 rounded-2xl p-6 mt-8 shadow-2xl space-y-6">
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-purple-900/40 pb-5">
                     <div>
-                      <span className="text-[10px] font-mono tracking-widest text-purple-400 uppercase font-black">
-                        PI NETWORK SECURITY & ENVIRONMENT MANAGEMENT
-                      </span>
-                      <h3 className="text-xl font-black text-white flex items-center gap-2 mt-1">
-                        <span>🟣</span> PI NETWORK MANAGEMENT
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono tracking-widest text-purple-400 uppercase font-black px-2 py-0.5 bg-purple-950 border border-purple-800/60 rounded">
+                          ADMIN CONTROL PANEL
+                        </span>
+                        <span className="text-[10px] font-mono tracking-widest text-amber-400 uppercase font-black px-2 py-0.5 bg-amber-950 border border-amber-800/60 rounded">
+                          GCV RATE: ${(paymentConfig as any).piGcvRate || '314,159'} USD
+                        </span>
+                      </div>
+                      <h3 className="text-2xl font-black text-white flex items-center gap-2 mt-2">
+                        <span>🟣</span> PI NETWORK TOGGLES & CONTROLS
                       </h3>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className={`px-3 py-1 rounded-full text-xs font-black ${piCustomerPaymentEnabled ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'bg-red-500/20 text-red-400 border border-red-500/40'}`}>
-                        Customer Pi Payments: {piCustomerPaymentEnabled ? 'ENABLED' : 'DISABLED'}
+                      <span className={`px-3 py-1.5 rounded-full text-xs font-black flex items-center gap-1.5 ${piCustomerPaymentEnabled ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50 shadow-[0_0_10px_rgba(245,158,11,0.2)]' : 'bg-red-500/20 text-red-400 border border-red-500/50'}`}>
+                        <span className={`w-2 h-2 rounded-full ${piCustomerPaymentEnabled ? 'bg-amber-400 animate-pulse' : 'bg-red-500'}`}></span>
+                        Customer Checkout: {piCustomerPaymentEnabled ? 'ACTIVE & ENABLED' : 'BLOCKED / DISABLED'}
                       </span>
-                      <span className="px-3 py-1 rounded-full text-xs font-black bg-purple-500/20 text-purple-300 border border-purple-500/40">
-                        Pi Testnet: DEVELOPER TESTING ONLY
-                      </span>
-                      <span className="px-3 py-1 rounded-full text-xs font-black bg-zinc-800 text-zinc-300 border border-zinc-700">
-                        Environment: {paymentConfig.piSandboxMode === 'false' ? 'MAINNET' : 'TESTNET'}
+                      <span className={`px-3 py-1.5 rounded-full text-xs font-black border ${paymentConfig.piSandboxMode === 'false' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50' : 'bg-purple-500/20 text-purple-300 border-purple-500/50'}`}>
+                        Environment: {paymentConfig.piSandboxMode === 'false' ? '🚀 MAINNET PRODUCTION' : '🧪 TESTNET SANDBOX'}
                       </span>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
-                    <div className="bg-black/60 border border-zinc-800 rounded-xl p-4">
-                      <h4 className="text-sm font-bold text-gray-200 mb-2">Customer Checkout Status Controls</h4>
-                      <p className="text-xs text-gray-400 mb-4 leading-relaxed">
-                        By default, Customer Pi Payments remain <strong className="text-red-400">DISABLED</strong> to protect customers from Testnet transactions.
-                      </p>
-                      <div className="flex gap-2">
-                        {!piCustomerPaymentEnabled ? (
-                          <button
-                            onClick={() => handleTogglePiCustomerPayments(true)}
-                            className="bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs px-4 py-2.5 rounded-lg transition"
-                          >
-                            Enable Customer Pi Payments
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => handleTogglePiCustomerPayments(false)}
-                            className="bg-red-600 hover:bg-red-500 text-white font-bold text-xs px-4 py-2.5 rounded-lg transition"
-                          >
-                            Disable Customer Pi Payments
-                          </button>
-                        )}
+                  {/* Primary Toggle Controls Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Toggle 1: Customer Checkout Switch */}
+                    <div className="bg-black/70 border border-purple-900/50 rounded-xl p-5 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                            🛒 Customer Pi Checkout Toggle
+                          </h4>
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            Enable or disable Pi Network option in the customer payment modal.
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => handleTogglePiCustomerPayments(!piCustomerPaymentEnabled)}
+                          className={`relative w-14 h-8 rounded-full transition-colors duration-200 focus:outline-none border ${piCustomerPaymentEnabled ? 'bg-purple-600 border-purple-400' : 'bg-zinc-800 border-zinc-700'}`}
+                        >
+                          <span
+                            className={`inline-block w-6 h-6 transform rounded-full bg-white transition-transform duration-200 shadow-md ${piCustomerPaymentEnabled ? 'translate-x-7 bg-amber-300' : 'translate-x-1 bg-gray-400'}`}
+                          />
+                        </button>
                       </div>
+                      <p className="text-[11px] text-gray-400 leading-snug bg-purple-950/30 p-2.5 rounded-lg border border-purple-900/30">
+                        {piCustomerPaymentEnabled ? (
+                          <span className="text-amber-300 font-medium">✅ Customers CAN see and pay using Pi Network at checkout. Ensure Mainnet SDK and credentials are ready.</span>
+                        ) : (
+                          <span className="text-red-300 font-medium">🛡️ Customer Pi payments are HIDDEN and BLOCKED. Protects users from testnet transactions.</span>
+                        )}
+                      </p>
                     </div>
 
-                    <div className="bg-black/60 border border-zinc-800 rounded-xl p-4">
-                      <h4 className="text-sm font-bold text-gray-200 mb-2">Developer Testnet Diagnostics & Audit</h4>
-                      <p className="text-xs text-gray-400 mb-4 leading-relaxed">
-                        Initiate Developer Portal Testnet payments or re-tag legacy Testnet orders as <strong className="text-amber-400">TESTNET_TEST_ONLY</strong>.
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        <button
-                          onClick={() => setShowPiDiagnosticsModal(true)}
-                          className="bg-purple-900/60 hover:bg-purple-800 text-purple-200 border border-purple-500/50 font-bold text-xs px-4 py-2.5 rounded-lg transition flex items-center gap-1.5"
+                    {/* Toggle 2: Network Environment (Mainnet vs Testnet) */}
+                    <div className="bg-black/70 border border-purple-900/50 rounded-xl p-5 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                            🌐 Network Mode Switch
+                          </h4>
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            Switch between Pi Mainnet Production & Pi Testnet Sandbox.
+                          </p>
+                        </div>
+                        <select
+                          className="bg-[#111] border border-purple-500/60 text-purple-200 font-bold text-xs rounded-lg p-2 outline-none focus:border-purple-400 transition"
+                          value={paymentConfig.piSandboxMode}
+                          onChange={e => {
+                            const val = e.target.value;
+                            setPaymentConfig({ ...paymentConfig, piSandboxMode: val });
+                            localStorage.setItem('PI_SANDBOX_MODE', val);
+                            localStorage.setItem('PI_SANDBOX', val);
+                          }}
                         >
-                          🧪 Open Pi Testnet Diagnostics
-                        </button>
-                        <button
-                          onClick={handleAuditDbForTestnet}
-                          disabled={isAuditingDb}
-                          className="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-600 font-bold text-xs px-4 py-2.5 rounded-lg transition flex items-center gap-1.5 disabled:opacity-50"
-                        >
-                          {isAuditingDb ? 'Auditing Database...' : '🔍 Audit Database for Testnet'}
-                        </button>
+                          <option value="true">🧪 Testnet (Sandbox)</option>
+                          <option value="false">🚀 Mainnet (Production)</option>
+                        </select>
                       </div>
+                      <p className="text-[11px] text-gray-400 leading-snug bg-purple-950/30 p-2.5 rounded-lg border border-purple-900/30">
+                        {paymentConfig.piSandboxMode === 'false' ? (
+                          <span className="text-emerald-300 font-medium">🚀 MAINNET ACTIVE: Transactions verify on Pi Mainnet blockchain to wallet <code className="font-mono text-white">{(paymentConfig.piMainnet || '').substring(0, 8)}...</code></span>
+                        ) : (
+                          <span className="text-purple-300 font-medium">🧪 TESTNET ACTIVE: Developer sandbox mode enabled. Testnet payments are strictly isolated as TESTNET_TEST_ONLY.</span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Advanced Configuration Fields */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                    {/* Pi Platform Developer API Key */}
+                    <div className="bg-black/60 border border-zinc-800 rounded-xl p-4 space-y-2">
+                      <label className="text-xs text-purple-300 font-bold block flex justify-between items-center">
+                        <span>🔑 Pi Platform API Key (PI_API_KEY)</span>
+                        <span className="text-[10px] text-amber-400 font-mono">minepi.com Developer Portal</span>
+                      </label>
+                      <input
+                        type="password"
+                        className="w-full bg-[#111] border border-purple-900/60 focus:border-purple-400 rounded-xl p-3 text-white text-xs font-mono outline-none transition"
+                        value={(paymentConfig as any).piApiKey || ''}
+                        onChange={e => setPaymentConfig({ ...paymentConfig, piApiKey: e.target.value } as any)}
+                        placeholder="Paste Pi Developer Platform API Key..."
+                      />
+                      <p className="text-[10px] text-gray-400">Used by server to automatically approve and complete payments with MinePi Platform API.</p>
+                    </div>
+
+                    {/* Pi GCV Rate Setting */}
+                    <div className="bg-black/60 border border-zinc-800 rounded-xl p-4 space-y-2">
+                      <label className="text-xs text-amber-300 font-bold block flex justify-between items-center">
+                        <span>💎 Pi GCV Consensus Rate (USD / Pi)</span>
+                        <span className="text-[10px] text-amber-400 font-mono">Global Value</span>
+                      </label>
+                      <input
+                        type="text"
+                        className="w-full bg-[#111] border border-amber-900/60 focus:border-amber-400 rounded-xl p-3 text-white text-xs font-mono outline-none transition"
+                        value={(paymentConfig as any).piGcvRate || '314159'}
+                        onChange={e => setPaymentConfig({ ...paymentConfig, piGcvRate: e.target.value } as any)}
+                        placeholder="314159 ($314,159 USD per Pi)"
+                      />
+                      <p className="text-[10px] text-gray-400">Used for calculating Pi amount equivalent for store items & subscriptions.</p>
+                    </div>
+                  </div>
+
+                  {/* Diagnostic & Audit Actions Bar */}
+                  <div className="bg-purple-950/30 border border-purple-800/40 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <div className="text-xs text-purple-200">
+                      <strong className="text-white block">Developer Diagnostic & Database Safeguards:</strong>
+                      Run testnet diagnostic transactions or audit existing database records.
+                    </div>
+                    <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+                      <button
+                        onClick={() => setShowPiDiagnosticsModal(true)}
+                        className="bg-purple-800 hover:bg-purple-700 text-white font-bold text-xs px-4 py-2.5 rounded-lg transition flex items-center justify-center gap-1.5 flex-1 sm:flex-none border border-purple-500/50 shadow"
+                      >
+                        🧪 Developer Testnet Diagnostics
+                      </button>
+                      <button
+                        onClick={handleAuditDbForTestnet}
+                        disabled={isAuditingDb}
+                        className="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-600 font-bold text-xs px-4 py-2.5 rounded-lg transition flex items-center justify-center gap-1.5 disabled:opacity-50 flex-1 sm:flex-none"
+                      >
+                        {isAuditingDb ? 'Auditing...' : '🔍 Audit DB for Testnet'}
+                      </button>
                     </div>
                   </div>
                 </div>

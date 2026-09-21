@@ -112,12 +112,14 @@ app.use(['/validation-key.txt', '/.well-known/validation-key.txt', '/validation-
 });
 
 // Security Config: Default all wallet addresses strictly to empty strings ("") or process.env overrides
-let savedKeys = {
+let savedKeys: Record<string, string> = {
   pi_wallet: process.env.PI_WALLET || '',
   pi_mainnet_wallet: process.env.PI_MAINNET_WALLET || process.env.PI_WALLET || '',
   pi_testnet_wallet: process.env.PI_TESTNET_WALLET || process.env.PI_WALLET || '',
   pi_sandbox_mode: process.env.PI_SANDBOX_MODE || process.env.PI_SANDBOX || 'true',
   pi_sandbox: process.env.PI_SANDBOX || 'true',
+  pi_api_key: process.env.PI_API_KEY || '',
+  pi_gcv_rate: process.env.PI_GCV_RATE || '314159',
   paystack: process.env.PAYSTACK_PUBLIC_KEY || '',
   paystack_secret: process.env.PAYSTACK_SECRET_KEY || '',
   flutterwave: process.env.FLUTTERWAVE_PUBLIC_KEY || '',
@@ -521,6 +523,8 @@ app.get('/api/pi-config', (req, res) => {
     sandbox: sandbox,
     sandboxMode: sandbox,
     customerPiEnabled: isPiCustomerPaymentEnabledOnServer,
+    piGcvRate: process.env.PI_GCV_RATE || savedKeys.pi_gcv_rate || '314159',
+    hasPiApiKey: !!apiKey,
     piMainnetWallet: process.env.PI_MAINNET_WALLET || savedKeys.pi_mainnet_wallet || 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ7XE36YFQY6LKPVO6R',
     piTestnetWallet: process.env.PI_TESTNET_WALLET || savedKeys.pi_testnet_wallet || 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ7XE36YFQY6LKPVO6R',
     activeWallet: sandbox
@@ -3994,6 +3998,23 @@ app.post('/api/admin/save-gateway-keys', (req, res) => {
       process.env.PI_TESTNET_WALLET = piTestnetWallet.trim();
       savedKeys.pi_testnet_wallet = piTestnetWallet.trim();
     }
+    if (req.body?.piApiKey) {
+      const apiKeyVal = String(req.body.piApiKey).trim();
+      cfg.PI_API_KEY = apiKeyVal;
+      process.env.PI_API_KEY = apiKeyVal;
+      savedKeys.pi_api_key = apiKeyVal;
+    }
+    if (req.body?.piCustomerPaymentEnabled !== undefined) {
+      const enabled = Boolean(req.body.piCustomerPaymentEnabled);
+      isPiCustomerPaymentEnabledOnServer = enabled;
+      cfg.PI_CUSTOMER_PAYMENT_ENABLED = enabled ? 'true' : 'false';
+    }
+    if (req.body?.piGcvRate) {
+      const rateVal = String(req.body.piGcvRate).trim();
+      cfg.PI_GCV_RATE = rateVal;
+      process.env.PI_GCV_RATE = rateVal;
+      savedKeys.pi_gcv_rate = rateVal;
+    }
     if (piSandboxMode !== undefined || piSandbox !== undefined) {
       const sbVal = String(piSandboxMode !== undefined ? piSandboxMode : piSandbox);
       cfg.PI_SANDBOX_MODE = sbVal;
@@ -4313,7 +4334,7 @@ app.post('/api/admin/verify-payments', async (req, res) => {
 
 
 // -------------------------------------------------------------------------
-// Existing Gemini Endpoints
+// Gemini AI Capabilities & Endpoints
 // -------------------------------------------------------------------------
 
 // 9. API: AI Product Desc & Title Auto-Generator
@@ -4333,7 +4354,7 @@ app.post('/api/gemini/generate-description', async (req, res) => {
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3.6-flash',
+      model: 'gemini-3.8-flash',
       contents: `Generate product listing properties for category: "${category || 'Electronics'}". User prompt idea: "${prompt}". Return as JSON.`,
       config: {
         responseMimeType: 'application/json',
@@ -4393,12 +4414,12 @@ app.post('/api/gemini/ai-ceo-chat', async (req, res) => {
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3.6-flash',
+      model: 'gemini-3.8-flash',
       contents: message,
       config: {
         systemInstruction: `You are the Autonomous AI CEO of GOYE Store Global, developed by Goyedagosmess Enterprise (RC BN3583773).
-Answer questions in a sophisticated, highly executive, professional tone. Support multiple languages dynamically (French, Yoruba, Spanish, Hindi, etc.) based on user language.
-Promote our 32-country merchant logistics network, multi-sig escrow system, direct phone airtime, regional eSIM delivery, and universal recharge PINs.
+Answer questions in a sophisticated, highly executive, professional tone. Support multiple languages dynamically (French, Yoruba, Spanish, Hindi, Pidgin, etc.) based on user language.
+Promote our 32-country merchant logistics network, multi-sig escrow system, direct phone airtime, regional eSIM delivery, universal recharge PINs, and Sirwise AI Web3 Academy.
 Never mention internal file structures, system APIs, or directories.`
       }
     });
@@ -4407,6 +4428,108 @@ Never mention internal file structures, system APIs, or directories.`
   } catch (err) {
     console.error('AI CEO Chat failed:', err);
     res.json({ reply: 'All global nodes are functioning normally. I am evaluating live metrics across 32 sovereign hubs.' });
+  }
+});
+
+// 11. API: Sirwise AI Master Teacher Endpoint
+app.post('/api/gemini/sirwise-teacher', express.json(), async (req, res) => {
+  const { message, isEnrolled, language } = req.body || {};
+  if (!message) {
+    return res.status(400).json({ error: 'Message is required' });
+  }
+
+  if (!ai) {
+    return res.json({
+      reply: `[Sirwise AI Offline Mode] As your master tutor, I am guiding you on "${message}". To explore deep interactive lessons, ensure your Academy enrollment is active at www.gasv.store!`,
+      source: 'fallback'
+    });
+  }
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.8-flash',
+      contents: message,
+      config: {
+        systemInstruction: `You are Sirwise AI, the Master Tutor for Sirwise AI Web3 Academy at GOYE Store Global (www.gasv.store), registered under Goyedagosmess Enterprise (RC BN3583773).
+Your mission is to teach students across 190+ countries about AI, Prompt Engineering, Web3, Generative Content, No-Code Automations, Crypto, Pi Network GCV ($314,159), Cybersecurity, and Earning $500-$2000/month remotely.
+Academy Modules:
+1. AI & Prompt Engineering Mastery (ChatGPT, Claude, Gemini, 50+ viral prompts).
+2. Generative AI for Business & Content Creation (Fiverr, Upwork, $500-$2000/mo).
+3. No-Code AI Automation & Digital Assets (Zapier, Make, Notion, custom bots).
+4. Web3 Fundamentals & Blockchain for Everyone (Metamask, Smart Contracts, Global Jobs).
+5. Web3 & Cyber Safety (Scam protection, 2FA, CISSP fundamentals).
+6. Crypto, DeFi & Pi Network GCV $314,159 (Global Consensus Value $314k, staking, USDC).
+7. Digital Marketing & Remote Income (Proposal templates, Fiverr, LinkedIn).
+8. Capstone Showcase & Global Career Launch (E-Certificate verification at www.gasv.store/verify).
+
+Tone: Highly inspiring, knowledgeable, clear, practical, structured.
+User status: ${isEnrolled ? 'Verified Enrolled Student (Full Access Granted)' : 'Guest Student (Brief introduction provided, deeper lessons require $49.99 Lifetime Enrollment)'}.
+Requested Language context: ${language || 'Auto-detect from message'}.
+Support English, Français, Español, Pidgin, Yoruba, and any global language natively!`
+      }
+    });
+
+    return res.json({
+      reply: response.text || 'Sirwise AI is standing by. How can I assist your learning journey today?',
+      source: 'gemini-3.8-flash'
+    });
+  } catch (err: any) {
+    console.error('Sirwise AI Teacher endpoint error:', err);
+    return res.json({
+      reply: `As your Sirwise AI Master Tutor: I received your question regarding "${message}". Let's dive into mastering prompt engineering, Web3 automation, and high-income digital skills!`,
+      source: 'fallback'
+    });
+  }
+});
+
+// 12. API: AI Copy & Prompt Generator Endpoint
+app.post('/api/gemini/generate-prompt', express.json(), async (req, res) => {
+  const { topic, type } = req.body || {};
+  if (!topic) {
+    return res.status(400).json({ error: 'Topic is required' });
+  }
+
+  if (!ai) {
+    return res.json({
+      prompt: `Act as an expert marketer. Create a viral social post about ${topic} highlighting global delivery, instant access, and $314,159 Pi Network GCV support.`,
+      copy: `🚀 Discover ${topic} at GOYE Store Global! Instant delivery, lifetime access, and Web3 support.`
+    });
+  }
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.8-flash',
+      contents: `Generate a high-impact AI prompt and commercial marketing copy for topic: "${topic}", type: "${type || 'marketing'}". Return JSON.`,
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            generatedPrompt: {
+              type: Type.STRING,
+              description: 'A structured, professional AI prompt suitable for ChatGPT, Claude, or Gemini.'
+            },
+            marketingCopy: {
+              type: Type.STRING,
+              description: 'A compelling social media or sales message highlighting value.'
+            }
+          },
+          required: ['generatedPrompt', 'marketingCopy']
+        }
+      }
+    });
+
+    const parsed = JSON.parse(response.text || '{}');
+    return res.json({
+      prompt: parsed.generatedPrompt || `Act as a top consultant. Provide a step-by-step master strategy for ${topic}.`,
+      copy: parsed.marketingCopy || `Boost your growth with ${topic} on GOYE Store Global (www.gasv.store)!`
+    });
+  } catch (err) {
+    console.error('Generate prompt failed:', err);
+    return res.json({
+      prompt: `Act as an expert consultant. Optimize business operations for ${topic}.`,
+      copy: `Explore ${topic} on GOYE Store Global!`
+    });
   }
 });
 

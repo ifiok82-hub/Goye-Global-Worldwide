@@ -109,18 +109,42 @@ export default function SirwiseAITeacher({ isOpen, onClose }: any) {
     return "Excellent question about " + userMessage + "! 🌟 As your global Sirwise AI tutor, I guide you across our 8 international modules. Whether you want to master prompt engineering, build AI automations, navigate Pi Network GCV ($314k), or earn $500–$2000/month remotely, I am here 24/7! What specific module or skill would you like to explore?";
   };
 
-  const handleSend = (text: string) => {
+  const handleSend = async (text: string) => {
     if (!text.trim()) return;
     const newMessages = [...messages, { role: "user" as const, content: text }];
     setMessages(newMessages);
     setInput("");
     setIsTyping(true);
 
+    try {
+      const res = await fetch('/api/gemini/sirwise-teacher', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: text,
+          isEnrolled: checkEnrolledStatus(),
+          language: text.toLowerCase().includes('french') ? 'French' : text.toLowerCase().includes('pidgin') ? 'Pidgin' : text.toLowerCase().includes('spanish') ? 'Spanish' : 'English'
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.reply) {
+          setMessages([...newMessages, { role: "ai", content: data.reply }]);
+          setIsTyping(false);
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn('Sirwise AI Gemini fetch failed, falling back to local KB:', e);
+    }
+
+    // Fallback to local response logic if server unavailable
     setTimeout(() => {
       const response = getAIResponse(text);
       setMessages([...newMessages, { role: "ai", content: response }]);
       setIsTyping(false);
-    }, 600);
+    }, 400);
   };
 
   return (
