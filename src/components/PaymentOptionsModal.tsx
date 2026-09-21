@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { PaymentDetailsModal } from './PaymentDetailsModal';
+import { isPiCustomerPaymentEnabled } from '../config/payment';
 
 interface PaymentOptionsModalProps {
   onClose: () => void;
@@ -242,7 +243,9 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ onClos
 
         <div style={{ background: '#1a1a00', border: '1px solid #FFD700', padding: '12px', borderRadius: '12px', marginBottom: '16px', textAlign: 'center' }}>
           <span style={{ color: '#FFD700', fontWeight: 900, fontSize: '20px' }}>${priceUSD} USD</span>
-          <span style={{ color: '#ccc', fontSize: '12px', display: 'block', marginTop: '2px' }}>≈ ₦{priceNGN.toLocaleString()} • ≈ 0.000159 Pi GCV ($314,159)</span>
+          <span style={{ color: '#ccc', fontSize: '12px', display: 'block', marginTop: '2px' }}>
+            ≈ ₦{priceNGN.toLocaleString()} {isPiCustomerPaymentEnabled() ? '• ≈ 0.000159 Pi GCV ($314,159)' : ''}
+          </span>
         </div>
 
         <div style={{ marginBottom: '16px' }}>
@@ -315,7 +318,7 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ onClos
             <span style={{ background: '#2775CA', color: 'white', fontSize: '10px', fontWeight: 900, padding: '3px 8px', borderRadius: '6px' }}>CRYPTO</span>
           </label>
 
-          {(localStorage.getItem('ENABLE_PI_PAYMENT') === 'true' || localStorage.getItem('enable_pi') === 'true') && (
+          {isPiCustomerPaymentEnabled() && (
             <label 
               onClick={() => setSelected('pi')}
               style={{ border: selected === 'pi' ? '2px solid #FFD700' : '1px solid #333', borderRadius: '12px', padding: '12px', cursor: 'pointer', background: selected === 'pi' ? '#222' : '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { X, Check } from 'lucide-react';
+import { isPiCustomerPaymentEnabled } from '../config/payment';
 
 export const CURRENCIES = [
   { code: 'USD', symbol: '$', rate: 1, name: 'US Dollar' },
@@ -17,7 +18,9 @@ export const CURRENCIES = [
 ];
 
 export default function CurrencyModal({ onClose, currentCurrency, onSelectCurrency, rates }: any) {
-  const displayRates = rates || CURRENCIES;
+  const isPiEnabled = isPiCustomerPaymentEnabled();
+  const rawRates = rates || CURRENCIES;
+  const displayRates = isPiEnabled ? rawRates : rawRates.filter((c: any) => c.code !== 'PI');
 
   return (
     <div className="fixed inset-0 bg-black/90 z-[10000] flex items-center justify-center p-4">

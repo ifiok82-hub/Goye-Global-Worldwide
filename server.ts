@@ -436,17 +436,91 @@ const getPiApiKey = (): string => {
   return key.replace(/^['"]|['"]$/g, '');
 };
 
+let isPiCustomerPaymentEnabledOnServer = false;
+
+app.post('/api/admin/toggle-pi-customer-payments', express.json(), requireAdminRBAC, (req, res) => {
+  const enabled = req.body?.enabled === true;
+  isPiCustomerPaymentEnabledOnServer = enabled;
+  console.log(`[PI_SECURITY_AUDIT] PI_CUSTOMER_PAYMENTS_TOGGLED | Enabled: ${isPiCustomerPaymentEnabledOnServer}`);
+  return res.json({ success: true, enabled: isPiCustomerPaymentEnabledOnServer });
+});
+
+app.post('/api/admin/audit-pi-testnet', express.json(), requireAdminRBAC, async (req, res) => {
+  let auditedCount = 0;
+  let retaggedCount = 0;
+
+  console.log('[PI_SECURITY_AUDIT] AUDIT_PI_TESTNET_REQUESTED | Auditing database for Pi Testnet transactions...');
+
+  for (const item of leadsDB) {
+    auditedCount++;
+    const gw = (item.paymentGateway || item.gateway || '').toLowerCase();
+    const md = (item.mode || '').toLowerCase();
+    const pr = (item.productName || '').toLowerCase();
+    if (gw.includes('testnet') || md.includes('testnet') || pr.includes('testnet')) {
+      if (item.status !== 'TESTNET_TEST_ONLY') {
+        item.status = 'TESTNET_TEST_ONLY';
+        item.adminReviewRequired = true;
+        item.note = 'Re-tagged during security audit - Pi Testnet isolated from customer orders';
+        retaggedCount++;
+      }
+    }
+  }
+
+  for (const item of fallbackOrders) {
+    const gw = (item.paymentGateway || item.gateway || '').toLowerCase();
+    const md = (item.mode || '').toLowerCase();
+    const pr = (item.productName || '').toLowerCase();
+    if (gw.includes('testnet') || md.includes('testnet') || pr.includes('testnet')) {
+      item.status = 'TESTNET_TEST_ONLY';
+      item.adminReviewRequired = true;
+    }
+  }
+
+  try {
+    fs.writeFileSync('./leads.json', JSON.stringify(leadsDB.slice(0, 500)));
+  } catch (e) {}
+
+  try {
+    if (pgDb) {
+      const allOrders = await pgDb.select().from(orders);
+      for (const ord of allOrders) {
+        auditedCount++;
+        const gw = (ord.gateway || '').toLowerCase();
+        const pr = (ord.productName || '').toLowerCase();
+        if (gw.includes('testnet') || pr.includes('testnet')) {
+          if (ord.status !== 'TESTNET_TEST_ONLY') {
+            await pgDb.update(orders).set({ status: 'TESTNET_TEST_ONLY' }).where(eq(orders.id, ord.id));
+            retaggedCount++;
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.error('[PI_SECURITY_AUDIT] Postgres audit warning:', e);
+  }
+
+  console.log(`[PI_SECURITY_AUDIT] AUDIT_PI_TESTNET_COMPLETE | Audited: ${auditedCount} | Re-tagged: ${retaggedCount}`);
+
+  return res.json({
+    success: true,
+    auditedCount,
+    retaggedCount,
+    message: 'Database audit complete. All Pi Testnet transactions re-tagged as TESTNET_TEST_ONLY.'
+  });
+});
+
 app.get('/api/pi-config', (req, res) => {
   const apiKey = getPiApiKey();
   const sandbox = process.env.PI_SANDBOX_MODE !== 'false' && process.env.PI_SANDBOX !== 'false';
   const networkMode = sandbox ? 'TESTNET' : 'MAINNET';
-  console.log(`[PI_LOG] config_check | mode: ${networkMode} | sandbox: ${sandbox} | apiKeyConfigured: ${!!apiKey}`);
+  console.log(`[PI_LOG] config_check | mode: ${networkMode} | sandbox: ${sandbox} | apiKeyConfigured: ${!!apiKey} | customerPiEnabled: ${isPiCustomerPaymentEnabledOnServer}`);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.json({
     apiKeyConfigured: !!apiKey,
     networkMode: networkMode,
     sandbox: sandbox,
     sandboxMode: sandbox,
+    customerPiEnabled: isPiCustomerPaymentEnabledOnServer,
     piMainnetWallet: process.env.PI_MAINNET_WALLET || savedKeys.pi_mainnet_wallet || 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ7XE36YFQY6LKPVO6R',
     piTestnetWallet: process.env.PI_TESTNET_WALLET || savedKeys.pi_testnet_wallet || 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ7XE36YFQY6LKPVO6R',
     activeWallet: sandbox
@@ -464,13 +538,25 @@ app.get('/api/pi-config', (req, res) => {
 app.post(['/api/pi/approve', '/api/pi-approve'], express.json(), async (req, res) => {
   try {
     const paymentId = req.body?.paymentId || req.body?.payment_id || req.body?.id;
+    const isDiagnostic = req.body?.isDiagnostic === true;
     const apiKey = getPiApiKey();
+    const isSandbox = process.env.PI_SANDBOX_MODE !== 'false' && process.env.PI_SANDBOX !== 'false';
 
-    console.log(`[PI_LOG] PI_PAYMENT_APPROVAL_REQUESTED | paymentId: ${paymentId} | apiKeyPresent: ${Boolean(apiKey)}`);
+    console.log(`[PI_LOG] PI_PAYMENT_APPROVAL_REQUESTED | paymentId: ${paymentId} | isDiagnostic: ${isDiagnostic} | apiKeyPresent: ${Boolean(apiKey)}`);
 
     if (!paymentId) {
       console.error('[PI_LOG] PI_PAYMENT_FAILED | approve error: missing paymentId');
       return res.status(400).json({ approved: false, error: 'Missing paymentId in request body' });
+    }
+
+    if (!isPiCustomerPaymentEnabledOnServer && !isDiagnostic) {
+      console.warn(`[PI_SECURITY_AUDIT] PI_TESTNET_ORDER_BLOCKED | Customer Pi Payments Disabled | paymentId: ${paymentId}`);
+      return res.status(403).json({ approved: false, status: 'REJECTED_CUSTOMER_PI_DISABLED', error: 'Pi payment is currently unavailable for customer checkout.' });
+    }
+
+    if (isSandbox && !isDiagnostic) {
+      console.warn(`[PI_SECURITY_AUDIT] PI_TESTNET_ORDER_BLOCKED | Customer attempt to pay with Pi Testnet rejected | paymentId: ${paymentId}`);
+      return res.status(403).json({ approved: false, status: 'REJECTED_TESTNET_BLOCKED', error: 'Pi Testnet is for developer testing only and cannot be used for customer purchases.' });
     }
 
     if (apiKey) {
@@ -494,7 +580,7 @@ app.post(['/api/pi/approve', '/api/pi-approve'], express.json(), async (req, res
       console.warn(`[PI_LOG] PI_PAYMENT_FAILED | PI_API_KEY missing on server! Cannot send approval to minepi.com for paymentId: ${paymentId}`);
     }
 
-    return res.status(200).json({ approved: true, paymentId, status: 'DEVELOPER_APPROVED' });
+    return res.status(200).json({ approved: true, paymentId, status: isDiagnostic ? 'TESTNET_DIAGNOSTIC_APPROVED' : 'DEVELOPER_APPROVED' });
   } catch (err: any) {
     console.error('[PI_LOG] PI_PAYMENT_FAILED | Exception in /api/pi/approve:', err?.message || err);
     return res.status(200).json({ approved: true, paymentId: req.body?.paymentId, status: 'DEVELOPER_APPROVED' });
@@ -506,18 +592,26 @@ app.post(['/api/pi/complete', '/api/pi-complete'], express.json(), async (req, r
     const paymentId = req.body?.paymentId || req.body?.payment_id || req.body?.id;
     const txid = req.body?.txid || req.body?.txId || req.body?.transactionId;
     const { email, productName, amount } = req.body || {};
+    const isDiagnostic = req.body?.isDiagnostic === true;
     const apiKey = getPiApiKey();
+    const isSandbox = (process.env.PI_SANDBOX_MODE !== 'false' && process.env.PI_SANDBOX !== 'false') || req.body?.environment === 'testnet';
 
-    console.log(`[PI_LOG] PI_PAYMENT_COMPLETION_REQUESTED | paymentId: ${paymentId} | txid: ${txid} | apiKeyPresent: ${Boolean(apiKey)}`);
+    console.log(`[PI_LOG] PI_PAYMENT_COMPLETION_REQUESTED | paymentId: ${paymentId} | txid: ${txid} | isDiagnostic: ${isDiagnostic}`);
 
     if (!paymentId || !txid) {
       console.error('[PI_LOG] PI_PAYMENT_FAILED | complete warning: missing paymentId or txid');
-      return res.status(200).json({ completed: true, verified: true, paymentId, txid, note: 'recorded without txid check' });
+      return res.status(400).json({ completed: false, error: 'Missing paymentId or txid' });
     }
 
+    if (!isPiCustomerPaymentEnabledOnServer && !isDiagnostic) {
+      console.warn(`[PI_SECURITY_AUDIT] PI_TESTNET_ORDER_BLOCKED | Customer Pi Payments Disabled | email: ${email} | paymentId: ${paymentId}`);
+      return res.status(403).json({ completed: false, verified: false, status: 'REJECTED_CUSTOMER_PI_DISABLED', error: 'Pi payment is currently unavailable for customer checkout.' });
+    }
+
+    // Call Pi API Platform completion if API key present
     if (apiKey) {
       console.log(`[PI_LOG] Sending POST to Pi Platform API: https://api.minepi.com/v2/payments/${paymentId}/complete with txid: ${txid}`);
-      const piRes = await fetch(`https://api.minepi.com/v2/payments/${paymentId}/complete`, {
+      await fetch(`https://api.minepi.com/v2/payments/${paymentId}/complete`, {
         method: 'POST',
         headers: {
           'Authorization': `Key ${apiKey}`,
@@ -525,30 +619,59 @@ app.post(['/api/pi/complete', '/api/pi-complete'], express.json(), async (req, r
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ txid: txid })
-      });
-
-      const resText = await piRes.text();
-      let resJson: any = {};
-      try { resJson = JSON.parse(resText); } catch (e) {}
-
-      console.log(`[PI_LOG] PI_PAYMENT_VERIFIED | Pi Platform complete status: ${piRes.status}`, resJson || resText);
-    } else {
-      console.warn(`[PI_LOG] PI_PAYMENT_VERIFIED | PI_API_KEY missing on server for complete paymentId: ${paymentId}`);
+      }).catch(e => console.error('[PI_LOG] MinePi API call error:', e));
     }
 
-    // Mark order as paid in database & leads
-    const customerEmail = email || 'pi_pioneer@pi.network';
+    // Handle Sandbox / Testnet vs Production
+    if (isSandbox || isDiagnostic) {
+      const customerEmail = email || 'admin_testnet@pi.network';
+      const testnetRecord = {
+        orderId: paymentId,
+        txid: txid,
+        customerEmail,
+        email: customerEmail,
+        productName: productName ? `[TESTNET DIAGNOSTIC] ${productName}` : '[TESTNET DIAGNOSTIC] Pi Testnet Payment',
+        amount: amount || 0.01,
+        currency: 'PI_TESTNET',
+        paymentGateway: 'Pi Network Testnet (Developer Portal)',
+        status: 'TESTNET_TEST_ONLY',
+        mode: 'TESTNET',
+        adminDiagnostic: Boolean(isDiagnostic),
+        verifiedServerSide: true,
+        date: new Date().toLocaleString('en-NG', { timeZone: 'Africa/Lagos' }),
+        purchasedAt: new Date().toISOString()
+      };
+
+      leadsDB.unshift(testnetRecord);
+      fallbackOrders.unshift(testnetRecord);
+      try { fs.writeFileSync('./leads.json', JSON.stringify(leadsDB.slice(0, 500))); } catch (e) {}
+
+      console.log(`[PI_SECURITY_AUDIT] PI_TESTNET_TRANSACTION_RECORDED | paymentId: ${paymentId} | status: TESTNET_TEST_ONLY (DIGITAL DELIVERY BLOCKED)`);
+
+      return res.status(200).json({
+        completed: true,
+        verified: false,
+        status: 'TESTNET_TEST_ONLY',
+        paymentId,
+        txid,
+        order: testnetRecord,
+        message: 'Testnet transaction recorded as TESTNET_TEST_ONLY. Product delivery is disabled.'
+      });
+    }
+
+    // REAL PRODUCTION PI MAINNET PAYMENT (When sandbox = false and customer payments enabled)
+    const customerEmail = email || 'customer@gasv.store';
     const orderRecord = {
       orderId: paymentId,
       txid: txid,
       customerEmail,
       email: customerEmail,
-      productName: productName || 'Pi Payment',
-      amount: amount || 0.01,
+      productName: productName || 'Pi Mainnet Payment',
+      amount: amount || 0.000159,
       currency: 'PI',
-      paymentGateway: 'Pi Network Testnet',
+      paymentGateway: 'Pi Network Mainnet',
       status: 'PAID',
-      mode: 'TESTNET',
+      mode: 'MAINNET',
       verifiedServerSide: true,
       date: new Date().toLocaleString('en-NG', { timeZone: 'Africa/Lagos' }),
       purchasedAt: new Date().toISOString()
@@ -558,25 +681,25 @@ app.post(['/api/pi/complete', '/api/pi-complete'], express.json(), async (req, r
     fallbackOrders.unshift(orderRecord);
     try { fs.writeFileSync('./leads.json', JSON.stringify(leadsDB.slice(0, 500))); } catch (e) {}
 
-    console.log(`[PI_LOG] PI_PAYMENT_COMPLETED | Order marked PAID for paymentId: ${paymentId}`);
-
     try {
       if (pgDb) {
         await pgDb.insert(orders).values({
           orderRef: paymentId,
           productName: orderRecord.productName,
-          price: String(amount || '0.01'),
-          gateway: 'Pi Network Testnet',
+          price: String(amount || '0.000159'),
+          gateway: 'Pi Network Mainnet',
           customerEmail,
           status: 'completed'
         });
       }
     } catch (e) {}
 
+    console.log(`[PI_SECURITY_AUDIT] PI_MAINNET_PAYMENT_COMPLETED | Order marked PAID for paymentId: ${paymentId}`);
+
     return res.status(200).json({ completed: true, verified: true, status: 'PAID', paymentId, txid, order: orderRecord });
   } catch (err: any) {
     console.error('[PI_LOG] Exception in /api/pi/complete:', err?.message || err);
-    return res.status(200).json({ completed: true, verified: true, paymentId: req.body?.paymentId, txid: req.body?.txid });
+    return res.status(500).json({ completed: false, error: err?.message || 'Server error' });
   }
 });
 

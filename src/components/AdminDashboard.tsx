@@ -147,6 +147,60 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
     localStorage.getItem('excludeAdminClicks') === 'true' || localStorage.getItem('exclude_my_clicks') !== 'false'
   );
 
+  // Pi Network Management State
+  const [piCustomerPaymentEnabled, setPiCustomerPaymentEnabled] = useState(
+    localStorage.getItem('PI_CUSTOMER_PAYMENT_ENABLED') === 'true'
+  );
+  const [showPiDiagnosticsModal, setShowPiDiagnosticsModal] = useState(false);
+  const [isAuditingDb, setIsAuditingDb] = useState(false);
+  const [auditDbResult, setAuditDbResult] = useState<any>(null);
+
+  const handleTogglePiCustomerPayments = async (enable: boolean) => {
+    setPiCustomerPaymentEnabled(enable);
+    localStorage.setItem('PI_CUSTOMER_PAYMENT_ENABLED', enable ? 'true' : 'false');
+    localStorage.setItem('ENABLE_PI_PAYMENT', enable ? 'true' : 'false');
+    localStorage.setItem('enable_pi', enable ? 'true' : 'false');
+    
+    const activeToken = localStorage.getItem('admin_password') || localStorage.getItem('admin_token') || 'GoyeBN3583773';
+    await fetch('/api/admin/toggle-pi-customer-payments', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-password': activeToken,
+        'Authorization': `Bearer ${activeToken}`
+      },
+      body: JSON.stringify({ enabled: enable })
+    }).catch(() => {});
+
+    if (enable) {
+      showToast('⚠️ Customer Pi Payments ENABLED. Make sure Pi Mainnet / Production is properly configured.', 'success');
+    } else {
+      showToast('✅ Customer Pi Payments DISABLED. Pi options are hidden from checkout.');
+    }
+  };
+
+  const handleAuditDbForTestnet = async () => {
+    setIsAuditingDb(true);
+    try {
+      const activeToken = localStorage.getItem('admin_password') || localStorage.getItem('admin_token') || 'GoyeBN3583773';
+      const res = await fetch('/api/admin/audit-pi-testnet', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-password': activeToken,
+          'Authorization': `Bearer ${activeToken}`
+        }
+      });
+      const data = await res.json();
+      setAuditDbResult(data);
+      showToast(`✅ Database Audit Complete! Audited: ${data.auditedCount || 0}, Re-tagged: ${data.retaggedCount || 0}`, 'success');
+    } catch (e: any) {
+      showToast('Audit failed: ' + (e?.message || 'Server error'), 'error');
+    } finally {
+      setIsAuditingDb(false);
+    }
+  };
+
   // Leads & Clicks Tracking State
   const [leadsList, setLeadsList] = useState<any[]>([]);
   const [clicksList, setClicksList] = useState<any[]>([]);
@@ -1563,6 +1617,79 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
                     />
                   </div>
                 </div>
+
+                {/* PI NETWORK MANAGEMENT SECTION */}
+                <div className="bg-[#111] border-2 border-purple-900/60 rounded-2xl p-6 mt-8 shadow-xl">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-purple-900/30 pb-4">
+                    <div>
+                      <span className="text-[10px] font-mono tracking-widest text-purple-400 uppercase font-black">
+                        PI NETWORK SECURITY & ENVIRONMENT MANAGEMENT
+                      </span>
+                      <h3 className="text-xl font-black text-white flex items-center gap-2 mt-1">
+                        <span>🟣</span> PI NETWORK MANAGEMENT
+                      </h3>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={`px-3 py-1 rounded-full text-xs font-black ${piCustomerPaymentEnabled ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'bg-red-500/20 text-red-400 border border-red-500/40'}`}>
+                        Customer Pi Payments: {piCustomerPaymentEnabled ? 'ENABLED' : 'DISABLED'}
+                      </span>
+                      <span className="px-3 py-1 rounded-full text-xs font-black bg-purple-500/20 text-purple-300 border border-purple-500/40">
+                        Pi Testnet: DEVELOPER TESTING ONLY
+                      </span>
+                      <span className="px-3 py-1 rounded-full text-xs font-black bg-zinc-800 text-zinc-300 border border-zinc-700">
+                        Environment: {paymentConfig.piSandboxMode === 'false' ? 'MAINNET' : 'TESTNET'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
+                    <div className="bg-black/60 border border-zinc-800 rounded-xl p-4">
+                      <h4 className="text-sm font-bold text-gray-200 mb-2">Customer Checkout Status Controls</h4>
+                      <p className="text-xs text-gray-400 mb-4 leading-relaxed">
+                        By default, Customer Pi Payments remain <strong className="text-red-400">DISABLED</strong> to protect customers from Testnet transactions.
+                      </p>
+                      <div className="flex gap-2">
+                        {!piCustomerPaymentEnabled ? (
+                          <button
+                            onClick={() => handleTogglePiCustomerPayments(true)}
+                            className="bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs px-4 py-2.5 rounded-lg transition"
+                          >
+                            Enable Customer Pi Payments
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleTogglePiCustomerPayments(false)}
+                            className="bg-red-600 hover:bg-red-500 text-white font-bold text-xs px-4 py-2.5 rounded-lg transition"
+                          >
+                            Disable Customer Pi Payments
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="bg-black/60 border border-zinc-800 rounded-xl p-4">
+                      <h4 className="text-sm font-bold text-gray-200 mb-2">Developer Testnet Diagnostics & Audit</h4>
+                      <p className="text-xs text-gray-400 mb-4 leading-relaxed">
+                        Initiate Developer Portal Testnet payments or re-tag legacy Testnet orders as <strong className="text-amber-400">TESTNET_TEST_ONLY</strong>.
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          onClick={() => setShowPiDiagnosticsModal(true)}
+                          className="bg-purple-900/60 hover:bg-purple-800 text-purple-200 border border-purple-500/50 font-bold text-xs px-4 py-2.5 rounded-lg transition flex items-center gap-1.5"
+                        >
+                          🧪 Open Pi Testnet Diagnostics
+                        </button>
+                        <button
+                          onClick={handleAuditDbForTestnet}
+                          disabled={isAuditingDb}
+                          className="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-600 font-bold text-xs px-4 py-2.5 rounded-lg transition flex items-center gap-1.5 disabled:opacity-50"
+                        >
+                          {isAuditingDb ? 'Auditing Database...' : '🔍 Audit Database for Testnet'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -1987,6 +2114,112 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
                 <button onClick={saveProduct} className="flex-1 bg-[#FFD700] text-black py-2 rounded font-bold">Save</button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Pi Testnet Diagnostics & Developer Testing Modal */}
+      {showPiDiagnosticsModal && (
+        <div className="fixed inset-0 bg-black/90 z-[10000] flex items-center justify-center p-4">
+          <div className="bg-[#111] border-2 border-purple-600 rounded-2xl p-6 w-full max-w-lg shadow-[0_0_50px_rgba(168,85,247,0.3)]">
+            <div className="flex justify-between items-center mb-4 border-b border-purple-900/50 pb-3">
+              <div>
+                <span className="text-[10px] font-mono uppercase tracking-widest text-purple-400 font-bold block">
+                  ADMIN DEVELOPER TOOLING
+                </span>
+                <h3 className="text-lg font-black text-white flex items-center gap-2">
+                  <span>🧪</span> PI TESTNET — DEVELOPER TESTING ONLY
+                </h3>
+              </div>
+              <button onClick={() => setShowPiDiagnosticsModal(false)} className="text-gray-400 hover:text-white font-bold text-xl">✕</button>
+            </div>
+
+            <div className="bg-purple-950/40 border border-purple-600/50 rounded-xl p-4 mb-4 text-xs text-purple-200 leading-relaxed">
+              <strong className="text-purple-300 block mb-1">⚠️ DEVELOPER TESTNET ISOLATION POLICY:</strong>
+              Testnet transactions executed here are strictly for Pi Developer Portal verification.
+              They are tagged on the server as <span className="font-mono bg-purple-900 px-1.5 py-0.5 rounded text-amber-300 font-bold">TESTNET_TEST_ONLY</span> and will <strong>NEVER</strong> mark customer orders as PAID, unlock digital products, or grant Academy access.
+            </div>
+
+            <div className="bg-black border border-zinc-800 rounded-xl p-4 mb-5">
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-gray-400">Environment:</span>
+                <span className="text-purple-300 font-bold font-mono">Pi Testnet Sandbox</span>
+              </div>
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-gray-400">Diagnostic Amount:</span>
+                <span className="text-amber-300 font-bold font-mono">0.01 Pi Testnet</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-gray-400">Testnet Wallet:</span>
+                <span className="text-gray-300 font-mono text-[11px] truncate max-w-[200px]">{paymentConfig.piTestnet || 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ7XE36YFQY6LKPVO6R'}</span>
+              </div>
+            </div>
+
+            <button
+              onClick={async () => {
+                const email = localStorage.getItem('userEmail') || localStorage.getItem('user_email') || localStorage.getItem('customer_email') || 'admin_testnet@gasv.store';
+                if (!(window as any).Pi) { 
+                  alert('Open https://gasv.store inside Pi Browser app to initiate Pi Testnet diagnostic payment.'); 
+                  return; 
+                }
+                try {
+                  showToast('Initializing Admin Pi Testnet 0.01 Pi Diagnostic Payment...');
+                  const Pi = (window as any).Pi;
+                  await Pi.authenticate(['username', 'payments'], (inc: any) => { 
+                    if (inc && inc.identifier) {
+                      fetch('/api/pi/complete', {
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/json' }, 
+                        body: JSON.stringify({ paymentId: inc.identifier, txid: inc.transaction?.txid || inc.txid, email, productName: 'Pi Testnet Admin Diagnostic', isDiagnostic: true })
+                      }).catch(() => {}); 
+                    }
+                  });
+                  await Pi.createPayment({
+                    amount: 0.01, 
+                    memo: 'START NEW TESTNET PAYMENT - Admin Developer Diagnostic (0.01 Pi Testnet)', 
+                    metadata: { type: 'pi-admin-diagnostic', product: 'testnet-diagnostic', email }
+                  }, {
+                    onReadyForServerApproval: async (id: string) => { 
+                      console.log('[Admin Pi Testnet] Server Approval for paymentId:', id); 
+                      await fetch('/api/pi/approve', {
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/json' }, 
+                        body: JSON.stringify({ paymentId: id })
+                      }).catch(() => {});
+                    },
+                    onReadyForServerCompletion: async (id: string, txid: string) => { 
+                      console.log('[Admin Pi Testnet] Server Completion for paymentId:', id, 'txid:', txid);
+                      const res = await fetch('/api/pi/complete', {
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/json' }, 
+                        body: JSON.stringify({ paymentId: id, txid, email, productName: 'Pi Testnet Admin Diagnostic', amount: 0.01, isDiagnostic: true })
+                      });
+                      const data = await res.json().catch(() => ({}));
+                      console.log('[Admin Pi Testnet] Complete response:', data);
+                      showToast('✅ Testnet Diagnostic Completed! Status: TESTNET_TEST_ONLY (TxID: ' + txid + ')', 'success');
+                    },
+                    onCancel: (id: string) => {
+                      if (id) fetch('/api/pi/cancel', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paymentId: id }) }).catch(() => {});
+                    },
+                    onError: (e: any, payment: any) => {
+                      console.error('[Admin Pi Testnet] Error:', e, payment);
+                    }
+                  });
+                } catch (err: any) { 
+                  console.error('Admin Testnet Exception:', err);
+                }
+              }}
+              className="w-full bg-purple-600 hover:bg-purple-500 text-white font-black text-sm py-3.5 rounded-xl transition shadow-lg flex items-center justify-center gap-2 mb-3"
+            >
+              🟣 START NEW TESTNET PAYMENT
+            </button>
+
+            <button
+              onClick={() => setShowPiDiagnosticsModal(false)}
+              className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-xs py-2.5 rounded-xl transition"
+            >
+              Close Diagnostics
+            </button>
           </div>
         </div>
       )}

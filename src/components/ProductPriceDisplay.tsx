@@ -1,23 +1,32 @@
 import React from 'react';
+import { isPiCustomerPaymentEnabled } from '../config/payment';
 
 export interface ProductPriceDisplayProps {
   usdPrice: number;
   currency?: string;
 }
 
-export function ProductPriceDisplay({ usdPrice, currency = 'PI' }: ProductPriceDisplayProps) {
+export function ProductPriceDisplay({ usdPrice, currency = 'USD' }: ProductPriceDisplayProps) {
   const GCV_RATE = 314159; // 1 Pi = $314,159
   const NGN_RATE = 1600;   // 1 USD = ₦1,600
+  const isPiEnabled = isPiCustomerPaymentEnabled();
+  const effectiveCurrency = (!isPiEnabled && currency === 'PI') ? 'USD' : currency;
 
   const calculatePrice = () => {
-    switch (currency) {
+    switch (effectiveCurrency) {
       case 'PI': {
+        if (!isPiEnabled) {
+          return { primary: `$${usdPrice}`, secondary: `≈ ₦${(usdPrice * NGN_RATE).toLocaleString()}` };
+        }
         const piVal = (usdPrice / GCV_RATE).toFixed(6);
         return { primary: `${piVal} Pi GCV`, secondary: `≈ $${usdPrice} USD` };
       }
       case 'NGN': {
         const ngnVal = (usdPrice * NGN_RATE).toLocaleString();
-        return { primary: `₦${ngnVal}`, secondary: `≈ ${(usdPrice / GCV_RATE).toFixed(6)} Pi` };
+        return {
+          primary: `₦${ngnVal}`,
+          secondary: isPiEnabled ? `≈ ${(usdPrice / GCV_RATE).toFixed(6)} Pi` : `≈ $${usdPrice} USD`
+        };
       }
       case 'CAD': {
         return { primary: `C$${(usdPrice * 1.38).toFixed(2)}`, secondary: `≈ $${usdPrice} USD` };
@@ -30,7 +39,10 @@ export function ProductPriceDisplay({ usdPrice, currency = 'PI' }: ProductPriceD
       }
       case 'USD':
       default: {
-        return { primary: `$${usdPrice}`, secondary: `≈ ${(usdPrice / GCV_RATE).toFixed(6)} Pi GCV` };
+        return {
+          primary: `$${usdPrice}`,
+          secondary: isPiEnabled ? `≈ ${(usdPrice / GCV_RATE).toFixed(6)} Pi GCV` : `≈ ₦${(usdPrice * NGN_RATE).toLocaleString()}`
+        };
       }
     }
   };

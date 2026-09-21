@@ -16,6 +16,11 @@ export const PI_TESTNET_WALLET_ADDRESS =
   (typeof process !== 'undefined' && (process.env?.PI_TESTNET_WALLET_ADDRESS || process.env?.NEXT_PUBLIC_PI_TESTNET_WALLET_ADDRESS)) ||
   'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ7XE36YFQY6LKPVO6R';
 
+export const isPiCustomerPaymentEnabled = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  return localStorage.getItem('PI_CUSTOMER_PAYMENT_ENABLED') === 'true';
+};
+
 export const isPiSandboxMode = (): boolean => {
   if (typeof window === 'undefined') return true;
   const s = localStorage.getItem('PI_SANDBOX_MODE') || localStorage.getItem('PI_SANDBOX') || localStorage.getItem('pi_sandbox');

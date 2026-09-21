@@ -1,3 +1,5 @@
+import { isPiCustomerPaymentEnabled } from '../config/payment';
+
 export const GCV_RATE = 314159;
 
 export interface CurrencyInfo {
@@ -18,22 +20,24 @@ export const FX_RATES: Record<string, CurrencyInfo> = {
 };
 
 export function formatPriceDisplay(usdPrice: number, curr?: string, mode?: string) {
-  const selectedCurr = curr || (typeof window !== 'undefined' ? localStorage.getItem('goye_currency') : 'USD') || 'USD';
-  const selectedMode = mode || (typeof window !== 'undefined' ? localStorage.getItem('goye_curr_mode') : 'pi') || 'pi';
+  const isPiEnabled = isPiCustomerPaymentEnabled();
+  const selectedCurr = (curr || (typeof window !== 'undefined' ? localStorage.getItem('goye_currency') : 'USD') || 'USD');
+  const effectiveCurr = (!isPiEnabled && selectedCurr === 'PI') ? 'USD' : selectedCurr;
+  const selectedMode = mode || (typeof window !== 'undefined' ? localStorage.getItem('goye_curr_mode') : 'fiat') || 'fiat';
 
   const numericUsd = typeof usdPrice === 'number' && !isNaN(usdPrice) && usdPrice > 0 ? usdPrice : 39.99;
   const piAmount = (numericUsd / GCV_RATE).toFixed(6).replace(/\.?0+$/, '') || '0.000001';
-  const currInfo = FX_RATES[selectedCurr] || { symbol: '$', name: 'US Dollar', rate: 1 };
+  const currInfo = FX_RATES[effectiveCurr] || { symbol: '$', name: 'US Dollar', rate: 1 };
   
   const fiatVal = numericUsd * currInfo.rate;
-  const formattedFiat = selectedCurr === 'NGN' 
+  const formattedFiat = effectiveCurr === 'NGN' 
     ? `₦${Math.round(fiatVal).toLocaleString('en-US')}` 
     : `${currInfo.symbol}${fiatVal.toFixed(2)}`;
 
   const usdStr = `$${numericUsd.toFixed(2)}`;
   const ngnStr = `₦${Math.round(numericUsd * 1600).toLocaleString('en-US')}`;
 
-  if (selectedCurr === 'PI' || selectedMode === 'pi') {
+  if (isPiEnabled && (effectiveCurr === 'PI' || selectedMode === 'pi')) {
     return {
       main: `${piAmount} Pi GCV`,
       sub: `≈ ${usdStr} USD (${formattedFiat})`,
@@ -42,19 +46,19 @@ export function formatPriceDisplay(usdPrice: number, curr?: string, mode?: strin
       usdStr,
       ngnStr
     };
-  } else if (selectedCurr === 'USD') {
+  } else if (effectiveCurr === 'USD') {
     return {
       main: usdStr,
-      sub: `≈ ${piAmount} Pi GCV • ${ngnStr}`,
+      sub: isPiEnabled ? `≈ ${piAmount} Pi GCV • ${ngnStr}` : `≈ ${ngnStr}`,
       piAmount,
       formattedFiat,
       usdStr,
       ngnStr
     };
-  } else if (selectedCurr === 'NGN') {
+  } else if (effectiveCurr === 'NGN') {
     return {
       main: ngnStr,
-      sub: `≈ ${usdStr} USD • ${piAmount} Pi GCV`,
+      sub: isPiEnabled ? `≈ ${usdStr} USD • ${piAmount} Pi GCV` : `≈ ${usdStr} USD`,
       piAmount,
       formattedFiat,
       usdStr,
@@ -62,8 +66,8 @@ export function formatPriceDisplay(usdPrice: number, curr?: string, mode?: strin
     };
   } else {
     return {
-      main: `${formattedFiat} ${selectedCurr}`,
-      sub: `≈ ${usdStr} USD • ${piAmount} Pi GCV`,
+      main: `${formattedFiat} ${effectiveCurr}`,
+      sub: isPiEnabled ? `≈ ${usdStr} USD • ${piAmount} Pi GCV` : `≈ ${usdStr} USD • ${ngnStr}`,
       piAmount,
       formattedFiat,
       usdStr,

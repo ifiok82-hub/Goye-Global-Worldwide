@@ -4,6 +4,7 @@ import { identifyUserSession, trackUserClick } from '../utils/analytics';
 import { cleanUserEmail } from '../lib/contact';
 import { safeParse } from '../utils/safeParse';
 import { PaymentDetailsModal } from './PaymentDetailsModal';
+import { isPiCustomerPaymentEnabled } from '../config/payment';
 
 const showToast = (msg: string, type?: string) => {
   if (typeof (window as any).showToast === 'function') {
@@ -699,7 +700,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                 >
                   <span>🔵</span> USDC (Base Network)
                 </button>
-                {(localStorage.getItem('ENABLE_PI_PAYMENT') === 'true' || localStorage.getItem('enable_pi') === 'true') && (
+                {isPiCustomerPaymentEnabled() && (
                   <button 
                     onClick={() => setPaymentDetailsType('pi')} 
                     style={{

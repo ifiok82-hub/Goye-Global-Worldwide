@@ -6,7 +6,8 @@ import {
   OPAY_ACCOUNT_NAME,
   USDT_CONFIG,
   USDC_CONFIG,
-  PI_CONFIG
+  PI_CONFIG,
+  isPiCustomerPaymentEnabled
 } from '../config/payment';
 
 interface PaymentDetailsModalProps {
@@ -177,6 +178,11 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
   };
 
   const handlePiPaymentReal = async () => {
+    if (!isPiCustomerPaymentEnabled()) {
+      alert('Pi payment is currently unavailable for customer checkout.');
+      return;
+    }
+
     const email = userEmail || localStorage.getItem('user_email') || localStorage.getItem('customer_email') || 'piuser@gasv.store';
     const Pi = (window as any).Pi;
 
@@ -231,11 +237,17 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
               });
               const data = await res.json();
               console.log('[Pi SDK] Server complete response:', data);
-            } catch (e) {
+              if (data.error || data.status === 'REJECTED_TESTNET_BLOCKED' || !data.completed || data.status === 'TESTNET_TEST_ONLY') {
+                alert(data.error || 'Pi Testnet is for developer testing only and cannot be used for customer purchases.');
+                return;
+              }
+              if (data.status === 'PAID') {
+                unlockAndRedirect('Pi Network GCV $314,159', txid, email);
+              }
+            } catch (e: any) {
               console.error('[Pi SDK] Complete error:', e);
+              alert('Payment verification error: ' + (e?.message || 'Server rejected Pi payment.'));
             }
-
-            unlockAndRedirect('Pi Network GCV $314,159', txid, email);
           },
           onCancel: (id: string) => {
             console.log('[Pi SDK Modal] Payment cancelled:', id);
