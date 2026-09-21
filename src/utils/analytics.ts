@@ -1,23 +1,24 @@
 // Visitor & Click Analytics Tracking Client Helper (100% LocalStorage - No Firebase)
 import { safeParse, safeGetNumber } from './safeParse';
 
+export function getAnonymousId(): string {
+  if (typeof window === 'undefined' || typeof localStorage === 'undefined') return 'anon_guest';
+  let anonId = localStorage.getItem('goye_anon_id');
+  if (!anonId) {
+    anonId = 'anon_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+    localStorage.setItem('goye_anon_id', anonId);
+  }
+  return anonId;
+}
+
 export function getAnonymousSessionId(): string {
+  if (typeof window === 'undefined' || typeof localStorage === 'undefined') return 'sess_guest';
   let sessionId = localStorage.getItem('goye_session_id');
   if (!sessionId) {
     sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
     localStorage.setItem('goye_session_id', sessionId);
   }
   return sessionId;
-}
-
-// Create permanent admin ID & flag
-if (typeof localStorage !== 'undefined') {
-  if (!localStorage.getItem('admin_device_id')) {
-    localStorage.setItem('admin_device_id', 'ADMIN_IFIOK_' + Date.now());
-  }
-  if (!localStorage.getItem('is_admin')) {
-    localStorage.setItem('is_admin', 'true');
-  }
 }
 
 export const ADMIN_NAMES = ['ifiok enyiema', 'ifiok', 'goyedagos', 'goye'];
@@ -28,39 +29,25 @@ export const ADMIN_EMAIL_PARTS = [
 export function isAdminClick(name?: string, email?: string): boolean {
   if (typeof window === 'undefined' || typeof localStorage === 'undefined') return false;
 
-  if (localStorage.getItem('isAdmin') === 'true') return true;
+  // Real admin session verification
+  const hasAdminAuth = 
+    localStorage.getItem('isAdmin') === 'true' && 
+    Boolean(localStorage.getItem('admin_token') || localStorage.getItem('admin_password'));
+
+  if (hasAdminAuth) return true;
 
   const n = (name || '').toLowerCase();
   const e = (
     email ||
     localStorage.getItem('user_email') ||
     localStorage.getItem('customer_email') ||
-    localStorage.getItem('admin_email') ||
     ''
   ).toLowerCase();
 
-  const deviceIsAdmin =
-    localStorage.getItem('is_admin') === 'true' ||
-    localStorage.getItem('is_owner') === 'true' ||
-    Boolean(localStorage.getItem('admin_device_id'));
-
+  const hasAdminEmail = ADMIN_EMAIL_PARTS.some(a => e.includes(a));
   const hasAdminName = ADMIN_NAMES.some(a => n.includes(a));
-  const hasAdminEmail =
-    ADMIN_EMAIL_PARTS.some(a => e.includes(a)) ||
-    e.includes('ifiok') ||
-    e.includes('goyedagos') ||
-    e.includes('admin');
 
-  const isAdminParam =
-    new URLSearchParams(window.location.search).get('admin') === 'RCBN3583773' ||
-    window.location.search.includes('admin') ||
-    window.location.hash.includes('admin');
-
-  const result = deviceIsAdmin || hasAdminName || hasAdminEmail || isAdminParam;
-  if (result) {
-    try { localStorage.setItem('isAdmin', 'true'); } catch (e) {}
-  }
-  return result;
+  return hasAdminEmail || (hasAdminName && hasAdminAuth);
 }
 
 // Initial seed records - Real verified orders only (empty by default until real Paystack transactions occur)

@@ -1,0 +1,27 @@
+[
+  {
+    "eventId": "evt_1789991376069_pfoze",
+    "eventName": "ACADEMY_VIEW",
+    "anonymousId": "anon_sess_1789991376069_qjvye",
+    "sessionId": "sess_1789991376069_qjvye",
+    "page": "/academy",
+    "target": "",
+    "productId": "",
+    "productName": "",
+    "customerName": "Pioneer Student",
+    "customerEmail": "student@goye.store",
+    "customerPhone": "",
+    "timestamp": "2026-09-21T11:49:36.069Z",
+    "serverTimestamp": "2026-09-21T11:49:36.069Z",
+    "referrer": "Direct",
+    "deviceType": "Mobile",
+    "browser": "Chrome",
+    "language": "en",
+    "timezone": "UTC",
+    "country": "Nigeria",
+    "city": "",
+    "consentState": "granted",
+    "metadata": {},
+    "isAdmin": false
+  }
+]

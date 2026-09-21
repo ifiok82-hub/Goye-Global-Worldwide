@@ -10,6 +10,20 @@ import multer from 'multer';
 import { jsPDF } from 'jspdf';
 import jwt from 'jsonwebtoken';
 import { requireAuth, AuthRequest } from './src/middleware/auth.ts';
+import { 
+  recordCustomerEvent, 
+  fetchAllAnalyticsEvents, 
+  fetchCustomerProfiles, 
+  fetchLiveVisitors, 
+  fetchLeads, 
+  deleteCustomerData, 
+  getAnalyticsDiagnostics 
+} from './src/lib/analytics-service.ts';
+import {
+  runFirestoreMigration,
+  runRetentionCleanup,
+  getMigrationReport
+} from './src/lib/firestore-migration.ts';
 
 dotenv.config();
 
@@ -4306,320 +4320,139 @@ const sessionClickCache = new Map<string, number>();
 // In-memory collection for real-time customer click tracking
 const inMemoryAnalyticsClicks: any[] = [];
 
-// Real-Time Click Tracking API Endpoint with Admin Exclusion
-app.post('/api/analytics/click', async (req: any, res: any) => {
+// Unified Event Ingestion API
+app.post(['/api/analytics/events', '/api/log-client-click', '/api/analytics/click', '/api/analytics/track', '/api/traffic/log', '/api/track/click', '/api/clicks'], express.json(), async (req: any, res: any) => {
   try {
-    const { sessionId, page, target, customerName, customerEmail, isAdmin: bodyIsAdmin, is_admin } = req.body || {};
-    const emailLower = (customerEmail || '').toLowerCase();
-
-    // Check if request is from Admin / Excluded device or email
-    const isAdmin = Boolean(
-      bodyIsAdmin === true ||
-      is_admin === true ||
-      req.headers['x-is-admin'] === 'true' ||
-      req.headers['x-admin-token'] ||
-      req.headers['x-exclude-admin'] === 'true' ||
-      (emailLower && (
-        emailLower.includes('goyedagos') ||
-        emailLower.includes('ifiok82') ||
-        emailLower.includes('godswill') ||
-        emailLower.includes('goye@gasv.store')
-      ))
+    const isAdminReq = Boolean(
+      req.headers['x-admin-token'] || 
+      req.headers['x-is-admin'] === 'true' || 
+      req.body?.isAdmin === true || 
+      req.body?.is_admin === true
     );
+    const result = await recordCustomerEvent(req.body || {}, isAdminReq);
+    return res.status(200).json(result);
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
 
-    console.log(`[CLICK LOGGED] Target: ${target || 'Page View'} | IP: ${req.ip || req.socket?.remoteAddress || '127.0.0.1'} | Admin: ${isAdmin}`);
+// Fetch Real Customer Events
+app.get(['/api/analytics/events', '/api/admin/client-activity', '/api/analytics/click', '/api/clicks'], async (req: any, res: any) => {
+  try {
+    const limit = Number(req.query.limit) || 1000;
+    const events = await fetchAllAnalyticsEvents(limit);
+    return res.status(200).json({
+      success: true,
+      count: events.length,
+      totalClicks: events.length,
+      clicks: events,
+      events
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
 
-    if (isAdmin) {
-      return res.status(200).json({ success: true, excluded: true, message: 'Admin click excluded from database' });
-    }
+// Comprehensive Customer Intelligence Aggregation
+app.get('/api/admin/customer-intelligence', async (req: any, res: any) => {
+  try {
+    const events = await fetchAllAnalyticsEvents(2000);
+    const profiles = await fetchCustomerProfiles();
+    const liveVisitors = await fetchLiveVisitors();
+    const leads = await fetchLeads();
+    const diagnostics = getAnalyticsDiagnostics();
 
-    const sid = sessionId || ('sess_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7));
-    const clickRecord = {
-      sessionId: sid,
-      page: page || 'Home',
-      target: target || 'Page View',
-      customerName: customerName || 'Guest Customer',
-      customerEmail: customerEmail || '',
-      isAdmin: false,
-      is_admin: false,
-      createdAt: new Date().toISOString()
-    };
+    // Aggregations
+    const productInterest: Record<string, number> = {};
+    const academyEvents: any[] = [];
+    const aiProfessorEvents: any[] = [];
+    const mpayEvents: any[] = [];
+    const countryStats: Record<string, { visitors: number, leads: number, sales: number }> = {};
+    const deviceStats: Record<string, number> = {};
+    const browserStats: Record<string, number> = {};
+    const trafficSources: Record<string, number> = {};
 
-    inMemoryAnalyticsClicks.unshift(clickRecord);
-    if (inMemoryAnalyticsClicks.length > 5000) inMemoryAnalyticsClicks.pop();
-
-    // Store in Postgres analytics_clicks table
-    try {
-      if (pgDb) {
-        await pgDb.insert(analyticsClicks).values({
-          sessionId: clickRecord.sessionId,
-          page: clickRecord.page,
-          target: clickRecord.target,
-          customerName: clickRecord.customerName,
-          customerEmail: clickRecord.customerEmail,
-          isAdmin: false
-        });
+    events.forEach(e => {
+      if (e.productId || e.productName) {
+        const pKey = e.productName || e.productId || 'General Item';
+        productInterest[pKey] = (productInterest[pKey] || 0) + 1;
       }
-    } catch (e) {
-      console.warn('Postgres click insert notice:', e);
-    }
-
-    // Store in MongoDB analytics_clicks collection
-    try {
-      const database = await getDb();
-      if (database) {
-        await database.collection('analytics_clicks').insertOne({
-          ...clickRecord,
-          is_admin: false,
-          created_at: new Date()
-        });
+      if (e.eventName.startsWith('ACADEMY_') || (e.page && e.page.includes('/academy'))) {
+        academyEvents.push(e);
       }
-    } catch (e) {
-      console.warn('MongoDB click insert notice:', e);
-    }
-
-    // Retrieve total non-admin clicks count from database
-    let totalCount = 0;
-    try {
-      if (pgDb) {
-        const rows = await pgDb.select().from(analyticsClicks).where(eq(analyticsClicks.isAdmin, false));
-        if (rows) totalCount = rows.length;
+      if (e.eventName.startsWith('AI_PROFESSOR_') || (e.page && (e.page.includes('teacher') || e.page.includes('professor')))) {
+        aiProfessorEvents.push(e);
       }
-    } catch (e) {}
+      if (e.eventName.startsWith('MPAY_') || (e.page && (e.page.includes('wallet') || e.page.includes('pos')))) {
+        mpayEvents.push(e);
+      }
+      const c = e.country || 'Global';
+      if (!countryStats[c]) countryStats[c] = { visitors: 0, leads: 0, sales: 0 };
+      countryStats[c].visitors += 1;
 
-    if (totalCount === 0) {
-      try {
-        const database = await getDb();
-        if (database) {
-          const dbCount = await database.collection('analytics_clicks').countDocuments({ is_admin: false });
-          if (dbCount > 0) totalCount = dbCount;
-        }
-      } catch (e) {}
-    }
+      const d = e.deviceType || 'Desktop';
+      deviceStats[d] = (deviceStats[d] || 0) + 1;
 
-    if (totalCount === 0) {
-      totalCount = inMemoryAnalyticsClicks.filter(c => !c.isAdmin && !c.is_admin).length;
-    }
+      const b = e.browser || 'Browser';
+      browserStats[b] = (browserStats[b] || 0) + 1;
+
+      const ref = e.referrer || 'Direct';
+      trafficSources[ref] = (trafficSources[ref] || 0) + 1;
+    });
 
     return res.status(200).json({
       success: true,
-      totalClicks: totalCount,
-      count: totalCount,
-      click: clickRecord
+      diagnostics,
+      overview: {
+        totalVisitorsCount: events.length,
+        liveVisitorsNow: liveVisitors.length,
+        customerProfilesCount: profiles.length,
+        leadsCount: leads.length,
+        totalEventsCount: events.length,
+      },
+      liveVisitors,
+      customerProfiles: profiles,
+      eventsTimeline: events.slice(0, 500),
+      leads,
+      productInterest,
+      academyEventsCount: academyEvents.length,
+      aiProfessorEventsCount: aiProfessorEvents.length,
+      mpayEventsCount: mpayEvents.length,
+      countryStats,
+      deviceStats,
+      browserStats,
+      trafficSources
     });
   } catch (err: any) {
     return res.status(500).json({ success: false, error: err.message });
   }
 });
 
-app.get('/api/analytics/click', async (req: any, res: any) => {
+// Delete Customer Profile (GDPR)
+app.post('/api/admin/customer/delete', express.json(), async (req: any, res: any) => {
   try {
-    let totalCount = 0;
-    let clicksList: any[] = [];
+    const { email } = req.body || {};
+    if (!email) return res.status(400).json({ success: false, message: 'Email is required' });
+    const success = await deleteCustomerData(email);
+    return res.status(200).json({ success, message: `Data deleted for ${email}` });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
 
-    try {
-      if (pgDb) {
-        clicksList = await pgDb.select().from(analyticsClicks).where(eq(analyticsClicks.isAdmin, false));
-        totalCount = clicksList.length;
-      }
-    } catch (e) {}
+// Health / Diagnostics
+app.get(['/api/admin/health', '/api/analytics/health'], (req: any, res: any) => {
+  return res.status(200).json(getAnalyticsDiagnostics());
+});
 
-    if (totalCount === 0) {
-      try {
-        const database = await getDb();
-        if (database) {
-          clicksList = await database.collection('analytics_clicks').find({ is_admin: false }).sort({ created_at: -1 }).toArray();
-          totalCount = clicksList.length;
-        }
-      } catch (e) {}
-    }
-
-    if (totalCount === 0) {
-      clicksList = inMemoryAnalyticsClicks.filter(c => !c.isAdmin && !c.is_admin);
-      totalCount = clicksList.length;
-    }
-
+// Migration Report API Endpoint
+app.get('/api/admin/migration-report', async (req: any, res: any) => {
+  try {
+    const report = getMigrationReport();
     return res.status(200).json({
       success: true,
-      totalClicks: totalCount,
-      count: totalCount,
-      clicks: clicksList.slice(0, 500)
+      report
     });
-  } catch (err: any) {
-    return res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// Sanity Check Diagnostic Route for Click Tracking Health
-app.get('/api/analytics/health', async (req: any, res: any) => {
-  try {
-    let isDbConn = false;
-    let totalCount = 0;
-    let lastClick: string | null = null;
-
-    try {
-      if (pgDb) {
-        const rows = await pgDb.select().from(analyticsClicks).where(eq(analyticsClicks.isAdmin, false));
-        isDbConn = true;
-        totalCount = rows.length;
-        if (rows.length > 0) {
-          const sorted = rows.sort((a: any, b: any) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
-          lastClick = sorted[0]?.createdAt ? new Date(sorted[0].createdAt).toISOString() : null;
-        }
-      }
-    } catch (e) {
-      console.warn('Postgres health check notice:', e);
-    }
-
-    if (!isDbConn || totalCount === 0) {
-      try {
-        const database = await getDb();
-        if (database) {
-          isDbConn = true;
-          const dbCount = await database.collection('analytics_clicks').countDocuments({ is_admin: false });
-          if (dbCount > 0) totalCount = dbCount;
-          const latest = await database.collection('analytics_clicks').find({ is_admin: false }).sort({ created_at: -1 }).limit(1).toArray();
-          if (latest.length > 0 && latest[0].created_at) {
-            lastClick = new Date(latest[0].created_at).toISOString();
-          }
-        }
-      } catch (e) {}
-    }
-
-    if (totalCount === 0 && inMemoryAnalyticsClicks.length > 0) {
-      const nonAdminClicks = inMemoryAnalyticsClicks.filter(c => !c.isAdmin && !c.is_admin);
-      totalCount = nonAdminClicks.length;
-      if (nonAdminClicks.length > 0) {
-        lastClick = nonAdminClicks[0].createdAt || new Date().toISOString();
-      }
-    }
-
-    if (!lastClick && inMemoryAnalyticsClicks.length > 0) {
-      lastClick = inMemoryAnalyticsClicks[0].createdAt || new Date().toISOString();
-    }
-
-    return res.status(200).json({
-      dbConnected: isDbConn || true,
-      totalClicksCount: totalCount,
-      lastClickTime: lastClick || new Date().toISOString()
-    });
-  } catch (err: any) {
-    return res.status(500).json({
-      dbConnected: false,
-      totalClicksCount: 0,
-      lastClickTime: null,
-      error: err.message
-    });
-  }
-});
-
-// 1. API: Visitor & Click Analytics Tracking
-app.post(['/api/analytics/track', '/api/analytics/log', '/api/traffic/log', '/api/track/click'], async (req: any, res: any) => {
-  try {
-    const { sessionId, page, target, productId, customerName, customerEmail, referrer, isAdmin: bodyIsAdmin, user_role, role } = req.body || {};
-    const emailLower = (customerEmail || '').toLowerCase();
-
-    // Check if request is from Admin / Excluded device
-    const isAdmin = Boolean(
-      req.headers['x-admin-token'] ||
-      req.headers['x-exclude-admin'] === 'true' ||
-      user_role === 'admin' ||
-      role === 'admin' ||
-      bodyIsAdmin === true ||
-      req.body?.is_admin === true ||
-      (emailLower && (
-        emailLower.includes('goyedagos') ||
-        emailLower.includes('ifiok82') ||
-        emailLower.includes('godswill') ||
-        emailLower.includes('goye@gasv.store')
-      ))
-    );
-
-    if (isAdmin) {
-      return res.status(200).json({ success: true, excluded: true, message: 'Admin click excluded from database' });
-    }
-
-    const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1').toString().split(',')[0].trim();
-    const sid = sessionId || ('sess_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7));
-
-    // Deduplicate rapid repeat clicks from same IP or session within 30s
-    const sessionKey = `${sid}_${page || 'Home'}_${target || 'Page View'}`;
-    const ipKey = `${ip}_${page || 'Home'}_${target || 'Page View'}`;
-    const now = Date.now();
-    const lastLogged = sessionClickCache.get(sessionKey) || sessionClickCache.get(ipKey);
-
-    if (lastLogged && (now - lastLogged < 30000)) {
-      return res.status(200).json({ success: true, duplicate: true, sessionId: sid, message: 'Deduplicated click within session window' });
-    }
-    sessionClickCache.set(sessionKey, now);
-    sessionClickCache.set(ipKey, now);
-
-    const country = (req.headers['cf-ipcountry'] || req.headers['x-appengine-country'] || 'Global').toString();
-    const city = (req.headers['x-appengine-city'] || 'Unknown City').toString();
-    const userAgent = (req.headers['user-agent'] || '').toString();
-    const deviceType = parseDeviceType(userAgent);
-
-    const logEntry: TrafficLog = {
-      id: 'log_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
-      sessionId: sid,
-      timestamp: new Date().toISOString(),
-      ip,
-      country,
-      city,
-      deviceType,
-      userAgent,
-      referrer: referrer || req.headers['referer'] || 'Direct',
-      page: page || 'Home',
-      target: target || 'Page View',
-      productId: productId || '',
-      customerName: customerName || '',
-      customerEmail: customerEmail || ''
-    };
-
-    trafficLogs.unshift(logEntry);
-    if (trafficLogs.length > 2000) trafficLogs.pop();
-
-    try {
-      const database = await getDb();
-      if (database) {
-        await database.collection('traffic_logs_global').insertOne(logEntry);
-      }
-    } catch (e) {}
-
-    return res.status(200).json({ success: true, sessionId: sid });
-  } catch (err: any) {
-    return res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// 2. API: Link Anonymous Session to Customer Identity
-app.post('/api/analytics/identify', async (req: any, res: any) => {
-  try {
-    const { sessionId, customerName, customerEmail } = req.body || {};
-    if (!sessionId || !customerEmail) {
-      return res.status(400).json({ success: false, message: 'sessionId and customerEmail required' });
-    }
-
-    let updatedCount = 0;
-    trafficLogs.forEach(log => {
-      if (log.sessionId === sessionId) {
-        if (customerName) log.customerName = customerName;
-        log.customerEmail = customerEmail;
-        updatedCount++;
-      }
-    });
-
-    try {
-      const database = await getDb();
-      if (database) {
-        await database.collection('traffic_logs_global').updateMany(
-          { sessionId: sessionId },
-          { $set: { customerName: customerName || '', customerEmail: customerEmail } }
-        );
-      }
-    } catch (e) {}
-
-    return res.status(200).json({ success: true, updatedCount, customerEmail });
   } catch (err: any) {
     return res.status(500).json({ success: false, error: err.message });
   }
@@ -5221,6 +5054,16 @@ async function startServer() {
 
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 GOYE Server running on http://0.0.0.0:${PORT}`);
+    
+    // Asynchronously trigger persistent migration and retention cleanup
+    setTimeout(async () => {
+      try {
+        await runFirestoreMigration();
+        await runRetentionCleanup();
+      } catch (err) {
+        console.warn('⚠️ Post-boot migration/retention error:', err);
+      }
+    }, 1000);
   });
 }
 

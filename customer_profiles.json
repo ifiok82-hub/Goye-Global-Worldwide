@@ -1,0 +1,25 @@
+[
+  {
+    "customerId": "cust_1789991376069",
+    "displayName": "Pioneer Student",
+    "email": "student@goye.store",
+    "phone": "",
+    "country": "Nigeria",
+    "preferredLanguage": "en",
+    "accountCreated": "2026-09-21T11:49:36.069Z",
+    "lastActive": "2026-09-21T11:49:36.069Z",
+    "customerStatus": "LEAD",
+    "isLead": true,
+    "isCustomer": false,
+    "totalSpentUSD": 0,
+    "totalSpentNGN": 0,
+    "ordersCount": 0,
+    "eventsCount": 1,
+    "lastEvent": "ACADEMY_VIEW on /academy",
+    "consentStatus": "granted",
+    "marketingPreference": true,
+    "interests": [
+      "/academy"
+    ]
+  }
+]

@@ -1,0 +1,127 @@
+{
+  "entities": {
+    "AnalyticsEvent": {
+      "title": "Analytics Event",
+      "description": "Represents a single customer interaction event.",
+      "type": "object",
+      "properties": {
+        "eventId": { "type": "string", "maxLength": 128 },
+        "eventName": { "type": "string", "maxLength": 128 },
+        "anonymousId": { "type": "string", "maxLength": 128 },
+        "sessionId": { "type": "string", "maxLength": 128 },
+        "page": { "type": "string", "maxLength": 256 },
+        "target": { "type": "string", "maxLength": 256 },
+        "productId": { "type": "string", "maxLength": 128 },
+        "customerName": { "type": "string", "maxLength": 128 },
+        "customerEmail": { "type": "string", "maxLength": 128 },
+        "timestamp": { "type": "string", "maxLength": 64 },
+        "serverTimestamp": { "type": "string", "maxLength": 64 },
+        "referrer": { "type": "string", "maxLength": 512 },
+        "deviceType": { "type": "string", "maxLength": 64 },
+        "language": { "type": "string", "maxLength": 32 },
+        "timezone": { "type": "string", "maxLength": 64 },
+        "country": { "type": "string", "maxLength": 64 },
+        "city": { "type": "string", "maxLength": 64 },
+        "consentState": { "type": "string", "maxLength": 32 }
+      },
+      "required": ["eventId", "eventName", "sessionId", "timestamp"]
+    },
+    "CustomerProfile": {
+      "title": "Customer Profile",
+      "description": "Customer identity, preferences, purchase history, and consent.",
+      "type": "object",
+      "properties": {
+        "customerId": { "type": "string", "maxLength": 128 },
+        "displayName": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 128 },
+        "phone": { "type": "string", "maxLength": 64 },
+        "country": { "type": "string", "maxLength": 64 },
+        "preferredLanguage": { "type": "string", "maxLength": 32 },
+        "accountCreated": { "type": "string", "maxLength": 64 },
+        "lastActive": { "type": "string", "maxLength": 64 },
+        "customerStatus": { "type": "string", "maxLength": 64 },
+        "isLead": { "type": "boolean" },
+        "isCustomer": { "type": "boolean" },
+        "totalSpentUSD": { "type": "number" },
+        "consentStatus": { "type": "string", "maxLength": 64 },
+        "marketingPreference": { "type": "boolean" }
+      },
+      "required": ["customerId", "email"]
+    },
+    "LiveVisitor": {
+      "title": "Live Visitor",
+      "description": "Active session tracking for real-time live visitors.",
+      "type": "object",
+      "properties": {
+        "sessionId": { "type": "string", "maxLength": 128 },
+        "anonymousId": { "type": "string", "maxLength": 128 },
+        "customerEmail": { "type": "string", "maxLength": 128 },
+        "customerName": { "type": "string", "maxLength": 128 },
+        "country": { "type": "string", "maxLength": 64 },
+        "currentSection": { "type": "string", "maxLength": 128 },
+        "currentPage": { "type": "string", "maxLength": 256 },
+        "deviceType": { "type": "string", "maxLength": 64 },
+        "browser": { "type": "string", "maxLength": 64 },
+        "sessionStartTime": { "type": "string", "maxLength": 64 },
+        "lastActiveTime": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["sessionId", "lastActiveTime"]
+    },
+    "LeadRecord": {
+      "title": "Lead Record",
+      "description": "Qualifying visitor lead record.",
+      "type": "object",
+      "properties": {
+        "leadId": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 128 },
+        "phone": { "type": "string", "maxLength": 64 },
+        "country": { "type": "string", "maxLength": 64 },
+        "source": { "type": "string", "maxLength": 128 },
+        "interest": { "type": "string", "maxLength": 128 },
+        "status": { "type": "string", "maxLength": 32 },
+        "createdAt": { "type": "string", "maxLength": 64 },
+        "lastActivity": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["leadId", "email"]
+    },
+    "ConsentRecord": {
+      "title": "Consent Record",
+      "description": "User analytics and marketing consent preferences.",
+      "type": "object",
+      "properties": {
+        "recordId": { "type": "string", "maxLength": 128 },
+        "anonymousId": { "type": "string", "maxLength": 128 },
+        "customerEmail": { "type": "string", "maxLength": 128 },
+        "necessaryConsent": { "type": "boolean" },
+        "analyticsConsent": { "type": "boolean" },
+        "marketingConsent": { "type": "boolean" },
+        "consentVersion": { "type": "string", "maxLength": 32 },
+        "updatedAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["recordId", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/analytics_events/{eventId}": {
+      "schema": "AnalyticsEvent",
+      "description": "Stores raw customer activity events"
+    },
+    "/customer_profiles/{customerId}": {
+      "schema": "CustomerProfile",
+      "description": "Stores aggregated customer profiles"
+    },
+    "/live_visitors/{sessionId}": {
+      "schema": "LiveVisitor",
+      "description": "Stores active live sessions"
+    },
+    "/leads/{leadId}": {
+      "schema": "LeadRecord",
+      "description": "Stores qualifying customer leads"
+    },
+    "/consent_records/{recordId}": {
+      "schema": "ConsentRecord",
+      "description": "Stores user consent audit logs"
+    }
+  }
+}

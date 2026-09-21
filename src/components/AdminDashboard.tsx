@@ -4,9 +4,10 @@ import { ALL_PRODUCTS } from '../data';
 import { SEED_CUSTOMERS, SEED_ORDERS, isAdminClick } from '../utils/analytics';
 import { safeParse, safeGetNumber } from '../utils/safeParse';
 import AdminSettings from './AdminSettings';
+import GoyeCustomerIntelligence from './GoyeCustomerIntelligence';
 
 export default function AdminDashboard({ showToast }: { showToast: (m: string, t?: string) => void }) {
-  const [activeTab, setActiveTab] = useState('analytics');
+  const [activeTab, setActiveTab] = useState('intelligence');
   
   // LocalStorage Data
   const [users, setUsers] = useState<any[]>([]); // Customers list
@@ -903,6 +904,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
   };
 
   const TABS = [
+    { id: 'intelligence', icon: Activity, label: 'GOYE GLOBAL CUSTOMER INTELLIGENCE' },
     { id: 'analytics', icon: Activity, label: 'Analytics Overview' },
     { id: 'gateways', icon: Key, label: 'Pi & Payment Gateways' },
     { id: 'leads', icon: Mail, label: 'Leads & Reminders' },
@@ -966,6 +968,12 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
           )
         })}
       </div>
+
+      {activeTab === 'intelligence' && (
+        <div className="animate-in fade-in">
+          <GoyeCustomerIntelligence showToast={showToast} />
+        </div>
+      )}
 
       {activeTab === 'gateways' && (
         <div className="animate-in fade-in">
