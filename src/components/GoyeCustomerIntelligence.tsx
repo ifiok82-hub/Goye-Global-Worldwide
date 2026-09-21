@@ -4,6 +4,7 @@ import {
   BookOpen, Bot, CreditCard, ShieldCheck, Download, Trash2, RefreshCw, 
   Search, Filter, CheckCircle2, AlertCircle, Sparkles, MapPin, ChevronRight, X
 } from 'lucide-react';
+import { safeFormatDate, safeFormatDateTime } from '../utils/safeParse';
 
 export default function GoyeCustomerIntelligence({ showToast }: { showToast: (m: string, t?: string) => void }) {
   const [activeSection, setActiveSection] = useState('overview');
@@ -144,7 +145,7 @@ export default function GoyeCustomerIntelligence({ showToast }: { showToast: (m:
   ];
 
   return (
-    <div className="bg-[#0A0A0A] border border-[#FFD700]/30 rounded-2xl p-4 sm:p-6 shadow-2xl text-white font-sans">
+    <div className="bg-[#0A0A0A] border border-[#FFD700]/30 rounded-2xl p-4 sm:p-6 pb-36 sm:pb-28 shadow-2xl text-white font-sans">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-[#222]">
         <div>
@@ -304,7 +305,7 @@ export default function GoyeCustomerIntelligence({ showToast }: { showToast: (m:
                         </p>
                       </div>
                       <span className="text-[10px] text-gray-500 font-mono whitespace-nowrap">
-                        {evt.timestamp ? new Date(evt.timestamp).toLocaleTimeString() : ''}
+                        {safeFormatDateTime(evt.timestamp || evt.createdAt || evt.created_at, 'Recently')}
                       </span>
                     </div>
                   ))}
@@ -325,8 +326,8 @@ export default function GoyeCustomerIntelligence({ showToast }: { showToast: (m:
             <span className="text-xs text-emerald-400 font-mono">Live Session Window: 5 Minutes</span>
           </div>
 
-          <div className="overflow-x-auto rounded-xl border border-[#222]">
-            <table className="w-full text-left text-xs text-gray-300">
+          <div className="w-full overflow-x-auto rounded-xl border border-[#222]">
+            <table className="w-full min-w-[620px] text-left text-xs text-gray-300">
               <thead className="bg-[#141414] text-gray-400 uppercase font-mono text-[10px]">
                 <tr>
                   <th className="p-3">Session ID</th>
@@ -351,11 +352,11 @@ export default function GoyeCustomerIntelligence({ showToast }: { showToast: (m:
                       <td className="p-3 font-medium text-white">{v.country || '🌍 Global'}</td>
                       <td className="p-3">
                         <div className="font-bold text-white">{v.customerName || 'Guest Visitor'}</div>
-                        <div className="text-[10px] text-gray-400">{v.customerEmail || 'Unidentified'}</div>
+                        <div className="text-[10px] text-gray-400 max-w-[150px] truncate" title={v.customerEmail}>{v.customerEmail || 'Unidentified'}</div>
                       </td>
                       <td className="p-3 text-[#FFD700] font-medium">{v.currentPage || 'Home'}</td>
                       <td className="p-3 text-gray-400">{v.deviceType} / {v.browser}</td>
-                      <td className="p-3 text-gray-400 font-mono">{v.lastActiveTime ? new Date(v.lastActiveTime).toLocaleTimeString() : 'Now'}</td>
+                      <td className="p-3 text-gray-400 font-mono">{safeFormatDateTime(v.lastActiveTime || v.timestamp || v.createdAt, 'Now')}</td>
                     </tr>
                   ))
                 )}
@@ -385,8 +386,8 @@ export default function GoyeCustomerIntelligence({ showToast }: { showToast: (m:
             </div>
           </div>
 
-          <div className="overflow-x-auto rounded-xl border border-[#222]">
-            <table className="w-full text-left text-xs text-gray-300">
+          <div className="w-full overflow-x-auto rounded-xl border border-[#222]">
+            <table className="w-full min-w-[640px] text-left text-xs text-gray-300">
               <thead className="bg-[#141414] text-gray-400 uppercase font-mono text-[10px]">
                 <tr>
                   <th className="p-3">Customer</th>
@@ -409,7 +410,7 @@ export default function GoyeCustomerIntelligence({ showToast }: { showToast: (m:
                   profiles.map((p: any, idx: number) => (
                     <tr key={idx} className="hover:bg-[#181818] transition">
                       <td className="p-3 font-bold text-white">{p.displayName}</td>
-                      <td className="p-3 font-mono text-gray-300">{p.email}</td>
+                      <td className="p-3 font-mono text-gray-300 max-w-[150px] sm:max-w-[200px] truncate" title={p.email}>{p.email}</td>
                       <td className="p-3">{p.country || 'Global'}</td>
                       <td className="p-3">
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold font-mono ${
@@ -472,7 +473,7 @@ export default function GoyeCustomerIntelligence({ showToast }: { showToast: (m:
                     </div>
                   </div>
                   <span className="text-[10px] text-gray-500 font-mono whitespace-nowrap">
-                    {e.timestamp ? new Date(e.timestamp).toLocaleString() : ''}
+                    {safeFormatDateTime(e.timestamp || e.createdAt || e.created_at, 'N/A')}
                   </span>
                 </div>
               ))
@@ -490,8 +491,8 @@ export default function GoyeCustomerIntelligence({ showToast }: { showToast: (m:
             </h3>
           </div>
 
-          <div className="overflow-x-auto rounded-xl border border-[#222]">
-            <table className="w-full text-left text-xs text-gray-300">
+          <div className="w-full overflow-x-auto rounded-xl border border-[#222]">
+            <table className="w-full min-w-[650px] text-left text-xs text-gray-300">
               <thead className="bg-[#141414] text-gray-400 uppercase font-mono text-[10px]">
                 <tr>
                   <th className="p-3">Lead Name</th>
@@ -513,11 +514,11 @@ export default function GoyeCustomerIntelligence({ showToast }: { showToast: (m:
                   leads.map((l: any, idx: number) => (
                     <tr key={idx} className="hover:bg-[#181818] transition">
                       <td className="p-3 font-bold text-white">{l.name || 'Lead User'}</td>
-                      <td className="p-3 font-mono text-gray-300">{l.email}</td>
+                      <td className="p-3 font-mono text-gray-300 max-w-[150px] sm:max-w-[200px] truncate" title={l.email}>{l.email}</td>
                       <td className="p-3">{l.country || 'Global'}</td>
-                      <td className="p-3 text-[#FFD700]">{l.interest || 'General'}</td>
+                      <td className="p-3 text-[#FFD700] max-w-[160px] sm:max-w-[220px] break-words">{l.interest || l.product || 'General'}</td>
                       <td className="p-3 font-mono text-amber-400 font-bold">{l.status || 'NEW'}</td>
-                      <td className="p-3 font-mono text-gray-400">{l.createdAt ? new Date(l.createdAt).toLocaleDateString() : 'N/A'}</td>
+                      <td className="p-3 font-mono text-gray-400">{safeFormatDate(l.createdAt || l.created_at || l.timestamp || l.date)}</td>
                     </tr>
                   ))
                 )}
@@ -567,8 +568,8 @@ export default function GoyeCustomerIntelligence({ showToast }: { showToast: (m:
             </h3>
           </div>
 
-          <div className="overflow-x-auto rounded-xl border border-[#222]">
-            <table className="w-full text-left text-xs text-gray-300">
+          <div className="w-full overflow-x-auto rounded-xl border border-[#222]">
+            <table className="w-full min-w-[400px] text-left text-xs text-gray-300">
               <thead className="bg-[#141414] text-gray-400 uppercase font-mono text-[10px]">
                 <tr>
                   <th className="p-3">Country / Region</th>
@@ -623,7 +624,7 @@ export default function GoyeCustomerIntelligence({ showToast }: { showToast: (m:
                 </div>
                 <div className="flex items-center justify-between pb-1.5">
                   <span className="text-gray-300">Last Received Event:</span>
-                  <span className="text-[#FFD700] font-mono text-[10px]">{diagnostics.lastEventTimestamp || 'N/A'}</span>
+                  <span className="text-[#FFD700] font-mono text-[10px]">{safeFormatDateTime(diagnostics.lastEventTimestamp, 'N/A')}</span>
                 </div>
               </div>
             </div>

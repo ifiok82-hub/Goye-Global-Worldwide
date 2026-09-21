@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { CreditCard, Users, ShoppingCart, Package, DollarSign, Settings, Download, Edit, Trash2, CheckCircle, XCircle, Activity, Globe, Eye, UserPlus, RefreshCw, Mail, ShieldCheck, AlertTriangle, Key, LogOut } from 'lucide-react';
 import { ALL_PRODUCTS } from '../data';
 import { SEED_CUSTOMERS, SEED_ORDERS, isAdminClick } from '../utils/analytics';
-import { safeParse, safeGetNumber } from '../utils/safeParse';
+import { safeParse, safeGetNumber, safeFormatDate, safeFormatDateTime } from '../utils/safeParse';
 import AdminSettings from './AdminSettings';
 import GoyeCustomerIntelligence from './GoyeCustomerIntelligence';
 
@@ -1621,17 +1621,8 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
                           <span className="px-2 py-1 bg-[#10B981]/20 text-[#10B981] rounded text-[10px] font-bold">Verified</span> : 
                           <span className="px-2 py-1 bg-yellow-500/20 text-yellow-500 rounded text-[10px] font-bold">Pending</span>}
                       </td>
-                      <td className="p-4 text-gray-500 text-xs">
-                        {(() => {
-                          const rawDate = u.createdAt || u.created_at || u.date_wat || u.date;
-                          if (!rawDate) return 'N/A';
-                          try {
-                            const parsed = new Date(rawDate);
-                            return !isNaN(parsed.getTime()) ? parsed.toLocaleDateString() : String(rawDate);
-                          } catch (e) {
-                            return String(rawDate);
-                          }
-                        })()}
+                      <td className="p-4 text-gray-500 text-xs font-mono">
+                        {safeFormatDate(u.createdAt || u.created_at || u.date_wat || u.date)}
                       </td>
                       <td className="p-4">
                         <button className="text-red-400 hover:text-red-300"><Trash2 size={16}/></button>
@@ -1889,7 +1880,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
               <tbody className="divide-y divide-white/5">
                 {leadsList.map((l: any, idx: number) => (
                   <tr key={l.id || idx} className="hover:bg-white/[0.02]">
-                    <td className="p-3.5 text-gray-400 text-xs">{l.date || l.date_wat || new Date(l.timestamp || Date.now()).toLocaleString()}</td>
+                    <td className="p-3.5 text-gray-400 text-xs font-mono">{safeFormatDateTime(l.timestamp || l.createdAt || l.created_at || l.date || l.date_wat)}</td>
                     <td className="p-3.5 text-white font-bold">{l.name || l.customerName || 'Lead User'}</td>
                     <td className="p-3.5 text-[#3b82f6] font-mono text-xs">{l.email || 'N/A'}</td>
                     <td className="p-3.5 text-gray-300">{safeCountryStr(l.country || 'Nigeria')}</td>
@@ -1952,7 +1943,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
               <tbody className="divide-y divide-white/5">
                 {clicksList.map((c: any, idx: number) => (
                   <tr key={c.id || idx} className="hover:bg-white/[0.02]">
-                    <td className="p-3.5 text-gray-400 text-xs">{c.date ? new Date(c.date).toLocaleString() : 'Just now'}</td>
+                    <td className="p-3.5 text-gray-400 text-xs font-mono">{safeFormatDateTime(c.timestamp || c.createdAt || c.created_at || c.date)}</td>
                     <td className="p-3.5 text-[#FFD700] font-bold text-xs">{c.action || 'click'}</td>
                     <td className="p-3.5 text-gray-300 font-mono text-xs">{typeof c.details === 'object' ? JSON.stringify(c.details) : String(c.details || '-')}</td>
                     <td className="p-3.5 text-[#3b82f6] font-mono text-xs">{c.page || '/'}</td>
