@@ -5,6 +5,10 @@ export const ALL_PRODUCTS = [
   // 0. Pi Testnet Payment Test (Developer Portal Verification Only - Hidden from customer shop)
   {
     id: 'pi-testnet-test',
+    is_locked: true,
+    slug: 'pi-gcv-crash-course-314159',
+    preview_image: '/images/old/pi-gcv-crash-course-314159.jpg',
+    image: '/images/old/pi-gcv-crash-course-314159.jpg',
     name: 'Pi Testnet Payment Test (0.01 Pi)',
     title: 'Pi Testnet Payment Test',
     icon: '🟣',
@@ -31,6 +35,10 @@ export const ALL_PRODUCTS = [
   // 0. AI Starter & Global Travel Pass ($1 Tripwire)
   {
     id: 'ai-starter-tripwire-pass',
+    is_locked: true,
+    slug: 'esim-global-1gb',
+    preview_image: '/images/old/esim-global-1gb.jpg',
+    image: '/images/old/esim-global-1gb.jpg',
     name: 'AI Starter & Global Travel Pass ($1 / 0.000003 Pi)',
     title: 'AI Starter & Global Travel Pass',
     icon: '⚡',
@@ -54,9 +62,41 @@ export const ALL_PRODUCTS = [
       '1-Day VIP Access Pass to Sirwise AI Academy'
     ]
   },
+  // DIGITAL DOCUMENTATION & ARCHIVING (15k NGN)
+  {
+    id: 'digital-documentation-archiving',
+    is_locked: true,
+    slug: 'digital-documentation-archiving',
+    preview_image: '/images/old/digital-documentation-archiving.jpg',
+    image: '/images/old/digital-documentation-archiving.jpg',
+    name: 'Digital Documentation & Archiving (ISO 15489)',
+    title: 'Digital Documentation & Archiving (ISO 15489)',
+    icon: '📑',
+    price: 10.00,
+    priceUSD: 10.00,
+    priceNGN: 15000,
+    category: 'toolkit',
+    badge: 'ISO 15489 COMPLIANT',
+    bestseller: true,
+    status: 'ACTIVE',
+    visible: true,
+    isDeleted: false,
+    downloadUrl: 'https://www.gasv.store/support',
+    filePath: 'https://www.gasv.store/support',
+    description: 'OCR text recognition, encrypted Google Drive cloud archives, and ISO 15489 compliant document management.',
+    features: [
+      'OCR-Searchable High-Compression PDF Archives',
+      'Encrypted Cloud Folder Link (Google Drive / Secure Zip Download)',
+      'Digital Document Index Spreadsheet & Metadata Cataloging'
+    ]
+  },
   // 1. Dubai eSIM 1GB (HOT - Top HOME #1)
   {
     id: 'dubai-esim-1gb',
+    is_locked: true,
+    slug: 'esim-global-1gb',
+    preview_image: '/images/old/esim-global-1gb.jpg',
+    image: '/images/old/esim-global-1gb.jpg',
     name: 'Dubai eSIM - 1GB / 3 Days - Instant',
     title: 'Dubai eSIM - 1GB / 3 Days - Instant',
     icon: '🇦🇪',
@@ -80,6 +120,10 @@ export const ALL_PRODUCTS = [
   // 2. Dubai Unlimited eSIM (HOT - Top HOME #2)
   {
     id: 'dubai-esim-unlimited',
+    is_locked: true,
+    slug: 'esim-global-1gb',
+    preview_image: '/images/old/esim-global-1gb.jpg',
+    image: '/images/old/esim-global-1gb.jpg',
     name: 'Dubai Unlimited eSIM - 10 Days',
     title: 'Dubai Unlimited eSIM - 10 Days',
     icon: '🇦🇪',
@@ -103,6 +147,10 @@ export const ALL_PRODUCTS = [
   // 3. GOYE eSIM Global 190 Countries 1GB
   {
     id: 'esim-global',
+    is_locked: true,
+    slug: 'esim-global-1gb',
+    preview_image: '/images/old/esim-global-1gb.jpg',
+    image: '/images/old/esim-global-1gb.jpg',
     name: 'GOYE eSIM Global 190 Countries 1GB',
     title: 'GOYE eSIM Global 190 Countries 1GB',
     icon: '🌐',
@@ -126,6 +174,10 @@ export const ALL_PRODUCTS = [
   // 4. GOYE eSIM Global 190 Countries 5GB
   {
     id: 'esim-global-5gb',
+    is_locked: true,
+    slug: 'esim-global-1gb',
+    preview_image: '/images/old/esim-global-1gb.jpg',
+    image: '/images/old/esim-global-1gb.jpg',
     name: 'GOYE eSIM Global 190 Countries 5GB',
     title: 'GOYE eSIM Global 190 Countries 5GB',
     icon: '🌐',
@@ -149,6 +201,10 @@ export const ALL_PRODUCTS = [
   // 5. USA 5GB 5G eSIM
   {
     id: 'esim-usa-5gb',
+    is_locked: true,
+    slug: 'esim-global-1gb',
+    preview_image: '/images/old/esim-global-1gb.jpg',
+    image: '/images/old/esim-global-1gb.jpg',
     name: 'USA 5GB High-Speed 5G/4G eSIM',
     title: 'USA 5GB High-Speed 5G/4G eSIM',
     icon: '🇺🇸',
@@ -172,6 +228,10 @@ export const ALL_PRODUCTS = [
   // 6. UK 5GB 5G eSIM
   {
     id: 'esim-uk-5gb',
+    is_locked: true,
+    slug: 'uk-care-worker-visa-blueprint-2026',
+    preview_image: '/images/old/uk-care-worker-visa-blueprint-2026.jpg',
+    image: '/images/old/uk-care-worker-visa-blueprint-2026.jpg',
     name: 'UK 5GB High-Speed 5G/4G eSIM',
     title: 'UK 5GB High-Speed 5G/4G eSIM',
     icon: '🇬🇧',
@@ -195,6 +255,10 @@ export const ALL_PRODUCTS = [
   // 7. Canada 5GB eSIM
   {
     id: 'esim-canada-5gb',
+    is_locked: true,
+    slug: 'canada-lmia-500-employers',
+    preview_image: '/images/old/canada-lmia-500-employers.jpg',
+    image: '/images/old/canada-lmia-500-employers.jpg',
     name: 'Canada 5GB High-Speed 5G/4G eSIM',
     title: 'Canada 5GB High-Speed 5G/4G eSIM',
     icon: '🇨🇦',
@@ -218,6 +282,10 @@ export const ALL_PRODUCTS = [
   // 8. Europe Regional 10GB eSIM
   {
     id: 'esim-europe-10gb',
+    is_locked: true,
+    slug: 'esim-global-1gb',
+    preview_image: '/images/old/esim-global-1gb.jpg',
+    image: '/images/old/esim-global-1gb.jpg',
     name: 'Europe 30-Country Regional 10GB eSIM',
     title: 'Europe 30-Country Regional 10GB eSIM',
     icon: '🇪🇺',
@@ -241,6 +309,10 @@ export const ALL_PRODUCTS = [
   // 9. Asia Regional 5GB eSIM
   {
     id: 'esim-asia-5gb',
+    is_locked: true,
+    slug: 'esim-global-1gb',
+    preview_image: '/images/old/esim-global-1gb.jpg',
+    image: '/images/old/esim-global-1gb.jpg',
     name: 'Asia-Pacific Regional 5GB eSIM',
     title: 'Asia-Pacific Regional 5GB eSIM',
     icon: '🌏',
@@ -264,6 +336,10 @@ export const ALL_PRODUCTS = [
   // 10. France 10GB eSIM
   {
     id: 'esim-france-10gb',
+    is_locked: true,
+    slug: 'esim-global-1gb',
+    preview_image: '/images/old/esim-global-1gb.jpg',
+    image: '/images/old/esim-global-1gb.jpg',
     name: 'France 10GB 5G/4G Travel eSIM',
     title: 'France 10GB 5G/4G Travel eSIM',
     icon: '🇫🇷',
@@ -287,6 +363,10 @@ export const ALL_PRODUCTS = [
   // 11. Germany 10GB eSIM
   {
     id: 'esim-germany-10gb',
+    is_locked: true,
+    slug: 'esim-global-1gb',
+    preview_image: '/images/old/esim-global-1gb.jpg',
+    image: '/images/old/esim-global-1gb.jpg',
     name: 'Germany 10GB 5G/4G Travel eSIM',
     title: 'Germany 10GB 5G/4G Travel eSIM',
     icon: '🇩🇪',
@@ -310,6 +390,10 @@ export const ALL_PRODUCTS = [
   // 12. Japan 1GB eSIM
   {
     id: 'esim-japan-1gb',
+    is_locked: true,
+    slug: 'uk-care-worker-visa-blueprint-2026',
+    preview_image: '/images/old/uk-care-worker-visa-blueprint-2026.jpg',
+    image: '/images/old/uk-care-worker-visa-blueprint-2026.jpg',
     name: 'Japan NTT Docomo 1GB Travel eSIM',
     title: 'Japan NTT Docomo 1GB Travel eSIM',
     icon: '🇯🇵',
@@ -333,6 +417,10 @@ export const ALL_PRODUCTS = [
   // 13. Turkey 1GB eSIM
   {
     id: 'esim-turkey-1gb',
+    is_locked: true,
+    slug: 'esim-global-1gb',
+    preview_image: '/images/old/esim-global-1gb.jpg',
+    image: '/images/old/esim-global-1gb.jpg',
     name: 'Turkey Travel 1GB High-Speed eSIM',
     title: 'Turkey Travel 1GB High-Speed eSIM',
     icon: '🇹🇷',
@@ -356,6 +444,10 @@ export const ALL_PRODUCTS = [
   // 14. Saudi Arabia Hajj & Umrah 3GB eSIM
   {
     id: 'esim-saudi-3gb',
+    is_locked: true,
+    slug: 'esim-global-1gb',
+    preview_image: '/images/old/esim-global-1gb.jpg',
+    image: '/images/old/esim-global-1gb.jpg',
     name: 'Saudi Arabia Hajj & Umrah 3GB eSIM',
     title: 'Saudi Arabia Hajj & Umrah 3GB eSIM',
     icon: '🇸🇦',
@@ -379,6 +471,10 @@ export const ALL_PRODUCTS = [
   // 15. South Africa 5GB eSIM
   {
     id: 'esim-south-africa-5gb',
+    is_locked: true,
+    slug: 'esim-global-1gb',
+    preview_image: '/images/old/esim-global-1gb.jpg',
+    image: '/images/old/esim-global-1gb.jpg',
     name: 'South Africa 5GB High-Speed eSIM',
     title: 'South Africa 5GB High-Speed eSIM',
     icon: '🇿🇦',
@@ -402,6 +498,10 @@ export const ALL_PRODUCTS = [
   // 16. Web3 Starter Toolkit
   {
     id: 'web3-starter-toolkit',
+    is_locked: true,
+    slug: 'sirwise-academy-modules-cover',
+    preview_image: '/images/old/sirwise-academy-modules-cover.jpg',
+    image: '/images/old/sirwise-academy-modules-cover.jpg',
     name: 'The Ultimate Web3 & AI Starter Toolkit',
     title: 'The Ultimate Web3 & AI Starter Toolkit',
     icon: '🚀',
@@ -423,6 +523,10 @@ export const ALL_PRODUCTS = [
   // 17. 1000 Viral AI Prompts
   {
     id: '1000-prompts',
+    is_locked: true,
+    slug: 'ai-prompts-library-1000',
+    preview_image: '/images/old/ai-prompts-library-1000.jpg',
+    image: '/images/old/ai-prompts-library-1000.jpg',
     name: '1000 Viral AI Prompts Make $1000/month',
     title: '1000 Viral AI Prompts Make $1000/month',
     icon: '🤖',
@@ -444,6 +548,10 @@ export const ALL_PRODUCTS = [
   // 18. GPT ChatGPT Business Pack
   {
     id: 'gpt-master-pack',
+    is_locked: true,
+    slug: 'ai-prompts-library-1000',
+    preview_image: '/images/old/ai-prompts-library-1000.jpg',
+    image: '/images/old/ai-prompts-library-1000.jpg',
     name: '⚡ ChatGPT Business Pack & 5,000+ Master Prompts',
     title: '⚡ ChatGPT Business Pack & 5,000+ Master Prompts',
     icon: '⚡',
@@ -465,6 +573,10 @@ export const ALL_PRODUCTS = [
   // 19. 5-Minute AI Prompt Blueprint
   {
     id: '5min-ai-prompt-blueprint',
+    is_locked: true,
+    slug: 'ai-prompts-library-1000',
+    preview_image: '/images/old/ai-prompts-library-1000.jpg',
+    image: '/images/old/ai-prompts-library-1000.jpg',
     name: '5-Minute AI Prompt Blueprint (Master SER Edition)',
     title: '5-Minute AI Prompt Blueprint (Master SER Edition)',
     icon: '📄',
@@ -486,6 +598,10 @@ export const ALL_PRODUCTS = [
   // 20. 100 Church Flyer Templates
   {
     id: 'canva-church-flyers',
+    is_locked: true,
+    slug: 'ai-prompts-library-1000',
+    preview_image: '/images/old/ai-prompts-library-1000.jpg',
+    image: '/images/old/ai-prompts-library-1000.jpg',
     name: '100 Professional Canva Church & Event Flyer Templates',
     title: '100 Professional Canva Church & Event Flyer Templates',
     icon: '🎨',
@@ -507,6 +623,10 @@ export const ALL_PRODUCTS = [
   // 21. 500 Luxury Logo Templates
   {
     id: 'canva-luxury-logos',
+    is_locked: true,
+    slug: 'ai-prompts-library-1000',
+    preview_image: '/images/old/ai-prompts-library-1000.jpg',
+    image: '/images/old/ai-prompts-library-1000.jpg',
     name: '500 Luxury Brand & Business Logo Templates',
     title: '500 Luxury Brand & Business Logo Templates',
     icon: '💎',
@@ -528,6 +648,10 @@ export const ALL_PRODUCTS = [
   // 22. Digital Nomad Pro Kit
   {
     id: 'digital-nomad-kit',
+    is_locked: true,
+    slug: 'esim-global-1gb',
+    preview_image: '/images/old/esim-global-1gb.jpg',
+    image: '/images/old/esim-global-1gb.jpg',
     name: '🔥 GOYE BEST SELLER - DIGITAL NOMAD PRO KIT',
     title: '🔥 GOYE BEST SELLER - DIGITAL NOMAD PRO KIT',
     icon: '💼',
@@ -549,6 +673,10 @@ export const ALL_PRODUCTS = [
   // 23. Canada LMIA Jobs Database
   {
     id: 'canada-lmia',
+    is_locked: true,
+    slug: 'canada-lmia-500-employers',
+    preview_image: '/images/old/canada-lmia-500-employers.jpg',
+    image: '/images/old/canada-lmia-500-employers.jpg',
     name: 'Canada LMIA Jobs Database 500 employers',
     title: 'Canada LMIA Jobs Database 500 employers',
     icon: '🇨🇦',
@@ -570,6 +698,10 @@ export const ALL_PRODUCTS = [
   // 24. UK Care Worker Visa Blueprint 2026
   {
     id: 'uk-care-visa',
+    is_locked: true,
+    slug: 'uk-care-worker-visa-blueprint-2026',
+    preview_image: '/images/old/uk-care-worker-visa-blueprint-2026.jpg',
+    image: '/images/old/uk-care-worker-visa-blueprint-2026.jpg',
     name: 'UK Care Worker Visa Blueprint 2026 + COS List',
     title: 'UK Care Worker Visa Blueprint 2026 + COS List',
     icon: '🇬🇧',
@@ -591,6 +723,10 @@ export const ALL_PRODUCTS = [
   // 25. Japa Relocation Package
   {
     id: 'japa-relocation-package',
+    is_locked: true,
+    slug: 'uk-care-worker-visa-blueprint-2026',
+    preview_image: '/images/old/uk-care-worker-visa-blueprint-2026.jpg',
+    image: '/images/old/uk-care-worker-visa-blueprint-2026.jpg',
     name: '✈️ Japa Relocation Package - Full Visa Guides & Docs',
     title: '✈️ Japa Relocation Package - Full Visa Guides & Docs',
     icon: '✈️',
@@ -612,6 +748,10 @@ export const ALL_PRODUCTS = [
   // 26. UK CV Pack Pro
   {
     id: 'uk-cv-pack-pro',
+    is_locked: true,
+    slug: 'uk-care-worker-visa-blueprint-2026',
+    preview_image: '/images/old/uk-care-worker-visa-blueprint-2026.jpg',
+    image: '/images/old/uk-care-worker-visa-blueprint-2026.jpg',
     name: 'UK CV Pack Pro - ATS Resume & Cover Letter Blueprint',
     title: 'UK CV Pack Pro - ATS Resume & Cover Letter Blueprint',
     icon: '📄',
@@ -633,6 +773,10 @@ export const ALL_PRODUCTS = [
   // 27. USA & Canada Study SOP Samples
   {
     id: 'usa-canada-sop-samples',
+    is_locked: true,
+    slug: 'canada-lmia-500-employers',
+    preview_image: '/images/old/canada-lmia-500-employers.jpg',
+    image: '/images/old/canada-lmia-500-employers.jpg',
     name: 'USA & Canada Study SOP Samples (10 Winning SOPs)',
     title: 'USA & Canada Study SOP Samples (10 Winning SOPs)',
     icon: '🎓',
@@ -654,6 +798,10 @@ export const ALL_PRODUCTS = [
   // 28. Pi Network GCV Crash Course
   {
     id: 'pi-network',
+    is_locked: true,
+    slug: 'pi-gcv-crash-course-314159',
+    preview_image: '/images/old/pi-gcv-crash-course-314159.jpg',
+    image: '/images/old/pi-gcv-crash-course-314159.jpg',
     name: 'Pi Network GCV Crash Course ($314,159 Economy)',
     title: 'Pi Network GCV Crash Course ($314,159 Economy)',
     icon: 'π',
@@ -675,6 +823,10 @@ export const ALL_PRODUCTS = [
   // 29. Sirwise AI Web3 Academy Full Masterclass Pass
   {
     id: 'sirwise-academy-full',
+    is_locked: true,
+    slug: 'sirwise-academy-modules-cover',
+    preview_image: '/images/old/sirwise-academy-modules-cover.jpg',
+    image: '/images/old/sirwise-academy-modules-cover.jpg',
     name: 'Sirwise AI Web3 Academy 4-Week Full Masterclass Pass',
     title: 'Sirwise AI Web3 Academy 4-Week Full Masterclass Pass',
     icon: '🎓',
@@ -696,6 +848,10 @@ export const ALL_PRODUCTS = [
   // 30. Academy Module 1: AI & Prompt Engineering
   {
     id: 'academy-mod-1',
+    is_locked: true,
+    slug: 'sirwise-academy-modules-cover',
+    preview_image: '/images/old/sirwise-academy-modules-cover.jpg',
+    image: '/images/old/sirwise-academy-modules-cover.jpg',
     name: 'AI & Prompt Engineering Mastery (Module 1)',
     title: 'AI & Prompt Engineering Mastery (Module 1)',
     icon: '🧠',
@@ -717,6 +873,10 @@ export const ALL_PRODUCTS = [
   // 31. Academy Module 2: Generative AI for Business
   {
     id: 'academy-mod-2',
+    is_locked: true,
+    slug: 'sirwise-academy-modules-cover',
+    preview_image: '/images/old/sirwise-academy-modules-cover.jpg',
+    image: '/images/old/sirwise-academy-modules-cover.jpg',
     name: 'Generative AI for Business & Content Creation (Module 2)',
     title: 'Generative AI for Business & Content Creation (Module 2)',
     icon: '📊',

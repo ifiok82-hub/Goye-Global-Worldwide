@@ -33,7 +33,7 @@ export default function GoyeCustomerIntelligence({ showToast }: { showToast: (m:
     try {
       const res = await fetch('/api/admin/customer-intelligence', {
         headers: {
-          'x-admin-token': localStorage.getItem('admin_token') || 'GoyeBN3583773',
+          'x-admin-token': localStorage.getItem('admin_token') || 'GoyeBN3583878',
           'x-is-admin': 'true'
         }
       });
@@ -67,7 +67,7 @@ export default function GoyeCustomerIntelligence({ showToast }: { showToast: (m:
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-admin-token': localStorage.getItem('admin_token') || 'GoyeBN3583773'
+          'x-admin-token': localStorage.getItem('admin_token') || 'GoyeBN3583878'
         },
         body: JSON.stringify({ email: deleteEmailInput.trim() })
       });

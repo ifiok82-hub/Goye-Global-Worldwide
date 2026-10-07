@@ -104,7 +104,7 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
       network: PI_CONFIG.network,
       qr: '',
       warning: PI_CONFIG.warning,
-      instructions: 'Pay with Pi in Pi Browser - GCV $314,159 - Amount 0.000159 Pi ≈ $49.99 - RC BN3583773 - 190+ Countries'
+      instructions: 'Pay with Pi in Pi Browser - GCV $314,159 - Amount 0.000159 Pi ≈ $49.99 - RC BN3583878 - 190+ Countries'
     }
   };
 
@@ -187,7 +187,7 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
     const Pi = (window as any).Pi;
 
     if (!Pi) {
-      alert('⚠️ Open gasv.store in Pi Browser!\n\nYou are in Chrome - Pi payment works inside Pi Browser:\n\n1. Open Pi Browser → gasv.store\n2. Select Pi Network GCV $314,159\n3. Click Open Pi Payment → Pi wallet opens automatically!\n\nReceiver Wallet:\n' + PI_WALLET_ADDRESS + '\n\nRC BN3583773');
+      alert('⚠️ Open gasv.store in Pi Browser!\n\nYou are in Chrome - Pi payment works inside Pi Browser:\n\n1. Open Pi Browser → gasv.store\n2. Select Pi Network GCV $314,159\n3. Click Open Pi Payment → Pi wallet opens automatically!\n\nReceiver Wallet:\n' + PI_WALLET_ADDRESS + '\n\nRC BN3583878');
       window.open('https://minepi.com', '_blank');
       return;
     }
@@ -209,7 +209,7 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
       await Pi.createPayment(
         {
           amount: piAmount,
-          memo: `Goye Store ${productName || 'Pi Payment'} RC BN3583773`,
+          memo: `Goye Store ${productName || 'Pi Payment'} RC BN3583878`,
           metadata: { email, product: productName, recipient: PI_WALLET_ADDRESS, store: 'gasv.store' }
         },
         {
@@ -373,7 +373,7 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
         </button>
 
         <p style={{ color: '#666', fontSize: '10px', textAlign: 'center', marginTop: '12px', margin: 0 }}>
-          Secure • 100% Instant Automated Unlock • RC BN3583773 • 190+ Countries
+          Secure • 100% Instant Automated Unlock • RC BN3583878 • 190+ Countries
         </p>
       </div>
     </div>

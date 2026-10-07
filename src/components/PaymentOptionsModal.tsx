@@ -109,7 +109,7 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ onClos
             if ((window as any).trackLead) {
               (window as any).trackLead({ email: userEmail, source: 'Paystack Order', ref, amount: priceUSD });
             }
-            alert(`🎉 Payment Successful!\nRef: ${ref}\n\nFull Academy Unlocked! RC BN3583773`);
+            alert(`🎉 Payment Successful!\nRef: ${ref}\n\nFull Academy Unlocked! RC BN3583878`);
             localStorage.setItem('sirwise_paid', 'true');
             localStorage.setItem('academy_unlocked', 'true');
             localStorage.setItem('payment_verified', 'true');
@@ -156,7 +156,7 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ onClos
         },
         customizations: {
           title: productName,
-          description: 'Goye Store Global - RC BN3583773',
+          description: 'Goye Store Global - RC BN3583878',
           logo: 'https://gasv.store/logo.png'
         },
         callback: (data: any) => {
@@ -238,7 +238,7 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ onClos
         </div>
 
         <p style={{ color: 'white', margin: '4px 0 12px 0', fontSize: '13px' }}>
-          8 Complete Modules • Certificate • RC BN3583773 • 190+ Countries • Lifetime Access
+          8 Complete Modules • Certificate • RC BN3583878 • 190+ Countries • Lifetime Access
         </p>
 
         <div style={{ background: '#1a1a00', border: '1px solid #FFD700', padding: '12px', borderRadius: '12px', marginBottom: '16px', textAlign: 'center' }}>
@@ -373,7 +373,7 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ onClos
         </button>
 
         <p style={{ color: '#666', fontSize: '10px', marginTop: '10px', textAlign: 'center' }}>
-          100% SSL Encrypted • RC BN3583773 • goyedagosmess@gmail.com • 190+ Countries
+          100% SSL Encrypted • RC BN3583878 • goyedagosmess@gmail.com • 190+ Countries
         </p>
       </div>
     </div>

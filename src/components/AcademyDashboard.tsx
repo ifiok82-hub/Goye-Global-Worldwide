@@ -121,7 +121,7 @@ const GLOBAL_MODULES = [
     id: 8, 
     title: 'Capstone Showcase & Blockchain Verified Certificate', 
     shortTitle: 'Capstone Showcase & Certificate',
-    desc: 'Final interactive project submission - Build your portfolio - Get blockchain verified certificate RC BN3583773 recognized in 190+ countries',
+    desc: 'Final interactive project submission - Build your portfolio - Get blockchain verified certificate RC BN3583878 recognized in 190+ countries',
     duration: '45-60 mins',
     videoUrl: 'https://www.youtube.com/embed/aircAruvnKk',
     pdfTitle: 'Capstone Portfolio Submission Template & Verification Guide',
@@ -180,7 +180,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
         body: JSON.stringify({
           name: cleanEmail.split('@')[0],
           email: cleanEmail,
-          source: 'Academy Direct Support Inquiry (RC BN3583773)',
+          source: 'Academy Direct Support Inquiry (RC BN3583878)',
           message: cleanMsg,
           timestamp: new Date().toISOString()
         })
@@ -193,7 +193,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({
-          _subject: 'New Sirwise Academy Inquiry RC BN3583773',
+          _subject: 'New Sirwise Academy Inquiry RC BN3583878',
           Email: cleanEmail,
           Message: cleanMsg,
           Date: new Date().toISOString()
@@ -310,7 +310,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
   useEffect(() => {
     try {
       const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-      if (params && (params.get('admin') === 'RCBN3583773' || params.get('admin_unlock') === 'RCBN3583773')) {
+      if (params && (params.get('admin') === 'RCBN3583878' || params.get('admin_unlock') === 'RCBN3583878')) {
         localStorage.setItem('sirwise_paid', 'true');
         localStorage.setItem('payment_verified', 'true');
         localStorage.setItem('academy_unlocked', 'true');
@@ -320,7 +320,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
       const isPaid = localStorage.getItem('sirwise_paid') === 'true';
       const isVerified = localStorage.getItem('payment_verified') === 'true';
       const isUnlocked = localStorage.getItem('academy_unlocked') === 'true';
-      const isAdmin = localStorage.getItem('is_admin') === 'true' || (params && (params.get('admin') === 'RCBN3583773' || params.get('admin_unlock') === 'RCBN3583773'));
+      const isAdmin = localStorage.getItem('is_admin') === 'true' || (params && (params.get('admin') === 'RCBN3583878' || params.get('admin_unlock') === 'RCBN3583878'));
 
       const hasAccess = (isPaid || isVerified || isAdmin) && (isUnlocked || isAdmin);
 
@@ -504,7 +504,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
         },
         customizations: {
           title: 'Sirwise AI Web3 Academy Global $49.99',
-          description: 'RC BN3583773',
+          description: 'RC BN3583878',
           logo: 'https://www.gasv.store/logo.png'
         },
         callback: function (data: any) {
@@ -615,7 +615,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
               <ShieldCheck className="text-[#10B981]" size={20} />
               <div className="text-left">
                 <p className="text-[10px] text-gray-400 uppercase font-bold">Official Registration</p>
-                <p className="text-xs font-black text-white">RC BN3583773</p>
+                <p className="text-xs font-black text-white">RC BN3583878</p>
               </div>
             </div>
           </div>
@@ -625,7 +625,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
             <span className="bg-[#222] text-[#FFD700] text-[11px] font-bold py-1.5 px-3 rounded-lg border border-[#333] text-center">🌍 190+ Countries</span>
             <span className="bg-[#222] text-[#FFD700] text-[11px] font-bold py-1.5 px-3 rounded-lg border border-[#333] text-center">🌐 Trusted Worldwide</span>
             <span className="bg-[#222] text-[#10B981] text-[11px] font-bold py-1.5 px-3 rounded-lg border border-[#333] text-center">🏆 Blockchain Verified</span>
-            <span className="bg-[#222] text-[#FFD700] text-[11px] font-bold py-1.5 px-3 rounded-lg border border-[#333] text-center">📜 RC BN3583773</span>
+            <span className="bg-[#222] text-[#FFD700] text-[11px] font-bold py-1.5 px-3 rounded-lg border border-[#333] text-center">📜 RC BN3583878</span>
             <span className="bg-[#222] text-[#FFD700] text-[11px] font-bold py-1.5 px-3 rounded-lg border border-[#333] text-center">💼 Job Ready Skills</span>
             <span className="bg-[#222] text-[#10B981] text-[11px] font-bold py-1.5 px-3 rounded-lg border border-[#333] text-center">💰 Earn in USD</span>
           </div>
@@ -884,7 +884,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
       {/* Inquiry / Support Form submitting to goyedagosmess@gmail.com */}
       <div className="bg-[#111] rounded-3xl p-6 border border-[#222] mt-8">
         <h3 className="text-[#FFD700] font-black text-lg mb-2 flex items-center gap-2">
-          <Mail size={20} /> Direct Support Inquiry (RC BN3583773)
+          <Mail size={20} /> Direct Support Inquiry (RC BN3583878)
         </h3>
         <p className="text-gray-400 text-xs mb-4">Send an official inquiry or payment proof to GOYE Support.</p>
         <form onSubmit={handleSupportInquirySubmit} className="space-y-3">

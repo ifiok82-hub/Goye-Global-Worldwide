@@ -13,12 +13,12 @@ interface FreeLeadMagnetModalProps {
 const BLUEPRINT_TEXT_CONTENT = `================================================================================
           THE 5-MINUTE AI PROMPT BLUEPRINT FOR ENTREPRENEURS (TEASER)
         Save 15+ Hours/Week Automating Marketing, Sales & Operations
-                 Powered by Sirwise AI Web3 Academy (RC BN3583773)
+                 Powered by Sirwise AI Web3 Academy (RC BN3583878)
                             www.gasv.store
 ================================================================================
 
 [PAGE 1: COVER]
-🎁 FREE BLUEPRINT ACCESS | RC BN3583773
+🎁 FREE BLUEPRINT ACCESS | RC BN3583878
 Title: The 5-Minute AI Prompt Blueprint for Entrepreneurs
 Publisher: Sirwise AI Web3 Academy
 Official Site: https://www.gasv.store | Contact: goyedagosmess@gmail.com
@@ -73,7 +73,7 @@ Your Free Blueprint is only 10% of the puzzle. Unlock the remaining 90% today!
 - USDC Base Address: 0xdc7f804B36aB672Ec31642dF418F29e73281b040
 - OPay Bank Transfer: Account 6113541882 GOYEDAGOSMESS ENTERPRISE
 - Global Cards: Paystack & Flutterwave Supported
-- 100% Secure SSL | Official Contact: goyedagosmess@gmail.com | RC BN3583773
+- 100% Secure SSL | Official Contact: goyedagosmess@gmail.com | RC BN3583878
 
 --------------------------------------------------------------------------------
 [PAGE 7: ACADEMY PAYWALL & VIDEO TOUR LINK]
@@ -116,7 +116,7 @@ export default function FreeLeadMagnetModal({ isOpen, onClose, onClaimTripwire, 
 
       doc.setFontSize(8);
       doc.setTextColor(212, 175, 55);
-      doc.text('Sirwise AI Web3 Academy | RC BN3583773 | www.gasv.store', 105, 33, { align: 'center' });
+      doc.text('Sirwise AI Web3 Academy | RC BN3583878 | www.gasv.store', 105, 33, { align: 'center' });
 
       let y = 52;
 
@@ -186,7 +186,7 @@ export default function FreeLeadMagnetModal({ isOpen, onClose, onClaimTripwire, 
       doc.rect(0, 280, 210, 17, 'F');
       doc.setTextColor(255, 215, 0);
       doc.setFontSize(8);
-      doc.text('© Goyedagosmess Enterprise | Sirwise AI Web3 Academy | RC BN3583773 | goyedagosmess@gmail.com', 105, 289, { align: 'center' });
+      doc.text('© Goyedagosmess Enterprise | Sirwise AI Web3 Academy | RC BN3583878 | goyedagosmess@gmail.com', 105, 289, { align: 'center' });
 
       doc.save('5-Minute-AI-Prompt-Blueprint-Master-SER-Sirwise.pdf');
       
@@ -510,7 +510,7 @@ Structure the output into 4 clear sections: Executive Summary, Project Scope, Ti
               </button>
 
               <p style={{ fontSize: '10px', color: '#888', textAlign: 'center', marginTop: '8px' }}>
-                100% Privacy Guaranteed. Zero Spam. Official: goyedagosmess@gmail.com RC BN3583773
+                100% Privacy Guaranteed. Zero Spam. Official: goyedagosmess@gmail.com RC BN3583878
               </p>
             </form>
           </div>

@@ -101,7 +101,7 @@ export default function AdminSettings() {
     setEnablePi(isPiEnabled);
 
     // Fetch keys from server with RBAC Admin Authentication
-    const adminToken = localStorage.getItem('admin_token') || localStorage.getItem('admin_password') || 'GoyeBN3583773';
+    const adminToken = localStorage.getItem('admin_token') || localStorage.getItem('admin_password') || 'GoyeBN3583878';
     setIsLoading(true);
 
     fetch('/api/admin/settings', {
@@ -185,7 +185,7 @@ export default function AdminSettings() {
       enable_pi: enablePi
     };
 
-    const adminToken = localStorage.getItem('admin_token') || localStorage.getItem('admin_password') || 'GoyeBN3583773';
+    const adminToken = localStorage.getItem('admin_token') || localStorage.getItem('admin_password') || 'GoyeBN3583878';
 
     try {
       setIsLoading(true);
@@ -202,10 +202,10 @@ export default function AdminSettings() {
       const data = await res.json();
       const piSavedText = cleanPiKey ? 'SAVED ✅ - Now test Pi Testnet at bottom' : 'Empty';
       alert(`✅ SAVED! PI_API_KEY ${piSavedText}`);
-      setSavedStatus(`✅ Settings & Gateway Keys Secured in Database! (RC BN3583773)`);
+      setSavedStatus(`✅ Settings & Gateway Keys Secured in Database! (RC BN3583878)`);
     } catch (e) {
       alert(`✅ Keys Saved Locally to Browser Storage!`);
-      setSavedStatus(`✅ Keys Saved Locally to Browser Storage! (RC BN3583773)`);
+      setSavedStatus(`✅ Keys Saved Locally to Browser Storage! (RC BN3583878)`);
     } finally {
       setIsLoading(false);
     }
@@ -225,7 +225,7 @@ export default function AdminSettings() {
     }
 
     setIsLoading(true);
-    const adminToken = localStorage.getItem('admin_token') || localStorage.getItem('admin_password') || 'GoyeBN3583773';
+    const adminToken = localStorage.getItem('admin_token') || localStorage.getItem('admin_password') || 'GoyeBN3583878';
 
     try {
       const res = await fetch('/api/admin/change-password', {
@@ -805,7 +805,7 @@ export default function AdminSettings() {
           <div className="text-gray-300 text-xs space-y-1 font-mono">
             <p>• Direct: <span className="text-white font-bold">https://www.gasv.store/#admin-settings</span> (no tapping)</p>
             <p>• Tap: Tap GOYE logo 5 times FAST in 2.5 sec</p>
-            <p>• Password: <span className="text-[#FFD700] font-bold">GoyeBN3583773</span></p>
+            <p>• Password: <span className="text-[#FFD700] font-bold">GoyeBN3583878</span></p>
           </div>
           <button 
             onClick={() => { window.location.hash = 'support'; }} 

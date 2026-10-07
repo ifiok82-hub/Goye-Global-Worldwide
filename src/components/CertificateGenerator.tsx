@@ -81,7 +81,7 @@ export default function CertificateGenerator({ isCompleted, isEnrolled, userProf
 
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(14);
-      doc.text('Goyedagosmess Enterprise RC BN3583773', 650, 500, { align: 'center' });
+      doc.text('Goyedagosmess Enterprise RC BN3583878', 650, 500, { align: 'center' });
       doc.setTextColor(150, 150, 150);
       doc.setFontSize(10);
       doc.text('Verified by Blockchain • 190+ Countries', 650, 520, { align: 'center' });

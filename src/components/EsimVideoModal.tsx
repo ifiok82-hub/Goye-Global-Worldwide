@@ -32,7 +32,7 @@ export default function EsimVideoModal({ onClose }: { onClose: () => void }) {
         
         <div style={{ background: '#111', padding: '15px', borderRadius: '10px', margin: '10px 0', borderLeft: '4px solid #FFD700' }}>
           <p style={{ color: 'white', fontWeight: 'bold', fontSize: '14px' }}>🎓 Sirwise AI WEB3 Academy - Internal Lesson</p>
-          <p style={{ color: '#aaa', fontSize: '11px' }}>RC BN3583773 - Goye Store Global - Sirwise AI verified</p>
+          <p style={{ color: '#aaa', fontSize: '11px' }}>RC BN3583878 - Goye Store Global - Sirwise AI verified</p>
         </div>
         
         <div id="goyeVideoPlayer" style={{ background: '#000', width: '100%', height: '220px', borderRadius: '10px', border: '2px solid #FFD700', position: 'relative', overflow: 'hidden', margin: '15px 0' }}>

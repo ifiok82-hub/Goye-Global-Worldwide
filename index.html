@@ -3,7 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Goye Store Global Sirwise AI WEB3 Academy - gasv.store - RC BN3583773</title>
+<title>GOYE STORE · SIRWISE AI WEB3 ACADEMY | gasv.store</title>
+<meta name="description" content="Official Goye Store & Sirwise AI WEB3 Academy - Global Digital Products, Roaming eSIM, AI & Web3 Certified Education - gasv.store" />
+
+<!-- OpenGraph Metadata -->
+<meta property="og:type" content="website" />
+<meta property="og:title" content="GOYE STORE · SIRWISE AI WEB3 ACADEMY" />
+<meta property="og:description" content="Official Goye Store & Sirwise AI WEB3 Academy - Global Digital Products, Roaming eSIM, AI & Web3 Certified Education - gasv.store" />
+<meta property="og:site_name" content="GOYE STORE" />
+<meta property="og:url" content="https://gasv.store" />
+
+<!-- Twitter Metadata -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="GOYE STORE · SIRWISE AI WEB3 ACADEMY" />
+<meta name="twitter:description" content="Official Goye Store & Sirwise AI WEB3 Academy - Global Digital Products, Roaming eSIM, AI & Web3 Certified Education" />
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://sdk.minepi.com/pi-sdk.js"></script>
 <script src="https://js.paystack.co/v1/inline.js"></script>
@@ -14,7 +27,7 @@ window.addEventListener('load', function(){
   if(window.Pi){
     try{
       Pi.init({version:"2.0", sandbox: isSandbox});
-      console.log('Pi SDK Ready - Sandbox:', isSandbox, '- gasv.store RC BN3583773');
+      console.log('Pi SDK Ready - Sandbox:', isSandbox, '- gasv.store RC BN3583878');
     }catch(e){
       console.error('Pi init error:', e);
     }
@@ -25,7 +38,7 @@ window.addEventListener('load', function(){
     localStorage.setItem('pi_testnet_paid', 'true');
     localStorage.setItem('sirwise_paid', 'true');
     localStorage.setItem('paid_email', email);
-    alert('✅ Auto Confirmed! ' + method + '\nTX: ' + (txid || 'VERIFIED') + '\nInstant Delivery - Check Downloads + Academy\nRC BN3583773');
+    alert('✅ Auto Confirmed! ' + method + '\nTX: ' + (txid || 'VERIFIED') + '\nInstant Delivery - Check Downloads + Academy\nRC BN3583878');
     window.location.hash = 'downloads';
     setTimeout(function(){ location.reload(); }, 600);
   };
@@ -124,7 +137,7 @@ body{background:#000; color:#fff; font-family:system-ui, -apple-system, sans-ser
       },
       customizations: {
         title: "Sirwise AI Web3 Academy",
-        description: "Global $49.99 RC BN3583773",
+        description: "Global $49.99 RC BN3583878",
         logo: "https://www.gasv.store/logo.png",
       },
       callback: function(data){
@@ -156,16 +169,16 @@ body{background:#000; color:#fff; font-family:system-ui, -apple-system, sans-ser
 </script>
 </head>
 <body class="bg-black text-white min-h-screen">
-  <div id="loader" style="position:fixed; inset:0; background:black; z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-    <div style="width:140px; height:140px; background:#FF00FF; border-radius:50%; display:flex; align-items:center; justify-content:center; border:3px solid #FFD700; box-shadow:0 0 30px #FF00FF;">
-      <img src="/icon-512.png" style="width:130px; height:130px; border-radius:50%; object-fit:cover;" alt="Official Complete Pink Logo" onerror="this.style.display='none'">
+  <div id="loader" style="position:fixed; inset:0; background:#000000; z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+    <div style="width:120px; height:120px; background:rgba(255, 215, 0, 0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid #FFD700; box-shadow:0 0 30px rgba(255,215,0,0.4);">
+      <img src="/icon-512.png" style="width:100px; height:100px; border-radius:50%; object-fit:cover;" alt="GOYE STORE GLOBAL Logo" onerror="this.style.display='none'">
     </div>
-    <div style="color:#FFD700; font-weight:900; margin-top:20px; font-size:22px; letter-spacing:1.5px;">GOYE STORE GLOBAL</div>
-    <div style="color:white; font-size:14px; margin-top:6px; font-weight:900; letter-spacing:2px;">SIRWISE AI WEB3 ACADEMY</div>
-    <div style="color:#FFD700; font-size:12px; margin-top:10px;">190+ Countries Instant Delivery · RC: BN3583773</div>
+    <div style="color:#ffffff; font-weight:900; margin-top:20px; font-size:22px; letter-spacing:1.5px; text-transform:uppercase;">GOYE STORE GLOBAL</div>
+    <div style="color:#FFD700; font-size:13px; margin-top:6px; font-weight:800; letter-spacing:2px; text-transform:uppercase;">SIRWISE AI WEB3 ACADEMY</div>
+    <div style="color:#94a3b8; font-size:12px; margin-top:8px; font-weight:600;">RC BN3583878 • www.gasv.store</div>
   </div>
   <script>
-  setTimeout(()=>{ const l=document.getElementById('loader'); if(l){ l.style.opacity='0'; l.style.transition='opacity 0.6s'; setTimeout(()=>l.remove(),700);} }, 2500);
+  setTimeout(()=>{ const l=document.getElementById('loader'); if(l){ l.style.opacity='0'; l.style.transition='opacity 0.4s'; setTimeout(()=>l.remove(),500);} }, 1200);
   setTimeout(()=>{ document.body.style.overflow='auto'; document.body.style.opacity='1'; }, 800);
   window.go = function(id) {
     const el = document.getElementById(id) || document.querySelector('[data-section="' + id + '"]');
@@ -416,18 +429,23 @@ window.loginWithPi = async function() {
   }
 };
 
-window.createPiPayment = async function(inputAmount, itemTitle) {
+window.createPiPayment = async function(inputAmount, itemTitle, isExplicitPi) {
   let piAmount, usdAmount;
   itemTitle = itemTitle || "Pi Network Testnet Payment";
-  if (!inputAmount) {
-    piAmount = 0.0001;
-    usdAmount = 31.4159;
-  } else if (typeof inputAmount === 'number' && inputAmount < 1) {
-    piAmount = inputAmount;
-    usdAmount = piAmount * (window.GCV_RATE || 314159);
+  if (isExplicitPi) {
+    piAmount = parseFloat(inputAmount);
+    usdAmount = piAmount / 2.632; // Reverse consistent convert for metadata
   } else {
-    usdAmount = parseFloat(inputAmount) || 49.99;
-    piAmount = parseFloat((usdAmount / (window.GCV_RATE || 314159)).toFixed(6));
+    if (!inputAmount) {
+      piAmount = 0.0001;
+      usdAmount = 31.4159;
+    } else if (typeof inputAmount === 'number' && inputAmount < 1) {
+      piAmount = inputAmount;
+      usdAmount = piAmount * (window.GCV_RATE || 314159);
+    } else {
+      usdAmount = parseFloat(inputAmount) || 49.99;
+      piAmount = parseFloat((usdAmount / (window.GCV_RATE || 314159)).toFixed(6));
+    }
   }
   if (piAmount <= 0) piAmount = 0.0001;
 
@@ -442,8 +460,8 @@ window.createPiPayment = async function(inputAmount, itemTitle) {
   try {
     const paymentData = {
       amount: piAmount,
-      memo: "GOYE Global " + itemTitle + " - RC BN3583773 - gasv.store",
-      metadata: { usd: usdAmount, pi: piAmount, gcv: window.GCV_RATE || 314159, store: "gasv.store", rc: "BN3583773", email: userEmail, product: itemTitle }
+      memo: "GOYE Global " + itemTitle + " - RC BN3583878 - gasv.store",
+      metadata: { usd: usdAmount, pi: piAmount, gcv: window.GCV_RATE || 314159, store: "gasv.store", rc: "BN3583878", email: userEmail, product: itemTitle }
     };
 
     const callbacks = {
@@ -672,7 +690,7 @@ window.openStudentDashboard = function() {
 };
 
 window.openReferral = function() {
-  const link = 'https://www.gasv.store/?ref=' + (localStorage.getItem('pi_username') || 'GOYE') + '&rc=BN3583773';
+  const link = 'https://www.gasv.store/?ref=' + (localStorage.getItem('pi_username') || 'GOYE') + '&rc=BN3583878';
   const modal = document.createElement('div');
   modal.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:999999; display:flex; align-items:center; justify-content:center; padding:20px;';
   modal.innerHTML = '<div style="background:#111; border:2px solid #FFD700; border-radius:16px; padding:20px; max-width:380px; width:100%; text-align:center;"><h3 style="color:#FFD700; margin:0 0 12px;">🎁 Referral - Earn 10%</h3><p style="color:white; font-size:13px;">Share your link and earn 10% of every sale - 0.0000159 Pi per referral!</p><div style="background:#222; padding:10px; border-radius:8px; margin:12px 0; word-break:break-all; color:#00FF88; font-size:11px;">' + link + '</div><div style="display:grid; gap:8px;"><button onclick="navigator.clipboard.writeText(\'' + link + '\'); this.textContent=\'✅ Copied!\'" style="background:#FFD700; color:black; padding:12px; border-radius:8px; border:none; font-weight:bold; cursor:pointer;">📋 Copy Link</button><button onclick="this.closest(\'div\').parentElement.remove()" style="background:#333; color:white; padding:10px; border-radius:8px; border:none; cursor:pointer;">Close</button></div></div>';

@@ -1,9 +1,138 @@
-import { relations } from 'drizzle-orm';
-import { pgTable, serial, text, timestamp, boolean, numeric, integer } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, boolean, numeric, jsonb, date, serial, integer } from 'drizzle-orm/pg-core';
 
+// 1. LEADS TABLE
+export const leads = pgTable('leads', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  fullName: text('full_name').notNull(),
+  businessName: text('business_name').notNull(),
+  email: text('email').notNull(),
+  phone: text('phone').notNull(),
+  country: text('country').notNull(),
+  businessType: text('business_type').notNull(),
+  needType: text('need_type').notNull(),
+  budgetRange: text('budget_range').notNull(),
+  projectDescription: text('project_description').notNull(),
+  contactMethod: text('contact_method').notNull(),
+  servicesSelected: jsonb('services_selected').default([]),
+  status: text('status').notNull().default('NEW'),
+  sourcePage: text('source_page'),
+  ipAddress: text('ip_address'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
+// 2. CONSULTATIONS TABLE
+export const consultations = pgTable('consultations', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  fullName: text('full_name').notNull(),
+  businessName: text('business_name').notNull(),
+  email: text('email').notNull(),
+  phone: text('phone').notNull(),
+  country: text('country').notNull(),
+  businessChallenge: text('business_challenge').notNull(),
+  serviceRequired: text('service_required').notNull(),
+  preferredTime: text('preferred_time').notNull(),
+  status: text('status').notNull().default('NEW'),
+  notes: text('notes'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+// 3. ASSESSMENTS TABLE
+export const assessments = pgTable('assessments', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  businessType: text('business_type'),
+  hasWebsite: boolean('has_website'),
+  customerHandling: text('customer_handling'),
+  customerAcquisition: text('customer_acquisition'),
+  biggestChallenge: text('biggest_challenge'),
+  teamSize: text('team_size'),
+  recommendedServices: jsonb('recommended_services'),
+  leadId: uuid('lead_id').references(() => leads.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+// 4. SERVICES TABLE
+export const services = pgTable('services', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  slug: text('slug').notNull().unique(),
+  title: text('title').notNull(),
+  category: text('category').notNull(),
+  shortDescription: text('short_description').notNull(),
+  problemStatement: text('problem_statement'),
+  solutionStatement: text('solution_statement'),
+  includedFeatures: jsonb('included_features').default([]),
+  whoIsFor: jsonb('who_is_for').default([]),
+  processSteps: jsonb('process_steps').default([]),
+  seoTitle: text('seo_title'),
+  seoDescription: text('seo_description'),
+  seoKeywords: text('seo_keywords'),
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+// 5. CLIENTS TABLE
+export const clients = pgTable('clients', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  businessName: text('business_name').notNull(),
+  contactName: text('contact_name').notNull(),
+  email: text('email').notNull().unique(),
+  phone: text('phone'),
+  country: text('country'),
+  status: text('status').default('ACTIVE'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+// 6. PROJECTS TABLE
+export const projects = pgTable('projects', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  clientId: uuid('client_id').references(() => clients.id),
+  leadId: uuid('lead_id').references(() => leads.id),
+  title: text('title').notNull(),
+  serviceType: text('service_type').notNull(),
+  status: text('status').notNull().default('DISCOVER'),
+  description: text('description'),
+  startDate: date('start_date'),
+  launchDate: date('launch_date'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+// 7. QUOTES TABLE
+export const quotes = pgTable('quotes', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  leadId: uuid('lead_id').references(() => leads.id),
+  clientId: uuid('client_id').references(() => clients.id),
+  title: text('title').notNull(),
+  amount: numeric('amount', { precision: 12, scale: 2 }),
+  currency: text('currency').default('USD'),
+  items: jsonb('items').default([]),
+  status: text('status').default('DRAFT'),
+  validUntil: date('valid_until'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+// 8. SETTINGS TABLE
+export const settings = pgTable('settings', {
+  key: text('key').primaryKey(),
+  value: jsonb('value').notNull(),
+  description: text('description'),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
+// 9. AUDIT LOGS TABLE
+export const auditLogs = pgTable('audit_logs', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  action: text('action').notNull(),
+  entityType: text('entity_type').notNull(),
+  entityId: uuid('entity_id'),
+  performedBy: text('performed_by'),
+  details: jsonb('details'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+// LEGACY TABLE DEFINITIONS FOR BACKWARD COMPATIBILITY
 export const users = pgTable('users', {
   id: serial('id').primaryKey(),
-  uid: text('uid').notNull().unique(), // Firebase Auth UID
+  uid: text('uid').notNull().unique(),
   email: text('email').notNull(),
   createdAt: timestamp('created_at').defaultNow(),
 });
@@ -47,14 +176,6 @@ export const academyAccess = pgTable('academy_access', {
   createdAt: timestamp('created_at').defaultNow(),
 });
 
-export const leads = pgTable('leads', {
-  id: serial('id').primaryKey(),
-  email: text('email').notNull().unique(),
-  createdAt: timestamp('created_at').defaultNow(),
-  sourceDomain: text('source_domain'),
-  convertedToBuyer: boolean('converted_to_buyer').default(false),
-});
-
 export const analyticsClicks = pgTable('analytics_clicks', {
   id: serial('id').primaryKey(),
   sessionId: text('session_id'),
@@ -65,25 +186,3 @@ export const analyticsClicks = pgTable('analytics_clicks', {
   isAdmin: boolean('is_admin').default(false),
   createdAt: timestamp('created_at').defaultNow(),
 });
-
-export const adminSettings = pgTable('admin_settings', {
-  id: serial('id').primaryKey(),
-  keyName: text('key_name').notNull().unique(), // 'payment_settings'
-  piApiKey: text('pi_api_key'),
-  piWallet: text('pi_wallet'),
-  piMainnetWallet: text('pi_mainnet_wallet'),
-  piTestnetWallet: text('pi_testnet_wallet'),
-  piSandbox: text('pi_sandbox').default('true'),
-  paystackPublicKey: text('paystack_public_key'),
-  paystackSecretKey: text('paystack_secret_key'),
-  flutterwavePublicKey: text('flutterwave_public_key'),
-  flutterwaveSecretKey: text('flutterwave_secret_key'),
-  usdtAddress: text('usdt_address'),
-  usdcAddress: text('usdc_address'),
-  opayAccount: text('opay_account'),
-  opayName: text('opay_name'),
-  updatedByAdminUid: text('updated_by_admin_uid'),
-  updatedAt: timestamp('updated_at').defaultNow(),
-});
-
-

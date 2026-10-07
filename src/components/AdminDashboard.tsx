@@ -66,7 +66,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
         },
         body: JSON.stringify({
           secretKey: keyToSave,
-          adminPassword: inputAdminPass || localStorage.getItem('admin_password') || localStorage.getItem('admin_token') || 'GoyeBN3583773'
+          adminPassword: inputAdminPass || localStorage.getItem('admin_password') || localStorage.getItem('admin_token') || 'GoyeBN3583878'
         })
       });
 
@@ -161,7 +161,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
     localStorage.setItem('ENABLE_PI_PAYMENT', enable ? 'true' : 'false');
     localStorage.setItem('enable_pi', enable ? 'true' : 'false');
     
-    const activeToken = localStorage.getItem('admin_password') || localStorage.getItem('admin_token') || 'GoyeBN3583773';
+    const activeToken = localStorage.getItem('admin_password') || localStorage.getItem('admin_token') || 'GoyeBN3583878';
     await fetch('/api/admin/toggle-pi-customer-payments', {
       method: 'POST',
       headers: {
@@ -182,7 +182,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
   const handleAuditDbForTestnet = async () => {
     setIsAuditingDb(true);
     try {
-      const activeToken = localStorage.getItem('admin_password') || localStorage.getItem('admin_token') || 'GoyeBN3583773';
+      const activeToken = localStorage.getItem('admin_password') || localStorage.getItem('admin_token') || 'GoyeBN3583878';
       const res = await fetch('/api/admin/audit-pi-testnet', {
         method: 'POST',
         headers: {
@@ -252,14 +252,14 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
       return;
     }
 
-    alert(`✅ UPGRADE REMINDER SENT TO ${email}:\n\nDear ${name},\n\nUnlock the full Sirwise AI WEB3 Academy 8-Module Masterclass ($49.99)!\n\nLink: https://www.gasv.store/#shop\nIncludes: Certificate, 50+ Prompts, Pi Network GCV Guide\n\nOfficial RC BN3583773 | www.gasv.store`);
+    alert(`✅ UPGRADE REMINDER SENT TO ${email}:\n\nDear ${name},\n\nUnlock the full Sirwise AI WEB3 Academy 8-Module Masterclass ($49.99)!\n\nLink: https://www.gasv.store/#shop\nIncludes: Certificate, 50+ Prompts, Pi Network GCV Guide\n\nOfficial RC BN3583878 | www.gasv.store`);
 
     try {
       const fd = new FormData();
       fd.append('email', email);
       fd.append('name', name);
-      fd.append('_subject', `Academy Reminder for ${name}: Upgrade to Full Academy $49.99 (RC BN3583773)`);
-      fd.append('_autoresponse', `Hi ${name}!\n\nThis is an automated reminder from Sirwise AI WEB3 Academy (RC BN3583773).\n\nYou downloaded our Free AI Prompt Blueprint. Don't miss out on unlocking all 8 full modules, certificate, and Web3 tools!\n\nEnroll now for $49.99: https://www.gasv.store/#shop\nSupport: goyedagosmess@gmail.com\n\nwww.gasv.store`);
+      fd.append('_subject', `Academy Reminder for ${name}: Upgrade to Full Academy $49.99 (RC BN3583878)`);
+      fd.append('_autoresponse', `Hi ${name}!\n\nThis is an automated reminder from Sirwise AI WEB3 Academy (RC BN3583878).\n\nYou downloaded our Free AI Prompt Blueprint. Don't miss out on unlocking all 8 full modules, certificate, and Web3 tools!\n\nEnroll now for $49.99: https://www.gasv.store/#shop\nSupport: goyedagosmess@gmail.com\n\nwww.gasv.store`);
       fd.append('_template', 'table');
       fetch('https://formsubmit.co/goyedagosmess@gmail.com', { method: 'POST', body: fd }).catch(() => {});
     } catch (e) {}
@@ -682,11 +682,11 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
           piSandboxMode: paymentConfig.piSandboxMode,
           piSandbox: paymentConfig.piSandboxMode,
           piWallet: activePiWallet,
-          adminPassword: localStorage.getItem('admin_password') || localStorage.getItem('admin_token') || 'GoyeBN3583773'
+          adminPassword: localStorage.getItem('admin_password') || localStorage.getItem('admin_token') || 'GoyeBN3583878'
         })
       }).catch(e => {});
 
-      const activeToken = localStorage.getItem('admin_password') || localStorage.getItem('admin_token') || 'GoyeBN3583773';
+      const activeToken = localStorage.getItem('admin_password') || localStorage.getItem('admin_token') || 'GoyeBN3583878';
       await fetch('/api/admin/settings', {
         method: 'POST',
         headers: {
@@ -1088,7 +1088,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
                 Checking Pi API Key...
               </div>
               <div style={{ color: '#888', fontSize: '10px', marginTop: '4px' }}>
-                GCV $314,159 = 0.000159 Pi GCV at $49.99 - RC BN3583773
+                GCV $314,159 = 0.000159 Pi GCV at $49.99 - RC BN3583878
               </div>
             </div>
 

@@ -5,6 +5,7 @@ import { cleanUserEmail } from '../lib/contact';
 import { safeParse } from '../utils/safeParse';
 import { PaymentDetailsModal } from './PaymentDetailsModal';
 import { isPiCustomerPaymentEnabled } from '../config/payment';
+import { getPaymentEnvironment, getDisplayPrice, getPiPrice, getFiatPrice } from '../utils/paymentAdapter';
 
 const showToast = (msg: string, type?: string) => {
   if (typeof (window as any).showToast === 'function') {
@@ -14,8 +15,14 @@ const showToast = (msg: string, type?: string) => {
 
 
 export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, onToast }: any) {
-  const [activeGateway, setActiveGateway] = useState<string | null>(null);
-  const [paymentDetailsType, setPaymentDetailsType] = useState<string | null>(null);
+  const env = getPaymentEnvironment();
+  const isPiBrowserMode = env === 'PI_BROWSER';
+  const [activeGateway, setActiveGateway] = useState<string | null>(() => {
+    return getPaymentEnvironment() === 'PI_BROWSER' ? 'pi' : null;
+  });
+  const [paymentDetailsType, setPaymentDetailsType] = useState<string | null>(() => {
+    return getPaymentEnvironment() === 'PI_BROWSER' ? 'pi' : null;
+  });
   const [email, setEmail] = useState('');
 
   useEffect(() => {
@@ -309,7 +316,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
             metadata: {
               custom_fields: [
                 { display_name: "Product", variable_name: "product", value: cleanProductName },
-                { display_name: "RC", variable_name: "rc", value: "BN3583773 GOYEDAGOSMESS ENTERPRISE" }
+                { display_name: "RC", variable_name: "rc", value: "BN3583878 GOYEDAGOSMESS ENTERPRISE" }
               ]
             },
             onClose: function() {
@@ -532,7 +539,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
           <div className="bg-black p-4 rounded-xl border border-[#333] w-full text-left text-xs font-mono text-gray-300 space-y-1">
              <div>Amount: ₦{nairaAmount} ({displaySymbol}{localPrice})</div>
              <div>Status: {activeGateway ? 'Pending Verification' : 'Verified & Active'}</div>
-             <div>RC: BN3583773</div>
+             <div>RC: BN3583878</div>
           </div>
           <button onClick={onClose} className="mt-6 bg-[#FFD700] text-black font-bold py-3 px-8 rounded-xl cursor-pointer pointer-events-auto">
             Continue to Academy
@@ -560,13 +567,21 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
             </div>
             
             <h2 className="text-xl font-black text-white mb-2">{product?.name || 'Sirwise AI Web3 Academy 4-Week'}</h2>
-            <div className="text-3xl font-black text-[#FFD700] mb-1">
-               ₦{nairaAmount} <span className="text-sm font-normal text-gray-400">({priceUSD} USD)</span>
-            </div>
-            {userCurrency !== 'USD' && userCurrency !== 'NGN' && (
-              <div className="text-gray-400 text-sm font-bold mb-6">
-                (~ {displaySymbol}{localPrice})
+            {isPiBrowserMode ? (
+              <div className="text-3xl font-black text-[#FFD700] mb-6">
+                {getDisplayPrice(product, env)}
               </div>
+            ) : (
+              <>
+                <div className="text-3xl font-black text-[#FFD700] mb-1">
+                   ₦{nairaAmount} <span className="text-sm font-normal text-gray-400">({priceUSD} USD)</span>
+                </div>
+                {userCurrency !== 'USD' && userCurrency !== 'NGN' && (
+                  <div className="text-gray-400 text-sm font-bold mb-6">
+                    (~ {displaySymbol}{localPrice})
+                  </div>
+                )}
+              </>
             )}
 
             <div className="space-y-3 border-t border-[#333] pt-6 mb-6">
@@ -655,6 +670,36 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                   className="flex items-center justify-center gap-2 hover:brightness-110 transition active:scale-[0.98]"
                 >
                   <span>🌍</span> Flutterwave (Africa Cards)
+                </button>
+                <button 
+                  onClick={() => {
+                    const emailInput = getValidatedEmail();
+                    if (!emailInput) {
+                      showToast('Please enter your email address before choosing PayPal.', 'error');
+                      return;
+                    }
+                    alert(`PayPal payment of $${priceUSD.toFixed(2)} requested!\nPlease send payments directly to goye@gasv.store or contact support via WhatsApp/Email to receive a direct invoice link.`);
+                    handleSuccess('PAYPAL-' + Date.now(), 'PayPal (Global)', true);
+                  }}
+                  style={{
+                    background: 'linear-gradient(135deg, #003087 0%, #0079C1 100%)',
+                    color: '#FFF',
+                    fontWeight: '800',
+                    fontSize: '15px',
+                    height: '56px',
+                    width: '100%',
+                    borderRadius: '16px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    pointerEvents: 'auto',
+                    zIndex: 10,
+                    position: 'relative',
+                    touchAction: 'manipulation',
+                    boxShadow: '0 4px 12px rgba(0, 48, 135, 0.3)'
+                  }}
+                  className="flex items-center justify-center gap-2 hover:brightness-110 transition active:scale-[0.98]"
+                >
+                  <span>🅿️</span> Pay with PayPal ($)
                 </button>
                 <button 
                   onClick={() => setPaymentDetailsType('usdt_bep20')} 
@@ -756,8 +801,12 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                 
                 <div className="bg-black p-4 rounded-xl border border-[#7D2AE7]/50 my-3">
                   <div className="text-xs text-gray-400 font-bold mb-1">Amount Due</div>
-                  <div className="text-2xl font-black text-[#FFD700]">{product?.id === 'pi-testnet-test' ? '0.000100' : (priceUSD / 314159).toFixed(6)} Pi GCV</div>
-                  <div className="text-xs text-gray-400 mt-1">(${priceUSD} USD / ₦{nairaAmount})</div>
+                  <div className="text-2xl font-black text-[#FFD700]">
+                    {isPiBrowserMode ? getDisplayPrice(product, env) : `${product?.id === 'pi-testnet-test' ? '0.000100' : (priceUSD / 314159).toFixed(6)} Pi GCV`}
+                  </div>
+                  {!isPiBrowserMode && (
+                    <div className="text-xs text-gray-400 mt-1">(${priceUSD} USD / ₦{nairaAmount})</div>
+                  )}
                 </div>
 
                 <button 
@@ -765,10 +814,10 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                     try {
                       const userEmail = getValidatedEmail() || 'customer@gasv.store';
                       if (typeof (window as any).createPiPayment === 'function') {
-                        const amountToPay = product?.id === 'pi-testnet-test' ? 0.0001 : priceUSD;
-                        (window as any).createPiPayment(amountToPay, product?.name || 'Pi Network Order');
+                        const amountToPay = isPiBrowserMode ? getPiPrice(product) : (product?.id === 'pi-testnet-test' ? 0.0001 : priceUSD);
+                        (window as any).createPiPayment(amountToPay, product?.name || 'Pi Network Order', isPiBrowserMode);
                       } else if (typeof (window as any).payWithPi === 'function') {
-                        const amountToPay = product?.id === 'pi-testnet-test' ? 0.0001 : priceUSD;
+                        const amountToPay = isPiBrowserMode ? getPiPrice(product) : (product?.id === 'pi-testnet-test' ? 0.0001 : priceUSD);
                         (window as any).payWithPi(userEmail, amountToPay);
                       } else {
                         if (typeof (window as any).showPiGuideReal === 'function') {
@@ -783,7 +832,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                   }} 
                   className="w-full h-[56px] bg-[#7D2AE7] hover:bg-[#6821c6] text-white font-black rounded-xl my-3 cursor-pointer transition text-base shadow-lg active:scale-[0.98]"
                 >
-                  🟣 Pay {(priceUSD / 314159).toFixed(6)} Pi in Pi Browser
+                  🟣 Pay {isPiBrowserMode ? getDisplayPrice(product, env) : `${(priceUSD / 314159).toFixed(6)} Pi`} in Pi Browser
                 </button>
 
                 <div className="bg-black/60 rounded-xl p-3 my-2 text-left space-y-1 text-xs text-gray-300">
@@ -792,7 +841,9 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                   <p>If you are in standard Chrome/Safari, please switch to Pi Browser or select Paystack / Bank Transfer above.</p>
                 </div>
 
-                <button onClick={() => setActiveGateway(null)} className="mt-3 text-gray-400 text-xs underline block mx-auto cursor-pointer pointer-events-auto hover:text-white">Back to Methods</button>
+                {!isPiBrowserMode && (
+                  <button onClick={() => setActiveGateway(null)} className="mt-3 text-gray-400 text-xs underline block mx-auto cursor-pointer pointer-events-auto hover:text-white">Back to Methods</button>
+                )}
               </div>
             </div>
           ) : activeGateway === 'crypto' ? (
@@ -996,7 +1047,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                       </div>
                     </div>
                     
-                    <div className="text-gray-400 text-[10px] font-semibold pt-1">RC BN3583773 Verified Business</div>
+                    <div className="text-gray-400 text-[10px] font-semibold pt-1">RC BN3583878 Verified Business</div>
                   </div>
 
                   <input 
@@ -1143,7 +1194,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
               <Lock size={14} /> 256-Bit SSL Encrypted & PCI-DSS Compliant
             </div>
             <div className="flex items-center gap-2 text-[10px] text-gray-400">
-              <ShieldCheck size={12} /> Verified Business: RC BN3583773
+              <ShieldCheck size={12} /> Verified Business: RC BN3583878
             </div>
             <div className="flex items-center gap-2 text-[10px] text-gray-400">
               <Zap size={12} /> Instant Automated Delivery

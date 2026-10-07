@@ -27,7 +27,7 @@ export function cleanUserEmail(rawEmail?: string | null): string {
 /**
  * Primary Support: Email support to goyedagosmess@gmail.com
  */
-export function openGoyeEmailSupport(subject: string = 'Hello GOYE Inquiry RC BN3583773', body: string = '') {
+export function openGoyeEmailSupport(subject: string = 'Hello GOYE Inquiry RC BN3583878', body: string = '') {
   const mailtoUrl = `mailto:goyedagosmess@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   window.location.href = mailtoUrl;
 }

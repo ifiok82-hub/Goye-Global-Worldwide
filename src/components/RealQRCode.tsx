@@ -14,7 +14,7 @@ export default function RealQRCode({ className = "", customTrigger }: { classNam
         const a = document.createElement('a');
         a.style.display = 'none';
         a.href = url;
-        a.download = 'GOYE_Global_QR_BN3583773.png';
+        a.download = 'GOYE_Global_QR_BN3583878.png';
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
@@ -41,7 +41,7 @@ export default function RealQRCode({ className = "", customTrigger }: { classNam
           <div className="relative inline-block w-full max-w-[280px] min-w-[150px]">
             <img loading="lazy" 
               src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://www.gasv.store" 
-              alt="GOYE Global QR - RC BN3583773" 
+              alt="GOYE Global QR - RC BN3583878" 
               className="w-full h-auto block rounded-lg"
               id="goyeRealQR"
               style={{ width: '100%', maxWidth: '280px' }}
@@ -65,7 +65,7 @@ export default function RealQRCode({ className = "", customTrigger }: { classNam
               <div className="relative inline-block w-full">
                 <img loading="lazy" 
                   src="https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=https://www.gasv.store" 
-                  alt="GOYE Global QR - RC BN3583773" 
+                  alt="GOYE Global QR - RC BN3583878" 
                   className="w-full h-auto block rounded-lg"
                 />
                 <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-full p-2 w-[70px] h-[70px] flex items-center justify-center">
@@ -75,7 +75,7 @@ export default function RealQRCode({ className = "", customTrigger }: { classNam
             </div>
             
             <p className="text-[#FFD700] font-bold text-center mt-5 text-[18px]">Scan to join GOYE Global</p>
-            <p className="text-white font-bold text-center mt-1">www.gasv.store - RC BN3583773</p>
+            <p className="text-white font-bold text-center mt-1">www.gasv.store - RC BN3583878</p>
             <p className="text-[#10B981] text-[14px] text-center font-bold mt-2 mb-5">WhatsApp 24/7 Support</p>
             
             <button onClick={downloadQR} className="bg-[#FFD700] text-black w-full py-3 rounded-xl font-bold hover:bg-yellow-400 transition flex justify-center items-center gap-2">
