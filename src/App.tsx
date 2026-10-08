@@ -93,8 +93,8 @@ export default function App() {
       slug: 'pi-gcv-crash-course-314159',
       preview_image: '/images/old/pi-gcv-crash-course-314159.jpg',
       image: '/images/old/pi-gcv-crash-course-314159.jpg',
-      name: 'Pi Network GCV Crash Course ($314,159)',
-      title: 'Pi Network GCV Crash Course ($314,159)',
+      name: 'Pi Network Crash Course',
+      title: 'Pi Network Crash Course',
       icon: 'π',
       price: 49.99,
       category: 'academy',
@@ -151,6 +151,23 @@ export default function App() {
       setCurrentUser({ uid: 'usr_pioneer', email: 'pioneer@gasv.store' });
       setUserProfile({ uid: 'usr_pioneer', email: 'pioneer@gasv.store', displayName: 'Pioneer' });
     }
+  }, []);
+
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = "https://sdk.minepi.com/pi-sdk.js";
+    script.async = true;
+    script.onload = () => {
+      try {
+        if ((window as any).Pi) {
+          const isSandbox = (localStorage.getItem('PI_SANDBOX_MODE') || 'true') !== 'false';
+          (window as any).Pi.init({ version: "2.0", sandbox: isSandbox });
+        }
+      } catch (e) {
+        console.error('Pi SDK init error:', e);
+      }
+    };
+    document.body.appendChild(script);
   }, []);
 
   useEffect(() => {
@@ -248,6 +265,15 @@ export default function App() {
           <div className="space-y-12 animate-in fade-in duration-300">
             {/* Hero Section */}
             <GoyeHero 
+              onPurchaseAcademy={() => {
+                const academyProd = {
+                  id: 'academy_bundle',
+                  name: 'Sirwise AI Web3 Academy (8 Modules)',
+                  price: 49.99
+                };
+                setSelectedProduct(academyProd);
+                setShowCheckoutModal(true);
+              }}
               onOpenTripwire={() => {
                 const tripwireProd = {
                   id: 'ai-starter-tripwire',

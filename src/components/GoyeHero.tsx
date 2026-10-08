@@ -4,16 +4,36 @@ import { ArrowRight, Star, Award, ShieldCheck, CheckCircle2 } from 'lucide-react
 interface GoyeHeroProps {
   onOpenTripwire?: () => void;
   onOpenLeadMagnet?: () => void;
+  onPurchaseAcademy?: () => void;
 }
 
 export const GoyeHero: React.FC<GoyeHeroProps> = ({ 
   onOpenTripwire,
-  onOpenLeadMagnet 
+  onOpenLeadMagnet,
+  onPurchaseAcademy 
 }) => {
+  const isAcademyPaid = typeof window !== 'undefined' && (
+    localStorage.getItem('sirwise_paid') === 'true' ||
+    localStorage.getItem('payment_verified') === 'true' ||
+    localStorage.getItem('paid_academy_bundle') === 'verified'
+  );
+
   const handleScrollToAcademy = () => {
     const el = document.getElementById('academy-dashboard') || document.getElementById('specializations');
     if (el) {
       el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const handleAction = () => {
+    if (!isAcademyPaid) {
+      if (onPurchaseAcademy) {
+        onPurchaseAcademy();
+      } else {
+        handleScrollToAcademy();
+      }
+    } else {
+      handleScrollToAcademy();
     }
   };
 
@@ -46,12 +66,6 @@ export const GoyeHero: React.FC<GoyeHeroProps> = ({
             <h1 className="text-[#FFD700] text-[40px] sm:text-[60px] md:text-[68px] font-black tracking-tight mb-2 leading-none uppercase select-none">
               SIRWISE AI WEB3<br/>ACADEMY
             </h1>
-            <h2 className="text-white text-lg sm:text-2xl font-bold uppercase tracking-widest leading-none mt-1">
-              GOYE Global Worldwide
-            </h2>
-            <p className="text-[#FFD700] text-xs font-bold mt-2 font-mono">
-              gasv.store • goyedagosmessenterprise@gmail.com
-            </p>
           </div>
           
           {/* Hero Coursera / Binance Academy Featured Tracks Grid */}
@@ -99,10 +113,10 @@ export const GoyeHero: React.FC<GoyeHeroProps> = ({
 
               <div className="p-4 pt-0">
                 <button 
-                  onClick={handleScrollToAcademy} 
-                  className="bg-[#FFD700] text-black hover:bg-yellow-400 text-xs font-black uppercase tracking-wider w-full py-3 rounded-xl transition duration-200 cursor-pointer active:scale-[0.98] flex items-center justify-center gap-1.5 shadow-md shadow-yellow-500/10"
+                  onClick={handleAction} 
+                  className="bg-[#FFD700] text-black hover:bg-yellow-400 text-xs font-black uppercase tracking-wider w-full py-3 rounded-xl transition duration-200 cursor-pointer active:scale-[0.98] flex items-center justify-center gap-1.5 shadow-md shadow-yellow-500/10 border-2 border-yellow-300"
                 >
-                  <span>Start Learning</span>
+                  <span>{isAcademyPaid ? 'Start Learning' : '🔒 UNLOCK ACADEMY - $49.99'}</span>
                   <ArrowRight size={13} />
                 </button>
               </div>
@@ -149,10 +163,10 @@ export const GoyeHero: React.FC<GoyeHeroProps> = ({
 
               <div className="p-4 pt-0">
                 <button 
-                  onClick={handleScrollToAcademy} 
-                  className="bg-[#FFD700] text-black hover:bg-yellow-400 text-xs font-black uppercase tracking-wider w-full py-3 rounded-xl transition duration-200 cursor-pointer active:scale-[0.98] flex items-center justify-center gap-1.5 shadow-md shadow-yellow-500/10"
+                  onClick={handleAction} 
+                  className="bg-[#FFD700] text-black hover:bg-yellow-400 text-xs font-black uppercase tracking-wider w-full py-3 rounded-xl transition duration-200 cursor-pointer active:scale-[0.98] flex items-center justify-center gap-1.5 shadow-md shadow-yellow-500/10 border-2 border-yellow-300"
                 >
-                  <span>Start Learning</span>
+                  <span>{isAcademyPaid ? 'Start Learning' : '🔒 UNLOCK ACADEMY - $49.99'}</span>
                   <ArrowRight size={13} />
                 </button>
               </div>
@@ -199,10 +213,10 @@ export const GoyeHero: React.FC<GoyeHeroProps> = ({
 
               <div className="p-4 pt-0">
                 <button 
-                  onClick={handleScrollToAcademy} 
-                  className="bg-[#FFD700] text-black hover:bg-yellow-400 text-xs font-black uppercase tracking-wider w-full py-3 rounded-xl transition duration-200 cursor-pointer active:scale-[0.98] flex items-center justify-center gap-1.5 shadow-md shadow-yellow-500/10"
+                  onClick={handleAction} 
+                  className="bg-[#FFD700] text-black hover:bg-yellow-400 text-xs font-black uppercase tracking-wider w-full py-3 rounded-xl transition duration-200 cursor-pointer active:scale-[0.98] flex items-center justify-center gap-1.5 shadow-md shadow-yellow-500/10 border-2 border-yellow-300"
                 >
-                  <span>Start Learning</span>
+                  <span>{isAcademyPaid ? 'Start Learning' : '🔒 UNLOCK ACADEMY - $49.99'}</span>
                   <ArrowRight size={13} />
                 </button>
               </div>

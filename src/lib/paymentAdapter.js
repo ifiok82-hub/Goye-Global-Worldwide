@@ -4,9 +4,8 @@
  * Registered: Goyedagosmess Enterprise (RC BN: 3583778)
  */
 
-export const isPiBrowser = typeof window !== 'undefined' && (
-  typeof window.Pi !== 'undefined' ||
-  (navigator.userAgent && (navigator.userAgent.includes('Pi Browser') || navigator.userAgent.includes('PiBrowser')))
+export const isPiBrowser = typeof window !== 'undefined' && typeof navigator !== 'undefined' && (
+  navigator.userAgent.includes('Pi Browser') || navigator.userAgent.includes('PiBrowser') || navigator.userAgent.includes('Pi/1')
 );
 
 export const BUSHA_USDT_BEP20_ADDRESS = (
@@ -225,7 +224,7 @@ export async function processPayment(product, method, callbacks = {}) {
         return;
       }
       try {
-        const piAmount = Number((priceUSD / 314159).toFixed(6)) || 0.000159;
+        const piAmount = Number((priceUSD / 0.38).toFixed(2)) || 131.55;
         await window.Pi.createPayment({
           amount: piAmount,
           memo: product.name,

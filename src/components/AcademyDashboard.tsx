@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { GraduationCap, CheckCircle, Circle, Play, Lock, ChevronRight, Globe, Award, ShieldCheck, DollarSign, Download, Sparkles, X, FileText, Video, BookOpen, ExternalLink, HelpCircle, CreditCard, Send, Mail } from 'lucide-react';
 import CertificateGenerator from './CertificateGenerator';
 import VideoModalPlayer from './VideoModalPlayer';
+import PaymentModal from './PaymentModal';
 import { cleanUserEmail } from '../lib/contact';
 import { RECEIVING_WALLET_ADDRESS, PI_WALLET_ADDRESS } from '../config/payment';
 
@@ -89,12 +90,12 @@ const GLOBAL_MODULES = [
   },
   { 
     id: 6, 
-    title: 'Crypto, DeFi & Pi Network GCV Global Economy', 
-    shortTitle: 'Crypto, DeFi & Pi GCV',
-    desc: 'Understanding Pi Network at Global Consensus Value $314,159, DeFi, USDT BEP20 (BNB Smart Chain), How to earn globally',
+    title: 'Crypto, DeFi & Pi Network Global Economy', 
+    shortTitle: 'Crypto, DeFi & Pi Network',
+    desc: 'Understanding Pi Network, DeFi, USDT BEP20 (BNB Smart Chain), How to earn globally',
     duration: '40-45 mins',
     videoUrl: 'https://www.youtube.com/embed/aircAruvnKk',
-    pdfTitle: 'Pi Network GCV $314k & DeFi Staking Manual (PDF)',
+    pdfTitle: 'Pi Network & DeFi Staking Manual (PDF)',
     exercise: 'Calculate your global Pi GCV portfolio value and set up a USDT BEP20 settlement address.',
     quiz: [
       { q: 'What does GCV stand for in the Pi Network ecosystem?', options: ['Global Consensus Value', 'General Currency Variable', 'Grand Crypto Value', 'Gold Coin Vault'], ans: 0 }
@@ -560,8 +561,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
   };
 
   const handleBuyUnlockNow = () => {
-    if (!validateCustomerEmail(customerEmail)) return;
-    payWithPaystack();
+    setShowPaymentModal(true);
   };
 
   const toggleModule = (id: number) => {
@@ -762,7 +762,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
               <p style={{ textAlign: 'center', color: '#888', fontSize: '10px', margin: '6px 0 0 0' }}>After sending USDT BEP20 $49.99 to address above, paste Tx Hash and click Verify - Academy unlocks automatically</p>
             </div>
             <button onClick={payWithPi} style={{ height: '52px', background: '#7A3ED6', color: '#ffffff', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', border: 'none', fontSize: '14px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>
-              Pi Network GCV $314,159
+              Pi Network Payment
             </button>
 
             <details style={{ marginTop: '8px', color: '#000000', textAlign: 'left', background: 'rgba(255, 255, 255, 0.4)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(0,0,0,0.15)' }}>
@@ -845,10 +845,10 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
               <div className="flex flex-col sm:flex-row gap-2">
                 {!isEnrolled ? (
                   <button 
-                    onClick={handleBuyUnlockNow}
+                    onClick={() => setActiveModule(mod)}
                     className="w-full py-3.5 bg-black/80 hover:bg-black text-[#FFD700] font-bold text-sm rounded-xl border border-[#FFD700]/50 flex items-center justify-center gap-2 transition cursor-pointer opacity-80 hover:opacity-100"
                   >
-                    <Lock size={16} /> 🔒 Locked - Buy & Unlock $49.99
+                    <Lock size={16} /> 🔒 UNLOCK TO START - $49.99
                   </button>
                 ) : (
                   <>
@@ -946,12 +946,12 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
       </div>
 
       {/* Interactive Active Module Viewer Modal */}
-      {activeModule && isEnrolled && (
+      {activeModule && (
         <div className="fixed inset-0 bg-black/90 z-[99999] flex items-center justify-center p-4 pointer-events-auto">
           <div className="bg-[#111] border-2 border-[#FFD700] text-white w-full max-w-[650px] rounded-3xl p-6 max-h-[92vh] overflow-y-auto relative shadow-2xl space-y-6">
             <button 
               onClick={() => setActiveModule(null)} 
-              className="absolute top-4 right-4 text-gray-400 hover:text-white p-2 rounded-full"
+              className="absolute top-4 right-4 text-gray-400 hover:text-white p-2 rounded-full cursor-pointer"
             >
               <X size={20} />
             </button>
@@ -963,6 +963,28 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
               <h3 className="text-2xl font-black text-white mt-2">{activeModule.title}</h3>
               <p className="text-gray-400 text-xs mt-1">{activeModule.desc}</p>
             </div>
+
+            {!isEnrolled ? (
+              <div style={{ border: '2px solid #FFD700', background: '#000', padding: '30px', textAlign: 'center', borderRadius: '20px' }}>
+                <div style={{ fontSize: '50px', marginBottom: '10px' }}>🔒</div>
+                <h2 style={{ fontSize: '22px', fontWeight: '900', color: '#FFD700', margin: '0 0 10px 0' }} className="uppercase">
+                  MODULE {activeModule.id} LOCKED
+                </h2>
+                <p style={{ color: '#ccc', fontSize: '13px', marginBottom: '20px', lineHeight: '1.5' }}>
+                  Pay to unlock HD Video Class + 50+ Prompts PDF + Quiz + Certificate
+                </p>
+                <button 
+                  onClick={() => {
+                    setActiveModule(null);
+                    handleBuyUnlockNow();
+                  }}
+                  style={{ background: '#FACC15', color: '#000', padding: '16px 24px', fontWeight: '900', borderRadius: '14px', width: '100%', cursor: 'pointer', fontSize: '13px', border: 'none', boxShadow: '0 4px 15px rgba(250,204,21,0.4)' }}
+                >
+                  UNLOCK NOW - $49.99 - Paystack | Flutterwave | OPay 6113541882 | USDT BEP20 Busha | USDC Base Busha | Pi Payment
+                </button>
+              </div>
+            ) : (
+              <>
 
             {/* Interactive Video Player Card */}
             <div 
@@ -1089,6 +1111,8 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
                 <CheckCircle size={18} /> Complete Module & Claim Badge
               </button>
             </div>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -1099,6 +1123,16 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
           title={playingVideo.title}
           onClose={() => setPlayingVideo(null)}
         />
+      )}
+
+      {showPaymentModal && (
+        <div className="fixed inset-0 bg-black/85 z-[999999] flex items-center justify-center p-4 overflow-y-auto">
+          <PaymentModal 
+            priceUSD={49.99} 
+            priceNGN={74985} 
+            onClose={() => setShowPaymentModal(false)} 
+          />
+        </div>
       )}
     </div>
   );

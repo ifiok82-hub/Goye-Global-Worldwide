@@ -97,14 +97,14 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
       instructions: `Transfer ₦${priceNGN.toLocaleString()} to OPay Account ${activeOpayAccount}.\nThen paste your Session ID or Transaction Reference below for instant automated verification.`
     },
     pi: {
-      title: 'Pi Network GCV $314,159',
+      title: 'Pi Network',
       token: 'Pi',
       address: activePiAddress,
-      amount: '0.000159 Pi',
+      amount: `${(amountUSD / 0.38).toFixed(2)} Pi`,
       network: PI_CONFIG.network,
       qr: '',
       warning: PI_CONFIG.warning,
-      instructions: 'Pay with Pi in Pi Browser - GCV $314,159 - Amount 0.000159 Pi ≈ $49.99 - RC BN3583878 - 190+ Countries'
+      instructions: 'Pay with Pi in Pi Browser - Market Rate ~$0.38/Pi - RC BN3583878 - 190+ Countries'
     }
   };
 
@@ -187,13 +187,13 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
     const Pi = (window as any).Pi;
 
     if (!Pi) {
-      alert('⚠️ Open gasv.store in Pi Browser!\n\nYou are in Chrome - Pi payment works inside Pi Browser:\n\n1. Open Pi Browser → gasv.store\n2. Select Pi Network GCV $314,159\n3. Click Open Pi Payment → Pi wallet opens automatically!\n\nReceiver Wallet:\n' + PI_WALLET_ADDRESS + '\n\nRC BN3583878');
+      alert('⚠️ Open gasv.store in Pi Browser!\n\nYou are in Chrome - Pi payment works inside Pi Browser:\n\n1. Open Pi Browser → gasv.store\n2. Select Pi Network\n3. Click Open Pi Payment → Pi wallet opens automatically!\n\nReceiver Wallet:\n' + PI_WALLET_ADDRESS + '\n\nRC BN3583878');
       window.open('https://minepi.com', '_blank');
       return;
     }
 
     const isTestProduct = (productName || '').toLowerCase().includes('test') || (productName || '').toLowerCase().includes('0.01');
-    const piAmount = isTestProduct ? 0.01 : (amountUSD === 1.00 ? 0.000003 : (amountUSD === 49.99 ? 0.000159 : Number((amountUSD / 314159).toFixed(6))));
+    const piAmount = isTestProduct ? 0.01 : Number((amountUSD / 0.38).toFixed(2));
 
     try {
       await Pi.authenticate(['username', 'payments'], (p: any) => {
@@ -242,7 +242,7 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
                 return;
               }
               if (data.status === 'PAID') {
-                unlockAndRedirect('Pi Network GCV $314,159', txid, email);
+                unlockAndRedirect('Pi Network', txid, email);
               }
             } catch (e: any) {
               console.error('[Pi SDK] Complete error:', e);

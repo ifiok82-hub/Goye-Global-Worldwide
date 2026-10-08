@@ -70,6 +70,6 @@ export const PI_CONFIG = {
   token: 'Pi',
   network: 'Pi Browser Only - MinePi',
   address: PI_WALLET_ADDRESS,
-  warning: '⚠️ Pay with Pi in Pi Browser - GCV $314,159 - Amount 0.000159 Pi ≈ $49.99'
+  warning: '⚠️ Pay with Pi in Pi Browser using official Pi SDK'
 };
 

@@ -50,7 +50,7 @@ high-converting social media sales posts promoting [INSERT YOUR PRODUCT NAME].
 Here is what you are missing in the Free Version:
 🔒 Prompts 2-50: Proposal Generators, Upwork/Fiverr Bidding, TikTok Scripts (LOCKED)
 🔒 Module 3: No-Code AI Automation with Zapier & Make.com (LOCKED)
-🔒 Module 5: Web3 Wallet Setup + Pi Network GCV $314,159 + Cyber Safety (LOCKED)
+🔒 Module 5: Web3 Wallet Setup + Pi Network + Cyber Safety (LOCKED)
 🔒 Module 8: Capstone Project + Blockchain-Verified Certificate + Portfolio (LOCKED)
 
 --------------------------------------------------------------------------------

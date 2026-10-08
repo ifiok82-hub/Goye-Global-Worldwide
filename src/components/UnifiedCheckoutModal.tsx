@@ -625,132 +625,16 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
         <div className="md:w-1/2 p-8 bg-[#111]">
           {!activeGateway ? (
             <div>
-              <p className="text-xs text-gray-400 text-center mb-6 uppercase tracking-widest font-bold">Choose Payment Method</p>
+              <p className="text-xs text-gray-400 text-center mb-6 uppercase tracking-widest font-bold">
+                {isPiBrowserMode ? 'Choose Pi Network Payment' : 'Choose Payment Method (Standard Browser)'}
+              </p>
               <div className="space-y-3">
-                <button 
-                  onClick={payWithPaystack} 
-                  style={{
-                    background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
-                    color: '#000',
-                    fontWeight: '800',
-                    fontSize: '15px',
-                    height: '56px',
-                    width: '100%',
-                    borderRadius: '16px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    pointerEvents: 'auto',
-                    zIndex: 10,
-                    position: 'relative',
-                    touchAction: 'manipulation',
-                    boxShadow: '0 4px 12px rgba(255, 215, 0, 0.3)'
-                  }}
-                  className="flex items-center justify-center gap-2 hover:brightness-110 transition active:scale-[0.98]"
-                >
-                  <span>💳</span> Pay with Paystack (Global Cards)
-                </button>
-                <button 
-                  onClick={payWithFlutterwave} 
-                  style={{
-                    background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
-                    color: '#000',
-                    fontWeight: '800',
-                    fontSize: '15px',
-                    height: '56px',
-                    width: '100%',
-                    borderRadius: '16px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    pointerEvents: 'auto',
-                    zIndex: 10,
-                    position: 'relative',
-                    touchAction: 'manipulation',
-                    boxShadow: '0 4px 12px rgba(255, 215, 0, 0.3)'
-                  }}
-                  className="flex items-center justify-center gap-2 hover:brightness-110 transition active:scale-[0.98]"
-                >
-                  <span>🌍</span> Flutterwave (Africa Cards)
-                </button>
-                <button 
-                  onClick={() => {
-                    const emailInput = getValidatedEmail();
-                    if (!emailInput) {
-                      showToast('Please enter your email address before choosing PayPal.', 'error');
-                      return;
-                    }
-                    alert(`PayPal payment of $${priceUSD.toFixed(2)} requested!\nPlease send payments directly to goye@gasv.store or contact support via WhatsApp/Email to receive a direct invoice link.`);
-                    handleSuccess('PAYPAL-' + Date.now(), 'PayPal (Global)', true);
-                  }}
-                  style={{
-                    background: 'linear-gradient(135deg, #003087 0%, #0079C1 100%)',
-                    color: '#FFF',
-                    fontWeight: '800',
-                    fontSize: '15px',
-                    height: '56px',
-                    width: '100%',
-                    borderRadius: '16px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    pointerEvents: 'auto',
-                    zIndex: 10,
-                    position: 'relative',
-                    touchAction: 'manipulation',
-                    boxShadow: '0 4px 12px rgba(0, 48, 135, 0.3)'
-                  }}
-                  className="flex items-center justify-center gap-2 hover:brightness-110 transition active:scale-[0.98]"
-                >
-                  <span>🅿️</span> Pay with PayPal ($)
-                </button>
-                <button 
-                  onClick={() => setPaymentDetailsType('usdt_bep20')} 
-                  style={{
-                    background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
-                    color: '#000',
-                    fontWeight: '800',
-                    fontSize: '15px',
-                    height: '56px',
-                    width: '100%',
-                    borderRadius: '16px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    pointerEvents: 'auto',
-                    zIndex: 10,
-                    position: 'relative',
-                    touchAction: 'manipulation',
-                    boxShadow: '0 4px 12px rgba(255, 215, 0, 0.3)'
-                  }}
-                  className="flex items-center justify-center gap-2 hover:brightness-110 transition active:scale-[0.98]"
-                >
-                  <span>🟡</span> USDT BEP20 (BNB Smart Chain)
-                </button>
-                <button 
-                  onClick={() => setPaymentDetailsType('usdc_base')} 
-                  style={{
-                    background: 'linear-gradient(135deg, #0052FF 0%, #0033AD 100%)',
-                    color: '#FFF',
-                    fontWeight: '800',
-                    fontSize: '15px',
-                    height: '56px',
-                    width: '100%',
-                    borderRadius: '16px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    pointerEvents: 'auto',
-                    zIndex: 10,
-                    position: 'relative',
-                    touchAction: 'manipulation',
-                    boxShadow: '0 4px 12px rgba(0, 82, 255, 0.3)'
-                  }}
-                  className="flex items-center justify-center gap-2 hover:brightness-110 transition active:scale-[0.98]"
-                >
-                  <span>🔵</span> USDC (Base Network)
-                </button>
-                {isPiCustomerPaymentEnabled() && (
+                {isPiBrowserMode ? (
                   <button 
                     onClick={() => setPaymentDetailsType('pi')} 
                     style={{
-                      background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
-                      color: '#000',
+                      background: 'linear-gradient(135deg, #7D2AE7 0%, #9C27B0 100%)',
+                      color: '#FFF',
                       fontWeight: '800',
                       fontSize: '15px',
                       height: '56px',
@@ -762,47 +646,168 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                       zIndex: 10,
                       position: 'relative',
                       touchAction: 'manipulation',
-                      boxShadow: '0 4px 12px rgba(255, 215, 0, 0.3)'
+                      boxShadow: '0 4px 12px rgba(125, 42, 231, 0.4)'
                     }}
                     className="flex items-center justify-center gap-2 hover:brightness-110 transition active:scale-[0.98]"
                   >
-                    <span>🟣</span> Pi Network GCV $314,159
+                    <span>🟣</span> Pay with Pi Network ({getPiPrice(product)} π)
                   </button>
+                ) : (
+                  <>
+                    <button 
+                      onClick={payWithPaystack} 
+                      style={{
+                        background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+                        color: '#000',
+                        fontWeight: '800',
+                        fontSize: '15px',
+                        height: '56px',
+                        width: '100%',
+                        borderRadius: '16px',
+                        border: 'none',
+                        cursor: 'pointer',
+                        pointerEvents: 'auto',
+                        zIndex: 10,
+                        position: 'relative',
+                        touchAction: 'manipulation',
+                        boxShadow: '0 4px 12px rgba(255, 215, 0, 0.3)'
+                      }}
+                      className="flex items-center justify-center gap-2 hover:brightness-110 transition active:scale-[0.98]"
+                    >
+                      <span>💳</span> Pay with Paystack (Global Cards)
+                    </button>
+                    <button 
+                      onClick={payWithFlutterwave} 
+                      style={{
+                        background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+                        color: '#000',
+                        fontWeight: '800',
+                        fontSize: '15px',
+                        height: '56px',
+                        width: '100%',
+                        borderRadius: '16px',
+                        border: 'none',
+                        cursor: 'pointer',
+                        pointerEvents: 'auto',
+                        zIndex: 10,
+                        position: 'relative',
+                        touchAction: 'manipulation',
+                        boxShadow: '0 4px 12px rgba(255, 215, 0, 0.3)'
+                      }}
+                      className="flex items-center justify-center gap-2 hover:brightness-110 transition active:scale-[0.98]"
+                    >
+                      <span>🌍</span> Flutterwave (Africa Cards)
+                    </button>
+                    <button 
+                      onClick={() => {
+                        const emailInput = getValidatedEmail();
+                        if (!emailInput) {
+                          showToast('Please enter your email address before choosing PayPal.', 'error');
+                          return;
+                        }
+                        alert(`PayPal payment of $${priceUSD.toFixed(2)} requested!\nPlease send payments directly to goye@gasv.store or contact support via WhatsApp/Email to receive a direct invoice link.`);
+                        handleSuccess('PAYPAL-' + Date.now(), 'PayPal (Global)', true);
+                      }}
+                      style={{
+                        background: 'linear-gradient(135deg, #003087 0%, #0079C1 100%)',
+                        color: '#FFF',
+                        fontWeight: '800',
+                        fontSize: '15px',
+                        height: '56px',
+                        width: '100%',
+                        borderRadius: '16px',
+                        border: 'none',
+                        cursor: 'pointer',
+                        pointerEvents: 'auto',
+                        zIndex: 10,
+                        position: 'relative',
+                        touchAction: 'manipulation',
+                        boxShadow: '0 4px 12px rgba(0, 48, 135, 0.3)'
+                      }}
+                      className="flex items-center justify-center gap-2 hover:brightness-110 transition active:scale-[0.98]"
+                    >
+                      <span>🅿️</span> Pay with PayPal ($)
+                    </button>
+                    <button 
+                      onClick={() => setPaymentDetailsType('usdt_bep20')} 
+                      style={{
+                        background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+                        color: '#000',
+                        fontWeight: '800',
+                        fontSize: '15px',
+                        height: '56px',
+                        width: '100%',
+                        borderRadius: '16px',
+                        border: 'none',
+                        cursor: 'pointer',
+                        pointerEvents: 'auto',
+                        zIndex: 10,
+                        position: 'relative',
+                        touchAction: 'manipulation',
+                        boxShadow: '0 4px 12px rgba(255, 215, 0, 0.3)'
+                      }}
+                      className="flex items-center justify-center gap-2 hover:brightness-110 transition active:scale-[0.98]"
+                    >
+                      <span>🟡</span> USDT BEP20 (BNB Smart Chain)
+                    </button>
+                    <button 
+                      onClick={() => setPaymentDetailsType('usdc_base')} 
+                      style={{
+                        background: 'linear-gradient(135deg, #0052FF 0%, #0033AD 100%)',
+                        color: '#FFF',
+                        fontWeight: '800',
+                        fontSize: '15px',
+                        height: '56px',
+                        width: '100%',
+                        borderRadius: '16px',
+                        border: 'none',
+                        cursor: 'pointer',
+                        pointerEvents: 'auto',
+                        zIndex: 10,
+                        position: 'relative',
+                        touchAction: 'manipulation',
+                        boxShadow: '0 4px 12px rgba(0, 82, 255, 0.3)'
+                      }}
+                      className="flex items-center justify-center gap-2 hover:brightness-110 transition active:scale-[0.98]"
+                    >
+                      <span>🔵</span> USDC (Base Network)
+                    </button>
+                    <button 
+                      onClick={() => setPaymentDetailsType('opay')} 
+                      style={{
+                        background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+                        color: '#000',
+                        fontWeight: '800',
+                        fontSize: '15px',
+                        height: '56px',
+                        width: '100%',
+                        borderRadius: '16px',
+                        border: 'none',
+                        cursor: 'pointer',
+                        pointerEvents: 'auto',
+                        zIndex: 10,
+                        position: 'relative',
+                        touchAction: 'manipulation',
+                        boxShadow: '0 4px 12px rgba(255, 215, 0, 0.3)'
+                      }}
+                      className="flex items-center justify-center gap-2 hover:brightness-110 transition active:scale-[0.98]"
+                    >
+                      <span>🏦</span> Bank / OPay / Card Transfer
+                    </button>
+                  </>
                 )}
-                <button 
-                  onClick={() => setPaymentDetailsType('opay')} 
-                  style={{
-                    background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
-                    color: '#000',
-                    fontWeight: '800',
-                    fontSize: '15px',
-                    height: '56px',
-                    width: '100%',
-                    borderRadius: '16px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    pointerEvents: 'auto',
-                    zIndex: 10,
-                    position: 'relative',
-                    touchAction: 'manipulation',
-                    boxShadow: '0 4px 12px rgba(255, 215, 0, 0.3)'
-                  }}
-                  className="flex items-center justify-center gap-2 hover:brightness-110 transition active:scale-[0.98]"
-                >
-                  <span>🏦</span> Bank / OPay / Card Transfer
-                </button>
               </div>
             </div>
           ) : activeGateway === 'pi' ? (
             <div className="animate-in fade-in slide-in-from-right-4">
               <div id="piPaymentSection" className="bg-[#1A1A1A] border-2 border-[#7D2AE7] rounded-2xl p-5 my-3 text-center">
                 <h3 className="text-[#FFD700] font-bold text-lg mb-1">🟣 Pay with Pi Network</h3>
-                <p className="text-gray-300 text-xs mb-3">Global Pi GCV Rate: 1 Pi = $314,159 GCV</p>
+                <p className="text-gray-300 text-xs mb-3">1-Click Pi SDK Payment — Market Rate ~$0.38/Pi</p>
                 
                 <div className="bg-black p-4 rounded-xl border border-[#7D2AE7]/50 my-3">
                   <div className="text-xs text-gray-400 font-bold mb-1">Amount Due</div>
                   <div className="text-2xl font-black text-[#FFD700]">
-                    {isPiBrowserMode ? getDisplayPrice(product, env) : `${product?.id === 'pi-testnet-test' ? '0.000100' : (priceUSD / 314159).toFixed(6)} Pi GCV`}
+                    {isPiBrowserMode ? getDisplayPrice(product, env) : `${(priceUSD / 0.38).toFixed(2)} Pi`}
                   </div>
                   {!isPiBrowserMode && (
                     <div className="text-xs text-gray-400 mt-1">(${priceUSD} USD / ₦{nairaAmount})</div>
@@ -1111,8 +1116,8 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
             </div>
           ) : (
             <div className="animate-in fade-in slide-in-from-right-4">
-              <h3 className="text-[#8b5cf6] font-bold text-lg mb-1">🟣 Pay with Pi Network (GCV $314,159)</h3>
-              <p className="text-gray-300 text-xs mb-3">1-Click Pi SDK Payment — Rate: ${priceUSD.toFixed(2)} = {(priceUSD / 314159).toFixed(6)} Pi</p>
+              <h3 className="text-[#8b5cf6] font-bold text-lg mb-1">🟣 Pay with Pi Network</h3>
+              <p className="text-gray-300 text-xs mb-3">1-Click Pi SDK Payment — Rate: ${(priceUSD).toFixed(2)} = {(priceUSD / 0.38).toFixed(2)} Pi</p>
 
               {/* Native Pi SDK 1-Click Button */}
               <button 
@@ -1155,7 +1160,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                 }}
                 className="flex items-center justify-center gap-2 hover:brightness-110 transition active:scale-[0.98] mb-4"
               >
-                <span>🟣</span> Pay with Pi — GCV $314,159 ({(priceUSD / 314159).toFixed(6)} Pi)
+                <span>🟣</span> Pay with Pi — {(priceUSD / 0.38).toFixed(2)} Pi
               </button>
 
               <div className="relative my-4 flex items-center justify-center">

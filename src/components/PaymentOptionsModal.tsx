@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { PaymentDetailsModal } from './PaymentDetailsModal';
 import { isPiCustomerPaymentEnabled } from '../config/payment';
+import { getPaymentEnvironment, getPiPrice } from '../utils/paymentAdapter';
 
 interface PaymentOptionsModalProps {
   onClose: () => void;
@@ -8,7 +9,9 @@ interface PaymentOptionsModalProps {
 }
 
 export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ onClose, product }) => {
-  const [selected, setSelected] = useState('paystack');
+  const env = getPaymentEnvironment();
+  const isPiBrowser = env === 'PI_BROWSER';
+  const [selected, setSelected] = useState(isPiBrowser ? 'pi' : 'paystack');
   const [detailsType, setDetailsType] = useState<string | null>(null);
   const [email, setEmail] = useState(() => {
     return localStorage.getItem('user_email') || localStorage.getItem('customer_email') || '';
@@ -196,7 +199,7 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ onClos
 
   const handlePi = () => {
     if ((window as any).trackClick) {
-      (window as any).trackClick('pi_gcv_click', { gcv: '$314,159' });
+      (window as any).trackClick('pi_click', { method: 'pi_network' });
     }
     setDetailsType('pi');
   };
@@ -244,7 +247,7 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ onClos
         <div style={{ background: '#1a1a00', border: '1px solid #FFD700', padding: '12px', borderRadius: '12px', marginBottom: '16px', textAlign: 'center' }}>
           <span style={{ color: '#FFD700', fontWeight: 900, fontSize: '20px' }}>${priceUSD} USD</span>
           <span style={{ color: '#ccc', fontSize: '12px', display: 'block', marginTop: '2px' }}>
-            ≈ ₦{priceNGN.toLocaleString()} {isPiCustomerPaymentEnabled() ? '• ≈ 0.000159 Pi GCV ($314,159)' : ''}
+            ≈ ₦{priceNGN.toLocaleString()} {isPiCustomerPaymentEnabled() ? `• ≈ ${(priceUSD / 0.38).toFixed(2)} Pi` : ''}
           </span>
         </div>
 
@@ -262,91 +265,93 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ onClos
         <p style={{ color: '#FFD700', fontWeight: 800, fontSize: '13px', marginBottom: '8px' }}>CHOOSE PAYMENT METHOD:</p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <label 
-            onClick={() => setSelected('paystack')}
-            style={{ border: selected === 'paystack' ? '2px solid #FFD700' : '1px solid #333', borderRadius: '12px', padding: '12px', cursor: 'pointer', background: selected === 'paystack' ? '#222' : '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <input type="radio" name="payment_option" checked={selected === 'paystack'} onChange={() => setSelected('paystack')} />
-              <div>
-                <div style={{ color: 'white', fontWeight: 700, fontSize: '14px' }}>💳 Paystack (Global Cards)</div>
-                <div style={{ color: '#888', fontSize: '11px' }}>Visa, Mastercard, Verve, Bank</div>
-              </div>
-            </div>
-            <span style={{ background: '#00C3F8', color: 'black', fontSize: '10px', fontWeight: 900, padding: '3px 8px', borderRadius: '6px' }}>INSTANT</span>
-          </label>
-
-          <label 
-            onClick={() => setSelected('flutterwave')}
-            style={{ border: selected === 'flutterwave' ? '2px solid #FFD700' : '1px solid #333', borderRadius: '12px', padding: '12px', cursor: 'pointer', background: selected === 'flutterwave' ? '#222' : '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <input type="radio" name="payment_option" checked={selected === 'flutterwave'} onChange={() => setSelected('flutterwave')} />
-              <div>
-                <div style={{ color: 'white', fontWeight: 700, fontSize: '14px' }}>🌊 Flutterwave</div>
-                <div style={{ color: '#888', fontSize: '11px' }}>Cards, Mobile Money, Paypal, Transfer</div>
-              </div>
-            </div>
-            <span style={{ background: '#FB9129', color: 'black', fontSize: '10px', fontWeight: 900, padding: '3px 8px', borderRadius: '6px' }}>GLOBAL</span>
-          </label>
-
-          <label 
-            onClick={() => setSelected('usdt')}
-            style={{ border: selected === 'usdt' ? '2px solid #FFD700' : '1px solid #333', borderRadius: '12px', padding: '12px', cursor: 'pointer', background: selected === 'usdt' ? '#222' : '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <input type="radio" name="payment_option" checked={selected === 'usdt'} onChange={() => setSelected('usdt')} />
-              <div>
-                <div style={{ color: 'white', fontWeight: 700, fontSize: '14px' }}>🟡 USDT (BEP20 BSC)</div>
-                <div style={{ color: '#888', fontSize: '11px' }}>0xdc7f804B...b040</div>
-              </div>
-            </div>
-            <span style={{ background: '#26A17B', color: 'white', fontSize: '10px', fontWeight: 900, padding: '3px 8px', borderRadius: '6px' }}>CRYPTO</span>
-          </label>
-
-          <label 
-            onClick={() => setSelected('usdc')}
-            style={{ border: selected === 'usdc' ? '2px solid #FFD700' : '1px solid #333', borderRadius: '12px', padding: '12px', cursor: 'pointer', background: selected === 'usdc' ? '#222' : '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <input type="radio" name="payment_option" checked={selected === 'usdc'} onChange={() => setSelected('usdc')} />
-              <div>
-                <div style={{ color: 'white', fontWeight: 700, fontSize: '14px' }}>🔵 USDC (Base Network)</div>
-                <div style={{ color: '#888', fontSize: '11px' }}>0xdc7f804B...b040</div>
-              </div>
-            </div>
-            <span style={{ background: '#2775CA', color: 'white', fontSize: '10px', fontWeight: 900, padding: '3px 8px', borderRadius: '6px' }}>CRYPTO</span>
-          </label>
-
-          {isPiCustomerPaymentEnabled() && (
+          {isPiBrowser ? (
             <label 
               onClick={() => setSelected('pi')}
-              style={{ border: selected === 'pi' ? '2px solid #FFD700' : '1px solid #333', borderRadius: '12px', padding: '12px', cursor: 'pointer', background: selected === 'pi' ? '#222' : '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+              style={{ border: selected === 'pi' ? '2px solid #7D2AE7' : '1px solid #333', borderRadius: '12px', padding: '12px', cursor: 'pointer', background: selected === 'pi' ? '#222' : '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <input type="radio" name="payment_option" checked={selected === 'pi'} onChange={() => setSelected('pi')} />
                 <div>
-                  <div style={{ color: 'white', fontWeight: 700, fontSize: '14px' }}>💜 Pi Network GCV</div>
-                  <div style={{ color: '#888', fontSize: '11px' }}>0.000159 Pi ≈ $49.99 (GCV $314,159)</div>
+                  <div style={{ color: 'white', fontWeight: 700, fontSize: '14px' }}>💜 Pi Network</div>
+                  <div style={{ color: '#888', fontSize: '11px' }}>{(priceUSD / 0.38).toFixed(2)} Pi ≈ ${priceUSD}</div>
                 </div>
               </div>
               <span style={{ background: '#7A3ED6', color: 'white', fontSize: '10px', fontWeight: 900, padding: '3px 8px', borderRadius: '6px' }}>PI BROWSER</span>
             </label>
-          )}
+          ) : (
+            <>
+              <label 
+                onClick={() => setSelected('paystack')}
+                style={{ border: selected === 'paystack' ? '2px solid #FFD700' : '1px solid #333', borderRadius: '12px', padding: '12px', cursor: 'pointer', background: selected === 'paystack' ? '#222' : '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <input type="radio" name="payment_option" checked={selected === 'paystack'} onChange={() => setSelected('paystack')} />
+                  <div>
+                    <div style={{ color: 'white', fontWeight: 700, fontSize: '14px' }}>💳 Paystack (Global Cards)</div>
+                    <div style={{ color: '#888', fontSize: '11px' }}>Visa, Mastercard, Verve, Bank</div>
+                  </div>
+                </div>
+                <span style={{ background: '#00C3F8', color: 'black', fontSize: '10px', fontWeight: 900, padding: '3px 8px', borderRadius: '6px' }}>INSTANT</span>
+              </label>
 
-          <label 
-            onClick={() => setSelected('bank')}
-            style={{ border: selected === 'bank' ? '2px solid #FFD700' : '1px solid #333', borderRadius: '12px', padding: '12px', cursor: 'pointer', background: selected === 'bank' ? '#222' : '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <input type="radio" name="payment_option" checked={selected === 'bank'} onChange={() => setSelected('bank')} />
-              <div>
-                <div style={{ color: 'white', fontWeight: 700, fontSize: '14px' }}>🏦 Bank / OPay Transfer</div>
-                <div style={{ color: '#888', fontSize: '11px' }}>OPay 6113541882 • GOYE STORE</div>
-              </div>
-            </div>
-            <span style={{ background: '#10B981', color: 'black', fontSize: '10px', fontWeight: 900, padding: '3px 8px', borderRadius: '6px' }}>NAIRA</span>
-          </label>
+              <label 
+                onClick={() => setSelected('flutterwave')}
+                style={{ border: selected === 'flutterwave' ? '2px solid #FFD700' : '1px solid #333', borderRadius: '12px', padding: '12px', cursor: 'pointer', background: selected === 'flutterwave' ? '#222' : '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <input type="radio" name="payment_option" checked={selected === 'flutterwave'} onChange={() => setSelected('flutterwave')} />
+                  <div>
+                    <div style={{ color: 'white', fontWeight: 700, fontSize: '14px' }}>🌊 Flutterwave</div>
+                    <div style={{ color: '#888', fontSize: '11px' }}>Cards, Mobile Money, Paypal, Transfer</div>
+                  </div>
+                </div>
+                <span style={{ background: '#FB9129', color: 'black', fontSize: '10px', fontWeight: 900, padding: '3px 8px', borderRadius: '6px' }}>GLOBAL</span>
+              </label>
+
+              <label 
+                onClick={() => setSelected('usdt')}
+                style={{ border: selected === 'usdt' ? '2px solid #FFD700' : '1px solid #333', borderRadius: '12px', padding: '12px', cursor: 'pointer', background: selected === 'usdt' ? '#222' : '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <input type="radio" name="payment_option" checked={selected === 'usdt'} onChange={() => setSelected('usdt')} />
+                  <div>
+                    <div style={{ color: 'white', fontWeight: 700, fontSize: '14px' }}>🟡 USDT (BEP20 BSC)</div>
+                    <div style={{ color: '#888', fontSize: '11px' }}>0xdc7f804B...b040</div>
+                  </div>
+                </div>
+                <span style={{ background: '#26A17B', color: 'white', fontSize: '10px', fontWeight: 900, padding: '3px 8px', borderRadius: '6px' }}>CRYPTO</span>
+              </label>
+
+              <label 
+                onClick={() => setSelected('usdc')}
+                style={{ border: selected === 'usdc' ? '2px solid #FFD700' : '1px solid #333', borderRadius: '12px', padding: '12px', cursor: 'pointer', background: selected === 'usdc' ? '#222' : '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <input type="radio" name="payment_option" checked={selected === 'usdc'} onChange={() => setSelected('usdc')} />
+                  <div>
+                    <div style={{ color: 'white', fontWeight: 700, fontSize: '14px' }}>🔵 USDC (Base Network)</div>
+                    <div style={{ color: '#888', fontSize: '11px' }}>0xdc7f804B...b040</div>
+                  </div>
+                </div>
+                <span style={{ background: '#2775CA', color: 'white', fontSize: '10px', fontWeight: 900, padding: '3px 8px', borderRadius: '6px' }}>CRYPTO</span>
+              </label>
+
+              <label 
+                onClick={() => setSelected('bank')}
+                style={{ border: selected === 'bank' ? '2px solid #FFD700' : '1px solid #333', borderRadius: '12px', padding: '12px', cursor: 'pointer', background: selected === 'bank' ? '#222' : '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <input type="radio" name="payment_option" checked={selected === 'bank'} onChange={() => setSelected('bank')} />
+                  <div>
+                    <div style={{ color: 'white', fontWeight: 700, fontSize: '14px' }}>🏦 Bank / OPay Transfer</div>
+                    <div style={{ color: '#888', fontSize: '11px' }}>OPay 6113541882 • GOYE STORE</div>
+                  </div>
+                </div>
+                <span style={{ background: '#10B981', color: 'black', fontSize: '10px', fontWeight: 900, padding: '3px 8px', borderRadius: '6px' }}>NAIRA</span>
+              </label>
+            </>
+          )}
         </div>
 
         <button

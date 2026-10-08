@@ -1088,7 +1088,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
                 Checking Pi API Key...
               </div>
               <div style={{ color: '#888', fontSize: '10px', marginTop: '4px' }}>
-                GCV $314,159 = 0.000159 Pi GCV at $49.99 - RC BN3583878
+                Pi Network Payment Configuration - RC BN3583878
               </div>
             </div>
 
@@ -1638,7 +1638,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
                           ADMIN CONTROL PANEL
                         </span>
                         <span className="text-[10px] font-mono tracking-widest text-amber-400 uppercase font-black px-2 py-0.5 bg-amber-950 border border-amber-800/60 rounded">
-                          GCV RATE: ${(paymentConfig as any).piGcvRate || '314,159'} USD
+                          PI MARKET RATE: ~$0.38 USD
                         </span>
                       </div>
                       <h3 className="text-2xl font-black text-white flex items-center gap-2 mt-2">
@@ -1751,7 +1751,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
                         className="w-full bg-[#111] border border-amber-900/60 focus:border-amber-400 rounded-xl p-3 text-white text-xs font-mono outline-none transition"
                         value={(paymentConfig as any).piGcvRate || '314159'}
                         onChange={e => setPaymentConfig({ ...paymentConfig, piGcvRate: e.target.value } as any)}
-                        placeholder="314159 ($314,159 USD per Pi)"
+                        placeholder="0.38 ($0.38 USD per Pi)"
                       />
                       <p className="text-[10px] text-gray-400">Used for calculating Pi amount equivalent for store items & subscriptions.</p>
                     </div>

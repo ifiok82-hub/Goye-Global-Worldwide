@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
 <title>GOYE STORE · SIRWISE AI WEB3 ACADEMY | gasv.store</title>
 <meta name="description" content="Official Goye Store & Sirwise AI WEB3 Academy - Global Digital Products, Roaming eSIM, AI & Web3 Certified Education - gasv.store" />
 
@@ -18,7 +21,6 @@
 <meta name="twitter:title" content="GOYE STORE · SIRWISE AI WEB3 ACADEMY" />
 <meta name="twitter:description" content="Official Goye Store & Sirwise AI WEB3 Academy - Global Digital Products, Roaming eSIM, AI & Web3 Certified Education" />
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://sdk.minepi.com/pi-sdk.js"></script>
 <script src="https://js.paystack.co/v1/inline.js"></script>
 <script src="https://checkout.flutterwave.com/v3.js"></script>
 <script>
@@ -1060,11 +1062,9 @@ setTimeout(()=>{ if(typeof convertAllPrices==='function') convertAllPrices(); },
 document.addEventListener('DOMContentLoaded', ()=>{
   // Delete any element showing incomplete RWISE AI
   document.querySelectorAll('*').forEach(el=>{
-    if(el.textContent && (el.textContent.includes('RWISE AI') || el.textContent.includes('GOYE GLOBAL WORLDWIDE'))){
+    if(el.textContent && el.textContent.includes('RWISE AI')){
       if(el.children.length===0 && el.textContent.length<100){
-        // If it's just text node with incomplete name, fix it
         if(el.textContent.includes('RWISE AI')) el.textContent = 'SIRWISE AI • WEB3 • ACADEMY';
-        if(el.textContent.includes('GOYE GLOBAL WORLDWIDE')) el.textContent = 'GOYE STORE GLOBAL SIRWISE AI WEB3 ACADEMY';
       }
     }
   });

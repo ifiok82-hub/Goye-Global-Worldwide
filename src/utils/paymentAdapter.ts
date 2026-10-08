@@ -21,15 +21,15 @@ const PRICING_REGISTRY: Record<string, { priceUSD: number; piPrice: number }> = 
 
 /**
  * Detects the runtime environment safely without throwing exceptions on SSR or non-browser envs.
- * Evaluates both the user agent string and actual loaded Pi SDK presence.
+ * Evaluates the User Agent string strictly for the official Pi Browser app.
  */
 export function getPaymentEnvironment(): PaymentEnvironment {
-  if (typeof window === 'undefined') return 'STANDARD_WEB';
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') return 'STANDARD_WEB';
 
-  const isPiBrowserUA = navigator.userAgent.includes('PiBrowser');
-  const hasPiSDK = !!(window as any).Pi && typeof (window as any).Pi.createPayment === 'function';
+  const ua = navigator.userAgent || '';
+  const isPiBrowserUA = ua.includes('PiBrowser') || ua.includes('Pi Browser') || ua.includes('Pi/1');
 
-  if (isPiBrowserUA || hasPiSDK) {
+  if (isPiBrowserUA) {
     return 'PI_BROWSER';
   }
 
@@ -99,9 +99,8 @@ export function getBuyButtonLabel(product: any, env: PaymentEnvironment): string
   return 'Buy & Unlock';
 }
 
-export const isPiBrowser = typeof window !== 'undefined' && (
-  typeof (window as any).Pi !== 'undefined' ||
-  (navigator.userAgent && (navigator.userAgent.includes('Pi Browser') || navigator.userAgent.includes('PiBrowser')))
+export const isPiBrowser = typeof window !== 'undefined' && typeof navigator !== 'undefined' && (
+  navigator.userAgent.includes('Pi Browser') || navigator.userAgent.includes('PiBrowser') || navigator.userAgent.includes('Pi/1')
 );
 
 export async function verifyPayment(product: any, refOrTx: string, method: string, email?: string) {
@@ -294,7 +293,7 @@ export async function processPayment(product: any, method: string, callbacks: an
         return;
       }
       try {
-        const piAmount = Number((priceUSD / 314159).toFixed(6)) || 0.000159;
+        const piAmount = Number((priceUSD / 0.38).toFixed(2)) || 131.55;
         await win.Pi.createPayment({
           amount: piAmount,
           memo: product.name,

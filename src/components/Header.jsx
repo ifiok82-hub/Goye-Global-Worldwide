@@ -42,20 +42,8 @@ export const Header = ({
 
   return (
     <header className="bg-[#000000] border-b border-[#FFD700]/30 text-white sticky top-0 z-[9990] shadow-xl">
-      {/* Top Banner: Strict Exact Format Requested by User */}
-      <div className="bg-[#0c0c0c] border-b border-[#FFD700]/20 text-gray-300 text-[11px] font-bold py-1.5 px-4 text-center flex items-center justify-center gap-2 flex-wrap tracking-wide">
-        <span className="inline-flex items-center gap-1.5 font-extrabold text-[#FFD700]">
-          <Globe size={13} className="text-[#FFD700]" />
-          GOYE STORE · SIRWISE AI WEB3 ACADEMY
-        </span>
-        <span className="text-zinc-600">|</span>
-        <span className="font-mono text-[12px] font-bold text-white">gasv.store</span>
-        <span className="text-zinc-600">|</span>
-        <span className="font-mono text-[12px] text-gray-300">goyedagosmessenterprise@gmail.com</span>
-      </div>
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-16">
           
           {/* Logo with 5-Tap Admin Action & onError Fallback */}
           <div onClick={handleLogoClick} className="flex items-center gap-3 cursor-pointer group select-none">

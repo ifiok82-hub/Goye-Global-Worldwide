@@ -7,7 +7,7 @@ export interface ProductPriceDisplayProps {
 }
 
 export function ProductPriceDisplay({ usdPrice, currency = 'USD' }: ProductPriceDisplayProps) {
-  const GCV_RATE = 314159; // 1 Pi = $314,159
+  const PI_RATE = 0.38;    // Market rate ~$0.38 per Pi
   const NGN_RATE = 1600;   // 1 USD = ₦1,600
   const isPiEnabled = isPiCustomerPaymentEnabled();
   const effectiveCurrency = (!isPiEnabled && currency === 'PI') ? 'USD' : currency;
@@ -18,14 +18,14 @@ export function ProductPriceDisplay({ usdPrice, currency = 'USD' }: ProductPrice
         if (!isPiEnabled) {
           return { primary: `$${usdPrice}`, secondary: `≈ ₦${(usdPrice * NGN_RATE).toLocaleString()}` };
         }
-        const piVal = (usdPrice / GCV_RATE).toFixed(6);
-        return { primary: `${piVal} Pi GCV`, secondary: `≈ $${usdPrice} USD` };
+        const piVal = (usdPrice / PI_RATE).toFixed(2);
+        return { primary: `${piVal} Pi`, secondary: `≈ $${usdPrice} USD` };
       }
       case 'NGN': {
         const ngnVal = (usdPrice * NGN_RATE).toLocaleString();
         return {
           primary: `₦${ngnVal}`,
-          secondary: isPiEnabled ? `≈ ${(usdPrice / GCV_RATE).toFixed(6)} Pi` : `≈ $${usdPrice} USD`
+          secondary: isPiEnabled ? `≈ ${(usdPrice / PI_RATE).toFixed(2)} Pi` : `≈ $${usdPrice} USD`
         };
       }
       case 'CAD': {
@@ -41,7 +41,7 @@ export function ProductPriceDisplay({ usdPrice, currency = 'USD' }: ProductPrice
       default: {
         return {
           primary: `$${usdPrice}`,
-          secondary: isPiEnabled ? `≈ ${(usdPrice / GCV_RATE).toFixed(6)} Pi GCV` : `≈ ₦${(usdPrice * NGN_RATE).toLocaleString()}`
+          secondary: isPiEnabled ? `≈ ${(usdPrice / PI_RATE).toFixed(2)} Pi` : `≈ ₦${(usdPrice * NGN_RATE).toLocaleString()}`
         };
       }
     }

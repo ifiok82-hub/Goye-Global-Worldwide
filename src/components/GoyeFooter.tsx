@@ -141,7 +141,7 @@ export const GoyeFooter: React.FC<GoyeFooterProps> = ({
               <span className="bg-[#111] border border-gray-800 text-[10px] font-black text-gray-300 px-2.5 py-1 rounded">Paystack</span>
               <span className="bg-[#111] border border-gray-800 text-[10px] font-black text-gray-300 px-2.5 py-1 rounded">Flutterwave</span>
               <span className="bg-[#111] border border-gray-800 text-[10px] font-black text-gray-300 px-2.5 py-1 rounded">PayPal</span>
-              <span className="bg-[#111] border border-[#FFD700]/30 text-[10px] font-black text-[#FFD700] px-2.5 py-1 rounded">Pi GCV ($314,159)</span>
+              <span className="bg-[#111] border border-[#FFD700]/30 text-[10px] font-black text-[#FFD700] px-2.5 py-1 rounded">Pi Network</span>
               <span className="bg-[#111] border border-gray-800 text-[10px] font-black text-[#00FF88] px-2.5 py-1 rounded">USDT / USDC</span>
             </div>
 
