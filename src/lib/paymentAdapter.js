@@ -97,6 +97,12 @@ export async function processPayment(product, method, callbacks = {}) {
         'pk_live_9f7e06b21fa6dc4e3e94cc0'
       );
       
+      const isValid = (k) => k && k !== 'null' && k.startsWith('pk_');
+      if (!isValid(key)) {
+        if (callbacks.onFallback) callbacks.onFallback('paystack');
+        return;
+      }
+      
       let email = userEmail;
       if (!email || !email.includes('@')) {
         email = (prompt('Enter your email for payment receipt & instant download:') || '').trim().toLowerCase();
@@ -156,6 +162,12 @@ export async function processPayment(product, method, callbacks = {}) {
         localStorage.getItem('FLUTTERWAVE_PUBLIC_KEY') ||
         'FLWPUBK_LIVE-d102e35a12003c27e382b68ef83a31c6-X'
       );
+
+      const isValid = (k) => k && k !== 'null' && k.startsWith('FLWPUBK');
+      if (!isValid(pubKey)) {
+        if (callbacks.onFallback) callbacks.onFallback('flutterwave');
+        return;
+      }
 
       let email = userEmail;
       if (!email || !email.includes('@')) {

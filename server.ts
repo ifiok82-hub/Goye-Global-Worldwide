@@ -73,16 +73,20 @@ function securityRateLimiter(maxRequests = 40, windowMs = 60000) {
   };
 }
 
-// CORS, Security Headers, and Anti-419 Compliance
+// CORS, Security Headers, and Pi Network Frame Compatibility
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  // Allow Pi Network Browser and socialchain.app to embed the application while denying arbitrary origins
+  res.setHeader(
+    'Content-Security-Policy',
+    "frame-ancestors 'self' https://*.minepi.com https://minepi.com https://*.socialchain.app https://socialchain.app; connect-src 'self' https://socialchain.app https://api.paystack.co https://api.flutterwave.com;"
+  );
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
 
-  const allowedOrigins = ['https://www.gasv.store', 'https://gasv.store', 'https://gas.store', 'https://www.gas.store'];
+  const allowedOrigins = ['https://www.gasv.store', 'https://gasv.store', 'https://gas.store', 'https://www.gas.store', 'https://minepi.com', 'https://app-cdn.minepi.com'];
   const origin = req.headers.origin || '';
-  if (allowedOrigins.includes(origin) || origin.endsWith('.cloudworkstations.dev') || origin.endsWith('.run.app')) {
+  if (allowedOrigins.includes(origin) || origin.endsWith('.cloudworkstations.dev') || origin.endsWith('.run.app') || origin.endsWith('.minepi.com') || origin.endsWith('.socialchain.app')) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   } else {
     res.setHeader('Access-Control-Allow-Origin', '*'); // Fallback for dev/preview
@@ -97,6 +101,7 @@ app.use((req, res, next) => {
 
 // Protect sensitive endpoints with anti-tampering rate limiter
 app.use(['/api/admin', '/api/verify-crypto', '/api/verify-bank', '/api/verify-order', '/api/pi'], securityRateLimiter(30, 60000));
+
 
 // VALIDATION-KEY.TXT FIRST - Fixes Pi domain verification - Must be before all middleware/redirects
 const PI_VALIDATION_KEY = '6fad9a58178d16528c6e748a4194797437604a6594d34e811d0dce570c722f1ab8a5caa04e3c5e340dbb68d3a50e9f75122d3a88f5f13fb0419ce5451dcc3201';
@@ -277,6 +282,92 @@ app.post('/api/admin/verify-pass', express.json(), (req, res) => {
     return res.json({ success: true, valid: true });
   } else {
     return res.status(401).json({ success: false, valid: false, error: 'Invalid admin password' });
+  }
+});
+
+// Pi Network App Studio Authentication Flow
+// Exchanges client-side Pi accessToken for verified Pi Network identity and session token
+// Endpoint: https://backend.appstudio-u7cm9zhmha0ruwv8.piappengine.com/pi/auth/v1/login
+const APP_STUDIO_AUTH_ENDPOINT = 'https://backend.appstudio-u7cm9zhmha0ruwv8.piappengine.com/pi/auth/v1/login';
+
+app.post('/api/auth/pi-signin', express.json(), async (req: express.Request, res: express.Response) => {
+  try {
+    const accessToken = req.body?.accessToken;
+
+    if (!accessToken || typeof accessToken !== 'string' || !accessToken.trim()) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'accessToken is required from Pi.authenticate()' 
+      });
+    }
+
+    // Server-side App Studio Token Exchange (Rule: NEVER call /v2/me directly; exchange with App Studio)
+    let appStudioResponse: any = null;
+    let exchangeError = '';
+
+    try {
+      const exchangeRes = await fetch(APP_STUDIO_AUTH_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          accessToken: accessToken.trim()
+        })
+      });
+
+      if (exchangeRes.ok) {
+        appStudioResponse = await exchangeRes.json();
+      } else {
+        const errorBody = await exchangeRes.text();
+        exchangeError = `App Studio authentication returned status ${exchangeRes.status}: ${errorBody}`;
+        console.warn('App Studio exchange failure:', exchangeError);
+      }
+    } catch (netErr: any) {
+      exchangeError = `Network connection to App Studio failed: ${netErr.message}`;
+      console.error('App Studio network error:', netErr.message);
+    }
+
+    // STRICT SECURITY RULE:
+    // The ONLY trusted identity is the uid and username returned by the App Studio response.
+    // NEVER trust browser-supplied uid/username.
+    if (!appStudioResponse || !appStudioResponse.user?.uid || !appStudioResponse.user?.username) {
+      return res.status(401).json({
+        success: false,
+        error: exchangeError || 'App Studio authentication failed: Invalid or unverified accessToken.'
+      });
+    }
+
+    const trustedUid = appStudioResponse.user.uid;
+    const trustedUsername = appStudioResponse.user.username;
+    const sessionToken = appStudioResponse.sessionToken || jwt.sign(
+      {
+        uid: trustedUid,
+        username: trustedUsername,
+        role: 'user',
+        platform: 'pi_network'
+      },
+      JWT_ADMIN_SECRET,
+      { expiresIn: '30d' }
+    );
+
+    console.log(`✅ [App Studio Pi Auth] Verified Pioneer @${trustedUsername} (UID: ${trustedUid})`);
+
+    return res.status(200).json({
+      success: true,
+      sessionToken,
+      user: {
+        uid: trustedUid,
+        username: trustedUsername
+      }
+    });
+  } catch (err: any) {
+    console.error('[Pi Auth Server Error]:', err?.message);
+    return res.status(500).json({ 
+      success: false, 
+      error: 'Pi authentication exchange could not be completed.' 
+    });
   }
 });
 

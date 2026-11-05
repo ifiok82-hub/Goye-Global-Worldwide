@@ -20,16 +20,16 @@
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="GOYE STORE · SIRWISE AI WEB3 ACADEMY" />
 <meta name="twitter:description" content="Official Goye Store & Sirwise AI WEB3 Academy - Global Digital Products, Roaming eSIM, AI & Web3 Certified Education" />
+<script src="https://sdk.minepi.com/pi-sdk.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://js.paystack.co/v1/inline.js"></script>
 <script src="https://checkout.flutterwave.com/v3.js"></script>
 <script>
 window.addEventListener('load', function(){
-  var isSandbox = (localStorage.getItem('PI_SANDBOX_MODE') || localStorage.getItem('PI_SANDBOX') || 'true') !== 'false';
   if(window.Pi){
     try{
-      Pi.init({version:"2.0", sandbox: isSandbox});
-      console.log('Pi SDK Ready - Sandbox:', isSandbox, '- gasv.store RC BN3583878');
+      Pi.init({version:"2.0"});
+      console.log('Pi SDK Ready - gasv.store RC BN3583878');
     }catch(e){
       console.error('Pi init error:', e);
     }
@@ -1034,9 +1034,8 @@ window.initPiSafe=function(){
   try{
     if(typeof Pi!=='undefined'){
       try{ 
-        var isSandbox = localStorage.getItem('PI_SANDBOX') !== 'false';
-        Pi.init({version:"2.0", sandbox: isSandbox}); 
-        console.log('Pi SDK initialized - sandbox:', isSandbox); 
+        Pi.init({version:"2.0"}); 
+        console.log('Pi SDK initialized version 2.0'); 
       }catch(e){ console.log('Pi init fallback', e); }
     }
   }catch(e){ console.log('Pi SDK not blocking', e); }

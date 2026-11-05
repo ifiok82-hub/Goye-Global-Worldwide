@@ -47,8 +47,8 @@ export const GoyeHero: React.FC<GoyeHeroProps> = ({
           
           {/* Top Pass Promotion & Micro-offer */}
           <div className="flex flex-col gap-3 mb-8">
-            <div className="bg-[#FFD700]/10 border border-[#FFD700]/30 text-[#FFD700] text-[11px] font-black py-1.5 px-5 rounded-full mx-auto inline-flex items-center gap-2 uppercase tracking-widest shadow-sm">
-              <Award size={13} className="text-[#FFD700]" />
+            <div className="bg-black border border-yellow-400 text-yellow-400 text-[11px] font-black py-1.5 px-5 rounded-full mx-auto inline-flex items-center gap-2 uppercase tracking-widest shadow-sm">
+              <Award size={13} className="text-yellow-400" />
               <span>ACCREDITED GLOBAL E-LEARNING & DIGITAL ASSETS</span>
             </div>
             
@@ -56,7 +56,7 @@ export const GoyeHero: React.FC<GoyeHeroProps> = ({
               onClick={onOpenTripwire || onOpenLeadMagnet}
               className="bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 hover:from-yellow-300 hover:to-amber-300 text-black font-black text-xs sm:text-sm py-4 px-8 rounded-2xl mx-auto flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(255,215,0,0.35)] transition active:scale-95 cursor-pointer border-2 border-yellow-200"
             >
-              <span>Get the AI Starter & Global Travel Pass for $1 / 0.000003 Pi</span>
+              <span>Get the AI Starter & Global Travel Pass for {window.navigator.userAgent.includes("PiBrowser") || (window as any).Pi ? "2 Pi" : "$1 / ₦1,500"}</span>
               <ArrowRight size={15} />
             </button>
           </div>
