@@ -1,6 +1,8 @@
 {
   "rewrites": [
-    { "source": "/pi-app-validation.txt", "destination": "/pi-app-validation.txt" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/((?!pi-app-validation.txt|validation-key.txt|.*\\.txt|api).*)",
+      "destination": "/index.html"
+    }
   ]
 }
