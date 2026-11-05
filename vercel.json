@@ -1,1 +1,14 @@
-
+{
+  "rewrites": [
+    { "source": "/pi-app-validation.txt", "destination": "/pi-app-validation.txt" },
+    { "source": "/validation-key.txt", "destination": "/validation-key.txt" },
+    { "source": "/.well-known/:path*", "destination": "/.well-known/:path*" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/pi-app-validation.txt",
+      "headers": [{ "key": "Content-Type", "value": "text/plain" }]
+    }
+  ]
+}
