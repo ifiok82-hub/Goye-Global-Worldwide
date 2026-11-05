@@ -1,7 +1,7 @@
 {
   "rewrites": [
     {
-      "source": "/((?!pi-app-validation.txt|validation-key.txt|.*\\.txt|api).*)",
+      "source": "/((?!.*\\.txt).*)",
       "destination": "/index.html"
     }
   ]
