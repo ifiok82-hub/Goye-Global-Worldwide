@@ -609,8 +609,37 @@ app.get('/api/clicks', (req, res) => {
   res.json({ success: true, clicks: clicksDB });
 });
 
-app.post('/api/pi/verify', express.json(), (req, res) => {
-  const { paymentId, txid, email, amount } = req.body;
+app.post('/api/pi/verify', express.json(), async (req, res) => {
+  const { accessToken, username, paymentId, txid, email, amount } = req.body || {};
+
+  // If verifying Pi User Authentication session
+  if (accessToken) {
+    try {
+      const piRes = await fetch('https://api.minepi.com/v2/me', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (piRes.ok) {
+        const piUser: any = await piRes.json();
+        const verifiedUsername = piUser?.username || username || 'unknown';
+        console.log(`Pi Auth verified for @${verifiedUsername}`);
+        return res.json({ success: true, username: verifiedUsername, uid: piUser?.uid });
+      } else {
+        const errText = await piRes.text().catch(() => '');
+        console.error(`[PI AUTH FAILED] Status ${piRes.status}:`, errText);
+        return res.status(piRes.status || 401).json({ success: false, error: 'Failed to verify with Pi Server' });
+      }
+    } catch (err: any) {
+      console.error('Exception verifying Pi Auth token:', err?.message || err);
+      return res.status(500).json({ success: false, error: err?.message || 'Server error' });
+    }
+  }
+
+  // Fallback for manual payment order verification
   const leadData = {
     email: email || 'piuser@gasv.store',
     action: 'Paid Pi GCV $314,159',

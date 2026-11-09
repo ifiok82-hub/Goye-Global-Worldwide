@@ -1,5 +1,6 @@
 import React from 'react';
 import { ArrowRight, Star, Award, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { loginWithPi } from '../lib/piAuth';
 
 interface GoyeHeroProps {
   onOpenTripwire?: () => void;
@@ -25,13 +26,56 @@ export const GoyeHero: React.FC<GoyeHeroProps> = ({
     }
   };
 
-  const handleAction = () => {
-    if (!isAcademyPaid) {
-      if (onPurchaseAcademy) {
-        onPurchaseAcademy();
-      } else {
-        handleScrollToAcademy();
+  const handleAction = async () => {
+    if (isAcademyPaid) {
+      handleScrollToAcademy();
+      return;
+    }
+
+    if (typeof window !== 'undefined' && (window as any).Pi && typeof (window as any).Pi.createPayment === 'function') {
+      const auth = await loginWithPi();
+      if (!auth) return;
+
+      try {
+        const paymentData = {
+          amount: 2,
+          memo: 'Sirwise AI Web3 Academy (8 Modules)',
+          metadata: { productId: 'academy_bundle', piPrice: 2 }
+        };
+        const callbacks = {
+          onReadyForServerApproval: async (paymentId: string) => {
+            try {
+              await fetch('/api/pi/approve', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ paymentId })
+              });
+            } catch (e) {}
+          },
+          onReadyForServerCompletion: async (paymentId: string, txid: string) => {
+            try {
+              await fetch('/api/pi/complete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ paymentId, txid, productId: 'academy_bundle', amount: 2 })
+              });
+              localStorage.setItem('sirwise_paid', 'true');
+              localStorage.setItem('academy_full_unlocked', 'true');
+              window.location.reload();
+            } catch (e) {}
+          },
+          onCancel: (paymentId: string) => console.log('Payment cancelled:', paymentId),
+          onError: (err: any) => console.error('Payment error:', err)
+        };
+        await (window as any).Pi.createPayment(paymentData, callbacks);
+        return;
+      } catch (e) {
+        console.error('Pi createPayment exception in GoyeHero:', e);
       }
+    }
+
+    if (onPurchaseAcademy) {
+      onPurchaseAcademy();
     } else {
       handleScrollToAcademy();
     }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Globe, Award, Download, Smartphone, Menu, X, ArrowRight, ShieldCheck, Mail, MessageSquare, Sparkles } from 'lucide-react';
+import { loginWithPi } from '../lib/piAuth';
 
 interface GoyeHeaderProps {
   currentTab: string;
@@ -22,33 +23,10 @@ export const GoyeHeader: React.FC<GoyeHeaderProps> = ({
     return typeof window !== 'undefined' ? localStorage.getItem('pi_username') || '' : '';
   });
 
-  const onIncompletePayment = (payment: any) => {
-    console.log("Incomplete payment", payment);
-    if (payment && payment.identifier) {
-      fetch('/api/pi/complete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ paymentId: payment.identifier, txid: payment.txid || 'incomplete' })
-      }).catch(() => {});
-    }
-  };
-
   const handlePiLogin = async () => {
-    if (!(window as any).Pi) {
-      alert("Open in Pi Browser to Login with Pi");
-      return;
-    }
-    try {
-      const auth = await (window as any).Pi.authenticate(['username', 'payments'], onIncompletePayment);
-      console.log(auth.user.username, auth.accessToken);
-      localStorage.setItem('pi_accessToken', auth.accessToken);
-      localStorage.setItem('pi_username', auth.user.username);
-      localStorage.setItem('user_email', auth.user.username.toLowerCase() + '@pi.network');
+    const auth = await loginWithPi();
+    if (auth?.user?.username) {
       setPiUsername(auth.user.username);
-      window.location.reload();
-    } catch(e) {
-      console.error(e);
-      alert("Open in Pi Browser to Login with Pi");
     }
   };
 

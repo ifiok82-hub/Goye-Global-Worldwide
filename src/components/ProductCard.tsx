@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ShieldCheck, CheckCircle, ArrowRight, Lock } from 'lucide-react';
+import { loginWithPi } from '../lib/piAuth';
 
 export interface ProductItem {
   id: string;
@@ -60,12 +61,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) =
       return;
     }
 
-    // Direct Pi Payment integration
+    // 1. Authenticate with Pi and verify token with Pi Server FIRST
+    const auth = await loginWithPi();
+    if (!auth) return;
+
+    // 2. Direct Pi Payment integration
     if (typeof window !== 'undefined' && (window as any).Pi && typeof (window as any).Pi.createPayment === 'function') {
       try {
         const paymentData = {
           amount: finalPiPrice,
-          memo: `GOYE Store - ${product.name || product.title || 'Digital Product'} (${finalPiPrice} Pi)`,
+          memo: product.name || product.title || 'Digital Product',
           metadata: {
             productId: product.id,
             productName: product.name || product.title,

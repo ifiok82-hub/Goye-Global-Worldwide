@@ -19,17 +19,17 @@
 <!-- Twitter Metadata -->
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="GOYE STORE · SIRWISE AI WEB3 ACADEMY" />
-<meta name="twitter:description" content="Official Goye Store & Sirwise AI WEB3 Academy - Global Digital Products, Roaming eSIM, AI & Web3 Certified Education" />
+<!-- Load Pi SDK FIRST before any code -->
+<script src="https://sdk.minepi.com/pi-sdk.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://js.paystack.co/v1/inline.js"></script>
 <script src="https://checkout.flutterwave.com/v3.js"></script>
 <script>
 window.addEventListener('load', function(){
-  var isSandbox = (localStorage.getItem('PI_SANDBOX_MODE') || localStorage.getItem('PI_SANDBOX') || 'true') !== 'false';
   if(window.Pi){
     try{
-      Pi.init({version:"2.0", sandbox: isSandbox});
-      console.log('Pi SDK Ready - Sandbox:', isSandbox, '- gasv.store RC BN3583878');
+      Pi.init({version:"2.0", sandbox: false});
+      console.log('Pi SDK Ready - Sandbox: false - gasv.store');
     }catch(e){
       console.error('Pi init error:', e);
     }
@@ -1084,6 +1084,5 @@ document.addEventListener('DOMContentLoaded', ()=>{
 body{opacity:1 !important; overflow:auto !important;}
 #programs, #academyProg, .card{display:block !important; opacity:1 !important;}
 </style>
-  <script src="https://sdk.minepi.com/pi-sdk.js"></script>
 </body>
 </html>
