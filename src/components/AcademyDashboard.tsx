@@ -5,6 +5,7 @@ import VideoModalPlayer from './VideoModalPlayer';
 import PaymentModal from './PaymentModal';
 import { cleanUserEmail } from '../lib/contact';
 import { RECEIVING_WALLET_ADDRESS, PI_WALLET_ADDRESS } from '../config/payment';
+import { loginWithPi } from '../lib/piAuth';
 
 const showToast = (msg: string, type?: string) => {
   if (typeof (window as any).showToast === 'function') {
@@ -470,7 +471,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
       const res = await fetch('/api/paystack/initialize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, amountUsd: 49.99, currencyCode: 'USD' })
+        body: JSON.stringify({ email, amountUsd: 2, currencyCode: 'USD' })
       });
       const data = await res.json();
       if (data.success && data.authorization_url) {
@@ -549,10 +550,41 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
     }
   };
 
-  const payWithPi = () => {
-    if (!validateCustomerEmail(customerEmail)) return;
-    if (typeof (window as any).createPiPayment === 'function') {
-      (window as any).createPiPayment(49.99, "Sirwise AI WEB3 Academy Full Access");
+  const payWithPi = async () => {
+    const auth = await loginWithPi();
+    if (!auth) return;
+    if (typeof (window as any).Pi && typeof (window as any).Pi.createPayment === 'function') {
+      try {
+        (window as any).Pi.createPayment({
+          amount: 2,
+          memo: "Sirwise AI WEB3 Academy (2 Pi)",
+          metadata: { productId: 'academy_bundle', piPrice: 2 }
+        }, {
+          onReadyForServerApproval: (paymentId: string) => {
+            fetch('/api/pi/approve', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ paymentId })
+            }).catch(() => {});
+          },
+          onReadyForServerCompletion: (paymentId: string, txid: string) => {
+            fetch('/api/pi/complete', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ paymentId, txid, productId: 'academy_bundle', amount: 2 })
+            }).catch(() => {});
+            localStorage.setItem('sirwise_paid', 'true');
+            localStorage.setItem('academy_unlocked', 'true');
+            localStorage.setItem('academy_full_unlocked', 'true');
+            showToast('✅ Pi Payment Verified! Academy Access Granted.', 'success');
+            setTimeout(() => window.location.reload(), 1000);
+          },
+          onCancel: (paymentId: string) => console.log('Pi payment cancelled:', paymentId),
+          onError: (err: any) => console.error('Pi payment error:', err)
+        });
+      } catch (err) {
+        console.error('Pi createPayment exception:', err);
+      }
     } else if (typeof (window as any).showPiGuideReal === 'function') {
       (window as any).showPiGuideReal();
     } else {
@@ -561,7 +593,11 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
   };
 
   const handleBuyUnlockNow = () => {
-    setShowPaymentModal(true);
+    if (typeof window !== 'undefined' && (window as any).Pi) {
+      payWithPi();
+    } else {
+      setShowPaymentModal(true);
+    }
   };
 
   const toggleModule = (id: number) => {
