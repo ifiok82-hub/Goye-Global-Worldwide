@@ -179,7 +179,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({
                   ₦{service.priceNGN.toLocaleString('en-US')}
                 </div>
                 <div className="text-xs text-[#FFD700] font-bold">
-                  ~ ${service.priceUSD} USD
+                  ~ {Math.ceil((service.priceUSD || 60) / 30)} Pi
                 </div>
                 <div className="text-[10px] text-gray-400 flex items-center justify-center lg:justify-end gap-1 mt-1">
                   <Clock size={11} />

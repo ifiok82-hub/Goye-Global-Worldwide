@@ -59,16 +59,16 @@ Here is what you are missing in the Free Version:
 Student Story: Chinedu from Lagos, Nigeria
 "I downloaded the Free Blueprint and got my first client inquiry. But when they asked 
 for custom AI workflow automation, I was stuck. I enrolled in the Sirwise AI Web3 
-Academy $49.99 (₦74,985) full course. Within 14 days of completing Module 3 & 8, 
+Academy 2 Pi (₦74,985) full course. Within 14 days of completing Module 3 & 8, 
 I secured a $300 Fiverr automation contract!"
 
 --------------------------------------------------------------------------------
-[PAGE 6: NEXT STEPS - UPGRADE TO FULL ACADEMY $49.99]
+[PAGE 6: NEXT STEPS - UPGRADE TO FULL ACADEMY 2 Pi]
 --------------------------------------------------------------------------------
 Your Free Blueprint is only 10% of the puzzle. Unlock the remaining 90% today!
 
 🎓 SIRWISE AI WEB3 ACADEMY - 8 FULL GLOBAL MODULES
-- Price: $49.99 USD = ₦74,985 Lifetime Access (190+ Countries)
+- Price: 2 Pi USD = ₦74,985 Lifetime Access (190+ Countries)
 - Special Link: https://www.gasv.store/#academy?from=blueprint
 - USDC Base Address: 0xdc7f804B36aB672Ec31642dF418F29e73281b040
 - OPay Bank Transfer: Account 6113541882 GOYEDAGOSMESS ENTERPRISE
@@ -178,7 +178,7 @@ export default function FreeLeadMagnetModal({ isOpen, onClose, onClaimTripwire, 
       doc.text('WHAT IS NEXT? UPGRADE TO FULL ACADEMY ACCESS', 16, y + 7);
       doc.setFontSize(9);
       doc.setFont('helvetica', 'normal');
-      doc.text('Ready to take your business to the next level? Upgrade to the full 8-Module Masterclass for $49.99:', 16, y + 13);
+      doc.text('Ready to take your business to the next level? Upgrade to the full 8-Module Masterclass for 2 Pi:', 16, y + 13);
       doc.text('• Learning Academy: https://www.gasv.store/#academy', 16, y + 18);
       doc.text('• Digital Store & Checkout: https://www.gasv.store', 16, y + 22);
 
@@ -321,7 +321,7 @@ export default function FreeLeadMagnetModal({ isOpen, onClose, onClaimTripwire, 
           Country: country,
           Source: '5-Minute AI Prompt Blueprint',
           Date: lead.date_wat,
-          Action: 'Send Academy course reminder to enroll $49.99',
+          Action: 'Send Academy course reminder to enroll 2 Pi',
           Link: 'www.gasv.store/academy?lead=' + cleanEmail
         })
       }).catch(() => {});
@@ -417,12 +417,12 @@ Structure the output into 4 clear sections: Executive Summary, Project Scope, Ti
           <div className="overflow-y-auto pr-1">
             {/* Top Badge */}
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#FFD700]/10 border border-[#FFD700]/40 rounded-full text-[#FFD700] text-xs font-bold uppercase tracking-wider mb-4">
-              <Sparkles size={14} /> TRIPWIRE MICRO-OFFER ($1 / 0.000003 Pi)
+              <Sparkles size={14} /> TRIPWIRE MICRO-OFFER (0.000003 Pi)
             </div>
 
             {/* Headline */}
             <h2 className="text-2xl sm:text-3xl font-black text-white leading-tight mb-2">
-              Get the <span className="text-[#FFD700]">AI Starter & Global Travel Pass</span> for $1 / 0.000003 Pi
+              Get the <span className="text-[#FFD700]">AI Starter & Global Travel Pass</span> for 0.000003 Pi
             </h2>
             <p className="text-gray-300 text-sm sm:text-base mb-6 font-medium">
               3 High-Impact Copy-Paste Prompts + 1GB Travel eSIM Trial + 1-Day Access to Sirwise AI Academy.
@@ -458,7 +458,7 @@ Structure the output into 4 clear sections: Executive Summary, Project Scope, Ti
                 style={{ width: '100%', padding: '16px', background: 'linear-gradient(90deg, #FFD700 0%, #FFA500 100%)', color: 'black', borderRadius: '16px', fontWeight: 900, fontSize: '16px', cursor: 'pointer', border: 'none' }}
                 className="hover:brightness-110 active:scale-95 transition shadow-[0_0_25px_rgba(255,215,0,0.4)] flex items-center justify-center gap-2"
               >
-                <span>⚡ Claim Pass Now for $1 / 0.000003 Pi (₦1,500)</span>
+                <span>⚡ Claim Pass Now for 0.000003 Pi (₦1,500)</span>
                 <ArrowRight size={18} />
               </button>
             </div>

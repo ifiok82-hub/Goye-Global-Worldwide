@@ -9,14 +9,14 @@ export interface ProductPricing {
 
 // Authoritative mapping of products to their fiat (USD) and Pi prices
 const PRICING_REGISTRY: Record<string, { priceUSD: number; piPrice: number }> = {
-  'esim-global': { priceUSD: 9.99, piPrice: 26.3 },
-  '1000-prompts': { priceUSD: 39.99, piPrice: 105.3 },
-  'pi-network': { priceUSD: 49.99, piPrice: 131.6 },
-  'canada-lmia': { priceUSD: 69.99, piPrice: 184.2 },
-  'uk-care-visa': { priceUSD: 89.99, piPrice: 236.9 },
-  'ai-starter-tripwire': { priceUSD: 1.00, piPrice: 2.6 },
-  'ai-starter-tripwire-pass': { priceUSD: 1.00, piPrice: 2.6 },
-  'sirwise-academy-full': { priceUSD: 49.99, piPrice: 131.6 }
+  'esim-global': { priceUSD: 2, piPrice: 2 },
+  '1000-prompts': { priceUSD: 2, piPrice: 2 },
+  'pi-network': { priceUSD: 2, piPrice: 2 },
+  'canada-lmia': { priceUSD: 2, piPrice: 2 },
+  'uk-care-visa': { priceUSD: 2, piPrice: 2 },
+  'ai-starter-tripwire': { priceUSD: 2, piPrice: 2 },
+  'ai-starter-tripwire-pass': { priceUSD: 2, piPrice: 2 },
+  'sirwise-academy-full': { priceUSD: 2, piPrice: 2 }
 };
 
 /**

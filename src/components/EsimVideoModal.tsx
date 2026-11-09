@@ -6,7 +6,7 @@ export default function EsimVideoModal({ onClose }: { onClose: () => void }) {
   const [step, setStep] = useState(0);
   
   const steps = [
-    { icon: "📱", text: "Step 1: Buy eSIM on GOYE Store Global Shop - $9.99" },
+    { icon: "📱", text: "Step 1: Buy eSIM on GOYE Store Global Shop - 2 Pi" },
     { icon: "📧", text: "Step 2: QR code sent to your email in 2 mins - GOYE system" },
     { icon: "⚙️", text: "Step 3: Settings > Cellular > Add eSIM > Scan QR" },
     { icon: "🌍", text: "Step 4: Instant internet 190+ countries! GOYE Global!" }
@@ -73,7 +73,7 @@ export default function EsimVideoModal({ onClose }: { onClose: () => void }) {
         <p style={{ color: '#666', fontSize: '10px', textAlign: 'center', marginTop: '10px', marginBottom: '20px' }}>This lesson stays inside GOYE Academy - No external YouTube - https://www.gasv.store</p>
 
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: '#111', padding: '15px', borderTop: '1px solid #333', borderBottomLeftRadius: '16px', borderBottomRightRadius: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <button onClick={() => { onClose(); window.location.hash='#esim'; }} style={{ background: '#FFD700', color: '#000', width: '100%', padding: '12px', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>Close &amp; Buy eSIM $9.99 - GOYE Store</button>
+          <button onClick={() => { onClose(); window.location.hash='#esim'; }} style={{ background: '#FFD700', color: '#000', width: '100%', padding: '12px', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>Close &amp; Buy eSIM 2 Pi - GOYE Store</button>
           <button onClick={() => { onClose(); window.location.hash='#academy'; }} style={{ background: 'transparent', color: '#aaa', border: '1px solid #444', width: '100%', padding: '10px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>Close &amp; Explore Academy</button>
         </div>
       </div>

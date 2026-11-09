@@ -56,7 +56,7 @@ export const GoyeHero: React.FC<GoyeHeroProps> = ({
               onClick={onOpenTripwire || onOpenLeadMagnet}
               className="bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 hover:from-yellow-300 hover:to-amber-300 text-black font-black text-xs sm:text-sm py-4 px-8 rounded-2xl mx-auto flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(255,215,0,0.35)] transition active:scale-95 cursor-pointer border-2 border-yellow-200"
             >
-              <span>Get the AI Starter & Global Travel Pass for $1 / 0.000003 Pi</span>
+              <span>Get the AI Starter & Global Travel Pass for 0.000003 Pi</span>
               <ArrowRight size={15} />
             </button>
           </div>
@@ -92,11 +92,9 @@ export const GoyeHero: React.FC<GoyeHeroProps> = ({
 
                 <div className="px-5 pb-4 space-y-2.5">
                   <div className="flex items-center justify-between text-xs">
-                    <div className="flex items-center text-[#FFD700]">
-                      <Star size={12} className="fill-[#FFD700]" />
-                      <span className="ml-1 font-bold text-white text-xs">4.96</span>
-                      <span className="text-gray-500 text-[11px] ml-1">(3,120 learners)</span>
-                    </div>
+                    <span className="text-[10px] uppercase font-bold text-[#FFD700] bg-zinc-900 px-2.5 py-0.5 rounded border border-[#FFD700]/30">
+                      Certified Track
+                    </span>
                     <span className="text-[10px] uppercase font-bold text-gray-400 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">
                       All Levels
                     </span>
@@ -142,11 +140,9 @@ export const GoyeHero: React.FC<GoyeHeroProps> = ({
 
                 <div className="px-5 pb-4 space-y-2.5">
                   <div className="flex items-center justify-between text-xs">
-                    <div className="flex items-center text-[#FFD700]">
-                      <Star size={12} className="fill-[#FFD700]" />
-                      <span className="ml-1 font-bold text-white text-xs">4.91</span>
-                      <span className="text-gray-500 text-[11px] ml-1">(1,670 learners)</span>
-                    </div>
+                    <span className="text-[10px] uppercase font-bold text-[#FFD700] bg-zinc-900 px-2.5 py-0.5 rounded border border-[#FFD700]/30">
+                      Certified Track
+                    </span>
                     <span className="text-[10px] uppercase font-bold text-gray-400 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">
                       Intermediate
                     </span>
@@ -192,11 +188,9 @@ export const GoyeHero: React.FC<GoyeHeroProps> = ({
 
                 <div className="px-5 pb-4 space-y-2.5">
                   <div className="flex items-center justify-between text-xs">
-                    <div className="flex items-center text-[#FFD700]">
-                      <Star size={12} className="fill-[#FFD700]" />
-                      <span className="ml-1 font-bold text-white text-xs">4.96</span>
-                      <span className="text-gray-500 text-[11px] ml-1">(2,150 learners)</span>
-                    </div>
+                    <span className="text-[10px] uppercase font-bold text-[#FFD700] bg-zinc-900 px-2.5 py-0.5 rounded border border-[#FFD700]/30">
+                      Certified Track
+                    </span>
                     <span className="text-[10px] uppercase font-bold text-gray-400 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">
                       Developer
                     </span>

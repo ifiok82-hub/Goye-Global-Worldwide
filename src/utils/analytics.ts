@@ -252,7 +252,7 @@ export async function saveGlobalClick(type: string = 'page_view', product: strin
     device: isMobile ? 'Mobile' : 'Desktop',
     excluded: 'Customer', // Will show green Customer badge
     product: product || 'Sirwise AI Web3 Academy',
-    amount: amount || (type === 'payment' ? '₦74,985.00 ($49.99)' : ''),
+    amount: amount || (type === 'payment' ? '₦74,985.00 (2 Pi)' : ''),
     date: new Date().toLocaleDateString('en-GB'),
     date_wat: new Date().toLocaleString('en-GB', { timeZone: 'Africa/Lagos' }) + ' WAT Lagos',
     verified: type === 'payment' ? 'VERIFIED' : 'UNVERIFIED',

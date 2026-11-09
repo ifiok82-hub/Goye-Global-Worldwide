@@ -36,14 +36,14 @@ export const ALL_PRODUCTS = [
       'Official Pi SDK Integration & Server Approval'
     ]
   },
-  // 0. AI Starter & Global Travel Pass ($1 Tripwire)
+  // 0. AI Starter & Global Travel Pass (Pi Micro-offer)
   {
     id: 'ai-starter-tripwire-pass',
     is_locked: true,
     slug: 'esim-global-1gb',
     preview_image: '/images/old/esim-global-1gb.jpg',
     image: '/images/old/esim-global-1gb.jpg',
-    name: 'AI Starter & Global Travel Pass ($1 / 0.000003 Pi)',
+    name: 'AI Starter & Global Travel Pass (0.000003 Pi)',
     title: 'AI Starter & Global Travel Pass',
     icon: '⚡',
     data: '1GB Trial Pass',
@@ -52,7 +52,7 @@ export const ALL_PRODUCTS = [
     piPrice: 2,
     
     category: 'starter',
-    badge: 'MICRO-OFFER ($1)',
+    badge: 'MICRO-OFFER (Pi)',
     bestseller: true,
     status: 'ACTIVE',
     visible: true,
@@ -531,8 +531,8 @@ export const ALL_PRODUCTS = [
     slug: 'ai-prompts-library-1000',
     preview_image: '/images/old/ai-prompts-library-1000.jpg',
     image: '/images/old/ai-prompts-library-1000.jpg',
-    name: '1000 Viral AI Prompts Make $1000/month',
-    title: '1000 Viral AI Prompts Make $1000/month',
+    name: '1000 Viral AI Prompts Make 1,000 Pi/month',
+    title: '1000 Viral AI Prompts Make 1,000 Pi/month',
     icon: '🤖',
     description: '1000 Master AI Prompts for Copywriting, Business Automation, Social Media Growth & Sales.',
     

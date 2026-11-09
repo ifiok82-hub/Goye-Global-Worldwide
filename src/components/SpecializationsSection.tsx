@@ -107,15 +107,11 @@ export const SpecializationsSection: React.FC<SpecializationsSectionProps> = ({
 
               {/* Card Body */}
               <div className="px-5 pb-4 pt-1 space-y-3">
-                {/* Rating & Learner Count */}
+                {/* Program Level */}
                 <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-1.5">
-                    <div className="flex items-center text-[#FFD700]">
-                      <Star size={12} className="fill-[#FFD700]" />
-                      <span className="ml-1 font-bold text-white text-xs">{spec.rating.toFixed(2)}</span>
-                    </div>
-                    <span className="text-gray-500 text-[11px]">({spec.ratingCount.toLocaleString()} learners)</span>
-                  </div>
+                  <span className="text-[10px] uppercase font-bold text-[#FFD700] bg-zinc-900 px-2.5 py-0.5 rounded border border-[#FFD700]/30">
+                    Certified Program
+                  </span>
                   <span className="text-[10px] uppercase font-bold text-gray-400 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">
                     {spec.level}
                   </span>

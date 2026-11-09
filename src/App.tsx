@@ -58,79 +58,13 @@ export default function App() {
 
   const logoTapCountRef = useRef(0);
 
-  // 5 Core Digital Products (Restored with exact /images/old/ paths)
-  const core5Products = [
-    {
-      id: 'esim-global',
-      slug: 'esim-global-1gb',
-      preview_image: '/images/old/esim-global-1gb.jpg',
-      image: '/images/old/esim-global-1gb.jpg',
-      name: 'GOYE eSIM Global 190 Countries 1GB',
-      title: 'GOYE eSIM Global 190 Countries 1GB',
-      icon: '🌐',
-      price: 9.99,
-      category: 'esim',
-      badge: 'TRAVEL BESTSELLER ($9)',
-      description: 'Global high-speed roaming eSIM valid in 190+ countries with 1GB 5G/4G data. Fast activation via WhatsApp QR within 60 seconds.',
-      features: ['190+ Countries Included', 'Instant WhatsApp QR Delivery', 'Zero Roaming Fees']
-    },
-    {
-      id: '1000-prompts',
-      slug: 'ai-prompts-library-1000',
-      preview_image: '/images/old/ai-prompts-library-1000.jpg',
-      image: '/images/old/ai-prompts-library-1000.jpg',
-      name: '1000 Viral AI Prompts Library',
-      title: '1000 Viral AI Prompts Library',
-      icon: '🤖',
-      price: 39.99,
-      category: 'prompts',
-      badge: 'MONETIZATION TOOLKIT',
-      description: '1000 Master AI Copy-Paste prompts for business, copywriting, social media, and automation that can earn $1000/month.',
-      features: ['ChatGPT & Claude Optimized', 'Sales Copywriting Systems', 'Freelancing Scripts']
-    },
-    {
-      id: 'pi-network',
-      slug: 'pi-gcv-crash-course-314159',
-      preview_image: '/images/old/pi-gcv-crash-course-314159.jpg',
-      image: '/images/old/pi-gcv-crash-course-314159.jpg',
-      name: 'Pi Network Crash Course',
-      title: 'Pi Network Crash Course',
-      icon: 'π',
-      price: 49.99,
-      category: 'academy',
-      badge: 'GCV SPECIALIST',
-      description: 'Complete crash course on Pi Network GCV commerce. Understand utility, secure wallet configurations, and peer-to-peer barter.',
-      features: ['Pi GCV Economy Basics', 'Secure Pi Wallet Manuals', 'Global Consensus Value Standards']
-    },
-    {
-      id: 'canada-lmia',
-      slug: 'canada-lmia-500-employers',
-      preview_image: '/images/old/canada-lmia-500-employers.jpg',
-      image: '/images/old/canada-lmia-500-employers.jpg',
-      name: 'Canada LMIA Jobs Database (500 Employers)',
-      title: 'Canada LMIA Jobs Database (500 Employers)',
-      icon: '🇨🇦',
-      price: 69.99,
-      category: 'contracts',
-      badge: 'IMMIGRATION DIRECTORY',
-      description: 'Verified spreadsheet of 500 active Canadian employers with approved LMIA status offering direct job visa sponsorships.',
-      features: ['500 Verified Sponsors', 'Provincial Application Steps', 'Resume Optimization Format']
-    },
-    {
-      id: 'uk-care-visa',
-      slug: 'uk-care-worker-visa-blueprint-2026',
-      preview_image: '/images/old/uk-care-worker-visa-blueprint-2026.jpg',
-      image: '/images/old/uk-care-worker-visa-blueprint-2026.jpg',
-      name: 'UK Care Worker Visa Blueprint 2026',
-      title: 'UK Care Worker Visa Blueprint 2026',
-      icon: '🇬🇧',
-      price: 89.99,
-      category: 'contracts',
-      badge: 'RELOCATION PACK',
-      description: 'Step-by-step master relocation blueprint, Certificate of Sponsorship (COS) directories, and professional cover letter formats.',
-      features: ['COS Sponsor Checklist', 'ATS UK Format Resumes', 'Visa Interview Preparation Guide']
-    }
-  ];
+  // All Real Digital Products, Courses, eSIM and Blueprints from Catalog
+  const displayProducts = ALL_PRODUCTS && ALL_PRODUCTS.length > 0 
+    ? ALL_PRODUCTS.filter(p => p.visible !== false && p.category !== 'developer')
+    : [];
+
+  const core5Products = displayProducts.slice(0, 5);
+
 
   const showToast = (msg: string, _type?: string) => {
     setToastMsg(msg);
@@ -269,7 +203,7 @@ export default function App() {
                 const academyProd = {
                   id: 'academy_bundle',
                   name: 'Sirwise AI Web3 Academy (8 Modules)',
-                  price: 49.99
+                  piPrice: 2, price: 2
                 };
                 setSelectedProduct(academyProd);
                 setShowCheckoutModal(true);
@@ -277,7 +211,7 @@ export default function App() {
               onOpenTripwire={() => {
                 const tripwireProd = {
                   id: 'ai-starter-tripwire',
-                  name: 'AI Starter & Global Travel Pass ($1)',
+                  name: 'AI Starter & Global Travel Pass (Pi)',
                   price: 1.00
                 };
                 setSelectedProduct(tripwireProd);
@@ -286,7 +220,7 @@ export default function App() {
               onOpenLeadMagnet={() => {
                 const tripwireProd = {
                   id: 'ai-starter-tripwire',
-                  name: 'AI Starter & Global Travel Pass ($1)',
+                  name: 'AI Starter & Global Travel Pass (Pi)',
                   price: 1.00
                 };
                 setSelectedProduct(tripwireProd);
@@ -318,7 +252,7 @@ export default function App() {
 
               {/* 5 Products Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-                {core5Products.map((prod) => (
+                {displayProducts.map((prod) => (
                   <ProductCard
                     key={prod.id}
                     product={prod}
@@ -411,7 +345,7 @@ export default function App() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-zinc-900 pt-8 space-y-6">
               <div className="text-center max-w-xl mx-auto space-y-1">
                 <h3 className="text-xl font-black text-white uppercase">
-                  Digital Toolkits & Global eSIM ($9)
+                  Digital Toolkits & Global eSIM (Pi)
                 </h3>
                 <p className="text-xs text-gray-400">
                   Instant electronic fulfillment credentials and downloadable packs.
@@ -419,7 +353,7 @@ export default function App() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 max-w-6xl mx-auto">
-                {core5Products.map((prod) => (
+                {displayProducts.map((prod) => (
                   <ProductCard
                     key={prod.id}
                     product={prod}

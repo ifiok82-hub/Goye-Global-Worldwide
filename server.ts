@@ -2652,12 +2652,13 @@ app.get('/api/clubkonnect/dataplans', async (req, res) => {
 // -------------------------------------------------------------------------
 import { ALL_PRODUCTS } from './src/data';
 
-const fallbackGlobalDigitalProducts = ALL_PRODUCTS.map(p => ({
+const fallbackGlobalDigitalProducts = ALL_PRODUCTS.map((p: any) => ({
   id: p.id,
   title: p.title || p.name,
   name: p.name || p.title,
-  priceNGN: p.priceNGN || Math.round(p.price * 1500),
-  priceUSD: p.priceUSD || p.price,
+  piPrice: p.piPrice || 2,
+  priceNGN: p.priceNGN || Math.round((p.piPrice || 2) * 1500),
+  priceUSD: p.priceUSD || p.piPrice || 2,
   category: p.category,
   status: 'ACTIVE',
   visible: true,
@@ -2709,6 +2710,7 @@ app.post('/api/digital/upload', upload.single('file'), async (req, res) => {
       name: title || 'Untitled Product',
       priceNGN: Number(priceNGN) || 5000,
       priceUSD: Number(priceUSD) || 6,
+      piPrice: Number((req.body as any)?.piPrice) || 2,
       category: 'prompts',
       status: 'ACTIVE',
       visible: true,

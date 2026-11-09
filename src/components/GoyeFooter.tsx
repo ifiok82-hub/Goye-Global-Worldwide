@@ -78,7 +78,7 @@ export const GoyeFooter: React.FC<GoyeFooterProps> = ({
               </li>
               <li>
                 <button onClick={(e) => handleNav('services', e)} className="hover:text-[#FFD700] font-bold text-left transition cursor-pointer">
-                  Global Store & eSIM ($9)
+                  Global Store & eSIM (Pi)
                 </button>
               </li>
               <li>

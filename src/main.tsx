@@ -14,6 +14,21 @@ try {
   console.warn('Initial seeds error:', e);
 }
 
+declare global {
+  interface Window {
+    Pi?: any;
+  }
+}
+
+// Pi SDK Initialization
+if (typeof window !== 'undefined' && window.Pi) {
+  try {
+    window.Pi.init({ version: "2.0", sandbox: false });
+  } catch (e) {
+    console.warn('Pi init error:', e);
+  }
+}
+
 // Service Worker cleanup
 if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
   try {

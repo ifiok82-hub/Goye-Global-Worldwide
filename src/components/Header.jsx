@@ -111,7 +111,7 @@ export const Header = ({
               onClick={() => handleNavClick('services')}
               className="hidden sm:flex items-center gap-1.5 bg-[#FFD700] hover:bg-yellow-400 text-black font-black text-xs uppercase px-4 py-2.5 rounded-xl shadow-lg shadow-yellow-500/20 transition active:scale-95 cursor-pointer"
             >
-              <span>eSIM ($9) & Store</span>
+              <span>eSIM (Pi) & Store</span>
             </button>
 
             {/* Mobile Menu Button */}

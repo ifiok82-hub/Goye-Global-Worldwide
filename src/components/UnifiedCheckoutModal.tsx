@@ -802,16 +802,13 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
             <div className="animate-in fade-in slide-in-from-right-4">
               <div id="piPaymentSection" className="bg-[#1A1A1A] border-2 border-[#7D2AE7] rounded-2xl p-5 my-3 text-center">
                 <h3 className="text-[#FFD700] font-bold text-lg mb-1">🟣 Pay with Pi Network</h3>
-                <p className="text-gray-300 text-xs mb-3">1-Click Pi SDK Payment — Market Rate ~$0.38/Pi</p>
+                <p className="text-gray-300 text-xs mb-3">1-Click Pi SDK Payment — Pi Network</p>
                 
                 <div className="bg-black p-4 rounded-xl border border-[#7D2AE7]/50 my-3">
                   <div className="text-xs text-gray-400 font-bold mb-1">Amount Due</div>
                   <div className="text-2xl font-black text-[#FFD700]">
-                    {isPiBrowserMode ? getDisplayPrice(product, env) : `${(priceUSD / 0.38).toFixed(2)} Pi`}
+                    {product?.piPrice ? `${product.piPrice} Pi` : `${getPiPrice(product)} Pi`}
                   </div>
-                  {!isPiBrowserMode && (
-                    <div className="text-xs text-gray-400 mt-1">(${priceUSD} USD / ₦{nairaAmount})</div>
-                  )}
                 </div>
 
                 <button 
@@ -1117,7 +1114,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
           ) : (
             <div className="animate-in fade-in slide-in-from-right-4">
               <h3 className="text-[#8b5cf6] font-bold text-lg mb-1">🟣 Pay with Pi Network</h3>
-              <p className="text-gray-300 text-xs mb-3">1-Click Pi SDK Payment — Rate: ${(priceUSD).toFixed(2)} = {(priceUSD / 0.38).toFixed(2)} Pi</p>
+              <p className="text-gray-300 text-xs mb-3">1-Click Pi SDK Payment</p>
 
               {/* Native Pi SDK 1-Click Button */}
               <button 
@@ -1160,7 +1157,7 @@ export default function UnifiedCheckoutModal({ product, onClose, paymentConfig, 
                 }}
                 className="flex items-center justify-center gap-2 hover:brightness-110 transition active:scale-[0.98] mb-4"
               >
-                <span>🟣</span> Pay with Pi — {(priceUSD / 0.38).toFixed(2)} Pi
+                <span>🟣</span> Pay with Pi — {product?.piPrice || 2} Pi
               </button>
 
               <div className="relative my-4 flex items-center justify-center">

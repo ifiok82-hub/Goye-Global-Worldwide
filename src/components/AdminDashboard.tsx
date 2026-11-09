@@ -252,14 +252,14 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
       return;
     }
 
-    alert(`✅ UPGRADE REMINDER SENT TO ${email}:\n\nDear ${name},\n\nUnlock the full Sirwise AI WEB3 Academy 8-Module Masterclass ($49.99)!\n\nLink: https://www.gasv.store/#shop\nIncludes: Certificate, 50+ Prompts, Pi Network GCV Guide\n\nOfficial RC BN3583878 | www.gasv.store`);
+    alert(`✅ UPGRADE REMINDER SENT TO ${email}:\n\nDear ${name},\n\nUnlock the full Sirwise AI WEB3 Academy 8-Module Masterclass (2 Pi)!\n\nLink: https://www.gasv.store/#shop\nIncludes: Certificate, 50+ Prompts, Pi Network GCV Guide\n\nOfficial RC BN3583878 | www.gasv.store`);
 
     try {
       const fd = new FormData();
       fd.append('email', email);
       fd.append('name', name);
-      fd.append('_subject', `Academy Reminder for ${name}: Upgrade to Full Academy $49.99 (RC BN3583878)`);
-      fd.append('_autoresponse', `Hi ${name}!\n\nThis is an automated reminder from Sirwise AI WEB3 Academy (RC BN3583878).\n\nYou downloaded our Free AI Prompt Blueprint. Don't miss out on unlocking all 8 full modules, certificate, and Web3 tools!\n\nEnroll now for $49.99: https://www.gasv.store/#shop\nSupport: goyedagosmess@gmail.com\n\nwww.gasv.store`);
+      fd.append('_subject', `Academy Reminder for ${name}: Upgrade to Full Academy 2 Pi (RC BN3583878)`);
+      fd.append('_autoresponse', `Hi ${name}!\n\nThis is an automated reminder from Sirwise AI WEB3 Academy (RC BN3583878).\n\nYou downloaded our Free AI Prompt Blueprint. Don't miss out on unlocking all 8 full modules, certificate, and Web3 tools!\n\nEnroll now for 2 Pi: https://www.gasv.store/#shop\nSupport: goyedagosmess@gmail.com\n\nwww.gasv.store`);
       fd.append('_template', 'table');
       fetch('https://formsubmit.co/goyedagosmess@gmail.com', { method: 'POST', body: fd }).catch(() => {});
     } catch (e) {}
@@ -805,7 +805,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
       const customerEmail = (o.customerEmail || o.email || '').trim();
       const customerName = cleanName(o);
       const countryName = cleanCountry(o.country);
-      const amtStr = o.amount || o.amountFormatted || (o.amountNGN ? `₦${Number(o.amountNGN).toLocaleString()}` : '') || (o.amountUSD ? `$${o.amountUSD}` : '') || o.price || '₦74,985.00 ($49.99)';
+      const amtStr = o.amount || o.amountFormatted || (o.amountNGN ? `₦${Number(o.amountNGN).toLocaleString()}` : '') || (o.amountUSD ? `$${o.amountUSD}` : '') || o.price || '₦74,985.00 (2 Pi)';
 
       rows.push(`"${o.ref || o.orderId || o.id || ''}","${customerEmail}","${customerName}","${countryName}","${o.productName || o.product || 'Sirwise AI Web3 Academy'}","${amtStr}","${o.method || o.paymentMethod || 'Paystack'}","${statusStr}","${dateStr}"`);
     });
@@ -891,7 +891,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
       const rawId = u.id || u.uid || ('PAYSTACK-' + Date.now());
       const custId = String(rawId).replace(/[^\w\d_-]/g, '').trim();
       const whatsapp = u.whatsapp || u.phone || 'N/A';
-      const totalSpent = u.totalSpent || u.amount || '₦74,985.00 ($49.99)';
+      const totalSpent = u.totalSpent || u.amount || '₦74,985.00 (2 Pi)';
 
       rows.push(`"${custId}","${customerEmail}","${customerName}","${countryName}","${whatsapp}","${totalSpent}","${dateStr}"`);
     });
@@ -2062,7 +2062,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
             <div className="flex items-center gap-2 flex-wrap">
               <button
                 onClick={() => {
-                  if (confirm('Send Academy $49.99 Upgrade reminder to ALL leads?')) {
+                  if (confirm('Send Academy 2 Pi Upgrade reminder to ALL leads?')) {
                     leadsList.forEach(l => sendUpgradeReminderToLead(l));
                     showToast('Bulk reminders sent!');
                   }

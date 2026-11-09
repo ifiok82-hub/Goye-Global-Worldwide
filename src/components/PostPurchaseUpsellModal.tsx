@@ -29,10 +29,10 @@ export default function PostPurchaseUpsellModal({ isOpen, onClose, onAcceptUpsel
 
         {/* Headline */}
         <h2 className="text-2xl sm:text-3xl font-black text-white leading-tight mb-2">
-          Upgrade to <span className="text-[#FFD700]">Full Academy & Unlimited eSIM Access</span> for $49.99
+          Upgrade to <span className="text-[#FFD700]">Full Academy & Unlimited eSIM Access</span> for 2 Pi
         </h2>
         <p className="text-gray-300 text-xs sm:text-sm mb-5">
-          Regular Price <span className="line-through text-gray-500">₦150,000 ($99.99)</span> — <strong className="text-[#FFD700]">Save 50% Today Only (₦74,985)</strong>
+          Regular Price <span className="line-through text-gray-500">₦150,000 (2 Pi)</span> — <strong className="text-[#FFD700]">Save 50% Today Only (₦74,985)</strong>
         </p>
 
         {/* Value Proposition Box */}
@@ -57,7 +57,7 @@ export default function PostPurchaseUpsellModal({ isOpen, onClose, onAcceptUpsel
             onClick={onAcceptUpsell}
             className="w-full bg-gradient-to-r from-[#FFD700] to-[#FFA500] hover:from-[#ffe033] hover:to-[#ffb733] text-black font-black py-4 px-6 rounded-xl flex items-center justify-center gap-2 text-base shadow-lg transition-transform active:scale-95"
           >
-            <span>🚀 Upgrade to Full Academy for $49.99 (₦74,985)</span>
+            <span>🚀 Upgrade to Full Academy for 2 Pi (₦74,985)</span>
             <ArrowRight size={18} />
           </button>
 

@@ -18,6 +18,39 @@ export const GoyeHeader: React.FC<GoyeHeaderProps> = ({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState(false);
+  const [piUsername, setPiUsername] = useState(() => {
+    return typeof window !== 'undefined' ? localStorage.getItem('pi_username') || '' : '';
+  });
+
+  const onIncompletePayment = (payment: any) => {
+    console.log("Incomplete payment", payment);
+    if (payment && payment.identifier) {
+      fetch('/api/pi/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentId: payment.identifier, txid: payment.txid || 'incomplete' })
+      }).catch(() => {});
+    }
+  };
+
+  const handlePiLogin = async () => {
+    if (!(window as any).Pi) {
+      alert("Open in Pi Browser to Login with Pi");
+      return;
+    }
+    try {
+      const auth = await (window as any).Pi.authenticate(['username', 'payments'], onIncompletePayment);
+      console.log(auth.user.username, auth.accessToken);
+      localStorage.setItem('pi_accessToken', auth.accessToken);
+      localStorage.setItem('pi_username', auth.user.username);
+      localStorage.setItem('user_email', auth.user.username.toLowerCase() + '@pi.network');
+      setPiUsername(auth.user.username);
+      window.location.reload();
+    } catch(e) {
+      console.error(e);
+      alert("Open in Pi Browser to Login with Pi");
+    }
+  };
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: any) => {
@@ -132,27 +165,14 @@ export const GoyeHeader: React.FC<GoyeHeaderProps> = ({
             })}
           </nav>
 
-          {/* Header Action Buttons (Install PWA & WhatsApp) */}
+          {/* Header Action Buttons (Install PWA & WhatsApp & Pi Login) */}
           <div className="hidden sm:flex items-center gap-3">
             <button
-              onClick={async () => {
-                if (!(window as any).Pi) {
-                   alert("Open in Pi Browser to login with Pi");
-                   return;
-                }
-                try {
-                  const auth = await (window as any).Pi.authenticate(['username', 'payments'], (payment: any) => console.log("Incomplete payment", payment));
-                  localStorage.setItem('pi_accessToken', auth.accessToken);
-                  localStorage.setItem('pi_username', auth.user.username);
-                  window.location.reload();
-                } catch(e) {
-                  console.error(e);
-                }
-              }}
-              className="px-4 py-2.5 rounded-xl bg-[#7D2AE7] hover:bg-purple-700 text-white font-black text-xs shadow-md flex items-center gap-2 active:scale-95 transition"
+              onClick={handlePiLogin}
+              className="px-4 py-2.5 rounded-xl bg-[#7D2AE7] hover:bg-purple-700 text-white font-black text-xs shadow-md flex items-center gap-2 active:scale-95 transition cursor-pointer"
             >
               <img src="https://minepi.com/favicon.png" className="w-4 h-4" alt="Pi" />
-              <span>{localStorage.getItem('pi_username') ? `Welcome, @${localStorage.getItem('pi_username')}` : "Login with Pi"}</span>
+              <span>{piUsername ? `Welcome @${piUsername}` : "Login with Pi"}</span>
             </button>
 
             {isInstallable && (
@@ -176,8 +196,26 @@ export const GoyeHeader: React.FC<GoyeHeaderProps> = ({
             </a>
           </div>
 
-          {/* Mobile Menu Button */}
-          <div className="flex lg:hidden items-center gap-2">
+          {/* Mobile Action and Menu Button */}
+          <div className="flex sm:hidden items-center gap-2">
+            <button
+              onClick={handlePiLogin}
+              className="px-2.5 py-1.5 rounded-xl bg-[#7D2AE7] hover:bg-purple-700 text-white font-black text-[11px] shadow-md flex items-center gap-1 active:scale-95 transition cursor-pointer"
+            >
+              <img src="https://minepi.com/favicon.png" className="w-3.5 h-3.5" alt="Pi" />
+              <span>{piUsername ? `@${piUsername}` : "Login with Pi"}</span>
+            </button>
+
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 rounded-xl bg-zinc-900 text-[#FFD700] border border-zinc-800 hover:bg-zinc-800"
+            >
+              {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+            </button>
+          </div>
+
+          {/* Tablet (sm to lg) Menu Button */}
+          <div className="hidden sm:flex lg:hidden items-center gap-2">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2.5 rounded-xl bg-zinc-900 text-[#FFD700] border border-zinc-800 hover:bg-zinc-800"
@@ -193,6 +231,14 @@ export const GoyeHeader: React.FC<GoyeHeaderProps> = ({
       {mobileMenuOpen && (
         <div className="lg:hidden bg-black border-b border-[#FFD700]/30 px-4 py-6 space-y-3 animate-in fade-in duration-200">
           <div className="grid gap-2">
+            <button
+              onClick={() => { setMobileMenuOpen(false); handlePiLogin(); }}
+              className="w-full text-center py-3 rounded-xl bg-[#7D2AE7] text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-lg"
+            >
+              <img src="https://minepi.com/favicon.png" className="w-4 h-4" alt="Pi" />
+              <span>{piUsername ? `Welcome @${piUsername}` : "Login with Pi"}</span>
+            </button>
+
             {navLinks.map((link) => {
               const isActive = currentTab === link.id || (link.id === 'home' && currentTab === 'academy');
               return (

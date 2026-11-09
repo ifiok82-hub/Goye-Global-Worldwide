@@ -110,7 +110,7 @@ const GLOBAL_MODULES = [
     desc: 'How to sell Sirwise skills globally - Fiverr, Upwork, LinkedIn, TikTok marketing - Earn in USD from Nigeria, India, etc',
     duration: '40-50 mins',
     videoUrl: 'https://www.youtube.com/embed/aircAruvnKk',
-    pdfTitle: '$49.99 Client Pitching Templates & Proposal Kit (PDF)',
+    pdfTitle: '2 Pi Client Pitching Templates & Proposal Kit (PDF)',
     exercise: 'Draft a killer Upwork proposal pitching an AI Content Creation service for $200.',
     quiz: [
       { q: 'Which strategy works best for getting high-paying remote USD clients on LinkedIn?', options: ['Spamming links', 'Optimized profile + showcasing real AI portfolio projects', 'Complaining about jobs', 'Using fake names'], ans: 1 }
@@ -137,7 +137,7 @@ const GLOBAL_MODULES = [
 
 const TESTIMONIALS = [
   { flag: '🇳🇬', country: 'Nigeria', quote: 'Earned $300 my first month using Sirwise AI prompt templates on Upwork & Fiverr!', author: 'Adebayo O.' },
-  { flag: '🇺🇸', country: 'USA', quote: 'Best AI & Web3 course online! Clear, structured, and worth far more than $49.99.', author: 'Sarah M., California' },
+  { flag: '🇺🇸', country: 'USA', quote: 'Best AI & Web3 course online! Clear, structured, and worth far more than 2 Pi.', author: 'Sarah M., California' },
   { flag: '🇮🇳', country: 'India', quote: 'Got hired for a remote AI content creation role within 2 weeks of completing Module 2!', author: 'Rajesh K., Bangalore' },
   { flag: '🇬🇧', country: 'UK', quote: 'The blockchain verified certificate with QR code was verified on LinkedIn instantly.', author: 'David P., London' },
   { flag: '🇬🇭', country: 'Ghana', quote: 'The Pi Network GCV and DeFi modules opened up incredible global opportunities.', author: 'Kwame A., Accra' },
@@ -225,7 +225,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
       return;
     }
     if (!tx || tx.length < 20) {
-      showToast('Paste Transaction Hash after you sent USDT BEP20 $49.99', 'error');
+      showToast('Paste Transaction Hash after you sent USDT BEP20 2 Pi', 'error');
       return;
     }
 
@@ -248,7 +248,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
       email: email,
       country: '🌍 Global USDT BEP20',
       product: 'Sirwise AI Web3 Academy - USDT BEP20 Payment',
-      amount: '₦74,985.00 ($49.99 USDT)',
+      amount: '₦74,985.00 (2 Pi USDT)',
       amount_num: 74985,
       status: 'Verified',
       verified: 'VERIFIED',
@@ -273,8 +273,8 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          subject: 'New USDT BEP20 Payment $49.99 - ' + email + ' - ' + tx,
-          message: 'USDT BEP20 Payment Received\nEmail: ' + email + '\nTx: ' + tx + '\nAmount: $49.99\nAddress: 0xdc7f804B36aB672Ec31642dF418F29e73281b040\nVerify: https://bscscan.io/tx/' + tx
+          subject: 'New USDT BEP20 Payment 2 Pi - ' + email + ' - ' + tx,
+          message: 'USDT BEP20 Payment Received\nEmail: ' + email + '\nTx: ' + tx + '\nAmount: 2 Pi\nAddress: 0xdc7f804B36aB672Ec31642dF418F29e73281b040\nVerify: https://bscscan.io/tx/' + tx
         })
       });
     } catch (e) {}
@@ -504,7 +504,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
           phone_number: '08012345678'
         },
         customizations: {
-          title: 'Sirwise AI Web3 Academy Global $49.99',
+          title: 'Sirwise AI Web3 Academy Global 2 Pi',
           description: 'RC BN3583878',
           logo: 'https://www.gasv.store/logo.png'
         },
@@ -533,7 +533,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
   const payWithUSDT = () => {
     if (!validateCustomerEmail(customerEmail)) return;
     const email = customerEmail.trim();
-    const txHash = prompt('Send $49.99 USDT (BEP20 - BNB Smart Chain) to address:\n0xdc7f804B36aB672Ec31642dF418F29e73281b040\n\nEnter your Transaction Hash / ID below:');
+    const txHash = prompt('Send 2 Pi USDT (BEP20 - BNB Smart Chain) to address:\n0xdc7f804B36aB672Ec31642dF418F29e73281b040\n\nEnter your Transaction Hash / ID below:');
     if (txHash && txHash.trim().length > 5) {
       if ((window as any).unlockAcademyAccess) {
         (window as any).unlockAcademyAccess('USDT BEP20', email, 'USDT_' + txHash.trim());
@@ -662,7 +662,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
             )}
             <div style={{ background: 'black', color: '#FFD700', padding: '12px', borderRadius: '12px', margin: '10px 0' }}>
               <p style={{ fontWeight: 'bold', fontSize: '13px', margin: 0 }}>⏰ Special: Upgrade from Free to Full Academy in next 15 mins</p>
-              <p style={{ fontSize: '18px', fontWeight: '900', margin: '4px 0 0 0' }}>Sirwise AI Web3 Academy - 8 Modules - $49.99 = ₦74,985 Lifetime</p>
+              <p style={{ fontSize: '18px', fontWeight: '900', margin: '4px 0 0 0' }}>Sirwise AI Web3 Academy - 8 Modules - 2 Pi = ₦74,985 Lifetime</p>
             </div>
             <button 
               onClick={() => {
@@ -691,7 +691,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
             🔒 Unlock Sirwise AI Web3 Academy - 8 Global Modules
           </h2>
           <p style={{ color: 'black', fontWeight: 'bold', fontSize: '14px', margin: '0 0 12px 0' }}>
-            Lifetime Access $49.99 = ₦74,985 - 190+ Countries
+            Lifetime Access 2 Pi = ₦74,985 - 190+ Countries
           </p>
           <input 
             type="email" 
@@ -735,7 +735,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
               </button>
 
               <div style={{ background: '#2a0000', border: '1px solid #ff4444', borderRadius: '12px', padding: '12px', margin: '10px 0', textAlign: 'left' }}>
-                <p style={{ color: '#FFD700', fontSize: '12px', margin: 0, fontWeight: 'bold' }}>Amount: $49.99 USDT (BEP20) = ₦74,985 (Min Deposit: 2 USDT)</p>
+                <p style={{ color: '#FFD700', fontSize: '12px', margin: 0, fontWeight: 'bold' }}>Amount: 2 Pi USDT (BEP20) = ₦74,985 (Min Deposit: 2 USDT)</p>
                 <p style={{ color: '#ccc', fontSize: '11px', margin: '4px 0' }}>Network: BNB Smart Chain (BEP20) / BSC</p>
                 <p style={{ color: '#ffaaaa', fontSize: '11px', fontWeight: 'bold', margin: '6px 0 0 0', lineHeight: '1.4' }}>
                   ⚠️ Send ONLY via BNB Smart Chain (BEP20/BSC). Transfers sent via Ethereum (ERC20) or other networks will be permanently lost.
@@ -759,7 +759,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
                 View on BscScan (BNB Smart Chain)
               </a>
 
-              <p style={{ textAlign: 'center', color: '#888', fontSize: '10px', margin: '6px 0 0 0' }}>After sending USDT BEP20 $49.99 to address above, paste Tx Hash and click Verify - Academy unlocks automatically</p>
+              <p style={{ textAlign: 'center', color: '#888', fontSize: '10px', margin: '6px 0 0 0' }}>After sending USDT BEP20 2 Pi to address above, paste Tx Hash and click Verify - Academy unlocks automatically</p>
             </div>
             <button onClick={payWithPi} style={{ height: '52px', background: '#7A3ED6', color: '#ffffff', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', border: 'none', fontSize: '14px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>
               Pi Network Payment
