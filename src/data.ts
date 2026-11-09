@@ -1,5 +1,9 @@
 export const PI_GCV_USD = 314159;
-export const ACADEMY_PRICE_USD = 49.99;
+export const ACADEMY_PRICE_USD = 2; // Pi-only price now
+
+// ... inside ALL_PRODUCTS:
+// Search and replace all  piPrice: 2, priceNGN: 74985 with 2, 2, 0 respectively for academy items.
+
 
 export const ALL_PRODUCTS = [
   // 0. Pi Testnet Payment Test (Developer Portal Verification Only - Hidden from customer shop)
@@ -14,9 +18,9 @@ export const ALL_PRODUCTS = [
     icon: '🟣',
     data: '0.01 Pi Testnet',
     days: 'Instant',
-    price: 0,
-    priceUSD: 0,
-    priceNGN: 0,
+    
+    piPrice: 2,
+    
     category: 'developer',
     badge: 'PI TESTNET 10/10',
     bestseller: false,
@@ -44,9 +48,9 @@ export const ALL_PRODUCTS = [
     icon: '⚡',
     data: '1GB Trial Pass',
     days: 'Instant',
-    price: 1.00,
-    priceUSD: 1.00,
-    priceNGN: 1500,
+    
+    piPrice: 2,
+    
     category: 'starter',
     badge: 'MICRO-OFFER ($1)',
     bestseller: true,
@@ -72,9 +76,9 @@ export const ALL_PRODUCTS = [
     name: 'Digital Documentation & Archiving (ISO 15489)',
     title: 'Digital Documentation & Archiving (ISO 15489)',
     icon: '📑',
-    price: 10.00,
-    priceUSD: 10.00,
-    priceNGN: 15000,
+    
+    piPrice: 2,
+    
     category: 'toolkit',
     badge: 'ISO 15489 COMPLIANT',
     bestseller: true,
@@ -102,9 +106,9 @@ export const ALL_PRODUCTS = [
     icon: '🇦🇪',
     data: '1GB',
     days: '3 Days',
-    price: 7.50,
-    priceUSD: 7.50,
-    priceNGN: 11250,
+    
+    piPrice: 2,
+    
     category: 'dubai',
     badge: 'DUBAI (INSTANT)',
     bestseller: true,
@@ -129,9 +133,9 @@ export const ALL_PRODUCTS = [
     icon: '🇦🇪',
     data: 'Unlimited Data',
     days: '10 Days',
-    price: 8.50,
-    priceUSD: 8.50,
-    priceNGN: 12750,
+    
+    piPrice: 2,
+    
     category: 'dubai',
     badge: 'DUBAI UNLIMITED',
     bestseller: true,
@@ -156,9 +160,9 @@ export const ALL_PRODUCTS = [
     icon: '🌐',
     data: '1GB',
     days: '7 Days',
-    price: 9.99,
-    priceUSD: 9.99,
-    priceNGN: 15000,
+    
+    piPrice: 2,
+    
     category: 'esim',
     badge: 'HOT',
     bestseller: true,
@@ -183,9 +187,9 @@ export const ALL_PRODUCTS = [
     icon: '🌐',
     data: '5GB',
     days: '30 Days',
-    price: 14.99,
-    priceUSD: 14.99,
-    priceNGN: 22485,
+    
+    piPrice: 2,
+    
     category: 'esim',
     badge: 'GLOBAL 5GB',
     bestseller: true,
@@ -210,9 +214,9 @@ export const ALL_PRODUCTS = [
     icon: '🇺🇸',
     data: '5GB',
     days: '15 Days',
-    price: 8.99,
-    priceUSD: 8.99,
-    priceNGN: 13485,
+    
+    piPrice: 2,
+    
     category: 'esim',
     badge: 'USA 5G',
     bestseller: false,
@@ -237,9 +241,9 @@ export const ALL_PRODUCTS = [
     icon: '🇬🇧',
     data: '5GB',
     days: '15 Days',
-    price: 7.99,
-    priceUSD: 7.99,
-    priceNGN: 11985,
+    
+    piPrice: 2,
+    
     category: 'esim',
     badge: 'UK 5G',
     bestseller: false,
@@ -264,9 +268,9 @@ export const ALL_PRODUCTS = [
     icon: '🇨🇦',
     data: '5GB',
     days: '15 Days',
-    price: 8.99,
-    priceUSD: 8.99,
-    priceNGN: 13485,
+    
+    piPrice: 2,
+    
     category: 'esim',
     badge: 'CANADA',
     bestseller: false,
@@ -291,9 +295,9 @@ export const ALL_PRODUCTS = [
     icon: '🇪🇺',
     data: '10GB',
     days: '30 Days',
-    price: 14.99,
-    priceUSD: 14.99,
-    priceNGN: 22485,
+    
+    piPrice: 2,
+    
     category: 'esim',
     badge: 'EUROPE 30',
     bestseller: true,
@@ -318,9 +322,9 @@ export const ALL_PRODUCTS = [
     icon: '🌏',
     data: '5GB',
     days: '15 Days',
-    price: 11.99,
-    priceUSD: 11.99,
-    priceNGN: 17985,
+    
+    piPrice: 2,
+    
     category: 'esim',
     badge: 'ASIA PACIFIC',
     bestseller: false,
@@ -345,9 +349,9 @@ export const ALL_PRODUCTS = [
     icon: '🇫🇷',
     data: '10GB',
     days: '30 Days',
-    price: 12.99,
-    priceUSD: 12.99,
-    priceNGN: 19485,
+    
+    piPrice: 2,
+    
     category: 'esim',
     badge: 'FRANCE 10GB',
     bestseller: false,
@@ -372,9 +376,9 @@ export const ALL_PRODUCTS = [
     icon: '🇩🇪',
     data: '10GB',
     days: '30 Days',
-    price: 12.99,
-    priceUSD: 12.99,
-    priceNGN: 19485,
+    
+    piPrice: 2,
+    
     category: 'esim',
     badge: 'GERMANY 10GB',
     bestseller: false,
@@ -399,9 +403,9 @@ export const ALL_PRODUCTS = [
     icon: '🇯🇵',
     data: '1GB',
     days: '7 Days',
-    price: 6.99,
-    priceUSD: 6.99,
-    priceNGN: 10485,
+    
+    piPrice: 2,
+    
     category: 'esim',
     badge: 'JAPAN',
     bestseller: false,
@@ -426,9 +430,9 @@ export const ALL_PRODUCTS = [
     icon: '🇹🇷',
     data: '1GB',
     days: '7 Days',
-    price: 6.99,
-    priceUSD: 6.99,
-    priceNGN: 10485,
+    
+    piPrice: 2,
+    
     category: 'esim',
     badge: 'TURKEY',
     bestseller: false,
@@ -453,9 +457,9 @@ export const ALL_PRODUCTS = [
     icon: '🇸🇦',
     data: '3GB',
     days: '14 Days',
-    price: 9.99,
-    priceUSD: 9.99,
-    priceNGN: 14985,
+    
+    piPrice: 2,
+    
     category: 'esim',
     badge: 'SAUDI 3GB',
     bestseller: false,
@@ -480,9 +484,9 @@ export const ALL_PRODUCTS = [
     icon: '🇿🇦',
     data: '5GB',
     days: '15 Days',
-    price: 9.99,
-    priceUSD: 9.99,
-    priceNGN: 14985,
+    
+    piPrice: 2,
+    
     category: 'esim',
     badge: 'SOUTH AFRICA',
     bestseller: false,
@@ -506,9 +510,9 @@ export const ALL_PRODUCTS = [
     title: 'The Ultimate Web3 & AI Starter Toolkit',
     icon: '🚀',
     description: '25 High-Yield Business AI Prompts, Web3 Wallet Security & Setup Cheatsheet, and VIP Access Pass to Academy Community Group.',
-    price: 3.00,
-    priceUSD: 3.00,
-    priceNGN: 2500,
+    
+    piPrice: 2,
+    
     category: 'prompts',
     badge: 'STARTER (₦2,500)',
     bestseller: true,
@@ -531,9 +535,9 @@ export const ALL_PRODUCTS = [
     title: '1000 Viral AI Prompts Make $1000/month',
     icon: '🤖',
     description: '1000 Master AI Prompts for Copywriting, Business Automation, Social Media Growth & Sales.',
-    price: 39.99,
-    priceUSD: 39.99,
-    priceNGN: 59985,
+    
+    piPrice: 2,
+    
     category: 'prompts',
     badge: 'BESTSELLER',
     bestseller: true,
@@ -556,9 +560,9 @@ export const ALL_PRODUCTS = [
     title: '⚡ ChatGPT Business Pack & 5,000+ Master Prompts',
     icon: '⚡',
     description: 'Ultimate ChatGPT Master Prompt Library & Business Automation Suite. Copywriting, Cold Email & Funnel Generators.',
-    price: 6.45,
-    priceUSD: 6.45,
-    priceNGN: 10000,
+    
+    piPrice: 2,
+    
     category: 'prompts',
     badge: 'GPT MASTER',
     bestseller: true,
@@ -581,9 +585,9 @@ export const ALL_PRODUCTS = [
     title: '5-Minute AI Prompt Blueprint (Master SER Edition)',
     icon: '📄',
     description: 'Step-by-step master guide to engineering precision prompts for high-income digital consulting.',
-    price: 5.00,
-    priceUSD: 5.00,
-    priceNGN: 7500,
+    
+    piPrice: 2,
+    
     category: 'prompts',
     badge: 'SER BLUEPRINT',
     bestseller: false,
@@ -606,9 +610,9 @@ export const ALL_PRODUCTS = [
     title: '100 Professional Canva Church & Event Flyer Templates',
     icon: '🎨',
     description: 'Stop paying graphics designers! 100 Canva editable templates for Sunday service, crusade & youth programs.',
-    price: 6.50,
-    priceUSD: 6.50,
-    priceNGN: 5500,
+    
+    piPrice: 2,
+    
     category: 'prompts',
     badge: 'CANVA PACK',
     bestseller: true,
@@ -631,9 +635,9 @@ export const ALL_PRODUCTS = [
     title: '500 Luxury Brand & Business Logo Templates',
     icon: '💎',
     description: '500 ready luxury logos for Fashion, Barbershop, POS, Restaurant & Beauty. Edit name in Canva in 2 mins.',
-    price: 5.00,
-    priceUSD: 5.00,
-    priceNGN: 4000,
+    
+    piPrice: 2,
+    
     category: 'prompts',
     badge: '500 LOGOS',
     bestseller: false,
@@ -656,9 +660,9 @@ export const ALL_PRODUCTS = [
     title: '🔥 GOYE BEST SELLER - DIGITAL NOMAD PRO KIT',
     icon: '💼',
     description: 'Ultimate All-In-One Digital Nomad Pro Kit! Remote Work Tools, Crypto Wallets, eSIM Setup & Global Taxes.',
-    price: 49.00,
-    priceUSD: 49.00,
-    priceNGN: 75950,
+    
+    piPrice: 2,
+    
     category: 'toolkit',
     badge: 'NOMAD PRO',
     bestseller: true,
@@ -681,9 +685,9 @@ export const ALL_PRODUCTS = [
     title: 'Canada LMIA Jobs Database 500 employers',
     icon: '🇨🇦',
     description: 'Direct 500 Verified Canadian Employers offering LMIA Work Permit Sponsorship across all provinces.',
-    price: 69.99,
-    priceUSD: 69.99,
-    priceNGN: 104985,
+    
+    piPrice: 2,
+    
     category: 'contracts',
     badge: 'HOT',
     bestseller: false,
@@ -706,9 +710,9 @@ export const ALL_PRODUCTS = [
     title: 'UK Care Worker Visa Blueprint 2026 + COS List',
     icon: '🇬🇧',
     description: 'Complete 2026 UK Care Worker Sponsorship List, Certificate of Sponsorship (COS) Guide & Visa Blueprint.',
-    price: 89.99,
-    priceUSD: 89.99,
-    priceNGN: 134985,
+    
+    piPrice: 2,
+    
     category: 'contracts',
     badge: 'BESTSELLER',
     bestseller: true,
@@ -731,9 +735,9 @@ export const ALL_PRODUCTS = [
     title: '✈️ Japa Relocation Package - Full Visa Guides & Docs',
     icon: '✈️',
     description: 'Complete UK, Canada, USA, Europe & Australia Japa Relocation Masterclass Package & Document Checklists.',
-    price: 14.99,
-    priceUSD: 14.99,
-    priceNGN: 23250,
+    
+    piPrice: 2,
+    
     category: 'contracts',
     badge: 'JAPA PACK',
     bestseller: true,
@@ -756,9 +760,9 @@ export const ALL_PRODUCTS = [
     title: 'UK CV Pack Pro - ATS Resume & Cover Letter Blueprint',
     icon: '📄',
     description: 'Complete UK Standard ATS Resume & Cover Letter Pack designed by professionals to pass visa scanner systems.',
-    price: 6.00,
-    priceUSD: 6.00,
-    priceNGN: 5000,
+    
+    piPrice: 2,
+    
     category: 'contracts',
     badge: 'UK ATS CV',
     bestseller: false,
@@ -781,9 +785,9 @@ export const ALL_PRODUCTS = [
     title: 'USA & Canada Study SOP Samples (10 Winning SOPs)',
     icon: '🎓',
     description: '10 real Statements of Purpose (SOP) that got student visas approved for MSc, BSc & Postgraduate diplomas.',
-    price: 9.00,
-    priceUSD: 9.00,
-    priceNGN: 7500,
+    
+    piPrice: 2,
+    
     category: 'contracts',
     badge: 'SOP SAMPLES',
     bestseller: false,
@@ -806,9 +810,9 @@ export const ALL_PRODUCTS = [
     title: 'Pi Network Crash Course',
     icon: 'π',
     description: 'Understanding Pi Network ecosystem, Pi Wallet & peer-to-peer commerce.',
-    price: 49.99,
-    priceUSD: 49.99,
-    priceNGN: 74985,
+    
+    piPrice: 2,
+    
     category: 'academy',
     badge: 'NEW',
     bestseller: true,
@@ -831,9 +835,9 @@ export const ALL_PRODUCTS = [
     title: 'Sirwise AI Web3 Academy 4-Week Full Masterclass Pass',
     icon: '🎓',
     description: 'Complete 4-Week Sirwise AI & Web3 Certification Masterclass. Includes Live Q&A, Discord Access & Verified Certificate.',
-    price: 49.99,
-    priceUSD: 49.99,
-    priceNGN: 74985,
+    
+    piPrice: 2,
+    
     category: 'academy',
     badge: 'ACADEMY PASS',
     bestseller: true,
@@ -856,9 +860,9 @@ export const ALL_PRODUCTS = [
     title: 'AI & Prompt Engineering Mastery (Module 1)',
     icon: '🧠',
     description: 'Master prompt design, LLM parameters, multi-shot prompting, and AI workflow automation.',
-    price: 19.99,
-    priceUSD: 19.99,
-    priceNGN: 29985,
+    
+    piPrice: 2,
+    
     category: 'academy',
     badge: 'MODULE 1',
     bestseller: false,
@@ -881,9 +885,9 @@ export const ALL_PRODUCTS = [
     title: 'Generative AI for Business & Content Creation (Module 2)',
     icon: '📊',
     description: 'Build viral social media content, automated blog posts, AI avatars and video scripts in minutes.',
-    price: 19.99,
-    priceUSD: 19.99,
-    priceNGN: 29985,
+    
+    piPrice: 2,
+    
     category: 'academy',
     badge: 'MODULE 2',
     bestseller: false,
@@ -902,9 +906,9 @@ export const ALL_PRODUCTS = [
     title: 'Web3 Fundamentals & Blockchain Security (Module 4)',
     icon: '⛓️',
     description: 'Learn Web3 wallets, hardware security, smart contract auditing, and scam prevention strategies.',
-    price: 19.99,
-    priceUSD: 19.99,
-    priceNGN: 29985,
+    
+    piPrice: 2,
+    
     category: 'academy',
     badge: 'MODULE 4',
     bestseller: false,

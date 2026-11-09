@@ -288,7 +288,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
     (window as any).verifyUSDCPayment = verifyUSDCPayment;
   }, [customerEmail, usdcTxHash]);
 
-  const priceUSD = 49.99;
+  const priceUSD = 2;
   const currencies: Record<string, { symbol: string; name: string; rate: number }> = {
     USD: { symbol: "$", name: "US Dollar", rate: 1 },
     NGN: { symbol: "₦", name: "Naira", rate: 1500 },
@@ -675,7 +675,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
               }} 
               style={{ width: '100%', height: '56px', background: 'black', color: '#FFD700', borderRadius: '12px', fontWeight: 'bold', fontSize: '17px', cursor: 'pointer', border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.3)' }}
             >
-              🚀 UPGRADE NOW - BUY & UNLOCK $49.99
+              🚀 UPGRADE NOW - BUY & LOCK 2 Pi
             </button>
             <p style={{ fontSize: '11px', marginTop: '10px', fontWeight: 'bold', color: 'black' }}>
               USDT BEP20: 0xdc7f804B36aB672Ec31642dF418F29e73281b040 | OPay 6113541882 | Paystack Global
@@ -706,7 +706,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
             onClick={handleBuyUnlockNow}
             style={{ width: '100%', height: '60px', background: 'black', color: '#FFD700', borderRadius: '16px', fontWeight: '900', fontSize: '18px', cursor: 'pointer', border: 'none', transition: 'transform 0.2s', boxShadow: '0 4px 15px rgba(0,0,0,0.4)' }}
           >
-            💳 BUY & UNLOCK NOW $49.99
+            💳 BUY & LOCK NOW 2 Pi
           </button>
           
           <div style={{ marginTop: '14px', display: 'grid', gap: '10px' }}>
@@ -848,7 +848,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
                     onClick={() => setActiveModule(mod)}
                     className="w-full py-3.5 bg-black/80 hover:bg-black text-[#FFD700] font-bold text-sm rounded-xl border border-[#FFD700]/50 flex items-center justify-center gap-2 transition cursor-pointer opacity-80 hover:opacity-100"
                   >
-                    <Lock size={16} /> 🔒 UNLOCK TO START - $49.99
+                    <Lock size={16} /> 🔒 LOCK ACADEMY - 2 Pi
                   </button>
                 ) : (
                   <>
@@ -980,7 +980,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
                   }}
                   style={{ background: '#FACC15', color: '#000', padding: '16px 24px', fontWeight: '900', borderRadius: '14px', width: '100%', cursor: 'pointer', fontSize: '13px', border: 'none', boxShadow: '0 4px 15px rgba(250,204,21,0.4)' }}
                 >
-                  UNLOCK NOW - $49.99 - Paystack | Flutterwave | OPay 6113541882 | USDT BEP20 Busha | USDC Base Busha | Pi Payment
+                  LOCK NOW - 2 Pi - Pi Network
                 </button>
               </div>
             ) : (

@@ -116,7 +116,7 @@ export const GoyeHero: React.FC<GoyeHeroProps> = ({
                   onClick={handleAction} 
                   className="bg-[#FFD700] text-black hover:bg-yellow-400 text-xs font-black uppercase tracking-wider w-full py-3 rounded-xl transition duration-200 cursor-pointer active:scale-[0.98] flex items-center justify-center gap-1.5 shadow-md shadow-yellow-500/10 border-2 border-yellow-300"
                 >
-                  <span>{isAcademyPaid ? 'Start Learning' : '🔒 UNLOCK ACADEMY - $49.99'}</span>
+                  <span>{isAcademyPaid ? 'Start Learning' : '🔒 LOCK ACADEMY - 2 Pi'}</span>
                   <ArrowRight size={13} />
                 </button>
               </div>
@@ -166,7 +166,7 @@ export const GoyeHero: React.FC<GoyeHeroProps> = ({
                   onClick={handleAction} 
                   className="bg-[#FFD700] text-black hover:bg-yellow-400 text-xs font-black uppercase tracking-wider w-full py-3 rounded-xl transition duration-200 cursor-pointer active:scale-[0.98] flex items-center justify-center gap-1.5 shadow-md shadow-yellow-500/10 border-2 border-yellow-300"
                 >
-                  <span>{isAcademyPaid ? 'Start Learning' : '🔒 UNLOCK ACADEMY - $49.99'}</span>
+                  <span>{isAcademyPaid ? 'Start Learning' : '🔒 LOCK ACADEMY - 2 Pi'}</span>
                   <ArrowRight size={13} />
                 </button>
               </div>
@@ -216,7 +216,7 @@ export const GoyeHero: React.FC<GoyeHeroProps> = ({
                   onClick={handleAction} 
                   className="bg-[#FFD700] text-black hover:bg-yellow-400 text-xs font-black uppercase tracking-wider w-full py-3 rounded-xl transition duration-200 cursor-pointer active:scale-[0.98] flex items-center justify-center gap-1.5 shadow-md shadow-yellow-500/10 border-2 border-yellow-300"
                 >
-                  <span>{isAcademyPaid ? 'Start Learning' : '🔒 UNLOCK ACADEMY - $49.99'}</span>
+                  <span>{isAcademyPaid ? 'Start Learning' : '🔒 LOCK ACADEMY - 2 Pi'}</span>
                   <ArrowRight size={13} />
                 </button>
               </div>

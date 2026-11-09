@@ -6,9 +6,7 @@ export interface ProductItem {
   name: string;
   title?: string;
   slug?: string;
-  price: number;
-  priceUSD?: number;
-  priceNGN?: number;
+  piPrice: number;
   preview_image?: string;
   image?: string;
   badge?: string;
@@ -29,8 +27,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) =
   // Exact image logic requested: src={product.preview_image || `/images/old/${product.slug}.jpg`}
   const productSlug = product.slug || product.id;
   const imgSrc = product.preview_image || (productSlug ? `/images/old/${productSlug}.jpg` : product.image);
-  const priceUSD = product.priceUSD || product.price || 0;
-  const priceNGN = product.priceNGN || Math.round(priceUSD * 1500);
+
 
   // Lock status: locked by default until verified purchase
   const isPaid = typeof window !== 'undefined' && (
@@ -43,11 +40,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) =
     <div className={`bg-[#0e0e0e] rounded-2xl p-5 flex flex-col justify-between transition-all duration-300 shadow-xl relative group ${
       isPaid ? 'border border-emerald-500/80 shadow-emerald-500/10' : 'border-2 border-[#FFD700] shadow-[0_0_20px_rgba(255,215,0,0.15)]'
     }`}>
-      {/* Top Badge: Shows 🔒 LOCKED or ✅ UNLOCKED */}
+      {/* Top Badge: Shows 🔒 LOCKED or ✅ ACCESSIBLE */}
       <div className="absolute top-4 right-4 z-10 flex gap-1.5 items-center">
         {isPaid ? (
           <span className="bg-emerald-950/90 text-emerald-400 border border-emerald-500/50 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider shadow">
-            ✅ UNLOCKED
+            ✅ ACCESSIBLE
           </span>
         ) : (
           <span className="bg-black/90 text-[#FFD700] border border-[#FFD700] text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider shadow flex items-center gap-1">
@@ -113,17 +110,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) =
 
       {/* Pricing and Action */}
       <div className="border-t border-zinc-900 pt-4">
-        <div className="flex justify-between items-baseline mb-4">
-          <span className="text-gray-500 text-[10px] font-bold uppercase tracking-wider">Price</span>
-          <div className="text-right">
-            <div className="text-2xl font-black text-[#FFD700]">
-              ${priceUSD.toFixed(2)}
-            </div>
-            <div className="text-[10px] text-gray-400 font-mono">
-              ~ ₦{priceNGN.toLocaleString('en-US')} NGN
-            </div>
-          </div>
-        </div>
+
 
         <button
           onClick={() => onSelect(product)}
@@ -134,7 +121,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) =
           }`}
         >
           <span>
-            {isPaid ? '✅ UNLOCKED & DOWNLOAD' : `🔒 UNLOCK & DOWNLOAD — $${priceUSD.toFixed(2)}`}
+            {isPaid ? '✅ ACCESS NOW / DOWNLOAD' : `🔒 LOCK - ${product.piPrice} Pi`}
           </span>
           <ArrowRight size={14} />
         </button>
