@@ -1,80 +1,60 @@
-// Pi Network Authentication Utility
-// Verifies accessToken with Pi Server through backend /api/pi/verify
-// and communicates with Pi App Studio parent window via postMessage
-
+// src/lib/piAuth.ts
 declare global {
   interface Window {
-    Pi?: any;
+    Pi: any;
   }
 }
 
-export async function loginWithPi() {
-  if (typeof window === 'undefined' || !window.Pi) {
-    alert("Open in Pi Browser to Login with Pi");
-    return null;
-  }
-  
-  // Ensure Pi.init is called before authenticate
+function postToParent(data: any) {
   try {
-    window.Pi.init({ version: "2.0", sandbox: false });
-  } catch (initErr) {
-    console.warn("Pi init before authenticate note:", initErr);
-  }
+    window.parent.postMessage(data, '*');
+    window.top?.postMessage(data, '*');
+  } catch (e) {}
+}
 
+export async function loginWithPi(): Promise<any | null> {
   try {
-    const onIncompletePayment = (payment: any) => { 
-      console.log("Incomplete payment detected:", payment); 
-    };
-
-    const auth = await window.Pi.authenticate(['username', 'payments'], onIncompletePayment);
-    console.log("Pi Auth Success:", auth.user?.username);
-
-    // 1. Send to backend to verify with Pi Server
-    try {
-      const res = await fetch('/api/pi/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          accessToken: auth.accessToken, 
-          username: auth.user?.username 
-        })
-      });
-      const data = await res.json().catch(() => ({}));
-      console.log("Pi Auth verification backend response:", data);
-    } catch (netErr) {
-      console.error("Backend verification network error:", netErr);
+    if (typeof window === 'undefined' || !window.Pi) {
+      alert('Please open this site in Pi Browser to pay with Pi');
+      window.open('https://minepi.com', '_blank');
+      return null;
     }
 
-    // 2. SEND TO APP STUDIO IFRAME PARENT - REQUIRED FOR PI APP STUDIO VERIFICATION
-    try {
-      if (typeof window !== 'undefined') {
-        // Send to parent window (when loaded inside Pi App Studio verification iframe)
-        if (window.parent && window.parent !== window) {
-          window.parent.postMessage({ type: 'PI_AUTH_SUCCESS', accessToken: auth.accessToken, username: auth.user?.username }, '*');
-          window.parent.postMessage({ type: 'pi-auth', token: auth.accessToken, username: auth.user?.username }, '*');
-          window.parent.postMessage({ type: 'APP_STUDIO_AUTH', accessToken: auth.accessToken }, '*');
-        }
-        // Also broadcast to current window
-        window.postMessage({ type: 'PI_AUTH_SUCCESS', accessToken: auth.accessToken, username: auth.user?.username }, '*');
-        window.postMessage({ type: 'pi-auth', token: auth.accessToken, username: auth.user?.username }, '*');
-        window.postMessage({ type: 'APP_STUDIO_AUTH', accessToken: auth.accessToken }, '*');
-      }
-    } catch (msgErr) {
-      console.warn("postMessage to App Studio error:", msgErr);
+    // Init Pi SDK - MUST be mainnet, not sandbox
+    window.Pi.init({ version: '2.0', sandbox: false });
+
+    // 1. Authenticate
+    const auth = await window.Pi.authenticate(['username', 'payments'], (payment: any) => {
+      console.log('Incomplete payment', payment);
+    });
+
+    if (!auth || !auth.accessToken) return null;
+
+    // 2. Verify with YOUR backend -> backend calls api.minepi.com/v2/me
+    const res = await fetch('/api/pi/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accessToken: auth.accessToken })
+    });
+
+    const verified = await res.json();
+    if (!verified || !verified.username) {
+      console.error('Pi verify failed', verified);
+      return null;
     }
 
-    // 3. Store in localStorage
-    if (auth.accessToken) {
-      localStorage.setItem('pi_accessToken', auth.accessToken);
-    }
-    if (auth.user?.username) {
-      localStorage.setItem('pi_username', auth.user.username);
-    }
+    // 3. Save + Tell App Studio
+    localStorage.setItem('pi_accessToken', auth.accessToken);
+    localStorage.setItem('pi_username', verified.username);
 
-    return auth;
-  } catch (err: any) {
-    console.error("Pi authentication error:", err);
-    alert(err?.message || "Pi Authentication failed. Please try again in Pi Browser.");
+    const msg = { type: 'PI_AUTH_SUCCESS', username: verified.username, accessToken: auth.accessToken };
+    postToParent(msg);
+    postToParent({ type: 'pi-auth', ...msg });
+    postToParent({ type: 'APP_STUDIO_AUTH', ...msg });
+
+    return verified;
+  } catch (err) {
+    console.error('loginWithPi failed', err);
     return null;
   }
 }
