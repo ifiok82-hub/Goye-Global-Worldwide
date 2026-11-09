@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Globe, Award, Download, Smartphone, Menu, X, ArrowRight, ShieldCheck, Mail, MessageSquare, Sparkles, UserCheck, LogIn } from 'lucide-react';
-import { signInWithPi, getSavedPiSession } from '../utils/piAuth';
+import { Globe, Award, Download, Smartphone, Menu, X, ArrowRight, ShieldCheck, Mail, MessageSquare, Sparkles } from 'lucide-react';
 
 interface GoyeHeaderProps {
   currentTab: string;
@@ -19,32 +18,6 @@ export const GoyeHeader: React.FC<GoyeHeaderProps> = ({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState(false);
-  const [piUser, setPiUser] = useState<string | null>(null);
-  const [isAuthenticatingPi, setIsAuthenticatingPi] = useState(false);
-
-  useEffect(() => {
-    const saved = getSavedPiSession();
-    if (saved?.username) {
-      setPiUser(saved.username);
-    }
-  }, []);
-
-  const handlePiSignIn = async () => {
-    if (isAuthenticatingPi) return;
-    setIsAuthenticatingPi(true);
-    try {
-      const res = await signInWithPi();
-      if (res.success && res.user) {
-        setPiUser(res.user.username);
-      } else if (res.error) {
-        alert(res.error);
-      }
-    } catch (e: any) {
-      alert(e.message || 'Authentication error');
-    } finally {
-      setIsAuthenticatingPi(false);
-    }
-  };
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: any) => {
@@ -159,25 +132,8 @@ export const GoyeHeader: React.FC<GoyeHeaderProps> = ({
             })}
           </nav>
 
-          {/* Header Action Buttons (Install PWA, Pi Auth & WhatsApp) */}
+          {/* Header Action Buttons (Install PWA & WhatsApp) */}
           <div className="hidden sm:flex items-center gap-3">
-            {/* Pi Network Sign-In Button */}
-            {piUser ? (
-              <div className="px-3 py-2 rounded-xl bg-purple-950/60 border border-purple-500/40 text-purple-200 font-bold text-xs flex items-center gap-1.5 shadow-sm">
-                <UserCheck size={14} className="text-[#FFD700]" />
-                <span className="text-[#FFD700]">@{piUser}</span>
-              </div>
-            ) : (
-              <button
-                onClick={handlePiSignIn}
-                disabled={isAuthenticatingPi}
-                className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-purple-700 to-indigo-600 hover:from-purple-600 hover:to-indigo-500 text-white font-black text-xs flex items-center gap-1.5 shadow-md shadow-purple-900/30 active:scale-95 transition cursor-pointer"
-              >
-                <LogIn size={13} className="text-[#FFD700]" />
-                <span>{isAuthenticatingPi ? 'Connecting Pi...' : 'Pi Sign In'}</span>
-              </button>
-            )}
-
             {isInstallable && (
               <button
                 onClick={handleInstallApp}
@@ -236,25 +192,6 @@ export const GoyeHeader: React.FC<GoyeHeaderProps> = ({
           </div>
 
           <div className="pt-2 grid gap-2">
-            {piUser ? (
-              <div className="w-full text-center py-3 rounded-xl bg-purple-950/80 border border-purple-500/50 text-[#FFD700] font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2">
-                <UserCheck size={14} className="text-[#FFD700]" />
-                <span>Pi Pioneer: @{piUser}</span>
-              </div>
-            ) : (
-              <button
-                onClick={() => {
-                  handlePiSignIn();
-                  setMobileMenuOpen(false);
-                }}
-                disabled={isAuthenticatingPi}
-                className="w-full text-center py-3 rounded-xl bg-gradient-to-r from-purple-700 to-indigo-600 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2"
-              >
-                <LogIn size={14} className="text-[#FFD700]" />
-                <span>{isAuthenticatingPi ? 'Connecting Pi...' : 'Sign In with Pi Network'}</span>
-              </button>
-            )}
-
             <a
               href="https://wa.me/2348033584736"
               target="_blank"

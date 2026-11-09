@@ -4,7 +4,7 @@ import {
   Lock, Copy, CheckCircle, RefreshCw, ChevronRight, ExternalLink, HelpCircle, 
   Trash2, Plus, FileText, Video, Eye, EyeOff, Bot, MessageSquare, Info, Star, Sparkles
 } from 'lucide-react';
-import { useIsPiBrowser } from './hooks/useIsPiBrowser';
+
 import { GoyeHeader } from './components/GoyeHeader';
 import { GoyeHero } from './components/GoyeHero';
 import { GoyeFooter } from './components/GoyeFooter';
@@ -25,9 +25,8 @@ import { safeParse } from './utils/safeParse';
 import { getPaymentEnvironment, getDisplayPrice, getBuyButtonLabel, getPiPrice } from './utils/paymentAdapter';
 
 export default function App() {
-  const isPiBrowser = useIsPiBrowser();
   const env = getPaymentEnvironment();
-  const isPiBrowserMode = env === 'PI_BROWSER' || isPiBrowser;
+  const isPiBrowserMode = env === 'PI_BROWSER';
 
   const [tab, setTab] = useState(() => {
     const path = window.location.pathname.replace('/', '').trim().toLowerCase();
@@ -94,8 +93,8 @@ export default function App() {
       slug: 'pi-gcv-crash-course-314159',
       preview_image: '/images/old/pi-gcv-crash-course-314159.jpg',
       image: '/images/old/pi-gcv-crash-course-314159.jpg',
-      name: 'Pi Network GCV Crash Course ($314,159)',
-      title: 'Pi Network GCV Crash Course ($314,159)',
+      name: 'Pi Network Crash Course',
+      title: 'Pi Network Crash Course',
       icon: 'π',
       price: 49.99,
       category: 'academy',
@@ -141,10 +140,6 @@ export default function App() {
   useEffect(() => {
     (window as any).showToast = showToast;
 
-    if ((window as any).Pi) {
-        (window as any).Pi.init({ version: "2.0", sandbox: false });
-    }
-
     // Local Storage Session Auth Restore (PWA requirement)
     const storedEmail = localStorage.getItem('user_email');
     if (storedEmail) {
@@ -156,6 +151,23 @@ export default function App() {
       setCurrentUser({ uid: 'usr_pioneer', email: 'pioneer@gasv.store' });
       setUserProfile({ uid: 'usr_pioneer', email: 'pioneer@gasv.store', displayName: 'Pioneer' });
     }
+  }, []);
+
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = "https://sdk.minepi.com/pi-sdk.js";
+    script.async = true;
+    script.onload = () => {
+      try {
+        if ((window as any).Pi) {
+          const isSandbox = (localStorage.getItem('PI_SANDBOX_MODE') || 'true') !== 'false';
+          (window as any).Pi.init({ version: "2.0", sandbox: isSandbox });
+        }
+      } catch (e) {
+        console.error('Pi SDK init error:', e);
+      }
+    };
+    document.body.appendChild(script);
   }, []);
 
   useEffect(() => {
