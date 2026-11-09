@@ -1,4 +1,4 @@
-// src/lib/piAuth.ts - V3 - Sends token to App Studio until it catches it
+// src/lib/piAuth.ts - V4 - LISTEN for App Studio request + ANSWER
 declare global { interface Window { Pi: any; } }
 
 export function toPi(naira?: number, usd?: number, piPrice?: number): number {
@@ -8,42 +8,53 @@ export function toPi(naira?: number, usd?: number, piPrice?: number): number {
   return 2;
 }
 
-// --- THE IMPORTANT PART: Send token to App Studio ---
 function sendTokenToAppStudio(accessToken: string, username: string) {
   if (!accessToken) return;
-  console.log('[Pi] Sending token to App Studio:', username);
-
-  // All formats App Studio might listen for
-  const messages: any[] = [
+  // Send in EVERY format + with event.source reply if needed
+  const msgs: any[] = [
     { type: 'PI_AUTH_SUCCESS', accessToken, username },
     { type: 'pi-auth-success', accessToken, username },
-    { type: 'pi-auth', accessToken, username },
     { type: 'PI_AUTH', accessToken, username },
+    { type: 'pi-auth', accessToken, username },
     { type: 'APP_STUDIO_AUTH', accessToken, username },
-    { type: 'pi-auth-success', token: accessToken, username, user: { username } },
-    { accessToken, username, type: 'PI_AUTH_SUCCESS' },
+    { type: 'SET_PI_ACCESS_TOKEN', accessToken, username },
+    { type: 'pi-app-studio-auth', accessToken, username },
+    { type: 'PI_ACCESS_TOKEN', accessToken, username, token: accessToken },
+    { type: 'pi-access-token', token: accessToken, username },
   ];
-
-  // Send NOW + every 500ms for 15 seconds, so App Studio cannot miss it
-  let count = 0;
-  const interval = setInterval(() => {
-    messages.forEach(msg => {
-      try { window.parent.postMessage(msg, '*'); } catch(e) {}
-      try { window.top?.postMessage(msg, '*'); } catch(e) {}
-      try { window.postMessage(msg, '*'); } catch(e) {}
-    });
-    count++;
-    if (count > 30) clearInterval(interval);
-  }, 500);
-
-  // Also send once immediately
-  messages.forEach(msg => {
-    try { window.parent.postMessage(msg, '*'); } catch(e) {}
+  msgs.forEach(m => {
+    try { window.parent.postMessage(m, '*'); } catch(e) {}
+    try { window.top?.postMessage(m, '*'); } catch(e) {}
   });
+}
+
+// --- LISTENER - THIS IS WHAT WAS MISSING ---
+let listenerAdded = false;
+export function startAppStudioListener() {
+  if (listenerAdded) return;
+  listenerAdded = true;
+  window.addEventListener('message', (event: any) => {
+    const data = event.data;
+    if (!data) return;
+    const str = JSON.stringify(data).toLowerCase();
+    // If App Studio asks for token in ANY wording, answer it
+    if (str.includes('token') || str.includes('auth') || str.includes('pi') || str.includes('verify') || str.includes('studio')) {
+      const token = localStorage.getItem('pi_accessToken') || '';
+      const user = localStorage.getItem('pi_username') || '';
+      if (token) {
+        // Reply directly to whoever asked
+        try { event.source?.postMessage({ type: 'PI_AUTH_SUCCESS', accessToken: token, username: user }, '*'); } catch(e) {}
+        sendTokenToAppStudio(token, user);
+        console.log('[Pi] Answered App Studio request for token:', user);
+      }
+    }
+  });
+  console.log('[Pi] App Studio listener started');
 }
 
 export async function loginWithPi(): Promise<any | null> {
   try {
+    startAppStudioListener();
     if (typeof window === 'undefined' || !window.Pi) {
       alert('Please open in Pi Browser to sign in with Pi');
       return null;
@@ -51,16 +62,17 @@ export async function loginWithPi(): Promise<any | null> {
     window.Pi.init({ version: '2.0', sandbox: false });
     const auth = await window.Pi.authenticate(['username', 'payments'], (p: any) => {});
     if (!auth?.accessToken) return null;
-
     const uname = auth.user?.username || '';
-    // 1. Save immediately
     localStorage.setItem('pi_accessToken', auth.accessToken);
     if (uname) localStorage.setItem('pi_username', uname);
-
-    // 2. Send to App Studio IMMEDIATELY - before backend
+    // Send immediately + send again every 1 sec for 20 sec
     sendTokenToAppStudio(auth.accessToken, uname);
-
-    // 3. Verify with backend - then send AGAIN with verified username
+    let c = 0;
+    const iv = setInterval(() => {
+      sendTokenToAppStudio(auth.accessToken, uname);
+      c++; if (c > 20) clearInterval(iv);
+    }, 1000);
+    // Verify with backend, then send again
     try {
       const res = await fetch('/api/pi/verify', {
         method: 'POST',
@@ -74,7 +86,6 @@ export async function loginWithPi(): Promise<any | null> {
         return verified;
       }
     } catch(e) {}
-
     if (uname) return { username: uname };
     return null;
   } catch (err) {
@@ -84,8 +95,8 @@ export async function loginWithPi(): Promise<any | null> {
 }
 
 export function autoLoginWithPi() {
+  startAppStudioListener();
   if (typeof window === 'undefined') return;
-  // If we already have a token, re-send it to App Studio on every page load
   const token = localStorage.getItem('pi_accessToken');
   const user = localStorage.getItem('pi_username');
   if (token && user) {
