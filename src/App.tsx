@@ -161,7 +161,7 @@ export default function App() {
       try {
         if ((window as any).Pi) {
           const isSandbox = (localStorage.getItem('PI_SANDBOX_MODE') || 'true') !== 'false';
-          (window as any).Pi.init({ version: "2.0", sandbox: isSandbox });
+          (window as any).Pi.init({ version: "2.0", sandbox: false });
         }
       } catch (e) {
         console.error('Pi SDK init error:', e);

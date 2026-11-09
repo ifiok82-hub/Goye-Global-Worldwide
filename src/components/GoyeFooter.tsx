@@ -204,6 +204,8 @@ export const GoyeFooter: React.FC<GoyeFooterProps> = ({
               <span>Admin Access</span>
             </button>
             <span>•</span>
+            <span className="text-[#FFD700] font-black">Built for Pi Network</span>
+            <span>•</span>
             <span>https://gasv.store</span>
           </div>
         </div>

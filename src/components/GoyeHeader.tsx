@@ -134,6 +134,27 @@ export const GoyeHeader: React.FC<GoyeHeaderProps> = ({
 
           {/* Header Action Buttons (Install PWA & WhatsApp) */}
           <div className="hidden sm:flex items-center gap-3">
+            <button
+              onClick={async () => {
+                if (!(window as any).Pi) {
+                   alert("Open in Pi Browser to login with Pi");
+                   return;
+                }
+                try {
+                  const auth = await (window as any).Pi.authenticate(['username', 'payments'], (payment: any) => console.log("Incomplete payment", payment));
+                  localStorage.setItem('pi_accessToken', auth.accessToken);
+                  localStorage.setItem('pi_username', auth.user.username);
+                  window.location.reload();
+                } catch(e) {
+                  console.error(e);
+                }
+              }}
+              className="px-4 py-2.5 rounded-xl bg-[#7D2AE7] hover:bg-purple-700 text-white font-black text-xs shadow-md flex items-center gap-2 active:scale-95 transition"
+            >
+              <img src="https://minepi.com/favicon.png" className="w-4 h-4" alt="Pi" />
+              <span>{localStorage.getItem('pi_username') ? `Welcome, @${localStorage.getItem('pi_username')}` : "Login with Pi"}</span>
+            </button>
+
             {isInstallable && (
               <button
                 onClick={handleInstallApp}
