@@ -24,6 +24,7 @@ import { SPECIALIZATIONS, Specialization } from './data/specializations';
 import { safeParse } from './utils/safeParse';
 import { getPaymentEnvironment, getDisplayPrice, getBuyButtonLabel, getPiPrice } from './utils/paymentAdapter';
 import { autoLoginWithPi } from './lib/piAuth';
+import { autoLoginWithPi } from './lib/piAuth';
 import PiLoginButton from './components/PiLoginButton';
 export default function App() {
   const env = getPaymentEnvironment();
