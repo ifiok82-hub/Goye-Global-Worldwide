@@ -45,9 +45,20 @@ export async function loginWithPi(): Promise<{ uid: string; username: string } |
     // Await Pi.init fully, version 2.0, NO sandbox param - detected automatically
     await window.Pi.init({ version: '2.0' });
 
-    // STEP 1 - Only ask for username. Keep accessToken, ignore uid/username beside it.
-    const auth = await window.Pi.authenticate(['username'], (payment: any) => {
-      console.log('Incomplete payment found', payment);
+    // STEP 1 - Extend Pi authentication with payments scope for U2A payments
+    const auth = await window.Pi.authenticate(['username', 'payments'], async (payment: any) => {
+      console.log('Incomplete payment found:', payment);
+      if (payment && payment.identifier) {
+        try {
+          await fetch('/api/pi/incomplete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ payment })
+          });
+        } catch (e) {
+          console.error('Error reporting incomplete payment:', e);
+        }
+      }
     });
 
     if (!auth?.accessToken) return null;
