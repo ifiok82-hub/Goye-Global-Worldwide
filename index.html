@@ -1,34 +1,21 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
     <title>GOYE STORE - SIRWISE AI WEB3 ACADEMY</title>
-    <meta name="description" content="Official Goye Store - Goye Global & Sirwise AI WEB3 Academy - Digital Products, Academy, eSIM. Pay with Pi." />
+    <meta
+      name="description"
+      content="Official Goye Store - Goye Global & Sirwise AI WEB3 Academy - Digital Products, Academy, eSIM. Pay with Pi."
+    />
+    <link rel="icon" type="image/png" href="/icon-192.png" />
+    <link rel="manifest" href="/manifest.json" />
 
-    <!-- OpenGraph -->
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="GOYE STORE - SIRWISE AI WEB3 ACADEMY" />
-    <meta property="og:description" content="Official Goye Store - Academy, Digital Products, eSIM. Pay with Pi." />
-    <meta property="og:site_name" content="GOYE STORE" />
-    <meta property="og:url" content="https://gasv.store" />
-
-    <!-- Twitter -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="GOYE STORE - SIRWISE AI WEB3 ACADEMY" />
-
-    <!-- Pi SDK - MUST be in head, FIRST before any code -->
+    <!-- Pi Network SDK loaded in head before any code -->
     <script src="https://sdk.minepi.com/pi-sdk.js"></script>
-
-    <!-- CSP for Pi SDK - allows SDK internal call to socialchain.app + App Studio exchange -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://sdk.minepi.com https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; connect-src 'self' https://socialchain.app https://backend.appstudio-u7cm9zhmha0ruwv8.piappengine.com https://api.minepi.com; frame-ancestors 'self' https://*.pinet.com https://*.minepi.com https://sandbox.minepi.com;" />
-
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
-  <body>
+  <body class="bg-black text-white min-h-screen">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

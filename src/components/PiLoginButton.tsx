@@ -24,7 +24,7 @@ export default function PiLoginButton() {
     return (
       <div className="w-full bg-[#FFD700] text-black text-center py-3 font-black text-sm flex items-center justify-center gap-2">
         ✅ Signed in as @{user}
-        <button onClick={handleLogout} className="ml-2 underline text-xs">Logout</button>
+        <button onClick={handleLogout} className="ml-2 underline text-xs cursor-pointer">Logout</button>
       </div>
     );
   }
@@ -32,7 +32,7 @@ export default function PiLoginButton() {
   return (
     <button
       onClick={handleLogin}
-      className="w-full bg-[#FFD700] hover:bg-yellow-400 text-black font-black uppercase text-sm tracking-widest py-3.5 px-4 rounded-full"
+      className="w-full bg-[#FFD700] hover:bg-yellow-400 text-black font-black uppercase text-sm tracking-widest py-3.5 px-4 rounded-full cursor-pointer transition active:scale-[0.99]"
     >
       🔐 Sign in with Pi
     </button>

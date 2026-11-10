@@ -1,6 +1,11 @@
 // src/lib/piAuth.ts - Pi Network Auth via App Studio backend
 // Docs: https://developers.minepi.com/docs/authenticate-user/Authentication
-declare global { interface Window { Pi: any; } }
+
+declare global {
+  interface Window {
+    Pi?: any;
+  }
+}
 
 const APP_STUDIO_LOGIN = 'https://backend.appstudio-u7cm9zhmha0ruwv8.piappengine.com/pi/auth/v1/login';
 
@@ -8,8 +13,20 @@ const APP_STUDIO_LOGIN = 'https://backend.appstudio-u7cm9zhmha0ruwv8.piappengine
 let sessionToken: string | null = null;
 let currentUser: { uid: string; username: string } | null = null;
 
-export function getSessionToken() { return sessionToken; }
-export function getCurrentUser() { return currentUser; }
+export function getSessionToken() {
+  return sessionToken;
+}
+
+export function getCurrentUser() {
+  if (currentUser) return currentUser;
+  if (typeof window !== 'undefined') {
+    const username = localStorage.getItem('pi_username_trusted');
+    const uid = localStorage.getItem('pi_uid_trusted') || '';
+    if (username) return { uid, username };
+  }
+  return null;
+}
+
 export function toPi(naira?: number, usd?: number, piPrice?: number): number {
   if (piPrice && piPrice > 0) return piPrice;
   if (usd && usd > 0) return Math.max(1, Math.ceil(usd / 30));
@@ -24,6 +41,7 @@ export async function loginWithPi(): Promise<{ uid: string; username: string } |
       alert('Please open this site in Pi Browser to sign in with Pi');
       return null;
     }
+
     // Await Pi.init fully, version 2.0, NO sandbox param - detected automatically
     await window.Pi.init({ version: '2.0' });
 
@@ -31,6 +49,7 @@ export async function loginWithPi(): Promise<{ uid: string; username: string } |
     const auth = await window.Pi.authenticate(['username'], (payment: any) => {
       console.log('Incomplete payment found', payment);
     });
+
     if (!auth?.accessToken) return null;
 
     // STEP 2 - Exchange accessToken with App Studio. One exchange per sign-in.
@@ -40,10 +59,12 @@ export async function loginWithPi(): Promise<{ uid: string; username: string } |
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ accessToken: auth.accessToken })
     });
+
     if (!res.ok) {
-      console.error('App Studio login failed', await res.text());
+      console.error('App Studio login failed', await res.text().catch(() => ''));
       return null;
     }
+
     const data = await res.json();
     // STEP 2 result - ONLY this identity is trusted
     // { sessionToken, user: { uid, username } }
@@ -53,10 +74,11 @@ export async function loginWithPi(): Promise<{ uid: string; username: string } |
     if (currentUser?.username) {
       // Store ONLY trusted username for display. Never store browser uid/username.
       localStorage.setItem('pi_username_trusted', currentUser.username);
-      localStorage.setItem('pi_uid_trusted', currentUser.uid);
+      localStorage.setItem('pi_uid_trusted', currentUser.uid || '');
       // Keep a flag so refresh can restore display, but sessionToken stays in memory
       sessionStorage.setItem('pi_has_session', '1');
     }
+
     return currentUser;
   } catch (err) {
     console.error('loginWithPi failed', err);
@@ -67,18 +89,20 @@ export async function loginWithPi(): Promise<{ uid: string; username: string } |
 export function logoutPi() {
   sessionToken = null;
   currentUser = null;
-  localStorage.removeItem('pi_username_trusted');
-  localStorage.removeItem('pi_uid_trusted');
-  sessionStorage.removeItem('pi_has_session');
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('pi_username_trusted');
+    localStorage.removeItem('pi_uid_trusted');
+    sessionStorage.removeItem('pi_has_session');
+  }
 }
 
 // STEP 3 - Auto-login on load / in App Studio / Pi Browser
 export function autoLoginWithPi() {
   if (typeof window === 'undefined') return;
-  const isPi = !!(window as any).Pi || navigator.userAgent.includes('PiBrowser') || window.self !== window.top;
+  const isPi = !!(window as any).Pi || (typeof navigator !== 'undefined' && navigator.userAgent.includes('PiBrowser')) || window.self !== window.top;
   if (!isPi) return;
-  // If we already have trusted username displayed, don't re-auth automatically on every load
-  // App Studio verification needs a fresh sign-in, so only auto-auth if no session flag
   if (sessionStorage.getItem('pi_has_session')) return;
-  setTimeout(() => { loginWithPi(); }, 800);
+  setTimeout(() => {
+    loginWithPi();
+  }, 800);
 }

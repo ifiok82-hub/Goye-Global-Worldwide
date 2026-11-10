@@ -25,8 +25,8 @@ export const GoyeHeader: React.FC<GoyeHeaderProps> = ({
 
   const handlePiLogin = async () => {
     const auth = await loginWithPi();
-    if (auth?.user?.username) {
-      setPiUsername(auth.user.username);
+    if (auth?.username) {
+      setPiUsername(auth.username);
     }
   };
 

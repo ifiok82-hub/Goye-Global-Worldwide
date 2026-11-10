@@ -24,8 +24,8 @@ import { SPECIALIZATIONS, Specialization } from './data/specializations';
 import { safeParse } from './utils/safeParse';
 import { getPaymentEnvironment, getDisplayPrice, getBuyButtonLabel, getPiPrice } from './utils/paymentAdapter';
 import { autoLoginWithPi } from './lib/piAuth';
-import { autoLoginWithPi } from './lib/piAuth';
 import PiLoginButton from './components/PiLoginButton';
+import AutoPiConverter from './components/AutoPiConverter';
 export default function App() {
   const env = getPaymentEnvironment();
     // AUTO Pi Auth - runs on page load, shows your Pi username automatically
@@ -188,6 +188,8 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#000000] text-white font-sans antialiased selection:bg-[#FFD700] selection:text-black">
+      <AutoPiConverter />
+      <PiLoginButton />
       
       {/* Header */}
       <GoyeHeader
