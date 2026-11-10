@@ -1,70 +1,90 @@
-import React, { useEffect } from 'react';
-import { convertPriceString } from '../lib/piCurrency';
+import { useEffect } from 'react';
 
-export const AutoPiConverter: React.FC = () => {
+// V2 - Handles split prices: ₦25,000 in one span + ($18) in another span
+// And converts ENROLL -> LOCK - X Pi + wires Pi payment
+export default function AutoPiConverter() {
   useEffect(() => {
-    if (typeof window === 'undefined' || typeof document === 'undefined') return;
+    const toPi = (naira?: number, usd?: number) => {
+      if (usd && usd > 0) return Math.max(1, Math.ceil(usd / 30));
+      if (naira && naira > 0) return Math.max(1, Math.ceil((naira / 1500) / 30));
+      return 2;
+    };
 
-    const ignoredTags = new Set(['INPUT', 'TEXTAREA', 'SCRIPT', 'STYLE', 'NOSCRIPT']);
+    const convertAll = () => {
+      // 1. Fix Paystack text
+      document.body.innerHTML = document.body.innerHTML.replace(/Pay securely with Paystack, Flutterwave, 【entity-PayPal¦canonical_name=PayPal】, or direct 【entity-OPay¦canonical_name=OPay】\./g, 'Pay securely with Pi.');
+      // Note: innerHTML replace runs once, then we use DOM walk below for prices
 
-    const scanAndConvert = (node: Node) => {
-      if (node.nodeType === Node.TEXT_NODE) {
-        const text = node.textContent || '';
-        if ((text.includes('₦') || text.includes('$') || text.includes('NGN') || text.includes('USD')) && !/(\bpi\b|π)/i.test(text)) {
-          // Replace price occurrences inside the text node
-          const converted = text
-            .replace(/(?:₦|NGN)\s*([0-9,]+(?:\.[0-9]+)?)/gi, (match) => {
-              const res = convertPriceString(match);
-              return res || match;
-            })
-            .replace(/(?:\$|USD)\s*([0-9,]+(?:\.[0-9]+)?)/gi, (match) => {
-              const res = convertPriceString(match);
-              return res || match;
+      // 2. Find ALL leaf elements with ₦ or $
+      const all = Array.from(document.querySelectorAll('body *'));
+      all.forEach((el: any) => {
+        if (el.children.length > 0) return; // only leaf nodes
+        const txt = (el.textContent || '').trim();
+        if (!txt) return;
+        if (txt.includes('Pi') && !txt.includes('₦') && !txt.includes('$')) return;
+
+        // Case A: ₦25,000 alone
+        const nairaOnly = txt.match(/^₦\s?([\d,]+)$/);
+        // Case B: ($18) alone
+        const usdOnly = txt.match(/^\(\$([\d.]+)\)$/);
+        // Case C: ₦25,000 ($18) together
+        const both = txt.match(/₦\s?([\d,]+).*\$([\d.]+)/);
+
+        if (both) {
+          const pi = toPi(parseFloat(both[1].replace(/,/g, '')), parseFloat(both[2]));
+          el.textContent = `${pi} Pi`;
+          el.style.color = '#FFD700';
+          el.style.fontWeight = '900';
+        } else if (nairaOnly) {
+          const pi = toPi(parseFloat(nairaOnly[1].replace(/,/g, '')), undefined);
+          el.textContent = `${pi} Pi`;
+          el.style.color = '#FFD700';
+          el.style.fontWeight = '900';
+        } else if (usdOnly) {
+          const pi = toPi(undefined, parseFloat(usdOnly[1]));
+          el.textContent = `${pi} Pi`;
+          el.style.color = '#FFD700';
+          el.style.fontWeight = '900';
+        }
+        // Hide the second part: if ₦ part converted, hide the ($18) sibling
+        if (nairaOnly || both) {
+          const parent = el.parentElement;
+          if (parent) {
+            Array.from(parent.children).forEach((sib: any) => {
+              if (sib !== el && /\(\$\d/.test(sib.textContent || '')) sib.style.display = 'none';
+              if (sib !== el && sib.textContent?.includes('STANDARD TUITION')) sib.style.display = 'none';
             });
-
-          if (converted !== text) {
-            node.textContent = converted;
           }
         }
-        return;
-      }
+      });
 
-      if (node.nodeType === Node.ELEMENT_NODE) {
-        const el = node as HTMLElement;
-        if (ignoredTags.has(el.tagName)) return;
-        for (let i = 0; i < el.childNodes.length; i++) {
-          scanAndConvert(el.childNodes[i]);
+      // 3. Convert ENROLL buttons -> LOCK - 2 Pi
+      const buttons = Array.from(document.querySelectorAll('button, a'));
+      buttons.forEach((btn: any) => {
+        const t = (btn.textContent || '').trim().toUpperCase();
+        if (t.includes('ENROLL')) {
+          // Find price in same card to calculate Pi
+          const card = btn.closest('div');
+          const cardText = card?.parentElement?.textContent || '';
+          const usdM = cardText.match(/\$([\d.]+)/);
+          const nairaM = cardText.match(/₦\s?([\d,]+)/);
+          let pi = 2;
+          if (usdM) pi = toPi(undefined, parseFloat(usdM[1]));
+          else if (nairaM) pi = toPi(parseFloat(nairaM[1].replace(/,/g, '')), undefined);
+          btn.textContent = `🔒 LOCK - ${pi} Pi`;
+          btn.style.background = '#FFD700';
+          btn.style.color = '#000';
+          // Store Pi for payment
+          btn.dataset.piPrice = String(pi);
+          btn.dataset.piConverted = '1';
         }
-      }
+      });
     };
 
-    // Initial pass
-    scanAndConvert(document.body);
-
-    // Observe dynamic changes
-    const observer = new MutationObserver((mutations) => {
-      observer.disconnect();
-      try {
-        for (const m of mutations) {
-          if (m.type === 'childList') {
-            m.addedNodes.forEach((n) => scanAndConvert(n));
-          } else if (m.type === 'characterData') {
-            scanAndConvert(m.target);
-          }
-        }
-      } finally {
-        observer.observe(document.body, { childList: true, subtree: true, characterData: true });
-      }
-    });
-
-    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
-
-    return () => {
-      observer.disconnect();
-    };
+    convertAll();
+    const obs = new MutationObserver(() => convertAll());
+    obs.observe(document.body, { childList: true, subtree: true, characterData: true });
+    return () => obs.disconnect();
   }, []);
-
   return null;
-};
-
-export default AutoPiConverter;
+}
