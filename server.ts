@@ -76,7 +76,12 @@ function securityRateLimiter(maxRequests = 40, windowMs = 60000) {
 // CORS, Security Headers, and Anti-419 Compliance
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  // Allow PiNet, Pi App Studio, Pi Sandbox, and AI Studio iframe embedding
+  res.removeHeader('X-Frame-Options');
+  res.setHeader(
+    'Content-Security-Policy',
+    "frame-ancestors 'self' https://*.pinet.com https://*.minepi.com https://*.piappengine.com https://*.pi.app https://sandbox.minepi.com https://appstudio.minepi.com https://*.run.app https://*.google.com https://*.aistudio.google.com https://*.cloudworkstations.dev;"
+  );
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
 
@@ -610,31 +615,39 @@ app.get('/api/clicks', (req, res) => {
 });
 
 app.post('/api/pi/verify', express.json(), async (req, res) => {
-  const { accessToken, username, paymentId, txid, email, amount } = req.body || {};
+  const { accessToken, paymentId, txid, email, amount } = req.body || {};
 
-  // If verifying Pi User Authentication session
+  // STEP 2: Exchange accessToken with App Studio backend
   if (accessToken) {
     try {
-      const piRes = await fetch('https://api.minepi.com/v2/me', {
-        method: 'GET',
+      const appStudioRes = await fetch('https://backend.appstudio-u7cm9zhmha0ruwv8.piappengine.com/pi/auth/v1/login', {
+        method: 'POST',
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json'
-        }
+        },
+        body: JSON.stringify({ accessToken })
       });
 
-      if (piRes.ok) {
-        const piUser: any = await piRes.json();
-        const verifiedUsername = piUser?.username || username || 'unknown';
-        console.log(`Pi Auth verified for @${verifiedUsername}`);
-        return res.json({ success: true, username: verifiedUsername, uid: piUser?.uid });
+      if (appStudioRes.ok) {
+        const authData: any = await appStudioRes.json();
+        const user = authData.user || {};
+        console.log(`Pi Auth verified via App Studio for @${user.username} (uid: ${user.uid})`);
+        return res.json({
+          success: true,
+          sessionToken: authData.sessionToken,
+          user: {
+            uid: user.uid,
+            username: user.username
+          },
+          username: user.username
+        });
       } else {
-        const errText = await piRes.text().catch(() => '');
-        console.error(`[PI AUTH FAILED] Status ${piRes.status}:`, errText);
-        return res.status(piRes.status || 401).json({ success: false, error: 'Failed to verify with Pi Server' });
+        const errText = await appStudioRes.text().catch(() => '');
+        console.error(`[APP STUDIO AUTH FAILED] Status ${appStudioRes.status}:`, errText);
+        return res.status(appStudioRes.status || 401).json({ success: false, error: 'App Studio auth exchange failed' });
       }
     } catch (err: any) {
-      console.error('Exception verifying Pi Auth token:', err?.message || err);
+      console.error('Exception exchanging Pi Auth token with App Studio:', err?.message || err);
       return res.status(500).json({ success: false, error: err?.message || 'Server error' });
     }
   }
@@ -705,7 +718,7 @@ app.use((req, res, next) => {
 
   // 2. Strict Security Headers
   res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
-  res.setHeader('X-Frame-Options', 'DENY');
+  res.removeHeader('X-Frame-Options');
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
@@ -719,7 +732,11 @@ app.use(express.urlencoded({ extended: true }));
 
 // ===== 1. PI NETWORK API ROUTES - MUST BE FIRST - BEFORE STATIC & SPA =====
 
-// VERIFY DOMAIN FILE - Must be before static and fallback - Pi Core Team checks this
+// VERIFY DOMAIN FILE - Must be before static and fallback - Pi Core Team & App Studio checks this
+app.use(['/pi-app-validation.txt', '/.well-known/pi-app-validation.txt'], (req, res) => {
+  res.status(200).setHeader('Content-Type', 'text/plain; charset=utf-8').set('Cache-Control', 'no-store').send('piappstudio-a-wG4SiJhhGC4hTlIHAdUuerkNMCIM0R');
+});
+
 app.use(['/validation-key.txt', '/.well-known/validation-key.txt', '/validation-key'], (req, res) => {
   res.status(200).setHeader('Content-Type', 'text/plain; charset=utf-8').set('Cache-Control', 'no-store').send(PI_VALIDATION_KEY);
 });
