@@ -4,7 +4,7 @@ import { isPiCustomerPaymentEnabled } from '../config/payment';
 
 export const CURRENCIES = [
   { code: 'USD', symbol: '$', rate: 1, name: 'US Dollar' },
-  { code: 'NGN', symbol: '₦', rate: 1500, name: 'Nigerian Naira' },
+  { code: 'NGN', symbol: 'NGN', rate: 1500, name: 'Nigerian Naira' },
   { code: 'GBP', symbol: '£', rate: 0.79, name: 'British Pound' },
   { code: 'EUR', symbol: '€', rate: 0.92, name: 'Euro' },
   { code: 'CAD', symbol: 'C$', rate: 1.35, name: 'Canadian Dollar' },

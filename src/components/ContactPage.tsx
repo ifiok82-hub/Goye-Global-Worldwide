@@ -93,7 +93,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onToast }) => {
               +2348033584736
             </p>
             <p className="text-[11px] text-gray-500">
-              Instant soft-copy delivery confirmation, OPay payment verification, student onboarding, and live assistance.
+              Instant soft-copy delivery confirmation, Pi payment verification, student onboarding, and live assistance.
             </p>
           </div>
 

@@ -27,7 +27,7 @@ Official Site: https://www.gasv.store | Contact: goyedagosmess@gmail.com
 [PAGE 2: WHAT YOU WILL GET IN THE NEXT 5 MINUTES]
 --------------------------------------------------------------------------------
 1. TEASER PROMPT 1: High-Converting Sales & Copy Generator (1 of 4 core prompts).
-2. REAL CASE STUDY: How a student built a ₦450,000/mo agency using AI automation.
+2. REAL CASE STUDY: How a student built a high-earning digital agency using AI automation.
 3. ACADEMY ROADMAP: What 109+ entrepreneurs unlock in the full 8-Module Masterclass.
 
 --------------------------------------------------------------------------------
@@ -54,26 +54,24 @@ Here is what you are missing in the Free Version:
 🔒 Module 8: Capstone Project + Blockchain-Verified Certificate + Portfolio (LOCKED)
 
 --------------------------------------------------------------------------------
-[PAGE 5: CASE STUDY - FROM FREE BLUEPRINT TO $300/WEEK]
+[PAGE 5: CASE STUDY - FROM FREE BLUEPRINT TO GLOBAL CONTRACTS]
 --------------------------------------------------------------------------------
 Student Story: Chinedu from Lagos, Nigeria
 "I downloaded the Free Blueprint and got my first client inquiry. But when they asked 
-for custom AI workflow automation, I was stuck. I enrolled in the Sirwise AI Web3 
-Academy 2 Pi (₦74,985) full course. Within 14 days of completing Module 3 & 8, 
-I secured a $300 Fiverr automation contract!"
+for custom AI workflow automation, I was stuck. I accessed the Sirwise AI Web3 
+Academy 2 Pi full course. Within 14 days of completing Module 3 & 8, 
+I secured a major international automation contract!"
 
 --------------------------------------------------------------------------------
 [PAGE 6: NEXT STEPS - UPGRADE TO FULL ACADEMY 2 Pi]
 --------------------------------------------------------------------------------
-Your Free Blueprint is only 10% of the puzzle. Unlock the remaining 90% today!
+Your Free Blueprint is only 10% of the puzzle. Access the remaining 90% today!
 
 🎓 SIRWISE AI WEB3 ACADEMY - 8 FULL GLOBAL MODULES
-- Price: 2 Pi USD = ₦74,985 Lifetime Access (190+ Countries)
+- Price: 2 Pi Lifetime Access (190+ Countries)
 - Special Link: https://www.gasv.store/#academy?from=blueprint
-- USDC Base Address: 0xdc7f804B36aB672Ec31642dF418F29e73281b040
-- OPay Bank Transfer: Account 6113541882 GOYEDAGOSMESS ENTERPRISE
-- Global Cards: Paystack & Flutterwave Supported
-- 100% Secure SSL | Official Contact: goyedagosmess@gmail.com | RC BN3583878
+- Verified Checkout: Pi Network Direct Payment
+- 100% Secure Pi Blockchain | Official Contact: goyedagosmess@gmail.com | RC BN3583878
 
 --------------------------------------------------------------------------------
 [PAGE 7: ACADEMY PAYWALL & VIDEO TOUR LINK]
@@ -458,7 +456,7 @@ Structure the output into 4 clear sections: Executive Summary, Project Scope, Ti
                 style={{ width: '100%', padding: '16px', background: 'linear-gradient(90deg, #FFD700 0%, #FFA500 100%)', color: 'black', borderRadius: '16px', fontWeight: 900, fontSize: '16px', cursor: 'pointer', border: 'none' }}
                 className="hover:brightness-110 active:scale-95 transition shadow-[0_0_25px_rgba(255,215,0,0.4)] flex items-center justify-center gap-2"
               >
-                <span>⚡ Claim Pass Now for 0.000003 Pi (₦1,500)</span>
+                <span>⚡ Claim Pass Now for 1 Pi</span>
                 <ArrowRight size={18} />
               </button>
             </div>
@@ -583,7 +581,7 @@ Structure the output into 4 clear sections: Executive Summary, Project Scope, Ti
                 The Ultimate Web3 & AI Starter Toolkit
               </h4>
               <p className="text-gray-300 text-xs mb-3">
-                Get 25 High-Yield Prompts, Web3 Wallet Security Cheatsheet + VIP Access Pass for just <span className="text-[#FFD700] font-black">₦2,500 ($3.00)</span> today!
+                Get 25 High-Yield Prompts, Web3 Wallet Security Cheatsheet + VIP Access Pass for just <span className="text-[#FFD700] font-black">1 Pi</span> today!
               </p>
               <button
                 onClick={() => {
@@ -592,7 +590,7 @@ Structure the output into 4 clear sections: Executive Summary, Project Scope, Ti
                 }}
                 className="w-full bg-[#FFD700] hover:bg-yellow-400 text-black font-black py-3 rounded-xl flex items-center justify-center gap-2 text-sm shadow transition cursor-pointer"
               >
-                <span>Get Starter Toolkit for ₦2,500</span>
+                <span>Get Starter Toolkit for 1 Pi</span>
                 <ArrowRight size={16} />
               </button>
             </div>

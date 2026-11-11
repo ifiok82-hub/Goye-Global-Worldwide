@@ -174,7 +174,7 @@ export default function App() {
     e.preventDefault();
     const input = (document.getElementById('manualVerifyInput') as HTMLInputElement)?.value.trim();
     if (!input) {
-      showToast('Please enter an OPay transaction reference or Tx Hash.', 'error');
+      showToast('Please enter a Pi payment reference or Tx Hash.', 'error');
       return;
     }
     showToast(`⏳ Checking reference: ${input}... Status: Pending Review.`, 'info');
@@ -254,7 +254,7 @@ export default function App() {
                   Featured Digital Products & Roaming eSIM
                 </h2>
                 <p className="text-xs sm:text-sm text-gray-400 max-w-xl mx-auto">
-                  Instant digital fulfillment. Pay securely with Paystack, Flutterwave, PayPal, or direct OPay.
+                  Instant digital fulfillment. Pay securely with Pi.
                 </p>
               </div>
 
@@ -405,17 +405,17 @@ export default function App() {
             <div className="bg-[#0c0c0c] border border-zinc-800 rounded-2xl p-6 space-y-4">
               <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
                 <ShieldCheck size={18} className="text-[#FFD700]" />
-                <span>Verify OPay Payment Reference</span>
+                <span>Verify Pi Payment Reference</span>
               </h3>
               <p className="text-xs text-gray-400 leading-relaxed">
-                If you made a transfer to OPay account <strong>6113541882</strong> (GOYEDAGOSMESS ENTERPRISE), enter your sender email, reference name, or Tx Hash below for instant confirmation.
+                If you made a payment on Pi Network, enter your username, payment ID, or Tx Hash below for instant confirmation.
               </p>
 
               <form onSubmit={handleManualVerificationCheck} className="flex flex-col sm:flex-row gap-3">
                 <input 
                   type="text" 
                   id="manualVerifyInput"
-                  placeholder="Enter OPay reference, sender name, or 0x Tx Hash..."
+                  placeholder="Enter Pi payment ID, username, or Tx Hash..."
                   className="flex-1 bg-black border border-zinc-800 p-3.5 rounded-xl text-white outline-none focus:border-[#FFD700] text-xs font-semibold"
                 />
                 <button 
@@ -573,10 +573,7 @@ export default function App() {
             setSelectedProduct(null);
           }}
           paymentConfig={{
-            paystack: localStorage.getItem('paystack_public_key') || 'pk_live_9f7e06b21fa6dc4e3e94cc0',
-            flutterwave: localStorage.getItem('flutterwave_public_key') || 'FLWPUBK-cbb518a9b8f74421e887f4a1ec911ea7-X',
-            crypto: '0xdc7f804B36aB672Ec31642dF418F29e73281b040',
-            pi: 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ'
+            pi: { enabled: true }
           }}
           onToast={showToast}
         />

@@ -165,10 +165,9 @@ export default function ReferralDashboardModal({ onClose, onToast, currentUser, 
             <div className="flex justify-between items-start mb-4">
               <div>
                 <p className="text-xs text-[#FFD700] font-bold uppercase tracking-wider mb-1">Available Earnings</p>
-                <div className="text-4xl font-black text-white">${stats.usd.toFixed(2)}</div>
-                <div className="text-sm text-gray-400 mt-1 font-medium space-x-2">
-                  <span>₦{stats.ngn.toLocaleString()}</span>
-                  <span className="text-[#34d399]">{stats.pi.toFixed(2)} Pi</span>
+                <div className="text-4xl font-black text-[#FFD700]">{stats.pi.toFixed(2)} Pi</div>
+                <div className="text-sm text-gray-400 mt-1 font-medium">
+                  <span className="text-[#34d399]">Blockchain Pi Rewards</span>
                 </div>
               </div>
               <Wallet className="text-[#FFD700] opacity-50" size={40} />

@@ -7,14 +7,14 @@ export default function AdminSettings() {
   const [piMainnetWalletAddress, setPiMainnetWalletAddress] = useState('');
   const [piTestnetWalletAddress, setPiTestnetWalletAddress] = useState('');
   const [piSandbox, setPiSandbox] = useState('true');
-  const [paystackKey, setPaystackKey] = useState('');
-  const [paystackSecret, setPaystackSecret] = useState('');
-  const [flutterwaveKey, setFlutterwaveKey] = useState('');
-  const [flutterwaveSecret, setFlutterwaveSecret] = useState('');
+  const [piGatewayKey, setPiGatewayKey] = useState('');
+  const [piGatewaySecret, setPiGatewaySecret] = useState('');
+  const [piSubGatewayKey, setPiSubGatewayKey] = useState('');
+  const [piSubGatewaySecret, setPiSubGatewaySecret] = useState('');
   const [usdtAddress, setUsdtAddress] = useState('');
   const [usdcAddress, setUsdcAddress] = useState('');
-  const [opayAccount, setOpayAccount] = useState('');
-  const [opayName, setOpayName] = useState('');
+  const [piMerchantAccount, setPIMERCHANTAccount] = useState('');
+  const [piMerchantName, setPIMERCHANTName] = useState('');
   const [enablePi, setEnablePi] = useState(false);
   const [savedStatus, setSavedStatus] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -60,13 +60,13 @@ export default function AdminSettings() {
   const [showPiWallet, setShowPiWallet] = useState(false);
   const [showPiMainnetWallet, setShowPiMainnetWallet] = useState(false);
   const [showPiTestnetWallet, setShowPiTestnetWallet] = useState(false);
-  const [showPaystackKey, setShowPaystackKey] = useState(false);
-  const [showPaystackSecret, setShowPaystackSecret] = useState(false);
-  const [showFlutterwaveKey, setShowFlutterwaveKey] = useState(false);
-  const [showFlutterwaveSecret, setShowFlutterwaveSecret] = useState(false);
+  const [showPiGatewayKey, setShowPiGatewayKey] = useState(false);
+  const [showPiGatewaySecret, setShowPiGatewaySecret] = useState(false);
+  const [showPiSubGatewayKey, setShowPiSubGatewayKey] = useState(false);
+  const [showPiSubGatewaySecret, setShowPiSubGatewaySecret] = useState(false);
   const [showUsdtAddress, setShowUsdtAddress] = useState(false);
   const [showUsdcAddress, setShowUsdcAddress] = useState(false);
-  const [showOpayAccount, setShowOpayAccount] = useState(false);
+  const [showPIMERCHANTAccount, setShowPIMERCHANTAccount] = useState(false);
 
   useEffect(() => {
     // Load local storage keys
@@ -75,14 +75,14 @@ export default function AdminSettings() {
     const piTestnet = localStorage.getItem('PI_TESTNET_WALLET_ADDRESS') || localStorage.getItem('pi_testnet_wallet') || 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ7XE36YFQY6LKPVO6R';
     const piWallet = localStorage.getItem('PI_WALLET_ADDRESS') || localStorage.getItem('pi_wallet') || 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ7XE36YFQY6LKPVO6R';
     const sandbox = localStorage.getItem('PI_SANDBOX') || localStorage.getItem('pi_sandbox') || 'true';
-    const paystack = localStorage.getItem('PAYSTACK_KEY') || localStorage.getItem('PAYSTACK_PUBLIC_KEY') || '';
-    const paystackSec = localStorage.getItem('paystack_admin_sk') || localStorage.getItem('PAYSTACK_SECRET_KEY') || '';
-    const flutterwave = localStorage.getItem('FLUTTERWAVE_KEY') || localStorage.getItem('FLUTTERWAVE_PUBLIC_KEY') || '';
-    const flutterwaveSec = localStorage.getItem('FLUTTERWAVE_SECRET_KEY') || '';
+    const piGateway = localStorage.getItem('PIGATEWAY_KEY') || localStorage.getItem('PIGATEWAY_PUBLIC_KEY') || '';
+    const piGatewaySec = localStorage.getItem('piGateway_admin_sk') || localStorage.getItem('PIGATEWAY_SECRET_KEY') || '';
+    const piSubGateway = localStorage.getItem('PISUBGATEWAY_KEY') || localStorage.getItem('PISUBGATEWAY_PUBLIC_KEY') || '';
+    const piSubGatewaySec = localStorage.getItem('PISUBGATEWAY_SECRET_KEY') || '';
     const usdt = localStorage.getItem('USDT_ADDRESS') || '0xdc7f804B36aB672Ec31642dF418F29e73281b040';
     const usdc = localStorage.getItem('USDC_ADDRESS') || '0xdc7f804B36aB672Ec31642dF418F29e73281b040';
-    const opayAcc = localStorage.getItem('OPAY_ACCOUNT') || '6113541882';
-    const opayNm = localStorage.getItem('OPAY_NAME') || 'GOYE STORE GLOBAL';
+    const piMerchantAcc = localStorage.getItem('PIMERCHANT_ACCOUNT') || '6113541882';
+    const piMerchantNm = localStorage.getItem('PIMERCHANT_NAME') || 'GOYE STORE GLOBAL';
     const isPiEnabled = localStorage.getItem('ENABLE_PI_PAYMENT') === 'true' || localStorage.getItem('enable_pi') === 'true';
 
     setPiApiKey(storedPiKey);
@@ -90,14 +90,14 @@ export default function AdminSettings() {
     setPiTestnetWalletAddress(piTestnet || piWallet);
     setPiWalletAddress(piWallet || piMainnet || piTestnet);
     setPiSandbox(sandbox);
-    setPaystackKey(paystack);
-    setPaystackSecret(paystackSec);
-    setFlutterwaveKey(flutterwave);
-    setFlutterwaveSecret(flutterwaveSec);
+    setPiGatewayKey(piGateway);
+    setPiGatewaySecret(piGatewaySec);
+    setPiSubGatewayKey(piSubGateway);
+    setPiSubGatewaySecret(piSubGatewaySec);
     setUsdtAddress(usdt);
     setUsdcAddress(usdc);
-    setOpayAccount(opayAcc);
-    setOpayName(opayNm);
+    setPIMERCHANTAccount(piMerchantAcc);
+    setPIMERCHANTName(piMerchantNm);
     setEnablePi(isPiEnabled);
 
     // Fetch keys from server with RBAC Admin Authentication
@@ -121,14 +121,14 @@ export default function AdminSettings() {
           if (d.pi_testnet_wallet !== undefined) setPiTestnetWalletAddress(d.pi_testnet_wallet || '');
           if (d.pi_wallet !== undefined) setPiWalletAddress(d.pi_wallet || '');
           if (d.pi_sandbox) setPiSandbox(d.pi_sandbox);
-          if (d.paystack) setPaystackKey(d.paystack);
-          if (d.paystack_secret) setPaystackSecret(d.paystack_secret);
-          if (d.flutterwave) setFlutterwaveKey(d.flutterwave);
-          if (d.flutterwave_secret) setFlutterwaveSecret(d.flutterwave_secret);
+          if (d.piGateway) setPiGatewayKey(d.piGateway);
+          if (d.piGateway_secret) setPiGatewaySecret(d.piGateway_secret);
+          if (d.piSubGateway) setPiSubGatewayKey(d.piSubGateway);
+          if (d.piSubGateway_secret) setPiSubGatewaySecret(d.piSubGateway_secret);
           if (d.usdt !== undefined) setUsdtAddress(d.usdt || '');
           if (d.usdc !== undefined) setUsdcAddress(d.usdc || '');
-          if (d.opay !== undefined) setOpayAccount(d.opay || '');
-          if (d.opay_name) setOpayName(d.opay_name);
+          if (d.piMerchant !== undefined) setPIMERCHANTAccount(d.piMerchant || '');
+          if (d.piMerchant_name) setPIMERCHANTName(d.piMerchant_name);
         }
       })
       .catch((err) => {
@@ -154,16 +154,16 @@ export default function AdminSettings() {
     localStorage.setItem('pi_sandbox_mode', piSandbox);
     localStorage.setItem('PI_SANDBOX', piSandbox);
     localStorage.setItem('pi_sandbox', piSandbox);
-    localStorage.setItem('PAYSTACK_KEY', paystackKey);
-    localStorage.setItem('PAYSTACK_PUBLIC_KEY', paystackKey);
-    if (paystackSecret) localStorage.setItem('paystack_admin_sk', paystackSecret);
-    localStorage.setItem('FLUTTERWAVE_KEY', flutterwaveKey);
-    localStorage.setItem('FLUTTERWAVE_PUBLIC_KEY', flutterwaveKey);
-    if (flutterwaveSecret) localStorage.setItem('FLUTTERWAVE_SECRET_KEY', flutterwaveSecret);
+    localStorage.setItem('PIGATEWAY_KEY', piGatewayKey);
+    localStorage.setItem('PIGATEWAY_PUBLIC_KEY', piGatewayKey);
+    if (piGatewaySecret) localStorage.setItem('piGateway_admin_sk', piGatewaySecret);
+    localStorage.setItem('PISUBGATEWAY_KEY', piSubGatewayKey);
+    localStorage.setItem('PISUBGATEWAY_PUBLIC_KEY', piSubGatewayKey);
+    if (piSubGatewaySecret) localStorage.setItem('PISUBGATEWAY_SECRET_KEY', piSubGatewaySecret);
     localStorage.setItem('USDT_ADDRESS', usdtAddress || '0xdc7f804B36aB672Ec31642dF418F29e73281b040');
     localStorage.setItem('USDC_ADDRESS', usdcAddress || '0xdc7f804B36aB672Ec31642dF418F29e73281b040');
-    localStorage.setItem('OPAY_ACCOUNT', opayAccount || '6113541882');
-    localStorage.setItem('OPAY_NAME', opayName || 'GOYE STORE GLOBAL');
+    localStorage.setItem('PIMERCHANT_ACCOUNT', piMerchantAccount || '6113541882');
+    localStorage.setItem('PIMERCHANT_NAME', piMerchantName || 'GOYE STORE GLOBAL');
     localStorage.setItem('ENABLE_PI_PAYMENT', enablePi ? 'true' : 'false');
     localStorage.setItem('enable_pi', enablePi ? 'true' : 'false');
 
@@ -174,14 +174,14 @@ export default function AdminSettings() {
       pi_testnet_wallet: piTestnetWalletAddress,
       pi_wallet: activePi,
       pi_sandbox: piSandbox,
-      paystack: paystackKey,
-      paystack_secret: paystackSecret,
-      flutterwave: flutterwaveKey,
-      flutterwave_secret: flutterwaveSecret,
+      piGateway: piGatewayKey,
+      piGateway_secret: piGatewaySecret,
+      piSubGateway: piSubGatewayKey,
+      piSubGateway_secret: piSubGatewaySecret,
       usdt: usdtAddress || '0xdc7f804B36aB672Ec31642dF418F29e73281b040',
       usdc: usdcAddress || '0xdc7f804B36aB672Ec31642dF418F29e73281b040',
-      opay: opayAccount || '6113541882',
-      opay_name: opayName || 'GOYE STORE GLOBAL',
+      piMerchant: piMerchantAccount || '6113541882',
+      piMerchant_name: piMerchantName || 'GOYE STORE GLOBAL',
       enable_pi: enablePi
     };
 
@@ -504,58 +504,58 @@ export default function AdminSettings() {
           </div>
         </div>
 
-        {/* 2. CARD PAYMENTS: PAYSTACK & FLUTTERWAVE */}
+        {/* 2. CARD PAYMENTS: PIGATEWAY & PISUBGATEWAY */}
         <div className="bg-[#111] border border-[#333] rounded-2xl p-5 space-y-4">
           <div className="flex items-center gap-2 text-[#FFD700] font-bold text-base border-b border-[#222] pb-3">
             <Lock size={18} />
-            <span>2. Paystack &amp; Flutterwave Sensitive Credentials</span>
+            <span>2. PiGateway &amp; PiSubGateway Sensitive Credentials</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="text-xs font-bold text-gray-300 block mb-1">
-                Paystack Public Key (pk_live_... or pk_test_...)
+                PiGateway Public Key (pk_live_... or pk_test_...)
               </label>
               <div className="relative">
                 <input
-                  id="paystack_key"
-                  type={showPaystackKey ? 'text' : 'password'}
+                  id="piGateway_key"
+                  type={showPiGatewayKey ? 'text' : 'password'}
                   autoComplete="new-password"
-                  value={paystackKey}
-                  onChange={(e) => setPaystackKey(e.target.value)}
+                  value={piGatewayKey}
+                  onChange={(e) => setPiGatewayKey(e.target.value)}
                   placeholder="pk_live_..."
                   className="w-full bg-black border border-[#333] focus:border-[#FFD700] rounded-xl px-4 py-3 text-sm text-white pr-10 font-mono"
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPaystackKey(!showPaystackKey)}
+                  onClick={() => setShowPiGatewayKey(!showPiGatewayKey)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
                 >
-                  {showPaystackKey ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showPiGatewayKey ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </div>
 
             <div>
               <label className="text-xs font-bold text-gray-300 block mb-1">
-                Paystack Secret Key (sk_live_... or sk_test_...)
+                PiGateway Secret Key (sk_live_... or sk_test_...)
               </label>
               <div className="relative">
                 <input
-                  id="paystack_secret"
-                  type={showPaystackSecret ? 'text' : 'password'}
+                  id="piGateway_secret"
+                  type={showPiGatewaySecret ? 'text' : 'password'}
                   autoComplete="new-password"
-                  value={paystackSecret}
-                  onChange={(e) => setPaystackSecret(e.target.value)}
+                  value={piGatewaySecret}
+                  onChange={(e) => setPiGatewaySecret(e.target.value)}
                   placeholder="sk_live_..."
                   className="w-full bg-black border border-[#333] focus:border-[#FFD700] rounded-xl px-4 py-3 text-sm text-white pr-10 font-mono"
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPaystackSecret(!showPaystackSecret)}
+                  onClick={() => setShowPiGatewaySecret(!showPiGatewaySecret)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
                 >
-                  {showPaystackSecret ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showPiGatewaySecret ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </div>
@@ -564,48 +564,48 @@ export default function AdminSettings() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="text-xs font-bold text-gray-300 block mb-1">
-                Flutterwave Public Key (FLWPUBK_...)
+                PiSubGateway Public Key (FLWPUBK_...)
               </label>
               <div className="relative">
                 <input
-                  id="flutterwave_key"
-                  type={showFlutterwaveKey ? 'text' : 'password'}
+                  id="piSubGateway_key"
+                  type={showPiSubGatewayKey ? 'text' : 'password'}
                   autoComplete="new-password"
-                  value={flutterwaveKey}
-                  onChange={(e) => setFlutterwaveKey(e.target.value)}
+                  value={piSubGatewayKey}
+                  onChange={(e) => setPiSubGatewayKey(e.target.value)}
                   placeholder="FLWPUBK_..."
                   className="w-full bg-black border border-[#333] focus:border-[#FFD700] rounded-xl px-4 py-3 text-sm text-white pr-10 font-mono"
                 />
                 <button
                   type="button"
-                  onClick={() => setShowFlutterwaveKey(!showFlutterwaveKey)}
+                  onClick={() => setShowPiSubGatewayKey(!showPiSubGatewayKey)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
                 >
-                  {showFlutterwaveKey ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showPiSubGatewayKey ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </div>
 
             <div>
               <label className="text-xs font-bold text-gray-300 block mb-1">
-                Flutterwave Secret Key (FLWSECK_...)
+                PiSubGateway Secret Key (FLWSECK_...)
               </label>
               <div className="relative">
                 <input
-                  id="flutterwave_secret"
-                  type={showFlutterwaveSecret ? 'text' : 'password'}
+                  id="piSubGateway_secret"
+                  type={showPiSubGatewaySecret ? 'text' : 'password'}
                   autoComplete="new-password"
-                  value={flutterwaveSecret}
-                  onChange={(e) => setFlutterwaveSecret(e.target.value)}
+                  value={piSubGatewaySecret}
+                  onChange={(e) => setPiSubGatewaySecret(e.target.value)}
                   placeholder="FLWSECK_..."
                   className="w-full bg-black border border-[#333] focus:border-[#FFD700] rounded-xl px-4 py-3 text-sm text-white pr-10 font-mono"
                 />
                 <button
                   type="button"
-                  onClick={() => setShowFlutterwaveSecret(!showFlutterwaveSecret)}
+                  onClick={() => setShowPiSubGatewaySecret(!showPiSubGatewaySecret)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
                 >
-                  {showFlutterwaveSecret ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showPiSubGatewaySecret ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </div>
@@ -670,37 +670,37 @@ export default function AdminSettings() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="text-xs font-bold text-gray-300 block mb-1">
-                OPay Account Number
+                PiMerchant Account Number
               </label>
               <div className="relative">
                 <input
-                  id="opay_account"
-                  type={showOpayAccount ? 'text' : 'password'}
+                  id="piMerchant_account"
+                  type={showPIMERCHANTAccount ? 'text' : 'password'}
                   autoComplete="new-password"
-                  value={opayAccount}
-                  onChange={(e) => setOpayAccount(e.target.value)}
-                  placeholder="Enter OPay Account Number"
+                  value={piMerchantAccount}
+                  onChange={(e) => setPIMERCHANTAccount(e.target.value)}
+                  placeholder="Enter PiMerchant Account Number"
                   className="w-full bg-black border border-[#333] focus:border-[#FFD700] rounded-xl px-4 py-3 text-sm text-white pr-10 font-mono"
                 />
                 <button
                   type="button"
-                  onClick={() => setShowOpayAccount(!showOpayAccount)}
+                  onClick={() => setShowPIMERCHANTAccount(!showPIMERCHANTAccount)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
                 >
-                  {showOpayAccount ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showPIMERCHANTAccount ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </div>
 
             <div>
               <label className="text-xs font-bold text-gray-300 block mb-1">
-                OPay Account Name
+                PiMerchant Account Name
               </label>
               <input
-                id="opay_name"
+                id="piMerchant_name"
                 type="text"
-                value={opayName}
-                onChange={(e) => setOpayName(e.target.value)}
+                value={piMerchantName}
+                onChange={(e) => setPIMERCHANTName(e.target.value)}
                 placeholder="Account Name"
                 className="w-full bg-black border border-[#333] focus:border-[#FFD700] rounded-xl px-4 py-3 text-sm text-white"
               />
@@ -821,7 +821,7 @@ export default function AdminSettings() {
             DEVELOPER ONLY - PI TESTNET 10/10
           </p>
           <h3 className="text-white font-black text-base text-center">
-            0.01 Pi Testnet - Test Pi Only - No USD - No GCV - No ₦5,026,544 - No $3141.59
+            0.01 Pi Testnet - Test Pi Only - No USD - No GCV - No 2 Pi - No $3141.59
           </h3>
           <p className="text-gray-400 text-xs text-center leading-relaxed">
             Official Pi Testnet Payment Diagnostic Tool. Runs complete end-to-end lifecycle verification inside Pi Browser.

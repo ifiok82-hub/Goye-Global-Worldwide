@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { GraduationCap, CheckCircle, Circle, Play, Lock, ChevronRight, Globe, Award, ShieldCheck, DollarSign, Download, Sparkles, X, FileText, Video, BookOpen, ExternalLink, HelpCircle, CreditCard, Send, Mail } from 'lucide-react';
 import CertificateGenerator from './CertificateGenerator';
 import VideoModalPlayer from './VideoModalPlayer';
-import PaymentModal from './PaymentModal';
 import { cleanUserEmail } from '../lib/contact';
 import { RECEIVING_WALLET_ADDRESS, PI_WALLET_ADDRESS } from '../config/payment';
 import { loginWithPi } from '../lib/piAuth';
@@ -248,9 +247,9 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
       customer: email.split('@')[0],
       email: email,
       country: '🌍 Global USDT BEP20',
-      product: 'Sirwise AI Web3 Academy - USDT BEP20 Payment',
-      amount: '₦74,985.00 (2 Pi USDT)',
-      amount_num: 74985,
+      product: 'Sirwise AI Web3 Academy - 2 Pi',
+      amount: '2 Pi',
+      amount_num: 2,
       status: 'Verified',
       verified: 'VERIFIED',
       payment_method: 'USDT BEP20',
@@ -292,7 +291,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
   const priceUSD = 2;
   const currencies: Record<string, { symbol: string; name: string; rate: number }> = {
     USD: { symbol: "$", name: "US Dollar", rate: 1 },
-    NGN: { symbol: "₦", name: "Naira", rate: 1500 },
+    NGN: { symbol: "Pi", name: "Pi Network", rate: 1 },
     GBP: { symbol: "£", name: "Pound", rate: 0.79 },
     EUR: { symbol: "€", name: "Euro", rate: 0.92 },
     CAD: { symbol: "C$", name: "Canadian", rate: 1.35 },
@@ -398,158 +397,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
     return true;
   };
 
-  const getValidPaystackKey = (): string => {
-    let key = (
-      (import.meta.env && import.meta.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY) ||
-      (import.meta.env && import.meta.env.VITE_PAYSTACK_PUBLIC_KEY) ||
-      (window as any).env?.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY ||
-      (window as any).env?.VITE_PAYSTACK_PUBLIC_KEY ||
-      localStorage.getItem('NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY') ||
-      localStorage.getItem('PAYSTACK_PUBLIC_KEY') ||
-      localStorage.getItem('paystack_public_key') ||
-      'pk_live_9f7e06b21fa6dc4e3e94cc0'
-    ).trim();
-
-    return key && key.length >= 10 ? key : 'pk_live_9f7e06b21fa6dc4e3e94cc0';
-  };
-
-  const payWithPaystack = async () => {
-    if (!validateCustomerEmail(customerEmail)) return;
-    const email = customerEmail.trim();
-
-    const paystackKey = getValidPaystackKey();
-
-    // Ensure script is present or wait for SDK
-    if (typeof (window as any).PaystackPop === 'undefined') {
-      if (!document.querySelector('script[src*="paystack.co/v1/inline.js"]')) {
-        const script = document.createElement('script');
-        script.src = 'https://js.paystack.co/v1/inline.js';
-        script.async = true;
-        document.head.appendChild(script);
-      }
-      let attempts = 0;
-      while (attempts < 10 && typeof (window as any).PaystackPop === 'undefined') {
-        await new Promise(r => setTimeout(r, 150));
-        attempts++;
-      }
-    }
-
-    if (typeof (window as any).PaystackPop !== 'undefined' && typeof (window as any).PaystackPop.setup === 'function') {
-      try {
-        const handler = (window as any).PaystackPop.setup({
-          key: paystackKey,
-          email: email,
-          amount: 7498500, // NGN 74,985 in kobo
-          currency: 'NGN',
-          ref: 'SIRWISE_' + Date.now(),
-          callback: function (res: any) {
-            const ref = res?.reference || res?.trxref || ('PSK_' + Date.now());
-            if ((window as any).unlockAcademyAccess) {
-              (window as any).unlockAcademyAccess('Paystack', email, ref);
-            } else {
-              localStorage.setItem('sirwise_paid', 'true');
-              localStorage.setItem('academy_unlocked', 'true');
-              localStorage.setItem('payment_verified', 'true');
-              showToast('Payment verified ' + ref + ' - Academy Unlocked!', 'success');
-              setTimeout(() => window.location.reload(), 1000);
-            }
-          },
-          onClose: function () {
-            showToast('Paystack checkout closed.', 'info');
-          }
-        });
-        handler.openIframe();
-        return;
-      } catch (err) {
-        console.error('Paystack popup setup error:', err);
-      }
-    }
-
-    // Server fallback
-    try {
-      showToast('Initializing Paystack session...', 'info');
-      const res = await fetch('/api/paystack/initialize', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, amountUsd: 2, currencyCode: 'USD' })
-      });
-      const data = await res.json();
-      if (data.success && data.authorization_url) {
-        window.location.href = data.authorization_url;
-      } else {
-        window.location.href = `/payment/verify?reference=goye-paystack-${Date.now()}`;
-      }
-    } catch (e) {
-      window.location.href = `/payment/verify?reference=goye-paystack-${Date.now()}`;
-    }
-  };
-
-  const payWithFlutterwave = () => {
-    if (!validateCustomerEmail(customerEmail)) return;
-    const email = customerEmail.trim();
-
-    if (typeof (window as any).FlutterwaveCheckout !== 'function') {
-      showToast('Flutterwave SDK is loading... Check internet connection.', 'info');
-      return;
-    }
-
-    try {
-      (window as any).FlutterwaveCheckout({
-        public_key: 'FLWPUBK-cbb518a9b8f74421e887f4a1ec911ea7-X',
-        tx_ref: 'SIRWISE_FW_' + Date.now(),
-        amount: 74985,
-        currency: 'NGN',
-        customer: {
-          email: email,
-          name: email.split('@')[0] || 'Sirwise Student',
-          phone_number: '08012345678'
-        },
-        customizations: {
-          title: 'Sirwise AI Web3 Academy Global 2 Pi',
-          description: 'RC BN3583878',
-          logo: 'https://www.gasv.store/logo.png'
-        },
-        callback: function (data: any) {
-          if (data && (data.status === 'successful' || data.status === 'completed')) {
-            if ((window as any).unlockAcademyAccess) {
-              (window as any).unlockAcademyAccess('Flutterwave', email, data.tx_ref || 'FW_SUCCESS');
-            } else {
-              localStorage.setItem('sirwise_paid', 'true');
-              localStorage.setItem('academy_unlocked', 'true');
-              localStorage.setItem('payment_verified', 'true');
-              showToast('Flutterwave success - Academy Unlocked!', 'success');
-              setTimeout(() => window.location.reload(), 1000);
-            }
-          } else {
-            showToast('Payment not successful', 'error');
-          }
-        }
-      });
-    } catch (err) {
-      console.error('Flutterwave error:', err);
-      showToast('Unable to launch Flutterwave. Please try Paystack or Bank Transfer.', 'error');
-    }
-  };
-
-  const payWithUSDT = () => {
-    if (!validateCustomerEmail(customerEmail)) return;
-    const email = customerEmail.trim();
-    const txHash = prompt('Send 2 Pi USDT (BEP20 - BNB Smart Chain) to address:\n0xdc7f804B36aB672Ec31642dF418F29e73281b040\n\nEnter your Transaction Hash / ID below:');
-    if (txHash && txHash.trim().length > 5) {
-      if ((window as any).unlockAcademyAccess) {
-        (window as any).unlockAcademyAccess('USDT BEP20', email, 'USDT_' + txHash.trim());
-      } else {
-        localStorage.setItem('sirwise_paid', 'true');
-        localStorage.setItem('academy_unlocked', 'true');
-        localStorage.setItem('payment_verified', 'true');
-        showToast('USDT BEP20 Transaction Submitted - Verified! Academy Unlocked!', 'success');
-        window.location.reload();
-      }
-    } else if (txHash !== null) {
-      showToast('Please enter a valid Transaction Hash.', 'error');
-    }
-  };
-
+  // Pi Network is the single payment method
   const payWithPi = async () => {
     const auth = await loginWithPi();
     if (!auth) return;
@@ -593,11 +441,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
   };
 
   const handleBuyUnlockNow = () => {
-    if (typeof window !== 'undefined' && (window as any).Pi) {
-      payWithPi();
-    } else {
-      setShowPaymentModal(true);
-    }
+    payWithPi();
   };
 
   const toggleModule = (id: number) => {
@@ -697,122 +541,40 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
               </p>
             )}
             <div style={{ background: 'black', color: '#FFD700', padding: '12px', borderRadius: '12px', margin: '10px 0' }}>
-              <p style={{ fontWeight: 'bold', fontSize: '13px', margin: 0 }}>⏰ Special: Upgrade from Free to Full Academy in next 15 mins</p>
-              <p style={{ fontSize: '18px', fontWeight: '900', margin: '4px 0 0 0' }}>Sirwise AI Web3 Academy - 8 Modules - 2 Pi = ₦74,985 Lifetime</p>
+              <div>
+                <p style={{ fontWeight: 'bold', fontSize: '13px', margin: 0 }}>⏰ Sirwise AI Web3 Academy - 8 Modules</p>
+                <p style={{ fontSize: '18px', fontWeight: '900', margin: '4px 0 0 0' }}>Lifetime Access · 2 Pi</p>
+              </div>
+              <button 
+                onClick={handleBuyUnlockNow} 
+                style={{ width: '100%', height: '56px', background: '#FFD700', color: 'black', borderRadius: '12px', fontWeight: '900', fontSize: '17px', cursor: 'pointer', border: 'none' }}
+              >
+                🔒 LOCK - 2 Pi
+              </button>
             </div>
-            <button 
-              onClick={() => {
-                const paywall = document.getElementById('paywall');
-                if (paywall) {
-                  paywall.scrollIntoView({ behavior: 'smooth' });
-                } else {
-                  handleBuyUnlockNow();
-                }
-              }} 
-              style={{ width: '100%', height: '56px', background: 'black', color: '#FFD700', borderRadius: '12px', fontWeight: 'bold', fontSize: '17px', cursor: 'pointer', border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.3)' }}
-            >
-              🚀 UPGRADE NOW - BUY & LOCK 2 Pi
-            </button>
-            <p style={{ fontSize: '11px', marginTop: '10px', fontWeight: 'bold', color: 'black' }}>
-              USDT BEP20: 0xdc7f804B36aB672Ec31642dF418F29e73281b040 | OPay 6113541882 | Paystack Global
-            </p>
           </div>
         );
       })()}
 
-      {/* Paywall Banner at Top before Your Progress */}
+      {/* Paywall Banner at Top */}
       {!isEnrolled && (
-        <div id="paywall" style={{ background: 'linear-gradient(135deg, #FFD700, #FFA500)', padding: '20px', borderRadius: '16px', textAlign: 'center', marginBottom: '20px', boxShadow: '0 10px 30px rgba(255, 215, 0, 0.3)' }}>
-          <h2 style={{ color: 'black', fontWeight: '900', fontSize: '20px', margin: '0 0 6px 0' }}>
-            🔒 Unlock Sirwise AI Web3 Academy - 8 Global Modules
+        <div id="paywall" style={{ background: '#0e0e0e', border: '2px solid #FFD700', padding: '24px', borderRadius: '16px', textAlign: 'center', marginBottom: '20px', boxShadow: '0 10px 30px rgba(255, 215, 0, 0.15)' }}>
+          <div className="inline-block bg-black text-[#FFD700] border border-[#FFD700] text-xs font-black uppercase px-3 py-1 rounded-md tracking-wider mb-3">
+            🔒 LOCKED ACCESS
+          </div>
+          <h2 style={{ color: 'white', fontWeight: '900', fontSize: '22px', margin: '0 0 6px 0' }}>
+            Sirwise AI Web3 Academy - 8 Global Modules
           </h2>
-          <p style={{ color: 'black', fontWeight: 'bold', fontSize: '14px', margin: '0 0 12px 0' }}>
-            Lifetime Access 2 Pi = ₦74,985 - 190+ Countries
+          <p style={{ color: '#FFD700', fontWeight: 'bold', fontSize: '15px', margin: '0 0 16px 0' }}>
+            Lifetime Access · 2 Pi
           </p>
-          <input 
-            type="email" 
-            id="customerEmail" 
-            value={customerEmail}
-            onChange={(e) => setCustomerEmail(e.target.value)}
-            placeholder="Enter your complete email" 
-            style={{ width: '100%', height: '50px', borderRadius: '12px', padding: '12px', margin: '10px 0', border: '1px solid #000', background: '#ffffff', color: '#000000', fontSize: '14px', fontWeight: '600', outline: 'none' }} 
-          />
           <button 
             id="buyUnlockBtn" 
-            onClick={handleBuyUnlockNow}
-            style={{ width: '100%', height: '60px', background: 'black', color: '#FFD700', borderRadius: '16px', fontWeight: '900', fontSize: '18px', cursor: 'pointer', border: 'none', transition: 'transform 0.2s', boxShadow: '0 4px 15px rgba(0,0,0,0.4)' }}
+            onClick={payWithPi}
+            style={{ width: '100%', maxWidth: '360px', height: '54px', background: '#FFD700', color: 'black', borderRadius: '14px', fontWeight: '900', fontSize: '16px', cursor: 'pointer', border: 'none', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
-            💳 BUY & LOCK NOW 2 Pi
+            🔒 LOCK - 2 Pi
           </button>
-          
-          <div style={{ marginTop: '14px', display: 'grid', gap: '10px' }}>
-            <button onClick={payWithPaystack} style={{ height: '52px', background: '#ffffff', color: '#000000', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', border: 'none', fontSize: '14px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>
-              Paystack Global Cards
-            </button>
-            <button onClick={payWithFlutterwave} style={{ height: '52px', background: '#FB9129', color: '#ffffff', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', border: 'none', fontSize: '14px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>
-              Flutterwave
-            </button>
-            {/* Professional USDT BEP20 Section */}
-            <div id="usdtPaymentSection" style={{ background: '#1A1A1A', border: '2px solid #F0B90B', borderRadius: '16px', padding: '20px', margin: '12px 0', textShadow: 'none' }}>
-              <h3 style={{ color: '#F0B90B', textAlign: 'center', fontWeight: 'bold', fontSize: '18px', margin: '0 0 4px 0' }}>🟡 Pay with USDT BEP20 (BNB Smart Chain)</h3>
-              <p style={{ textAlign: 'center', color: '#888', fontSize: '12px', margin: '0 0 12px 0' }}>Global Payment - 190+ Countries - Instant BSC Verification</p>
-
-              <div style={{ background: 'white', padding: '12px', borderRadius: '12px', width: '200px', height: '200px', margin: '12px auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${RECEIVING_WALLET_ADDRESS}`} alt="USDT BEP20 BSC QR" style={{ width: '180px', height: '180px' }} />
-              </div>
-
-              <p style={{ textAlign: 'center', fontWeight: 'bold', color: 'white', margin: '6px 0', fontSize: '14px' }}>USDT BEP20 (BNB Smart Chain)</p>
-              <p style={{ textAlign: 'center', color: '#00FF88', fontSize: '11px', wordBreak: 'break-all', background: '#000', padding: '10px', borderRadius: '8px', margin: '10px 0', fontFamily: 'monospace' }}>
-                {RECEIVING_WALLET_ADDRESS}
-              </p>
-
-              <button onClick={copyUSDC} style={{ width: '100%', height: '50px', background: 'white', color: 'black', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', margin: '8px 0', border: 'none', fontSize: '14px' }}>
-                📋 Copy USDT BEP20 Address
-              </button>
-
-              <div style={{ background: '#2a0000', border: '1px solid #ff4444', borderRadius: '12px', padding: '12px', margin: '10px 0', textAlign: 'left' }}>
-                <p style={{ color: '#FFD700', fontSize: '12px', margin: 0, fontWeight: 'bold' }}>Amount: 2 Pi USDT (BEP20) = ₦74,985 (Min Deposit: 2 USDT)</p>
-                <p style={{ color: '#ccc', fontSize: '11px', margin: '4px 0' }}>Network: BNB Smart Chain (BEP20) / BSC</p>
-                <p style={{ color: '#ffaaaa', fontSize: '11px', fontWeight: 'bold', margin: '6px 0 0 0', lineHeight: '1.4' }}>
-                  ⚠️ Send ONLY via BNB Smart Chain (BEP20/BSC). Transfers sent via Ethereum (ERC20) or other networks will be permanently lost.
-                </p>
-              </div>
-
-              <input 
-                type="text" 
-                id="usdtTxHash" 
-                value={usdcTxHash}
-                onChange={(e) => setUsdcTxHash(e.target.value)}
-                placeholder="Paste Transaction Hash after payment" 
-                style={{ width: '100%', height: '50px', borderRadius: '12px', padding: '12px', margin: '8px 0', background: '#222', color: 'white', border: '1px solid #333', fontSize: '13px', outline: 'none' }} 
-              />
-
-              <button onClick={verifyUSDCPayment} style={{ width: '100%', height: '55px', background: '#F0B90B', color: 'black', borderRadius: '12px', fontWeight: '900', cursor: 'pointer', margin: '8px 0', border: 'none', fontSize: '15px' }}>
-                ✅ Verify USDT BEP20 Payment & Unlock Academy
-              </button>
-
-              <a href={`https://bscscan.io/address/${RECEIVING_WALLET_ADDRESS}`} target="_blank" rel="noreferrer" style={{ display: 'block', textAlign: 'center', color: '#F0B90B', fontSize: '12px', margin: '8px 0', textDecoration: 'underline' }}>
-                View on BscScan (BNB Smart Chain)
-              </a>
-
-              <p style={{ textAlign: 'center', color: '#888', fontSize: '10px', margin: '6px 0 0 0' }}>After sending USDT BEP20 2 Pi to address above, paste Tx Hash and click Verify - Academy unlocks automatically</p>
-            </div>
-            <button onClick={payWithPi} style={{ height: '52px', background: '#7A3ED6', color: '#ffffff', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', border: 'none', fontSize: '14px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}>
-              Pi Network Payment
-            </button>
-
-            <details style={{ marginTop: '8px', color: '#000000', textAlign: 'left', background: 'rgba(255, 255, 255, 0.4)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(0,0,0,0.15)' }}>
-              <summary style={{ fontWeight: '800', cursor: 'pointer', fontSize: '13px' }}>
-                Bank Transfer OPay 6113541882
-              </summary>
-              <div style={{ fontSize: '12px', marginTop: '8px', fontWeight: 'bold', lineHeight: '1.6' }}>
-                Account: <span style={{ fontFamily: 'monospace', fontSize: '14px', background: '#000', color: '#FFD700', padding: '2px 6px', borderRadius: '6px' }}>6113541882</span><br />
-                Account Name: <strong>GOYEDAGOSMESS ENTERPRISE</strong><br />
-                Bank: <strong>OPay</strong><br />
-                After transfer send payment proof to <a href="mailto:goyedagosmess@gmail.com" style={{ color: '#000000', textDecoration: 'underline', fontWeight: '900' }}>goyedagosmess@gmail.com</a>
-              </div>
-            </details>
-          </div>
         </div>
       )}
 
@@ -842,74 +604,35 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
           return (
             <div 
               key={mod.id} 
-              className="bg-[#111] rounded-2xl p-5 md:p-6 transition-all shadow-lg" 
-              style={{ border: isEnrolled ? "2px solid #FFD700" : "2px solid #333" }}
+              className="bg-[#111] rounded-2xl p-5 md:p-6 transition-all shadow-lg border border-zinc-800"
             >
               <div className="flex justify-between items-start mb-3">
                 <div className="flex items-center gap-2">
-                  <span className={`text-xs font-black px-2.5 py-1 rounded-lg ${!isEnrolled ? 'bg-[#222] text-gray-500' : isCompleted ? 'bg-[#10B981]/20 text-[#10B981]' : 'bg-[#FFD700]/20 text-[#FFD700]'}`}>
-                    MODULE {mod.id} of 8
+                  <span className="text-xs font-black px-2.5 py-1 rounded-lg bg-black text-[#FFD700] border border-[#FFD700]">
+                    {!isEnrolled ? '🔒 LOCKED ACCESS' : isCompleted ? '✅ COMPLETED' : 'MODULE ' + mod.id}
                   </span>
-                  <span className="text-[11px] text-gray-400 font-bold hidden sm:inline-block">• {mod.duration}</span>
                 </div>
-
-                <button onClick={() => isEnrolled ? toggleModule(mod.id) : handleBuyUnlockNow()} className="transition transform active:scale-90">
-                  {!isEnrolled ? (
-                    <Lock className="text-gray-500 hover:text-[#FFD700]" size={22} />
-                  ) : isCompleted ? (
-                    <CheckCircle className="text-[#10B981]" size={24} />
-                  ) : null}
-                </button>
               </div>
 
-              <h4 className="font-extrabold text-lg md:text-xl mb-2 text-white flex items-center gap-2">
+              <h4 className="font-extrabold text-lg md:text-xl mb-4 text-white">
                 {mod.title} 
-                {!isEnrolled && <span className="text-red-400 text-xs font-bold bg-red-950/60 px-2 py-0.5 rounded border border-red-800/40 flex items-center gap-1"><Lock size={12}/> Locked</span>}
               </h4>
-              
-              <p className="text-gray-400 text-xs md:text-sm mb-4 leading-relaxed">{mod.desc}</p>
-              
-              <div className="bg-black/50 border border-white/5 rounded-xl p-3 mb-5 flex flex-wrap items-center justify-between gap-2 text-xs">
-                <span className="text-[#FFD700] font-bold flex items-center gap-1.5">
-                  <Award size={14} /> {mod.badge}
-                </span>
-                <span className="text-gray-400 font-medium">
-                  {mod.globalAppeal}
-                </span>
-              </div>
 
               <div className="flex flex-col sm:flex-row gap-2">
                 {!isEnrolled ? (
                   <button 
-                    onClick={() => setActiveModule(mod)}
-                    className="w-full py-3.5 bg-black/80 hover:bg-black text-[#FFD700] font-bold text-sm rounded-xl border border-[#FFD700]/50 flex items-center justify-center gap-2 transition cursor-pointer opacity-80 hover:opacity-100"
+                    onClick={handleBuyUnlockNow}
+                    className="w-full py-3.5 bg-[#FFD700] hover:bg-yellow-400 text-black font-black text-xs uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-2"
                   >
-                    <Lock size={16} /> 🔒 LOCK ACADEMY - 2 Pi
+                    🔒 LOCK - 2 Pi
                   </button>
                 ) : (
-                  <>
-                    <button 
-                      onClick={() => setActiveModule(mod)} 
-                      className={`flex-1 py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition cursor-pointer z-10 ${
-                        isCompleted 
-                          ? 'bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/40 hover:bg-[#10B981]/30' 
-                          : 'bg-[#222] hover:bg-[#333] text-gray-300 font-bold border border-[#444]'
-                      }`}
-                    >
-                      {isCompleted ? (
-                        <><CheckCircle size={18} /> COMPLETED • Review Module</>
-                      ) : (
-                        <><Play size={18} fill="currentColor" /> Start Module →</>
-                      )}
-                    </button>
-
-                    <button 
-                      onClick={() => toggleModule(mod.id)}
-                      className="px-4 py-3 bg-[#222] hover:bg-[#333] text-gray-300 font-bold text-xs rounded-xl border border-[#444] transition"
-                    >
-                      {isCompleted ? 'Mark Incomplete' : 'Mark Complete'}
-                    </button>
-                  </>
+                  <button 
+                    onClick={() => setActiveModule(mod)} 
+                    className="w-full py-3.5 bg-[#FFD700] hover:bg-yellow-400 text-black font-black text-xs uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    ✅ ACCESS NOW / DOWNLOAD
+                  </button>
                 )}
               </div>
             </div>
@@ -1014,9 +737,9 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
                     setActiveModule(null);
                     handleBuyUnlockNow();
                   }}
-                  style={{ background: '#FACC15', color: '#000', padding: '16px 24px', fontWeight: '900', borderRadius: '14px', width: '100%', cursor: 'pointer', fontSize: '13px', border: 'none', boxShadow: '0 4px 15px rgba(250,204,21,0.4)' }}
+                  style={{ background: '#FFD700', color: '#000', padding: '16px 24px', fontWeight: '900', borderRadius: '14px', width: '100%', cursor: 'pointer', fontSize: '13px', border: 'none' }}
                 >
-                  LOCK NOW - 2 Pi - Pi Network
+                  🔒 LOCK - 2 Pi
                 </button>
               </div>
             ) : (
@@ -1161,15 +884,6 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
         />
       )}
 
-      {showPaymentModal && (
-        <div className="fixed inset-0 bg-black/85 z-[999999] flex items-center justify-center p-4 overflow-y-auto">
-          <PaymentModal 
-            priceUSD={49.99} 
-            priceNGN={74985} 
-            onClose={() => setShowPaymentModal(false)} 
-          />
-        </div>
-      )}
     </div>
   );
 }

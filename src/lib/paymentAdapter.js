@@ -1,6 +1,5 @@
 /**
- * GOYE Global Worldwide - Official Payment Adapter
- * Supports Standard Web Browsers & Pi Browser SDK
+ * GOYE Global Worldwide - Official Pi Payment Adapter
  * Registered: Goyedagosmess Enterprise (RC BN: 3583778)
  */
 
@@ -8,34 +7,12 @@ export const isPiBrowser = typeof window !== 'undefined' && typeof navigator !==
   navigator.userAgent.includes('Pi Browser') || navigator.userAgent.includes('PiBrowser') || navigator.userAgent.includes('Pi/1')
 );
 
-export const BUSHA_USDT_BEP20_ADDRESS = (
-  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_BUSHA_USDT_BEP20_ADDRESS) ||
-  '0xdc7f804B36aB672Ec31642dF418F29e73281b040'
-);
-
-export const BUSHA_USDC_BASE_ADDRESS = (
-  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_BUSHA_USDC_BASE_ADDRESS) ||
-  '0xdc7f804B36aB672Ec31642dF418F29e73281b040'
-);
-
-export const OPAY_MERCHANT_DETAILS = {
-  bank: 'OPay (PayCom)',
-  accountNumber: '6113541882',
-  accountName: 'GOYEDAGOSMESS ENTERPRISE',
-  rc: 'BN: 3583778'
-};
-
-/**
- * Unlocks the purchased product locally and synchronizes with server / Supabase
- */
 export async function verifyPayment(product, refOrTx, method, email) {
   const prodId = product?.id || 'unknown';
   const prodSlug = product?.slug || prodId;
   const prodName = product?.name || 'Digital Product';
-  const price = product?.price || product?.priceUSD || 49.99;
   const userEmail = email || localStorage.getItem('user_email') || localStorage.getItem('customer_email') || 'customer@gasv.store';
 
-  // Set localStorage unlocks
   localStorage.setItem(`paid_${prodId}`, 'true');
   localStorage.setItem(`paid_${prodSlug}`, 'true');
   localStorage.setItem('orderStatus', 'PAID');
@@ -50,7 +27,6 @@ export async function verifyPayment(product, refOrTx, method, email) {
     }
   }
 
-  // Call /api/verify-payment on backend
   try {
     await fetch('/api/verify-payment', {
       method: 'POST',
@@ -58,220 +34,58 @@ export async function verifyPayment(product, refOrTx, method, email) {
       body: JSON.stringify({
         productId: prodId,
         productName: prodName,
-        amount: price,
+        paymentReference: refOrTx,
         email: userEmail,
-        method: method,
-        reference: refOrTx,
-        tx_id: refOrTx,
-        status: 'VERIFIED'
+        paymentGateway: 'Pi Network'
       })
     });
   } catch (err) {
-    console.warn('Backend payment record sync:', err);
+    console.warn('Backend sync failed, local unlock valid:', err);
   }
 
-  // Dispatch custom event for immediate UI unlock across components
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent('payment_success', { 
-      detail: { productId: prodId, product, method, refOrTx } 
-    }));
-  }
-
-  return { success: true, verified: true };
+  return true;
 }
 
-/**
- * Universal payment processing for Paystack, Flutterwave, OPay, USDT Busha, USDC Busha, and Pi
- */
-export async function processPayment(product, method, callbacks = {}) {
-  const userEmail = callbacks.email || localStorage.getItem('user_email') || localStorage.getItem('customer_email') || '';
-  const priceUSD = product?.price || product?.priceUSD || 49.99;
-  const priceNGN = product?.priceNGN || Math.round(priceUSD * 1500);
+export async function triggerPayment(product, _method, callbacks = {}) {
+  const win = window;
+  if (!win.Pi || !win.Pi.createPayment) {
+    alert("Open in Pi Browser to pay with Pi Network");
+    return;
+  }
 
-  switch (method) {
-    case 'paystack': {
-      const key = (
-        (typeof import.meta !== 'undefined' && import.meta.env?.VITE_PAYSTACK_PUBLIC_KEY) ||
-        (typeof process !== 'undefined' && process.env?.PAYSTACK_PUBLIC) ||
-        localStorage.getItem('PAYSTACK_PUBLIC_KEY') ||
-        'pk_live_9f7e06b21fa6dc4e3e94cc0'
-      );
-      
-      let email = userEmail;
-      if (!email || !email.includes('@')) {
-        email = (prompt('Enter your email for payment receipt & instant download:') || '').trim().toLowerCase();
-      }
-      if (!email || !email.includes('@')) {
-        alert('A valid email address is required for access delivery.');
-        return;
-      }
-      localStorage.setItem('user_email', email);
-
-      // Check if Paystack SDK is loaded
-      if (typeof window.PaystackPop !== 'undefined' && typeof window.PaystackPop.newTransaction === 'function') {
-        window.PaystackPop.newTransaction({
-          key,
-          email,
-          amount: Math.round(priceNGN * 100), // in kobo
-          currency: 'NGN',
-          onSuccess: async (transaction) => {
-            const ref = transaction.reference || transaction.trxref || `PAYSTACK-${Date.now()}`;
-            await verifyPayment(product, ref, 'paystack', email);
-            if (callbacks.onSuccess) callbacks.onSuccess(ref);
-            alert(`🎉 Payment Successful!\nReference: ${ref}\nAccess has been unlocked.`);
-            window.location.reload();
-          },
-          onCancel: () => {
-            if (callbacks.onCancel) callbacks.onCancel();
-          }
+  const piPrice = product?.piPrice || 2;
+  try {
+    await win.Pi.createPayment({
+      amount: piPrice,
+      memo: product.name,
+      metadata: { productId: product.id, piPrice }
+    }, {
+      onReadyForServerApproval: async (paymentId) => {
+        await fetch('/api/pi/approve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ paymentId, productId: product.id })
         });
-      } else if (typeof window.PaystackPop !== 'undefined' && typeof window.PaystackPop.setup === 'function') {
-        const handler = window.PaystackPop.setup({
-          key,
-          email,
-          amount: Math.round(priceNGN * 100),
-          currency: 'NGN',
-          callback: async (response) => {
-            const ref = response.reference || `PAYSTACK-${Date.now()}`;
-            await verifyPayment(product, ref, 'paystack', email);
-            if (callbacks.onSuccess) callbacks.onSuccess(ref);
-            alert(`🎉 Payment Successful!\nReference: ${ref}\nAccess has been unlocked.`);
-            window.location.reload();
-          },
-          onClose: () => {
-            if (callbacks.onCancel) callbacks.onCancel();
-          }
+      },
+      onReadyForServerCompletion: async (paymentId, txid) => {
+        await fetch('/api/pi/complete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ paymentId, txid, productId: product.id, amount: piPrice })
         });
-        handler.openIframe();
-      } else {
-        if (callbacks.onFallback) callbacks.onFallback('paystack');
+        await verifyPayment(product, txid, 'Pi Network');
+        if (callbacks.onSuccess) callbacks.onSuccess(txid);
+        alert("🎉 Payment Verified! Access Unlocked.");
+        window.location.reload();
+      },
+      onCancel: (paymentId) => {
+        if (callbacks.onCancel) callbacks.onCancel(paymentId);
+      },
+      onError: (err) => {
+        console.error('Pi error:', err);
       }
-      break;
-    }
-
-    case 'flutterwave': {
-      const pubKey = (
-        (typeof import.meta !== 'undefined' && import.meta.env?.VITE_FLUTTERWAVE_PUBLIC_KEY) ||
-        (typeof process !== 'undefined' && process.env?.FLUTTERWAVE_PUBLIC_KEY) ||
-        localStorage.getItem('FLUTTERWAVE_PUBLIC_KEY') ||
-        'FLWPUBK_LIVE-d102e35a12003c27e382b68ef83a31c6-X'
-      );
-
-      let email = userEmail;
-      if (!email || !email.includes('@')) {
-        email = (prompt('Enter your email for receipt & access:') || '').trim().toLowerCase();
-      }
-      if (!email || !email.includes('@')) {
-        alert('A valid email address is required.');
-        return;
-      }
-      localStorage.setItem('user_email', email);
-
-      if (typeof window.FlutterwaveCheckout === 'function') {
-        window.FlutterwaveCheckout({
-          public_key: pubKey,
-          tx_ref: `GOYE-FLW-${Date.now()}`,
-          amount: priceUSD,
-          currency: 'USD',
-          customer: { email },
-          callback: async (data) => {
-            const ref = data.transaction_id || data.tx_ref || `FLW-${Date.now()}`;
-            await verifyPayment(product, ref, 'flutterwave', email);
-            if (callbacks.onSuccess) callbacks.onSuccess(ref);
-            alert(`🎉 Payment Confirmed via Flutterwave!\nAccess Unlocked.`);
-            window.location.reload();
-          },
-          onclose: () => {
-            if (callbacks.onCancel) callbacks.onCancel();
-          }
-        });
-      } else {
-        if (callbacks.onFallback) callbacks.onFallback('flutterwave');
-      }
-      break;
-    }
-
-    case 'opay': {
-      if (callbacks.onOpenDetails) {
-        callbacks.onOpenDetails('opay');
-      } else if (callbacks.onFallback) {
-        callbacks.onFallback('opay');
-      }
-      break;
-    }
-
-    case 'usdt_busha': {
-      if (callbacks.onOpenDetails) {
-        callbacks.onOpenDetails('usdt_bep20');
-      } else if (callbacks.onFallback) {
-        callbacks.onFallback('usdt_bep20');
-      }
-      break;
-    }
-
-    case 'usdc_busha': {
-      if (callbacks.onOpenDetails) {
-        callbacks.onOpenDetails('usdc_base');
-      } else if (callbacks.onFallback) {
-        callbacks.onFallback('usdc_base');
-      }
-      break;
-    }
-
-    case 'pi': {
-      if (!isPiBrowser && (!window.Pi || !window.Pi.createPayment)) {
-        alert("Open in Pi Browser to pay with Pi\n\nOfficial Pi payment requires Pi Browser for cryptographically secure wallet authentication.");
-        return;
-      }
-      try {
-        const piAmount = Number((priceUSD / 0.38).toFixed(2)) || 131.55;
-        await window.Pi.createPayment({
-          amount: piAmount,
-          memo: product.name,
-          metadata: { productId: product.id }
-        }, {
-          onReadyForServerApproval: async (paymentId) => {
-            await fetch('/api/pi/approve', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ paymentId })
-            });
-          },
-          onReadyForServerCompletion: async (paymentId, txid) => {
-            await fetch('/api/pi/complete', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ paymentId, txid })
-            });
-            await verifyPayment(product, txid, 'pi', userEmail);
-            if (callbacks.onSuccess) callbacks.onSuccess(txid);
-            alert("🎉 Pi Payment Verified! Access Unlocked.");
-            window.location.reload();
-          },
-          onCancel: (paymentId) => {
-            console.log('Pi payment cancelled:', paymentId);
-          },
-          onError: (err) => {
-            console.error('Pi payment error:', err);
-            alert('Pi payment error: ' + (err?.message || err));
-          }
-        });
-      } catch (err) {
-        alert('Pi SDK Error: ' + err.message);
-      }
-      break;
-    }
-
-    default:
-      console.warn('Unknown payment method:', method);
+    });
+  } catch (err) {
+    alert('Pi SDK Error: ' + err.message);
   }
 }
-
-export default {
-  isPiBrowser,
-  processPayment,
-  verifyPayment,
-  BUSHA_USDT_BEP20_ADDRESS,
-  BUSHA_USDC_BASE_ADDRESS,
-  OPAY_MERCHANT_DETAILS
-};

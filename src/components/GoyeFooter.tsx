@@ -137,19 +137,16 @@ export const GoyeFooter: React.FC<GoyeFooterProps> = ({
             <h4 className="text-xs font-black uppercase tracking-wider text-white">Accepted Gateways</h4>
             
             <div className="flex flex-wrap gap-2">
-              <span className="bg-[#111] border border-gray-800 text-[10px] font-black text-gray-300 px-2.5 py-1 rounded">OPay</span>
-              <span className="bg-[#111] border border-gray-800 text-[10px] font-black text-gray-300 px-2.5 py-1 rounded">Paystack</span>
-              <span className="bg-[#111] border border-gray-800 text-[10px] font-black text-gray-300 px-2.5 py-1 rounded">Flutterwave</span>
-              <span className="bg-[#111] border border-gray-800 text-[10px] font-black text-gray-300 px-2.5 py-1 rounded">PayPal</span>
-              <span className="bg-[#111] border border-[#FFD700]/30 text-[10px] font-black text-[#FFD700] px-2.5 py-1 rounded">Pi Network</span>
-              <span className="bg-[#111] border border-gray-800 text-[10px] font-black text-[#00FF88] px-2.5 py-1 rounded">USDT / USDC</span>
+              <span className="bg-[#111] border border-[#FFD700] text-[10px] font-black text-[#FFD700] px-2.5 py-1 rounded">Pi Network Direct</span>
+              <span className="bg-[#111] border border-[#FFD700]/40 text-[10px] font-black text-[#FFD700] px-2.5 py-1 rounded">Pi Browser App</span>
+              <span className="bg-[#111] border border-gray-800 text-[10px] font-black text-gray-300 px-2.5 py-1 rounded">Web3 Blockchain</span>
             </div>
 
             {/* Support Box */}
             <div className="bg-gradient-to-br from-[#111] to-[#1a1400] border border-[#FFD700]/40 p-3.5 rounded-2xl flex flex-col items-center justify-center text-center space-y-2">
               <h4 className="text-[10px] font-black uppercase text-[#FFD700] flex items-center gap-1">
                 <QrCode size={12} />
-                <span>Verified OPay & WhatsApp Support</span>
+                <span>Verified Pi & WhatsApp Support</span>
               </h4>
               <p className="text-[10px] text-gray-300 font-mono">
                 +2348033584736

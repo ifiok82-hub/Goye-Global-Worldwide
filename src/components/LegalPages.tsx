@@ -54,7 +54,7 @@ export const TermsPage: React.FC<LegalPageProps> = ({ onBack, setTab }) => {
               <span className="text-[#FFD700]">3.</span> Payments & Billing
             </h2>
             <p className="text-gray-300 text-xs sm:text-sm">
-              Via OPay secure gateway. Prices in NGN.
+              Via Pi Network secure blockchain protocol. Prices in Pi.
             </p>
           </div>
 
@@ -143,7 +143,7 @@ export const PrivacyPage: React.FC<LegalPageProps> = ({ onBack, setTab }) => {
               <span className="text-[#FFD700]">3.</span> Payment Security
             </h2>
             <p className="text-gray-300 text-xs sm:text-sm">
-              Processed by OPay. We do not store card PIN.
+              Processed via Pi Network blockchain SDK. We never store private keys.
             </p>
           </div>
 
@@ -152,7 +152,7 @@ export const PrivacyPage: React.FC<LegalPageProps> = ({ onBack, setTab }) => {
               <span className="text-[#FFD700]">4.</span> Data Sharing & Confidentiality
             </h2>
             <p className="text-gray-300 text-xs sm:text-sm">
-              Only OPay for payment processing. We never sell or trade customer data.
+              Only Pi Network blockchain for decentralized payment verification. We never sell or trade customer data.
             </p>
           </div>
 
@@ -242,7 +242,7 @@ export const RefundPage: React.FC<LegalPageProps> = ({ onBack, setTab }) => {
               <span className="text-[#FFD700]">4.</span> Refund Payout Method
             </h2>
             <p className="text-gray-300 text-xs sm:text-sm">
-              Refunds if approved paid to original method via OPay in 5-7 days. Gateway charges non-refundable.
+              Refunds if approved paid to original Pi wallet address within 3-5 business days.
             </p>
           </div>
 

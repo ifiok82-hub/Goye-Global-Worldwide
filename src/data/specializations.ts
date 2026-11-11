@@ -8,12 +8,11 @@ export interface Specialization {
   imageUrl: string;
   imageAlt: string;
   level: string;
-  rating: number;
-  ratingCount: number;
-  badge: string;
+  rating?: number;
+  ratingCount?: number;
+  badge?: string;
   turnaround: string;
-  priceNGN: number;
-  priceUSD: number;
+  piPrice: number;
   deliverables: string[];
   fullOverview: string;
   whoIsItFor: string;
@@ -34,8 +33,7 @@ export const SPECIALIZATIONS: Specialization[] = [
     ratingCount: 1840,
     badge: 'TOP RATED COURSE',
     turnaround: 'Self-paced modules + Weekly live mentorship',
-    priceNGN: 40000,
-    priceUSD: 28,
+    piPrice: 1,
     deliverables: [
       'Figma Component Architecture & Design System Mastery Lessons',
       'Modern Web Stack Tutorials (HTML5, Tailwind CSS, React, Next.js)',
@@ -60,8 +58,7 @@ export const SPECIALIZATIONS: Specialization[] = [
     ratingCount: 3290,
     badge: 'INSTANT FULFILLMENT',
     turnaround: 'Instant / 5-15 minutes digital delivery via WhatsApp',
-    priceNGN: 5000,
-    priceUSD: 4,
+    piPrice: 0.5,
     deliverables: [
       'Electronic E-PIN Vouchers sent via WhatsApp (+2348033584736) & Email',
       'Automated Virtual Top-Up & Data Bundle Confirmation Slip',
@@ -86,8 +83,7 @@ export const SPECIALIZATIONS: Specialization[] = [
     ratingCount: 940,
     badge: 'ISO 15489 COMPLIANT',
     turnaround: '24-48 hours soft copy digital delivery',
-    priceNGN: 15000,
-    priceUSD: 10,
+    piPrice: 0.5,
     deliverables: [
       'OCR-Searchable High-Compression PDF Archives',
       'Encrypted Cloud Folder Link (Google Drive / Secure Zip Download)',
@@ -112,8 +108,7 @@ export const SPECIALIZATIONS: Specialization[] = [
     ratingCount: 2410,
     badge: 'GLOBAL ACCREDITATION',
     turnaround: 'Self-paced curriculum + Instant certificate upon assessment pass',
-    priceNGN: 45000,
-    priceUSD: 30,
+    piPrice: 2,
     deliverables: [
       'All 8 Master Modules in Applied AI, Web3 & Digital Systems',
       'Verifiable Digital Certificate with Unique Credential ID & QR Code',
@@ -138,8 +133,7 @@ export const SPECIALIZATIONS: Specialization[] = [
     ratingCount: 1670,
     badge: 'BINANCE ACADEMY ALIGNED',
     turnaround: 'Instant digital curriculum / 1-on-1 scheduled sessions',
-    priceNGN: 30000,
-    priceUSD: 20,
+    piPrice: 1,
     deliverables: [
       'DeFi Yield Farming & Liquidity Provision Playbook (Uniswap, PancakeSwap)',
       'Impermanent Loss Mitigation & APY Optimization Framework',
@@ -164,8 +158,7 @@ export const SPECIALIZATIONS: Specialization[] = [
     ratingCount: 1350,
     badge: 'SECURITY ESSENTIAL',
     turnaround: 'Instant digital curriculum / Live security audit session',
-    priceNGN: 25000,
-    priceUSD: 18,
+    piPrice: 1,
     deliverables: [
       'Hardware Wallet Setup & Air-Gapped Key Storage Masterclass',
       'Multisig Class III Vault Architecture Guide (Safe / Gnosis)',
@@ -190,8 +183,7 @@ export const SPECIALIZATIONS: Specialization[] = [
     ratingCount: 1120,
     badge: 'PREMIUM ASSET PACK',
     turnaround: '24-48 hours soft copy digital delivery',
-    priceNGN: 15000,
-    priceUSD: 10,
+    piPrice: 0.5,
     deliverables: [
       'Vector E-Passport Layout Design (Ultra-High Resolution PDF/PNG)',
       'Digital Corporate Brand Identity Kit (Palette, Typography, Logo Specs)',
@@ -216,8 +208,7 @@ export const SPECIALIZATIONS: Specialization[] = [
     ratingCount: 2150,
     badge: 'INDUSTRY STANDARD',
     turnaround: '48-72 hours soft copy code delivery & testnet deployment',
-    priceNGN: 50000,
-    priceUSD: 35,
+    piPrice: 1,
     deliverables: [
       'Production-Ready Solidity Code (.sol files & GitHub repository)',
       'Hardhat / Foundry Unit Test Suites (100% coverage)',
@@ -242,8 +233,7 @@ export const SPECIALIZATIONS: Specialization[] = [
     ratingCount: 1540,
     badge: 'PROVEN ROI',
     turnaround: '48-72 hours strategy roadmap delivery',
-    priceNGN: 25000,
-    priceUSD: 18,
+    piPrice: 1,
     deliverables: [
       '30-Day Multi-Channel Growth & Content Blueprint (PDF)',
       'Crypto & Web3 Community Growth Strategy (Telegram, X, Discord)',
@@ -268,8 +258,7 @@ export const SPECIALIZATIONS: Specialization[] = [
     ratingCount: 2890,
     badge: 'CORE CURRICULUM',
     turnaround: 'Instant digital curriculum / Weekly Live Cohort',
-    priceNGN: 35000,
-    priceUSD: 25,
+    piPrice: 1,
     deliverables: [
       'Comprehensive Web3 Video Curriculum & PDF Modules',
       'Smart Contract & DApp Interaction Lab Files',
@@ -294,8 +283,7 @@ export const SPECIALIZATIONS: Specialization[] = [
     ratingCount: 3120,
     badge: 'BESTSELLER',
     turnaround: 'Instant access / 24-48 hours bespoke automation setup',
-    priceNGN: 30000,
-    priceUSD: 20,
+    piPrice: 1,
     deliverables: [
       '1,000+ Master Copy-Paste Prompt Engineering Library',
       'AI Workflow Automation Video Tutorials & Step-by-Step SOPs',
@@ -320,8 +308,7 @@ export const SPECIALIZATIONS: Specialization[] = [
     ratingCount: 1470,
     badge: 'CREATIVE SUITE',
     turnaround: '24-48 hours soft copy digital delivery',
-    priceNGN: 15000,
-    priceUSD: 10,
+    piPrice: 0.5,
     deliverables: [
       'High-Resolution Print-Ready Soft Copy (PDF, JPG, PNG)',
       'Vector Master Files (SVG / Editable Source File)',
@@ -346,8 +333,7 @@ export const SPECIALIZATIONS: Specialization[] = [
     ratingCount: 1980,
     badge: 'SECURITY VERIFIED',
     turnaround: '24-48 hours soft copy digital delivery',
-    priceNGN: 10000,
-    priceUSD: 7,
+    piPrice: 0.5,
     deliverables: [
       'Soft Copy Front & Back ID Card Design (Ultra HD PDF & PNG)',
       'Scannable Digital QR Code Embedding for Staff/Member Verification',

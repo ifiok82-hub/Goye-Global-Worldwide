@@ -41,7 +41,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) =
 
   const productSlug = product.slug || product.id;
   const imgSrc = product.preview_image || (productSlug ? `/images/old/${productSlug}.jpg` : product.image);
-  const finalPiPrice = toPi(product.priceNGN, product.priceUSD || product.price, product.piPrice);
+  const finalPiPrice = product.piPrice !== undefined ? product.piPrice : toPi(product.priceNGN, product.priceUSD || product.price, 2);
 
   const handleAction = async () => {
     if (!isLocked) {
@@ -115,7 +115,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) =
 
   return (
     <div className="bg-[#0e0e0e] rounded-2xl p-5 flex flex-col justify-between border border-zinc-800 shadow-xl">
-      {/* 1. Image */}
+      {/* 1. Image with Badge */}
       <div className="relative w-full aspect-[4/3] rounded-[16px] overflow-hidden shadow-lg border border-zinc-800 bg-zinc-950 mb-4 flex items-center justify-center">
         {imgSrc && !imageFailed ? (
           <img
@@ -131,6 +131,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) =
             {product.name || product.title}
           </div>
         )}
+
+        {/* Badge: 🔒 LOCKED ACCESS (black badge, yellow border) */}
+        <div className="absolute top-2.5 left-2.5 bg-black text-[#FFD700] border border-[#FFD700] text-[10px] font-black uppercase px-2.5 py-1 rounded-md tracking-wider z-10 shadow-md">
+          {isLocked ? '🔒 LOCKED ACCESS' : '✅ ACCESS GRANTED'}
+        </div>
       </div>
 
       {/* 2. Title */}
@@ -143,7 +148,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) =
         onClick={handleAction}
         className="w-full font-black uppercase text-xs tracking-widest py-3.5 rounded-xl transition duration-200 cursor-pointer active:scale-95 shadow-md flex items-center justify-center bg-[#FFD700] hover:bg-yellow-400 text-black shadow-yellow-500/20"
       >
-        <span>🔒 LOCK - {finalPiPrice} Pi</span>
+        <span>{isLocked ? `🔒 LOCK - ${finalPiPrice} Pi` : '✅ ACCESS NOW / DOWNLOAD'}</span>
       </button>
     </div>
   );

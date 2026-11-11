@@ -1,9 +1,6 @@
 export const PI_GCV_USD = 314159;
-export const ACADEMY_PRICE_USD = 2; // Pi-only price now
-
-// ... inside ALL_PRODUCTS:
-// Search and replace all  piPrice: 2, priceNGN: 74985 with 2, 2, 0 respectively for academy items.
-
+export const ACADEMY_PRICE_PI = 2;
+export const ACADEMY_PRICE_USD = 2;
 
 export const ALL_PRODUCTS = [
   // 0. Pi Testnet Payment Test (Developer Portal Verification Only - Hidden from customer shop)
@@ -18,9 +15,7 @@ export const ALL_PRODUCTS = [
     icon: '🟣',
     data: '0.01 Pi Testnet',
     days: 'Instant',
-    
-    piPrice: 2,
-    
+    piPrice: 0.01,
     category: 'developer',
     badge: 'PI TESTNET 10/10',
     bestseller: false,
@@ -43,14 +38,12 @@ export const ALL_PRODUCTS = [
     slug: 'esim-global-1gb',
     preview_image: '/images/old/esim-global-1gb.jpg',
     image: '/images/old/esim-global-1gb.jpg',
-    name: 'AI Starter & Global Travel Pass (0.000003 Pi)',
+    name: 'AI Starter & Global Travel Pass',
     title: 'AI Starter & Global Travel Pass',
     icon: '⚡',
     data: '1GB Trial Pass',
     days: 'Instant',
-    
-    piPrice: 2,
-    
+    piPrice: 1,
     category: 'starter',
     badge: 'MICRO-OFFER (Pi)',
     bestseller: true,
@@ -66,7 +59,7 @@ export const ALL_PRODUCTS = [
       '1-Day VIP Access Pass to Sirwise AI Academy'
     ]
   },
-  // DIGITAL DOCUMENTATION & ARCHIVING (15k NGN)
+  // DIGITAL DOCUMENTATION & ARCHIVING
   {
     id: 'digital-documentation-archiving',
     is_locked: true,
@@ -76,9 +69,7 @@ export const ALL_PRODUCTS = [
     name: 'Digital Documentation & Archiving (ISO 15489)',
     title: 'Digital Documentation & Archiving (ISO 15489)',
     icon: '📑',
-    
-    piPrice: 2,
-    
+    piPrice: 0.5,
     category: 'toolkit',
     badge: 'ISO 15489 COMPLIANT',
     bestseller: true,
@@ -106,9 +97,7 @@ export const ALL_PRODUCTS = [
     icon: '🇦🇪',
     data: '1GB',
     days: '3 Days',
-    
-    piPrice: 2,
-    
+    piPrice: 0.5,
     category: 'dubai',
     badge: 'DUBAI (INSTANT)',
     bestseller: true,
@@ -133,9 +122,7 @@ export const ALL_PRODUCTS = [
     icon: '🇦🇪',
     data: 'Unlimited Data',
     days: '10 Days',
-    
-    piPrice: 2,
-    
+    piPrice: 1.5,
     category: 'dubai',
     badge: 'DUBAI UNLIMITED',
     bestseller: true,
@@ -160,9 +147,7 @@ export const ALL_PRODUCTS = [
     icon: '🌐',
     data: '1GB',
     days: '7 Days',
-    
-    piPrice: 2,
-    
+    piPrice: 0.5,
     category: 'esim',
     badge: 'HOT',
     bestseller: true,
@@ -187,9 +172,7 @@ export const ALL_PRODUCTS = [
     icon: '🌐',
     data: '5GB',
     days: '30 Days',
-    
-    piPrice: 2,
-    
+    piPrice: 1,
     category: 'esim',
     badge: 'GLOBAL 5GB',
     bestseller: true,
@@ -214,9 +197,7 @@ export const ALL_PRODUCTS = [
     icon: '🇺🇸',
     data: '5GB',
     days: '15 Days',
-    
-    piPrice: 2,
-    
+    piPrice: 1,
     category: 'esim',
     badge: 'USA 5G',
     bestseller: false,
@@ -241,9 +222,7 @@ export const ALL_PRODUCTS = [
     icon: '🇬🇧',
     data: '5GB',
     days: '15 Days',
-    
-    piPrice: 2,
-    
+    piPrice: 1,
     category: 'esim',
     badge: 'UK 5G',
     bestseller: false,
@@ -268,9 +247,7 @@ export const ALL_PRODUCTS = [
     icon: '🇨🇦',
     data: '5GB',
     days: '15 Days',
-    
-    piPrice: 2,
-    
+    piPrice: 1,
     category: 'esim',
     badge: 'CANADA',
     bestseller: false,
@@ -295,9 +272,7 @@ export const ALL_PRODUCTS = [
     icon: '🇪🇺',
     data: '10GB',
     days: '30 Days',
-    
-    piPrice: 2,
-    
+    piPrice: 1.5,
     category: 'esim',
     badge: 'EUROPE 30',
     bestseller: true,
@@ -306,7 +281,7 @@ export const ALL_PRODUCTS = [
     isDeleted: false,
     downloadUrl: 'https://wa.me/2348033584736?text=Hi%20GOYE%20Store%2C%20I%20purchased%20Europe%20eSIM',
     filePath: 'https://wa.me/2348033584736?text=Hi%20GOYE%20Store%2C%20I%20purchased%20Europe%20eSIM',
-    description: 'Seamless roaming across 30 European countries (UK, France, Germany, Italy, Spain, etc.) with 10GB data.',
+    description: 'Seamless roaming across 30 European countries with 10GB data.',
     features: ['30 European Countries', '10GB High-Speed 5G', '30 Days Validity']
   },
 
@@ -322,9 +297,7 @@ export const ALL_PRODUCTS = [
     icon: '🌏',
     data: '5GB',
     days: '15 Days',
-    
-    piPrice: 2,
-    
+    piPrice: 1,
     category: 'esim',
     badge: 'ASIA PACIFIC',
     bestseller: false,
@@ -349,9 +322,7 @@ export const ALL_PRODUCTS = [
     icon: '🇫🇷',
     data: '10GB',
     days: '30 Days',
-    
-    piPrice: 2,
-    
+    piPrice: 1,
     category: 'esim',
     badge: 'FRANCE 10GB',
     bestseller: false,
@@ -376,9 +347,7 @@ export const ALL_PRODUCTS = [
     icon: '🇩🇪',
     data: '10GB',
     days: '30 Days',
-    
-    piPrice: 2,
-    
+    piPrice: 1,
     category: 'esim',
     badge: 'GERMANY 10GB',
     bestseller: false,
@@ -403,9 +372,7 @@ export const ALL_PRODUCTS = [
     icon: '🇯🇵',
     data: '1GB',
     days: '7 Days',
-    
-    piPrice: 2,
-    
+    piPrice: 0.5,
     category: 'esim',
     badge: 'JAPAN',
     bestseller: false,
@@ -430,9 +397,7 @@ export const ALL_PRODUCTS = [
     icon: '🇹🇷',
     data: '1GB',
     days: '7 Days',
-    
-    piPrice: 2,
-    
+    piPrice: 0.5,
     category: 'esim',
     badge: 'TURKEY',
     bestseller: false,
@@ -457,9 +422,7 @@ export const ALL_PRODUCTS = [
     icon: '🇸🇦',
     data: '3GB',
     days: '14 Days',
-    
-    piPrice: 2,
-    
+    piPrice: 1,
     category: 'esim',
     badge: 'SAUDI 3GB',
     bestseller: false,
@@ -484,9 +447,7 @@ export const ALL_PRODUCTS = [
     icon: '🇿🇦',
     data: '5GB',
     days: '15 Days',
-    
-    piPrice: 2,
-    
+    piPrice: 1,
     category: 'esim',
     badge: 'SOUTH AFRICA',
     bestseller: false,
@@ -510,11 +471,9 @@ export const ALL_PRODUCTS = [
     title: 'The Ultimate Web3 & AI Starter Toolkit',
     icon: '🚀',
     description: '25 High-Yield Business AI Prompts, Web3 Wallet Security & Setup Cheatsheet, and VIP Access Pass to Academy Community Group.',
-    
-    piPrice: 2,
-    
+    piPrice: 1,
     category: 'prompts',
-    badge: 'STARTER (₦2,500)',
+    badge: 'STARTER',
     bestseller: true,
     status: 'ACTIVE',
     visible: true,
@@ -535,9 +494,7 @@ export const ALL_PRODUCTS = [
     title: '1000 Viral AI Prompts Make 1,000 Pi/month',
     icon: '🤖',
     description: '1000 Master AI Prompts for Copywriting, Business Automation, Social Media Growth & Sales.',
-    
-    piPrice: 2,
-    
+    piPrice: 1,
     category: 'prompts',
     badge: 'BESTSELLER',
     bestseller: true,
@@ -560,9 +517,7 @@ export const ALL_PRODUCTS = [
     title: '⚡ ChatGPT Business Pack & 5,000+ Master Prompts',
     icon: '⚡',
     description: 'Ultimate ChatGPT Master Prompt Library & Business Automation Suite. Copywriting, Cold Email & Funnel Generators.',
-    
-    piPrice: 2,
-    
+    piPrice: 1,
     category: 'prompts',
     badge: 'GPT MASTER',
     bestseller: true,
@@ -585,9 +540,7 @@ export const ALL_PRODUCTS = [
     title: '5-Minute AI Prompt Blueprint (Master SER Edition)',
     icon: '📄',
     description: 'Step-by-step master guide to engineering precision prompts for high-income digital consulting.',
-    
-    piPrice: 2,
-    
+    piPrice: 1,
     category: 'prompts',
     badge: 'SER BLUEPRINT',
     bestseller: false,
@@ -609,10 +562,8 @@ export const ALL_PRODUCTS = [
     name: '100 Professional Canva Church & Event Flyer Templates',
     title: '100 Professional Canva Church & Event Flyer Templates',
     icon: '🎨',
-    description: 'Stop paying graphics designers! 100 Canva editable templates for Sunday service, crusade & youth programs.',
-    
-    piPrice: 2,
-    
+    description: '100 Canva editable templates for Sunday service, events & youth programs.',
+    piPrice: 1,
     category: 'prompts',
     badge: 'CANVA PACK',
     bestseller: true,
@@ -635,9 +586,7 @@ export const ALL_PRODUCTS = [
     title: '500 Luxury Brand & Business Logo Templates',
     icon: '💎',
     description: '500 ready luxury logos for Fashion, Barbershop, POS, Restaurant & Beauty. Edit name in Canva in 2 mins.',
-    
-    piPrice: 2,
-    
+    piPrice: 1,
     category: 'prompts',
     badge: '500 LOGOS',
     bestseller: false,
@@ -660,9 +609,7 @@ export const ALL_PRODUCTS = [
     title: '🔥 GOYE BEST SELLER - DIGITAL NOMAD PRO KIT',
     icon: '💼',
     description: 'Ultimate All-In-One Digital Nomad Pro Kit! Remote Work Tools, Crypto Wallets, eSIM Setup & Global Taxes.',
-    
-    piPrice: 2,
-    
+    piPrice: 1.5,
     category: 'toolkit',
     badge: 'NOMAD PRO',
     bestseller: true,
@@ -685,9 +632,7 @@ export const ALL_PRODUCTS = [
     title: 'Canada LMIA Jobs Database 500 employers',
     icon: '🇨🇦',
     description: 'Direct 500 Verified Canadian Employers offering LMIA Work Permit Sponsorship across all provinces.',
-    
     piPrice: 2,
-    
     category: 'contracts',
     badge: 'HOT',
     bestseller: false,
@@ -699,20 +644,18 @@ export const ALL_PRODUCTS = [
     features: ['500 Approved LMIA Employers', 'Work Permit Application Templates', 'Direct Hiring Portal Links']
   },
 
-  // 24. UK Care Worker Visa Blueprint 2026
+  // 24. UK Care Worker Relocation Blueprint 2026
   {
     id: 'uk-care-visa',
     is_locked: true,
     slug: 'uk-care-worker-visa-blueprint-2026',
     preview_image: '/images/old/uk-care-worker-visa-blueprint-2026.jpg',
     image: '/images/old/uk-care-worker-visa-blueprint-2026.jpg',
-    name: 'UK Care Worker Visa Blueprint 2026 + COS List',
-    title: 'UK Care Worker Visa Blueprint 2026 + COS List',
+    name: 'UK Care Worker Relocation Blueprint 2026 + COS List',
+    title: 'UK Care Worker Relocation Blueprint 2026 + COS List',
     icon: '🇬🇧',
-    description: 'Complete 2026 UK Care Worker Sponsorship List, Certificate of Sponsorship (COS) Guide & Visa Blueprint.',
-    
-    piPrice: 2,
-    
+    description: 'Complete 2026 UK Care Worker Sponsorship List, Certificate of Sponsorship (COS) Guide & Sponsorship Blueprint.',
+    piPrice: 3,
     category: 'contracts',
     badge: 'BESTSELLER',
     bestseller: true,
@@ -721,7 +664,7 @@ export const ALL_PRODUCTS = [
     isDeleted: false,
     downloadUrl: 'https://www.gasv.store/support',
     filePath: 'https://www.gasv.store/support',
-    features: ['2026 Verified COS Sponsor Directory', 'UK Visa Step-by-Step Guide', 'Interview Preparation Kit']
+    features: ['2026 Verified COS Sponsor Directory', 'UK Relocation Step-by-Step Guide', 'Interview Preparation Kit']
   },
 
   // 25. Japa Relocation Package
@@ -731,13 +674,11 @@ export const ALL_PRODUCTS = [
     slug: 'uk-care-worker-visa-blueprint-2026',
     preview_image: '/images/old/uk-care-worker-visa-blueprint-2026.jpg',
     image: '/images/old/uk-care-worker-visa-blueprint-2026.jpg',
-    name: '✈️ Japa Relocation Package - Full Visa Guides & Docs',
-    title: '✈️ Japa Relocation Package - Full Visa Guides & Docs',
+    name: '✈️ Japa Relocation Package - Full Relocation Guides & Docs',
+    title: '✈️ Japa Relocation Package - Full Relocation Guides & Docs',
     icon: '✈️',
     description: 'Complete UK, Canada, USA, Europe & Australia Japa Relocation Masterclass Package & Document Checklists.',
-    
-    piPrice: 2,
-    
+    piPrice: 3,
     category: 'contracts',
     badge: 'JAPA PACK',
     bestseller: true,
@@ -746,7 +687,7 @@ export const ALL_PRODUCTS = [
     isDeleted: false,
     downloadUrl: 'https://www.gasv.store/support',
     filePath: 'https://www.gasv.store/support',
-    features: ['5 Country Visa Checklists', 'SOP & Cover Letter Samples', 'Proof of Funds Calculator']
+    features: ['5 Country Relocation Checklists', 'SOP & Cover Letter Samples', 'Proof of Funds Calculator']
   },
 
   // 26. UK CV Pack Pro
@@ -759,10 +700,8 @@ export const ALL_PRODUCTS = [
     name: 'UK CV Pack Pro - ATS Resume & Cover Letter Blueprint',
     title: 'UK CV Pack Pro - ATS Resume & Cover Letter Blueprint',
     icon: '📄',
-    description: 'Complete UK Standard ATS Resume & Cover Letter Pack designed by professionals to pass visa scanner systems.',
-    
-    piPrice: 2,
-    
+    description: 'Complete UK Standard ATS Resume & Cover Letter Pack designed by professionals to pass automated scanner systems.',
+    piPrice: 1.5,
     category: 'contracts',
     badge: 'UK ATS CV',
     bestseller: false,
@@ -784,10 +723,8 @@ export const ALL_PRODUCTS = [
     name: 'USA & Canada Study SOP Samples (10 Winning SOPs)',
     title: 'USA & Canada Study SOP Samples (10 Winning SOPs)',
     icon: '🎓',
-    description: '10 real Statements of Purpose (SOP) that got student visas approved for MSc, BSc & Postgraduate diplomas.',
-    
-    piPrice: 2,
-    
+    description: '10 real Statements of Purpose (SOP) that got student permits approved for MSc, BSc & Postgraduate diplomas.',
+    piPrice: 1.5,
     category: 'contracts',
     badge: 'SOP SAMPLES',
     bestseller: false,
@@ -810,9 +747,7 @@ export const ALL_PRODUCTS = [
     title: 'Pi Network Crash Course',
     icon: 'π',
     description: 'Understanding Pi Network ecosystem, Pi Wallet & peer-to-peer commerce.',
-    
-    piPrice: 2,
-    
+    piPrice: 1.5,
     category: 'academy',
     badge: 'NEW',
     bestseller: true,
@@ -835,9 +770,7 @@ export const ALL_PRODUCTS = [
     title: 'Sirwise AI Web3 Academy 4-Week Full Masterclass Pass',
     icon: '🎓',
     description: 'Complete 4-Week Sirwise AI & Web3 Certification Masterclass. Includes Live Q&A, Discord Access & Verified Certificate.',
-    
     piPrice: 2,
-    
     category: 'academy',
     badge: 'ACADEMY PASS',
     bestseller: true,
@@ -860,9 +793,7 @@ export const ALL_PRODUCTS = [
     title: 'AI & Prompt Engineering Mastery (Module 1)',
     icon: '🧠',
     description: 'Master prompt design, LLM parameters, multi-shot prompting, and AI workflow automation.',
-    
-    piPrice: 2,
-    
+    piPrice: 1,
     category: 'academy',
     badge: 'MODULE 1',
     bestseller: false,
@@ -885,9 +816,7 @@ export const ALL_PRODUCTS = [
     title: 'Generative AI for Business & Content Creation (Module 2)',
     icon: '📊',
     description: 'Build viral social media content, automated blog posts, AI avatars and video scripts in minutes.',
-    
-    piPrice: 2,
-    
+    piPrice: 1,
     category: 'academy',
     badge: 'MODULE 2',
     bestseller: false,
@@ -906,9 +835,7 @@ export const ALL_PRODUCTS = [
     title: 'Web3 Fundamentals & Blockchain Security (Module 4)',
     icon: '⛓️',
     description: 'Learn Web3 wallets, hardware security, smart contract auditing, and scam prevention strategies.',
-    
-    piPrice: 2,
-    
+    piPrice: 1,
     category: 'academy',
     badge: 'MODULE 4',
     bestseller: false,

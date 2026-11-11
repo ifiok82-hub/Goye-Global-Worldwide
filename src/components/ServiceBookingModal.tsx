@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { X, CheckCircle, Copy, MessageSquare, ShieldCheck, Clock, FileText, ArrowRight, Sparkles } from 'lucide-react';
 import { Specialization } from '../data/specializations';
+import { X, Clock, Sparkles, CheckCircle, ArrowRight, MessageSquare } from 'lucide-react';
+import { loginWithPi } from '../lib/piAuth';
 
 interface ServiceBookingModalProps {
   service: Specialization;
   onClose: () => void;
-  onToast: (msg: string, type?: string) => void;
+  onToast: (msg: string, type?: 'success' | 'error' | 'info') => void;
 }
 
 export const ServiceBookingModal: React.FC<ServiceBookingModalProps> = ({
@@ -13,41 +14,89 @@ export const ServiceBookingModal: React.FC<ServiceBookingModalProps> = ({
   onClose,
   onToast
 }) => {
+  const [step, setStep] = useState<'details' | 'payment' | 'confirmed'>('details');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [projectBrief, setProjectBrief] = useState('');
   const [paymentRef, setPaymentRef] = useState('');
-  const [step, setStep] = useState<'details' | 'payment' | 'confirmed'>('details');
-  const [copied, setCopied] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const opayAccount = '6113541882';
-  const opayName = 'GOYEDAGOSMESS ENTERPRISE';
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    onToast('Account number copied to clipboard!', 'success');
-    setTimeout(() => setCopied(false), 2500);
-  };
+  const finalPiPrice = service.piPrice || 2;
 
   const handleProceedToPayment = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullName || !email || !whatsapp) {
-      onToast('Please fill in your name, email, and WhatsApp number.', 'error');
+    if (!fullName.trim() || !email.trim() || !whatsapp.trim()) {
+      onToast('Please fill all required contact fields.', 'error');
       return;
     }
     setStep('payment');
   };
 
-  const handleConfirmBooking = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!paymentRef.trim()) {
-      onToast('Please enter your OPay transaction reference or sender name.', 'error');
+  const handlePiPay = async () => {
+    const auth = await loginWithPi();
+    if (!auth) {
+      onToast('Please login with Pi Browser to proceed.', 'error');
       return;
     }
+    setIsProcessing(true);
 
-    // Save locally
+    if (typeof (window as any).Pi && typeof (window as any).Pi.createPayment === 'function') {
+      try {
+        (window as any).Pi.createPayment({
+          amount: finalPiPrice,
+          memo: `Booking: ${service.title} (${finalPiPrice} Pi)`,
+          metadata: {
+            serviceId: service.id,
+            serviceTitle: service.title,
+            clientName: fullName,
+            clientEmail: email,
+            piPrice: finalPiPrice
+          }
+        }, {
+          onReadyForServerApproval: (paymentId: string) => {
+            fetch('/api/pi/approve', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ paymentId })
+            }).catch(() => {});
+          },
+          onReadyForServerCompletion: (paymentId: string, txid: string) => {
+            fetch('/api/pi/complete', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                paymentId,
+                txid,
+                productId: service.id,
+                amount: finalPiPrice
+              })
+            }).catch(() => {});
+
+            saveBooking(txid || paymentId);
+          },
+          onCancel: (paymentId: string) => {
+            setIsProcessing(false);
+            console.log('Pi payment cancelled:', paymentId);
+          },
+          onError: (err: any) => {
+            setIsProcessing(false);
+            console.error('Pi payment error:', err);
+            onToast('Payment error. Please try again in Pi Browser.', 'error');
+          }
+        });
+      } catch (err) {
+        setIsProcessing(false);
+        console.error('Pi createPayment exception:', err);
+      }
+    } else {
+      setIsProcessing(false);
+      onToast('Open in Pi Browser to pay with Pi Network', 'info');
+    }
+  };
+
+  const saveBooking = (ref: string) => {
+    setPaymentRef(ref);
     const orderData = {
       id: 'GD-' + Math.floor(100000 + Math.random() * 900000),
       serviceId: service.id,
@@ -56,36 +105,38 @@ export const ServiceBookingModal: React.FC<ServiceBookingModalProps> = ({
       clientEmail: email,
       clientWhatsapp: whatsapp,
       brief: projectBrief,
-      paymentRef: paymentRef,
-      amountNGN: service.priceNGN,
+      paymentRef: ref,
+      amountPi: finalPiPrice,
       date: new Date().toISOString(),
-      status: 'PENDING_VERIFICATION'
+      status: 'VERIFIED_PAID'
     };
 
     const existing = JSON.parse(localStorage.getItem('goye_service_orders') || '[]');
     existing.unshift(orderData);
     localStorage.setItem('goye_service_orders', JSON.stringify(existing));
+    localStorage.setItem(`paid_${service.id}`, 'true');
 
+    setIsProcessing(false);
     setStep('confirmed');
-    onToast('Booking submitted successfully! Proceeding to WhatsApp confirmation.', 'success');
+    onToast('Pi Payment verified! Booking confirmed.', 'success');
   };
 
   const getWhatsappLink = () => {
     const text = `Hello Goye Store Support! I booked:
 *${service.title}*
-Amount: ₦${service.priceNGN.toLocaleString('en-US')}
+Amount: ${finalPiPrice} Pi
 Client: ${fullName}
 Email: ${email}
 WhatsApp: ${whatsapp}
-OPay Payment Ref: ${paymentRef || 'Pending/Paid'}
+Pi TX / Ref: ${paymentRef || 'Verified Pi Payment'}
 Notes: ${projectBrief || 'None'}
-Please verify and commence digital service.`;
+Please commence digital specialization.`;
     return `https://wa.me/2348033584736?text=${encodeURIComponent(text)}`;
   };
 
   return (
     <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[99999] flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-[#0a0f1d] border border-[#0088FF]/40 rounded-3xl max-w-xl w-full p-6 sm:p-8 text-white relative shadow-2xl my-8">
+      <div className="bg-[#0a0f1d] border border-[#FFD700]/40 rounded-3xl max-w-xl w-full p-6 sm:p-8 text-white relative shadow-2xl my-8">
         
         {/* Close Button */}
         <button
@@ -106,7 +157,7 @@ Please verify and commence digital service.`;
                 className="w-full h-full object-cover"
               />
               <div className="absolute top-2.5 left-2.5 bg-black/80 backdrop-blur-md text-[#FFD700] border border-[#FFD700]/40 text-[9px] font-black uppercase px-2 py-0.5 rounded">
-                {service.badge || 'VERIFIED SPECIALIZATION'}
+                🔒 LOCKED ACCESS
               </div>
             </div>
           )}
@@ -123,8 +174,8 @@ Please verify and commence digital service.`;
               <Clock size={12} /> {service.turnaround}
             </span>
             <span>•</span>
-            <span className="text-emerald-400 font-bold">
-              ₦{service.priceNGN.toLocaleString('en-US')} NGN (~${service.priceUSD})
+            <span className="text-[#FFD700] font-black">
+              {finalPiPrice} Pi
             </span>
           </div>
         </div>
@@ -133,25 +184,23 @@ Please verify and commence digital service.`;
         {step === 'details' && (
           <form onSubmit={handleProceedToPayment} className="space-y-4">
             <div className="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-4 text-xs space-y-2 text-gray-300">
-              <p className="font-bold text-white uppercase tracking-wider flex items-center gap-1.5 text-[#0088FF]">
+              <p className="font-bold text-white uppercase tracking-wider flex items-center gap-1.5 text-[#FFD700]">
                 <Sparkles size={13} /> Deliverables & Scope
               </p>
               <ul className="space-y-1 text-gray-400">
                 {service.deliverables.map((item, idx) => (
-                  <li key={idx} className="flex items-start gap-1.5">
-                    <span className="text-[#FF6B00] font-bold">✓</span> {item}
+                  <li key={idx} className="flex items-start gap-2">
+                    <span className="text-[#FFD700] font-bold">✓</span>
+                    <span>{item}</span>
                   </li>
                 ))}
               </ul>
-              <p className="text-[10px] text-amber-400/90 font-bold pt-1">
-                Notice: 100% digital soft copy delivered via Email and WhatsApp within 24-72 hours.
-              </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-[11px] font-bold text-gray-400 uppercase mb-1">
-                  Your Full Name *
+                  Full Name *
                 </label>
                 <input
                   type="text"
@@ -159,36 +208,36 @@ Please verify and commence digital service.`;
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="e.g. Samuel Adekunle"
-                  className="w-full bg-black/60 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#0088FF]"
+                  className="w-full bg-black/60 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#FFD700]"
                 />
               </div>
 
               <div>
                 <label className="block text-[11px] font-bold text-gray-400 uppercase mb-1">
-                  Email Address (for soft copy) *
+                  Email Address *
                 </label>
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="e.g. samuel@gmail.com"
-                  className="w-full bg-black/60 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#0088FF]"
+                  placeholder="name@example.com"
+                  className="w-full bg-black/60 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#FFD700]"
                 />
               </div>
             </div>
 
             <div>
               <label className="block text-[11px] font-bold text-gray-400 uppercase mb-1">
-                WhatsApp Phone Number (with country code) *
+                WhatsApp Phone Number *
               </label>
               <input
                 type="tel"
                 required
                 value={whatsapp}
                 onChange={(e) => setWhatsapp(e.target.value)}
-                placeholder="+2348012345678"
-                className="w-full bg-black/60 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#0088FF]"
+                placeholder="+234 803 123 4567"
+                className="w-full bg-black/60 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#FFD700]"
               />
             </div>
 
@@ -200,16 +249,16 @@ Please verify and commence digital service.`;
                 rows={3}
                 value={projectBrief}
                 onChange={(e) => setProjectBrief(e.target.value)}
-                placeholder="Describe your design specifics, ID details, or preferred training schedule..."
-                className="w-full bg-black/60 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#0088FF] resize-none"
+                placeholder="Describe your design specifics, requirements, or preferred schedule..."
+                className="w-full bg-black/60 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#FFD700] resize-none"
               />
             </div>
 
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-[#0088FF] to-[#00b4d8] hover:from-blue-600 hover:to-cyan-600 text-white font-black uppercase text-xs tracking-wider py-3.5 rounded-xl transition cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 active:scale-[0.98]"
+              className="w-full bg-[#FFD700] hover:bg-yellow-400 text-black font-black uppercase text-xs tracking-wider py-3.5 rounded-xl transition cursor-pointer flex items-center justify-center gap-2 shadow-lg active:scale-[0.98]"
             >
-              <span>Continue to OPay Secure Payment</span>
+              <span>Continue to Pi Payment ({finalPiPrice} Pi)</span>
               <ArrowRight size={14} />
             </button>
           </form>
@@ -217,79 +266,36 @@ Please verify and commence digital service.`;
 
         {/* Step 2: Payment */}
         {step === 'payment' && (
-          <form onSubmit={handleConfirmBooking} className="space-y-5">
-            <div className="bg-gradient-to-br from-emerald-950/40 to-black border border-emerald-500/30 rounded-2xl p-5 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-black uppercase text-emerald-400 tracking-wider">
-                  OPay Direct Merchant Transfer
-                </span>
-                <span className="text-base font-black text-white">
-                  ₦{service.priceNGN.toLocaleString('en-US')}
-                </span>
-              </div>
-
-              <div className="bg-black/80 border border-zinc-800 rounded-xl p-3.5 space-y-2 text-xs">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Bank:</span>
-                  <strong className="text-white">OPay (PayCom)</strong>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Account Number:</span>
-                  <div className="flex items-center gap-2">
-                    <strong className="text-[#FFD700] text-sm font-mono tracking-wider">{opayAccount}</strong>
-                    <button
-                      type="button"
-                      onClick={() => copyToClipboard(opayAccount)}
-                      className="text-gray-400 hover:text-white p-1 rounded transition"
-                      title="Copy Account Number"
-                    >
-                      <Copy size={13} />
-                    </button>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Account Name:</span>
-                  <strong className="text-white text-right">{opayName}</strong>
-                </div>
-              </div>
-
-              <p className="text-[11px] text-gray-300 leading-relaxed">
-                1. Open your OPay app or bank app and transfer <strong>₦{service.priceNGN.toLocaleString('en-US')}</strong> to the account above.<br />
-                2. Copy your OPay Transaction ID or sender name and paste below to submit.
+          <div className="space-y-5">
+            <div className="bg-black border-2 border-[#FFD700] rounded-2xl p-5 space-y-3 text-center">
+              <span className="text-[11px] font-black uppercase text-[#FFD700] tracking-wider block">
+                Pi Network Direct Checkout
+              </span>
+              <p className="text-3xl font-black text-[#FFD700]">
+                {finalPiPrice} Pi
+              </p>
+              <p className="text-xs text-gray-300">
+                Service: <strong>{service.title}</strong>
               </p>
             </div>
 
-            <div>
-              <label className="block text-[11px] font-bold text-gray-400 uppercase mb-1">
-                OPay Transaction Reference / Sender Name *
-              </label>
-              <input
-                type="text"
-                required
-                value={paymentRef}
-                onChange={(e) => setPaymentRef(e.target.value)}
-                placeholder="e.g. OPAY-TX-982187 or 'Transferred from Samuel A.'"
-                className="w-full bg-black/60 border border-zinc-800 rounded-xl px-3.5 py-3 text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
-              />
-            </div>
+            <button
+              type="button"
+              disabled={isProcessing}
+              onClick={handlePiPay}
+              className="w-full bg-[#FFD700] hover:bg-yellow-400 text-black font-black uppercase text-sm tracking-wider py-4 rounded-xl transition flex items-center justify-center gap-2 shadow-lg cursor-pointer disabled:opacity-50"
+            >
+              <span>{isProcessing ? 'Processing in Pi Wallet...' : `🔒 LOCK - ${finalPiPrice} Pi`}</span>
+            </button>
 
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setStep('details')}
-                className="w-1/3 bg-zinc-900 hover:bg-zinc-800 text-gray-300 text-xs font-bold py-3 rounded-xl transition"
-              >
-                Back
-              </button>
-              <button
-                type="submit"
-                className="w-2/3 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase text-xs tracking-wider py-3 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 cursor-pointer"
-              >
-                <span>Confirm & Submit Order</span>
-                <CheckCircle size={14} />
-              </button>
-            </div>
-          </form>
+            <button
+              type="button"
+              onClick={() => setStep('details')}
+              className="w-full bg-zinc-900 hover:bg-zinc-800 text-gray-300 text-xs font-bold py-3 rounded-xl transition"
+            >
+              Back to Details
+            </button>
+          </div>
         )}
 
         {/* Step 3: Confirmed */}
@@ -313,6 +319,7 @@ Please verify and commence digital service.`;
               <p>Client: {fullName}</p>
               <p>Email: {email}</p>
               <p>WhatsApp: {whatsapp}</p>
+              <p>Price: {finalPiPrice} Pi</p>
             </div>
 
             <a

@@ -25,7 +25,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
     unverifiedCount: 0,
     unverifiedRevenue: 0,
     totalRecordsAudited: 0,
-    hasPaystackSecretKey: true
+    hasPiDirectSecretKey: true
   });
   const [isAuditing, setIsAuditing] = useState(false);
 
@@ -40,7 +40,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
   const handleSaveSecretKey = async () => {
     const keyToSave = inputSecretKey.trim();
     if (!keyToSave) {
-      setKeySaveError('Please enter a Paystack Secret Key starting with sk_live_ or sk_test_');
+      setKeySaveError('Please enter a PiDirect Secret Key starting with sk_live_ or sk_test_');
       return;
     }
     if (!keyToSave.startsWith('sk_live_') && !keyToSave.startsWith('sk_test_')) {
@@ -53,7 +53,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
 
     // Save key locally for session persistence
     try {
-      localStorage.setItem('paystack_admin_sk', keyToSave);
+      localStorage.setItem('piDirect_admin_sk', keyToSave);
     } catch (e) {}
 
     try {
@@ -62,7 +62,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
         headers: { 
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'x-paystack-secret-key': keyToSave
+          'x-piDirect-secret-key': keyToSave
         },
         body: JSON.stringify({
           secretKey: keyToSave,
@@ -121,10 +121,10 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
   const [editingProduct, setEditingProduct] = useState<any>(null);
   
   const [paymentConfig, setPaymentConfig] = useState({
-    paystack: localStorage.getItem('paystack_public_key') || '',
-    paystackSecret: localStorage.getItem('paystack_secret_key') || localStorage.getItem('paystack_admin_sk') || '',
-    flutterwave: localStorage.getItem('flutterwave_public_key') || '',
-    flutterwaveSecret: localStorage.getItem('flutterwave_secret_key') || '',
+    piDirect: localStorage.getItem('piDirect_public_key') || '',
+    piDirectSecret: localStorage.getItem('piDirect_secret_key') || localStorage.getItem('piDirect_admin_sk') || '',
+    piGateway: localStorage.getItem('piGateway_public_key') || '',
+    piGatewaySecret: localStorage.getItem('piGateway_secret_key') || '',
     usdcBase: localStorage.getItem('usdc_base_address') || localStorage.getItem('USDC_ADDRESS') || localStorage.getItem('crypto_wallet') || '',
     usdtBep20: localStorage.getItem('usdt_bep20_address') || localStorage.getItem('USDT_ADDRESS') || '',
     piMainnet: localStorage.getItem('pi_mainnet_wallet') || localStorage.getItem('PI_MAINNET_WALLET_ADDRESS') || '',
@@ -133,8 +133,8 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
     pi: localStorage.getItem('pi_wallet') || localStorage.getItem('PI_WALLET_ADDRESS') || ''
   });
 
-  const [showPaystackSecret, setShowPaystackSecret] = useState(false);
-  const [showFlutterwaveSecret, setShowFlutterwaveSecret] = useState(false);
+  const [showPiDirectSecret, setShowPiDirectSecret] = useState(false);
+  const [showPiGatewaySecret, setShowPiGatewaySecret] = useState(false);
   const [isSavingGateways, setIsSavingGateways] = useState(false);
   
   const [settings, setSettings] = useState({
@@ -345,10 +345,10 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
     setIsAuditing(true);
     try {
       const listToAudit = Array.isArray(ordersList) && ordersList.length > 0 ? ordersList : orders;
-      const sk = overrideKey || localStorage.getItem('paystack_admin_sk') || '';
+      const sk = overrideKey || localStorage.getItem('piDirect_admin_sk') || '';
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (sk) {
-        headers['x-paystack-secret-key'] = sk;
+        headers['x-piDirect-secret-key'] = sk;
       }
 
       const res = await fetch('/api/admin/verify-payments', {
@@ -361,7 +361,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
         if (data.success && data.summary) {
           setAuditSummary({
             ...data.summary,
-            hasPaystackSecretKey: Boolean(data.hasPaystackSecretKey || data.summary.hasPaystackSecretKey || sk)
+            hasPiDirectSecretKey: Boolean(data.hasPiDirectSecretKey || data.summary.hasPiDirectSecretKey || sk)
           });
           if (Array.isArray(data.auditedOrders) && data.auditedOrders.length > 0) {
             setOrders(data.auditedOrders);
@@ -625,11 +625,11 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
     setIsSavingGateways(true);
     try {
       localStorage.setItem('PAYMENT_CONFIG', JSON.stringify(paymentConfig));
-      localStorage.setItem('paystack_public_key', paymentConfig.paystack.trim());
-      localStorage.setItem('paystack_secret_key', paymentConfig.paystackSecret.trim());
-      localStorage.setItem('paystack_admin_sk', paymentConfig.paystackSecret.trim());
-      localStorage.setItem('flutterwave_public_key', paymentConfig.flutterwave.trim());
-      localStorage.setItem('flutterwave_secret_key', paymentConfig.flutterwaveSecret.trim());
+      localStorage.setItem('piDirect_public_key', paymentConfig.piDirect.trim());
+      localStorage.setItem('piDirect_secret_key', paymentConfig.piDirectSecret.trim());
+      localStorage.setItem('piDirect_admin_sk', paymentConfig.piDirectSecret.trim());
+      localStorage.setItem('piGateway_public_key', paymentConfig.piGateway.trim());
+      localStorage.setItem('piGateway_secret_key', paymentConfig.piGatewaySecret.trim());
       localStorage.setItem('usdc_base_address', paymentConfig.usdcBase.trim());
       localStorage.setItem('USDC_ADDRESS', paymentConfig.usdcBase.trim());
       localStorage.setItem('usdt_bep20_address', paymentConfig.usdtBep20.trim());
@@ -663,14 +663,14 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-paystack-secret-key': paymentConfig.paystackSecret.trim(),
-          'x-flutterwave-secret-key': paymentConfig.flutterwaveSecret.trim()
+          'x-piDirect-secret-key': paymentConfig.piDirectSecret.trim(),
+          'x-piGateway-secret-key': paymentConfig.piGatewaySecret.trim()
         },
         body: JSON.stringify({
-          paystackPublicKey: paymentConfig.paystack.trim(),
-          paystackSecretKey: paymentConfig.paystackSecret.trim(),
-          flutterwavePublicKey: paymentConfig.flutterwave.trim(),
-          flutterwaveSecretKey: paymentConfig.flutterwaveSecret.trim(),
+          piDirectPublicKey: paymentConfig.piDirect.trim(),
+          piDirectSecretKey: paymentConfig.piDirectSecret.trim(),
+          piGatewayPublicKey: paymentConfig.piGateway.trim(),
+          piGatewaySecretKey: paymentConfig.piGatewaySecret.trim(),
           usdcAddress: paymentConfig.usdcBase.trim(),
           usdtAddress: paymentConfig.usdtBep20.trim(),
           cryptoWallet: paymentConfig.usdcBase.trim(),
@@ -695,10 +695,10 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
           'Authorization': `Bearer ${activeToken}`
         },
         body: JSON.stringify({
-          paystack: paymentConfig.paystack.trim(),
-          paystack_secret: paymentConfig.paystackSecret.trim(),
-          flutterwave: paymentConfig.flutterwave.trim(),
-          flutterwave_secret: paymentConfig.flutterwaveSecret.trim(),
+          piDirect: paymentConfig.piDirect.trim(),
+          piDirect_secret: paymentConfig.piDirectSecret.trim(),
+          piGateway: paymentConfig.piGateway.trim(),
+          piGateway_secret: paymentConfig.piGatewaySecret.trim(),
           usdc: paymentConfig.usdcBase.trim(),
           usdt: paymentConfig.usdtBep20.trim(),
           pi_mainnet_wallet: paymentConfig.piMainnet.trim(),
@@ -710,8 +710,8 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
       }).catch(e => {});
 
       showToast('✅ Payment Public & Secret Gateway Keys Activated!');
-      if (paymentConfig.paystackSecret) {
-        await auditPayments(undefined, paymentConfig.paystackSecret.trim());
+      if (paymentConfig.piDirectSecret) {
+        await auditPayments(undefined, paymentConfig.piDirectSecret.trim());
       }
     } catch (e) {
       console.warn('Save payment config error:', e);
@@ -805,9 +805,9 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
       const customerEmail = (o.customerEmail || o.email || '').trim();
       const customerName = cleanName(o);
       const countryName = cleanCountry(o.country);
-      const amtStr = o.amount || o.amountFormatted || (o.amountNGN ? `₦${Number(o.amountNGN).toLocaleString()}` : '') || (o.amountUSD ? `$${o.amountUSD}` : '') || o.price || '₦74,985.00 (2 Pi)';
+      const amtStr = o.amount || o.amountFormatted || (o.amountNGN ? `Pi ${Number(o.amountNGN).toLocaleString()}` : '') || (o.amountUSD ? `$${o.amountUSD}` : '') || o.price || '2 Pi (2 Pi)';
 
-      rows.push(`"${o.ref || o.orderId || o.id || ''}","${customerEmail}","${customerName}","${countryName}","${o.productName || o.product || 'Sirwise AI Web3 Academy'}","${amtStr}","${o.method || o.paymentMethod || 'Paystack'}","${statusStr}","${dateStr}"`);
+      rows.push(`"${o.ref || o.orderId || o.id || ''}","${customerEmail}","${customerName}","${countryName}","${o.productName || o.product || 'Sirwise AI Web3 Academy'}","${amtStr}","${o.method || o.paymentMethod || 'PiDirect'}","${statusStr}","${dateStr}"`);
     });
 
     const bomBytes = new Uint8Array([0xEF, 0xBB, 0xBF]);
@@ -888,10 +888,10 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
       const customerEmail = (u.email || u.customerEmail || '').trim();
       const customerName = cleanName(u);
       const countryName = cleanCountry(u.country);
-      const rawId = u.id || u.uid || ('PAYSTACK-' + Date.now());
+      const rawId = u.id || u.uid || ('PIDIRECT-' + Date.now());
       const custId = String(rawId).replace(/[^\w\d_-]/g, '').trim();
       const whatsapp = u.whatsapp || u.phone || 'N/A';
-      const totalSpent = u.totalSpent || u.amount || '₦74,985.00 (2 Pi)';
+      const totalSpent = u.totalSpent || u.amount || '2 Pi (2 Pi)';
 
       rows.push(`"${custId}","${customerEmail}","${customerName}","${countryName}","${whatsapp}","${totalSpent}","${dateStr}"`);
     });
@@ -1005,7 +1005,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
             className="flex items-center gap-2 bg-[#111] hover:bg-white/10 text-[#FFD700] border border-[#FFD700]/40 px-4 py-2 rounded-xl text-sm font-bold transition cursor-pointer"
           >
             <RefreshCw size={16} className={(isLoadingOrders || isAuditing) ? 'animate-spin' : ''} />
-            {isLoadingOrders || isAuditing ? 'Auditing Paystack...' : 'Sync Live Orders'}
+            {isLoadingOrders || isAuditing ? 'Auditing PiDirect...' : 'Sync Live Orders'}
           </button>
           <button
             onClick={handleAdminLogout}
@@ -1054,21 +1054,21 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
               <div>
                 <h3 className="text-white font-black text-base flex items-center gap-2">
                   <ShieldCheck className="text-[#10B981]" size={20} />
-                  Paystack Server-Side Direct Verification Audit
+                  PiDirect Server-Side Direct Verification Audit
                 </h3>
                 <p className="text-gray-400 text-xs mt-0.5">
-                  Live verification status directly through Paystack API (Secret Key server-side only).
+                  Live verification status directly through PiDirect API (Secret Key server-side only).
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <span className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider ${auditSummary.hasPaystackSecretKey ? 'bg-emerald-950 text-emerald-400 border border-emerald-800/40' : 'bg-amber-950 text-amber-400 border border-amber-800/40'}`}>
-                  {auditSummary.hasPaystackSecretKey ? '🔒 SERVER SECRET KEY: CONFIGURED' : '⚠️ SERVER SECRET KEY: NOT CONFIGURED'}
+                <span className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider ${auditSummary.hasPiDirectSecretKey ? 'bg-emerald-950 text-emerald-400 border border-emerald-800/40' : 'bg-amber-950 text-amber-400 border border-amber-800/40'}`}>
+                  {auditSummary.hasPiDirectSecretKey ? '🔒 SERVER SECRET KEY: CONFIGURED' : '⚠️ SERVER SECRET KEY: NOT CONFIGURED'}
                 </span>
                 <button
                   onClick={() => setShowKeyModal(true)}
                   className="flex items-center gap-1 text-xs text-[#FFD700] bg-black border border-[#FFD700]/50 hover:bg-[#FFD700]/15 px-2.5 py-1.5 rounded-lg font-bold transition"
                 >
-                  🔑 {auditSummary.hasPaystackSecretKey ? 'Update Key' : 'Configure Key'}
+                  🔑 {auditSummary.hasPiDirectSecretKey ? 'Update Key' : 'Configure Key'}
                 </button>
                 <button 
                   onClick={() => auditPayments()} 
@@ -1076,7 +1076,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
                   className="flex items-center gap-1.5 text-xs text-black bg-[#FFD700] hover:bg-yellow-400 px-3 py-1.5 rounded-lg font-bold transition disabled:opacity-50"
                 >
                   <RefreshCw size={13} className={isAuditing ? 'animate-spin' : ''} />
-                  {isAuditing ? 'Verifying Paystack...' : 'Re-verify All Transactions'}
+                  {isAuditing ? 'Verifying PiDirect...' : 'Re-verify All Transactions'}
                 </button>
               </div>
             </div>
@@ -1098,13 +1098,13 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
                 <div className="bg-[#111] border border-[#FFD700]/50 rounded-2xl p-6 max-w-md w-full shadow-2xl relative">
                   <div className="flex justify-between items-center mb-4 pb-2 border-b border-[#222]">
                     <h3 className="text-base font-black text-white flex items-center gap-2">
-                      <ShieldCheck size={20} className="text-[#FFD700]" /> Configure Paystack Secret Key
+                      <ShieldCheck size={20} className="text-[#FFD700]" /> Configure PiDirect Secret Key
                     </h3>
                     <button onClick={() => setShowKeyModal(false)} className="text-gray-400 hover:text-white font-bold p-1">✕</button>
                   </div>
 
                   <p className="text-xs text-gray-300 leading-relaxed mb-4">
-                    Enter your Paystack Secret Key (<code className="text-[#FFD700] bg-black px-1 py-0.5 rounded">sk_live_...</code> or <code className="text-[#FFD700] bg-black px-1 py-0.5 rounded">sk_test_...</code>). It will be saved securely on the server-side only (<code className="text-gray-400">.server-config.json</code>) and never exposed to client browsers or public storage.
+                    Enter your PiDirect Secret Key (<code className="text-[#FFD700] bg-black px-1 py-0.5 rounded">sk_live_...</code> or <code className="text-[#FFD700] bg-black px-1 py-0.5 rounded">sk_test_...</code>). It will be saved securely on the server-side only (<code className="text-gray-400">.server-config.json</code>) and never exposed to client browsers or public storage.
                   </p>
 
                   {keySaveError && (
@@ -1115,7 +1115,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
 
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-[11px] font-bold text-gray-300 uppercase mb-1.5">Paystack Secret Key</label>
+                      <label className="block text-[11px] font-bold text-gray-300 uppercase mb-1.5">PiDirect Secret Key</label>
                       <input
                         type="password"
                         placeholder="sk_live_xxxxxxxxxxxxxxxxxxxxxxxx"
@@ -1437,7 +1437,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
             </div>
 
             <div className="space-y-6">
-              {/* Paystack Box */}
+              {/* PiDirect Box */}
               <div className="bg-black/60 border border-white/10 rounded-xl p-5 space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -1445,11 +1445,11 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
                       PS
                     </div>
                     <div>
-                      <h4 className="text-white font-bold text-sm">Paystack Gateway Configuration</h4>
+                      <h4 className="text-white font-bold text-sm">PiDirect Gateway Configuration</h4>
                       <p className="text-gray-400 text-xs">Used for Debit/Credit Cards & Bank Transfers</p>
                     </div>
                   </div>
-                  {auditSummary.hasPaystackSecretKey || paymentConfig.paystackSecret ? (
+                  {auditSummary.hasPiDirectSecretKey || paymentConfig.piDirectSecret ? (
                     <span className="text-[10px] bg-emerald-950 text-emerald-400 font-extrabold px-2.5 py-1 rounded-full border border-emerald-800/40 flex items-center gap-1">
                       <CheckCircle size={10} /> Live Secret Key Configured
                     </span>
@@ -1463,32 +1463,32 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
                     <label className="text-xs text-gray-300 font-bold block mb-1">
-                      Paystack Public Key <span className="text-gray-500 font-normal">(Client-side)</span>
+                      PiDirect Public Key <span className="text-gray-500 font-normal">(Client-side)</span>
                     </label>
                     <input
                       type="text"
                       className="w-full bg-[#111] border border-[#333] rounded-xl p-3 text-white text-xs font-mono focus:border-[#FFD700] outline-none transition"
-                      value={paymentConfig.paystack}
-                      onChange={e => setPaymentConfig({ ...paymentConfig, paystack: e.target.value })}
+                      value={paymentConfig.piDirect}
+                      onChange={e => setPaymentConfig({ ...paymentConfig, piDirect: e.target.value })}
                       placeholder="pk_live_... or pk_test_..."
                     />
                   </div>
 
                   <div>
                     <label className="text-xs text-gray-300 font-bold block mb-1">
-                      Paystack Secret Key <span className="text-red-400 font-bold">(Required for Live Audit & Access)</span>
+                      PiDirect Secret Key <span className="text-red-400 font-bold">(Required for Live Audit & Access)</span>
                     </label>
                     <div className="relative">
                       <input
-                        type={showPaystackSecret ? 'text' : 'password'}
+                        type={showPiDirectSecret ? 'text' : 'password'}
                         className="w-full bg-[#111] border border-[#333] rounded-xl p-3 pr-10 text-white text-xs font-mono focus:border-[#FFD700] outline-none transition"
-                        value={paymentConfig.paystackSecret}
-                        onChange={e => setPaymentConfig({ ...paymentConfig, paystackSecret: e.target.value })}
+                        value={paymentConfig.piDirectSecret}
+                        onChange={e => setPaymentConfig({ ...paymentConfig, piDirectSecret: e.target.value })}
                         placeholder="sk_live_... or sk_test_..."
                       />
                       <button
                         type="button"
-                        onClick={() => setShowPaystackSecret(!showPaystackSecret)}
+                        onClick={() => setShowPiDirectSecret(!showPiDirectSecret)}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition"
                       >
                         <Eye size={16} />
@@ -1498,7 +1498,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
                 </div>
               </div>
 
-              {/* Flutterwave Box */}
+              {/* PiGateway Box */}
               <div className="bg-black/60 border border-white/10 rounded-xl p-5 space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -1506,11 +1506,11 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
                       FLW
                     </div>
                     <div>
-                      <h4 className="text-white font-bold text-sm">Flutterwave Gateway Configuration</h4>
+                      <h4 className="text-white font-bold text-sm">PiGateway Gateway Configuration</h4>
                       <p className="text-gray-400 text-xs">Used for Global Cards & African Currencies</p>
                     </div>
                   </div>
-                  {paymentConfig.flutterwaveSecret ? (
+                  {paymentConfig.piGatewaySecret ? (
                     <span className="text-[10px] bg-emerald-950 text-emerald-400 font-extrabold px-2.5 py-1 rounded-full border border-emerald-800/40 flex items-center gap-1">
                       <CheckCircle size={10} /> Live Secret Key Configured
                     </span>
@@ -1524,32 +1524,32 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
                     <label className="text-xs text-gray-300 font-bold block mb-1">
-                      Flutterwave Public Key <span className="text-gray-500 font-normal">(Client-side)</span>
+                      PiGateway Public Key <span className="text-gray-500 font-normal">(Client-side)</span>
                     </label>
                     <input
                       type="text"
                       className="w-full bg-[#111] border border-[#333] rounded-xl p-3 text-white text-xs font-mono focus:border-[#FFD700] outline-none transition"
-                      value={paymentConfig.flutterwave}
-                      onChange={e => setPaymentConfig({ ...paymentConfig, flutterwave: e.target.value })}
+                      value={paymentConfig.piGateway}
+                      onChange={e => setPaymentConfig({ ...paymentConfig, piGateway: e.target.value })}
                       placeholder="FLWPUBK_... or FLWPUBK_TEST-..."
                     />
                   </div>
 
                   <div>
                     <label className="text-xs text-gray-300 font-bold block mb-1">
-                      Flutterwave Secret Key <span className="text-amber-400 font-bold">(Server Verification)</span>
+                      PiGateway Secret Key <span className="text-amber-400 font-bold">(Server Verification)</span>
                     </label>
                     <div className="relative">
                       <input
-                        type={showFlutterwaveSecret ? 'text' : 'password'}
+                        type={showPiGatewaySecret ? 'text' : 'password'}
                         className="w-full bg-[#111] border border-[#333] rounded-xl p-3 pr-10 text-white text-xs font-mono focus:border-[#FFD700] outline-none transition"
-                        value={paymentConfig.flutterwaveSecret}
-                        onChange={e => setPaymentConfig({ ...paymentConfig, flutterwaveSecret: e.target.value })}
+                        value={paymentConfig.piGatewaySecret}
+                        onChange={e => setPaymentConfig({ ...paymentConfig, piGatewaySecret: e.target.value })}
                         placeholder="FLWSECK_... or FLWSECK_TEST-..."
                       />
                       <button
                         type="button"
-                        onClick={() => setShowFlutterwaveSecret(!showFlutterwaveSecret)}
+                        onClick={() => setShowPiGatewaySecret(!showPiGatewaySecret)}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition"
                       >
                         <Eye size={16} />
@@ -1924,7 +1924,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
                       <td className="p-4">{safeCountryStr(o.country)}</td>
                       <td className="p-4 text-[#FFD700] font-bold">{safeString(o.productName, 'Digital Item')}</td>
                       <td className="p-4 text-[#10B981] font-bold">{safeString(o.currency, 'USD')} {safeString(o.amount || `$${o.amountUSD || o.price || 0}`, '$0.00')}</td>
-                      <td className="p-4 text-gray-400 uppercase text-xs">{safeString(o.method || o.paymentMethod, 'Paystack')}</td>
+                      <td className="p-4 text-gray-400 uppercase text-xs">{safeString(o.method || o.paymentMethod, 'PiDirect')}</td>
                       <td className="p-4">
                         {(() => {
                           const cat = o.verificationCategory || (o.verifiedLive ? 'LIVE_VERIFIED' : (o._isSandboxSimulation ? 'TEST_PAYMENT' : 'UNVERIFIED'));
@@ -1964,7 +1964,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
                     <td colSpan={8} className="p-8 text-center text-gray-500">
                       <ShoppingCart size={32} className="mx-auto mb-2 opacity-30" />
                       <p className="font-bold text-gray-400">No orders recorded yet.</p>
-                      <p className="text-xs text-gray-600 mt-1">Orders placed via Paystack, Flutterwave, PayPal, Crypto, or Pi GCV will automatically appear here in real-time.</p>
+                      <p className="text-xs text-gray-600 mt-1">Orders placed via PiDirect, PiGateway, PiWallet, Crypto, or Pi GCV will automatically appear here in real-time.</p>
                     </td>
                   </tr>
                 )}
@@ -2410,7 +2410,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
                                     <td className="p-3 text-[#FFD700]">{safeString(o.productName, 'Item')}</td>
                                     <td className="p-3 text-green-500 font-bold">{safeString(o.amount, '0')}</td>
                                     <td className="p-3">{safeString(o.currency, 'USD')}</td>
-                                    <td className="p-3 uppercase text-xs">{safeString(o.method || o.paymentMethod, 'Paystack')}</td>
+                                    <td className="p-3 uppercase text-xs">{safeString(o.method || o.paymentMethod, 'PiDirect')}</td>
                                     <td className="p-3"><span className="text-green-500 text-xs">{safeString(o.status, 'COMPLETED')}</span></td>
                                     <td className="p-3 text-xs text-gray-400">{new Date(o.date || o.purchasedAt || Date.now()).toLocaleString()}</td>
                                 </tr>

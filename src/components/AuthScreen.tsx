@@ -1001,7 +1001,7 @@ export const COUNTRIES = [
     "flag": "🇳🇬",
     "phone": "+234",
     "currency": "NGN",
-    "symbol": "₦"
+    "symbol": "NGN"
   },
   {
     "code": "KP",

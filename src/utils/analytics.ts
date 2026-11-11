@@ -50,7 +50,7 @@ export function isAdminClick(name?: string, email?: string): boolean {
   return hasAdminEmail || (hasAdminName && hasAdminAuth);
 }
 
-// Initial seed records - Real verified orders only (empty by default until real Paystack transactions occur)
+// Initial seed records - Real verified orders only (empty by default until real transactions occur)
 export const SEED_CUSTOMERS: any[] = [];
 export const SEED_ORDERS: any[] = [];
 
@@ -252,7 +252,7 @@ export async function saveGlobalClick(type: string = 'page_view', product: strin
     device: isMobile ? 'Mobile' : 'Desktop',
     excluded: 'Customer', // Will show green Customer badge
     product: product || 'Sirwise AI Web3 Academy',
-    amount: amount || (type === 'payment' ? '₦74,985.00 (2 Pi)' : ''),
+    amount: amount || (type === 'payment' ? '2 Pi' : ''),
     date: new Date().toLocaleDateString('en-GB'),
     date_wat: new Date().toLocaleString('en-GB', { timeZone: 'Africa/Lagos' }) + ' WAT Lagos',
     verified: type === 'payment' ? 'VERIFIED' : 'UNVERIFIED',

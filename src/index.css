@@ -87,8 +87,8 @@ body {
   overflow-x: hidden;
 }
 
-/* Fix third-party payment modals (Paystack, Flutterwave, OPay) */
-iframe[name*="paystack"], iframe[name*="flutterwave"], iframe[src*="paystack"], iframe[src*="flutterwave"], .paystack-modal, .flutterwave-modal {
+/* Payment modal overlay */
+.payment-modal-overlay {
   z-index: 999999 !important;
 }
 

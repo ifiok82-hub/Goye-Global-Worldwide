@@ -47,7 +47,8 @@ export interface Product {
   id: string;
   name: string;
   category: string;
-  price: number; // Stored in USD base
+  piPrice?: number;
+  price?: number;
   priceUSD?: number;
   priceGBP?: number;
   priceNGN?: number;

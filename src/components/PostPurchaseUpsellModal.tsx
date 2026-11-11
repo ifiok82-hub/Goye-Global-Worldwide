@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Sparkles, Zap, ArrowRight, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { X, Zap, ArrowRight, ShieldCheck, CheckCircle2 } from 'lucide-react';
 
 interface PostPurchaseUpsellModalProps {
   isOpen: boolean;
@@ -32,7 +32,7 @@ export default function PostPurchaseUpsellModal({ isOpen, onClose, onAcceptUpsel
           Upgrade to <span className="text-[#FFD700]">Full Academy & Unlimited eSIM Access</span> for 2 Pi
         </h2>
         <p className="text-gray-300 text-xs sm:text-sm mb-5">
-          Regular Price <span className="line-through text-gray-500">₦150,000 (2 Pi)</span> — <strong className="text-[#FFD700]">Save 50% Today Only (₦74,985)</strong>
+          Regular Access <span className="line-through text-gray-500">4 Pi</span> — <strong className="text-[#FFD700]">Special Price Today: 2 Pi</strong>
         </p>
 
         {/* Value Proposition Box */}
@@ -57,7 +57,7 @@ export default function PostPurchaseUpsellModal({ isOpen, onClose, onAcceptUpsel
             onClick={onAcceptUpsell}
             className="w-full bg-gradient-to-r from-[#FFD700] to-[#FFA500] hover:from-[#ffe033] hover:to-[#ffb733] text-black font-black py-4 px-6 rounded-xl flex items-center justify-center gap-2 text-base shadow-lg transition-transform active:scale-95"
           >
-            <span>🚀 Upgrade to Full Academy for 2 Pi (₦74,985)</span>
+            <span>🚀 Upgrade to Full Academy for 2 Pi</span>
             <ArrowRight size={18} />
           </button>
 
@@ -71,7 +71,7 @@ export default function PostPurchaseUpsellModal({ isOpen, onClose, onAcceptUpsel
 
         <div className="flex items-center justify-center gap-2 mt-4 text-gray-500 text-[11px]">
           <ShieldCheck size={14} className="text-[#10B981]" />
-          <span>Guaranteed 100% Secure Checkout via Paystack & Flutterwave</span>
+          <span>Guaranteed 100% Secure Checkout via Pi Network</span>
         </div>
       </div>
     </div>
