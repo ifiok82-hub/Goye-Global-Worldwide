@@ -13,7 +13,6 @@ import { ServicesPage } from './components/ServicesPage';
 import { ServiceBookingModal } from './components/ServiceBookingModal';
 import { VerifyCertificatePage } from './components/VerifyCertificatePage';
 import { ContactPage } from './components/ContactPage';
-import { FloatingWhatsApp } from './components/FloatingWhatsApp';
 import AcademyDashboard from './components/AcademyDashboard';
 import UnifiedCheckoutModal from './components/UnifiedCheckoutModal';
 import AdminDashboard from './components/AdminDashboard';
@@ -23,7 +22,7 @@ import { ALL_PRODUCTS } from './data';
 import { SPECIALIZATIONS, Specialization } from './data/specializations';
 import { safeParse } from './utils/safeParse';
 import { getPaymentEnvironment, getDisplayPrice, getBuyButtonLabel, getPiPrice } from './utils/paymentAdapter';
-import { autoLoginWithPi } from './lib/piAuth';
+import { autoLoginWithPi, loginWithPi } from './lib/piAuth';
 import PiLoginButton from './components/PiLoginButton';
 import AutoPiConverter from './components/AutoPiConverter';
 export default function App() {
@@ -57,12 +56,25 @@ export default function App() {
   const [selectedServiceBooking, setSelectedServiceBooking] = useState<Specialization | null>(null);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
-  const [isAdminAuth, setIsAdminAuth] = useState(() => localStorage.getItem('isAdmin') === 'true');
-  const [showAdminLogin, setShowAdminLogin] = useState(false);
-  const [adminPassword, setAdminPassword] = useState('');
-  const [isVerifyingPass, setIsVerifyingPass] = useState(false);
+  const [logoTaps, setLogoTaps] = useState(0);
+  const [showAdmin, setShowAdmin] = useState(false);
+  const logoTapTimerRef = useRef<any>(null);
 
-  const logoTapCountRef = useRef(0);
+  const handleFooterLogoTap = () => {
+    setLogoTaps(prev => {
+      const next = prev + 1;
+      if (next >= 7) {
+        setShowAdmin(true);
+        if (logoTapTimerRef.current) clearTimeout(logoTapTimerRef.current);
+        return 0;
+      }
+      if (logoTapTimerRef.current) clearTimeout(logoTapTimerRef.current);
+      logoTapTimerRef.current = setTimeout(() => {
+        setLogoTaps(0);
+      }, 3000);
+      return next;
+    });
+  };
 
   // All Real Digital Products, Courses, eSIM and Blueprints from Catalog
   const displayProducts = ALL_PRODUCTS && ALL_PRODUCTS.length > 0 
@@ -116,11 +128,8 @@ export default function App() {
       const hash = window.location.hash.replace('#', '').trim().toLowerCase();
       const route = path || hash;
       if (route === 'admin' || route === 'admin-dashboard') {
-        const authed = localStorage.getItem('isAdmin') === 'true';
-        if (!authed) {
-          setShowAdminLogin(true);
-        }
-        setTab('admin');
+        setShowAdmin(true);
+        setTab('home');
       } else if (route === 'specializations') {
         setTab('specializations');
       } else if (route === 'courses' || route === 'academy') {
@@ -152,24 +161,6 @@ export default function App() {
     };
   }, []);
 
-  const handleAdminLoginSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const cleanPass = adminPassword.trim();
-    if (cleanPass === 'GoyeBN3583878' || cleanPass === 'BN3583878' || cleanPass === 'GoyeBN3583878' || cleanPass === 'BN3583878') {
-      localStorage.setItem('isAdmin', 'true');
-      localStorage.setItem('is_admin', 'true');
-      localStorage.setItem('admin_token', 'gd_master_admin_session_' + Date.now());
-      setIsAdminAuth(true);
-      setShowAdminLogin(false);
-      setTab('admin');
-      window.location.hash = 'admin';
-      showToast('🔑 Master Admin Access Unlocked!', 'success');
-      setAdminPassword('');
-    } else {
-      showToast('❌ Incorrect Admin Password!', 'error');
-    }
-  };
-
   const handleManualVerificationCheck = (e: React.FormEvent) => {
     e.preventDefault();
     const input = (document.getElementById('manualVerifyInput') as HTMLInputElement)?.value.trim();
@@ -195,8 +186,6 @@ export default function App() {
       <GoyeHeader
         currentTab={tab}
         setTab={navigateTo}
-        onOpenAdminLogin={() => setShowAdminLogin(true)}
-        logoTapCount={logoTapCountRef}
       />
 
       {/* Main Container */}
@@ -454,35 +443,6 @@ export default function App() {
           </div>
         )}
 
-        {/* Render Tab: Admin Control Console */}
-        {tab === 'admin' && (
-          <div className="max-w-7xl mx-auto px-4 py-8 animate-in fade-in duration-300">
-            {isAdminAuth ? (
-              <AdminDashboard showToast={showToast} />
-            ) : (
-              <div className="min-h-[50vh] flex flex-col items-center justify-center p-6 text-center">
-                <div className="bg-[#0c0c0c] border border-zinc-800 rounded-3xl p-8 w-full max-w-md shadow-2xl space-y-4">
-                  <div className="w-14 h-14 bg-zinc-900 border border-[#FFD700] text-[#FFD700] rounded-2xl flex items-center justify-center mx-auto text-2xl font-black">
-                    🔒
-                  </div>
-                  <h2 className="text-white text-2xl font-black uppercase tracking-tight">
-                    Admin Portal Login
-                  </h2>
-                  <p className="text-gray-400 text-xs">
-                    Please enter the Master Admin Password to access order logs, service bookings, and payment settings.
-                  </p>
-                  <button 
-                    onClick={() => setShowAdminLogin(true)} 
-                    className="w-full bg-[#FFD700] hover:bg-yellow-400 text-black font-black py-3.5 rounded-xl cursor-pointer text-xs uppercase tracking-wider shadow-lg transition active:scale-95"
-                  >
-                    Authenticate Admin Access
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
         {/* Render Tab: Terms & Conditions */}
         {tab === 'terms' && (
           <TermsPage onBack={() => navigateTo('home')} setTab={navigateTo} />
@@ -500,16 +460,13 @@ export default function App() {
 
       </main>
 
-      {/* Footer */}
+      {/* Footer with 7-tap Admin Trigger */}
       <GoyeFooter
         setTab={navigateTo}
-        onOpenAdminLogin={() => setShowAdminLogin(true)}
+        onLogoTap={handleFooterLogoTap}
       />
 
-      {/* Floating WhatsApp Button */}
-      <FloatingWhatsApp />
-
-      {/* Service Booking Modal (TASK 2) */}
+      {/* Service Booking Modal */}
       {selectedServiceBooking && (
         <ServiceBookingModal
           service={selectedServiceBooking}
@@ -518,48 +475,51 @@ export default function App() {
         />
       )}
 
-      {/* Admin Login Modal Triggered via Logo clicks or footer */}
-      {showAdminLogin && (
-        <div className="fixed inset-0 bg-black/95 backdrop-blur-md z-[99999] flex items-center justify-center p-4">
-          <div className="bg-[#0c0c0c] border border-[#FFD700]/40 rounded-2xl max-w-sm w-full p-6 text-white relative shadow-2xl space-y-4">
-            <button
-              onClick={() => setShowAdminLogin(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white"
-            >
-              ✕
-            </button>
-
-            <div className="text-center space-y-1">
-              <span className="text-[10px] font-black uppercase text-black bg-[#FFD700] px-2.5 py-0.5 rounded">
-                SECURITY ACCESS CONTROL
-              </span>
-              <h3 className="text-xl font-black text-white uppercase">Master Admin Password</h3>
-              <p className="text-xs text-gray-400">Authenticate session for master admin console.</p>
-            </div>
-
-            <form onSubmit={handleAdminLoginSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">
-                  Admin Secret Key
-                </label>
-                <input
-                  type="password"
-                  autoFocus
-                  value={adminPassword}
-                  onChange={(e) => setAdminPassword(e.target.value)}
-                  placeholder="Enter Goye password..."
-                  className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#FFD700]"
-                />
+      {/* Master Admin Console Overlay - Triggered via Footer Logo 7 taps */}
+      {showAdmin && (
+        <div className="fixed inset-0 bg-black/95 backdrop-blur-md z-[99999] overflow-y-auto p-4 sm:p-6">
+          <div className="max-w-6xl mx-auto">
+            {Boolean(typeof window !== 'undefined' && (localStorage.getItem('pi_username') || localStorage.getItem('pi_username_trusted'))) ? (
+              <AdminDashboard 
+                showToast={showToast} 
+                onClose={() => setShowAdmin(false)} 
+              />
+            ) : (
+              <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-6">
+                <div className="bg-[#0c0c0c] border border-[#FFD700]/40 rounded-3xl p-8 max-w-md w-full shadow-2xl space-y-4">
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => setShowAdmin(false)}
+                      className="text-gray-400 hover:text-white text-lg cursor-pointer"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <div className="w-16 h-16 bg-zinc-900 border border-[#FFD700] text-[#FFD700] rounded-2xl flex items-center justify-center mx-auto text-3xl font-black">
+                    🔒
+                  </div>
+                  <h3 className="text-xl font-black text-white uppercase tracking-tight">
+                    Pi Network Admin Verification
+                  </h3>
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    Master Admin Console is restricted to authenticated Pi Network users. Authenticate with your Pi Browser account to access order logs, customer intelligence, and payment settings.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const res = await loginWithPi();
+                      if (res?.username || localStorage.getItem('pi_username') || localStorage.getItem('pi_username_trusted')) {
+                        showToast('✅ Pi Network Admin Authenticated', 'success');
+                      }
+                    }}
+                    className="w-full py-3.5 rounded-xl bg-[#7D2AE7] hover:bg-purple-700 text-white font-black text-xs uppercase tracking-widest transition cursor-pointer flex items-center justify-center gap-2 shadow-lg"
+                  >
+                    <img src="https://minepi.com/favicon.png" className="w-4 h-4" alt="Pi" />
+                    <span>Login with Pi Network</span>
+                  </button>
+                </div>
               </div>
-
-              <button
-                type="submit"
-                disabled={isVerifyingPass}
-                className="w-full py-3.5 rounded-xl bg-[#FFD700] hover:bg-yellow-400 text-black font-black text-xs uppercase tracking-widest transition cursor-pointer"
-              >
-                Verify Session Access
-              </button>
-            </form>
+            )}
           </div>
         </div>
       )}

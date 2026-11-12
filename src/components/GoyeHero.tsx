@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowRight, Star, Award, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { loginWithPi } from '../lib/piAuth';
+import ProductGradientImage from './ProductGradientImage';
 
 interface GoyeHeroProps {
   onOpenTripwire?: () => void;
@@ -97,10 +98,12 @@ export const GoyeHero: React.FC<GoyeHeroProps> = ({
             </div>
             
             <button 
+              type="button"
+              style={{ pointerEvents: 'auto', zIndex: 10, position: 'relative' }}
               onClick={onOpenTripwire || onOpenLeadMagnet}
               className="bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 hover:from-yellow-300 hover:to-amber-300 text-black font-black text-xs sm:text-sm py-4 px-8 rounded-2xl mx-auto flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(255,215,0,0.35)] transition active:scale-95 cursor-pointer border-2 border-yellow-200"
             >
-              <span>Get the AI Starter & Global Travel Pass for 0.000003 Pi</span>
+              <span>Get the AI Starter & Global Travel Pass for 1 Pi</span>
               <ArrowRight size={15} />
             </button>
           </div>
@@ -112,38 +115,28 @@ export const GoyeHero: React.FC<GoyeHeroProps> = ({
             </h1>
           </div>
           
-          {/* Hero Coursera / Binance Academy Featured Tracks Grid */}
+          {/* Featured Tracks Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left max-w-6xl mx-auto mt-10">
             
             {/* Track 1: AI Training & Prompt Engineering */}
             <div className="group bg-[#0e0e0e] hover:bg-[#131313] rounded-2xl border border-zinc-800 hover:border-[#FFD700] transition duration-300 flex flex-col justify-between shadow-xl overflow-hidden">
               <div>
-                {/* 400x300 Image rounded 16px with shadow */}
                 <div className="p-3">
-                  <div className="relative w-full aspect-[4/3] rounded-[16px] overflow-hidden shadow-lg border border-zinc-800 bg-zinc-950">
-                    <img 
+                  <div className="relative w-full rounded-[16px] overflow-hidden shadow-lg border border-zinc-800 bg-zinc-950">
+                    <ProductGradientImage
                       src="/images/specializations/ai_training_solutions_1791357439223.jpg"
-                      alt="GOYE Store Sirwise AI WEB3 Academy Artificial Intelligence AI Training & Solutions"
-                      referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      loading="lazy"
+                      alt="AI Training & Solutions"
+                      category="AI"
+                      title="AI Training & Solutions"
+                      height="220px"
                     />
-                    <div className="absolute top-2.5 left-2.5 bg-black/80 backdrop-blur-md text-[#FFD700] border border-[#FFD700]/40 text-[9px] font-black uppercase px-2.5 py-1 rounded">
-                      UDEMY BESTSELLER
+                    <div className="absolute top-2.5 left-2.5 bg-black text-[#FFD700] border border-[#FFD700] text-[10px] font-black uppercase px-2.5 py-1 rounded-md tracking-wider z-10 shadow-md">
+                      🔒 LOCKED ACCESS
                     </div>
                   </div>
                 </div>
 
                 <div className="px-5 pb-4 space-y-2.5">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-[10px] uppercase font-bold text-[#FFD700] bg-zinc-900 px-2.5 py-0.5 rounded border border-[#FFD700]/30">
-                      Certified Track
-                    </span>
-                    <span className="text-[10px] uppercase font-bold text-gray-400 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">
-                      All Levels
-                    </span>
-                  </div>
-
                   <h3 className="text-white font-black text-base uppercase tracking-tight group-hover:text-[#FFD700] transition-colors">
                     AI Training & Solutions
                   </h3>
@@ -155,10 +148,12 @@ export const GoyeHero: React.FC<GoyeHeroProps> = ({
 
               <div className="p-4 pt-0">
                 <button 
+                  type="button"
+                  style={{ pointerEvents: 'auto', zIndex: 10, position: 'relative' }}
                   onClick={handleAction} 
-                  className="bg-[#FFD700] text-black hover:bg-yellow-400 text-xs font-black uppercase tracking-wider w-full py-3 rounded-xl transition duration-200 cursor-pointer active:scale-[0.98] flex items-center justify-center gap-1.5 shadow-md shadow-yellow-500/10 border-2 border-yellow-300"
+                  className="bg-[#FFD700] text-black hover:bg-yellow-400 text-xs font-black uppercase tracking-wider w-full py-3.5 rounded-xl transition duration-200 cursor-pointer active:scale-[0.98] flex items-center justify-center gap-1.5 shadow-md shadow-yellow-500/10 border-2 border-yellow-300"
                 >
-                  <span>{isAcademyPaid ? 'Start Learning' : '🔒 LOCK ACADEMY - 2 Pi'}</span>
+                  <span>{isAcademyPaid ? '✅ ACCESS NOW' : '🔒 LOCK - 2 Pi'}</span>
                   <ArrowRight size={13} />
                 </button>
               </div>
@@ -168,30 +163,21 @@ export const GoyeHero: React.FC<GoyeHeroProps> = ({
             <div className="group bg-[#0e0e0e] hover:bg-[#131313] rounded-2xl border border-zinc-800 hover:border-[#FFD700] transition duration-300 flex flex-col justify-between shadow-xl overflow-hidden">
               <div>
                 <div className="p-3">
-                  <div className="relative w-full aspect-[4/3] rounded-[16px] overflow-hidden shadow-lg border border-zinc-800 bg-zinc-950">
-                    <img 
+                  <div className="relative w-full rounded-[16px] overflow-hidden shadow-lg border border-zinc-800 bg-zinc-950">
+                    <ProductGradientImage
                       src="/images/specializations/defi_yield_farming_1791357364300.jpg"
-                      alt="GOYE Store Sirwise AI WEB3 Academy DeFi Yield Farming"
-                      referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      loading="lazy"
+                      alt="DeFi Yield Farming"
+                      category="WEB3"
+                      title="DeFi Yield Farming"
+                      height="220px"
                     />
-                    <div className="absolute top-2.5 left-2.5 bg-black/80 backdrop-blur-md text-[#00FF88] border border-emerald-500/40 text-[9px] font-black uppercase px-2.5 py-1 rounded">
-                      BINANCE ACADEMY STANDARD
+                    <div className="absolute top-2.5 left-2.5 bg-black text-[#FFD700] border border-[#FFD700] text-[10px] font-black uppercase px-2.5 py-1 rounded-md tracking-wider z-10 shadow-md">
+                      🔒 LOCKED ACCESS
                     </div>
                   </div>
                 </div>
 
                 <div className="px-5 pb-4 space-y-2.5">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-[10px] uppercase font-bold text-[#FFD700] bg-zinc-900 px-2.5 py-0.5 rounded border border-[#FFD700]/30">
-                      Certified Track
-                    </span>
-                    <span className="text-[10px] uppercase font-bold text-gray-400 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">
-                      Intermediate
-                    </span>
-                  </div>
-
                   <h3 className="text-white font-black text-base uppercase tracking-tight group-hover:text-[#FFD700] transition-colors">
                     DeFi Yield Farming
                   </h3>
@@ -203,10 +189,12 @@ export const GoyeHero: React.FC<GoyeHeroProps> = ({
 
               <div className="p-4 pt-0">
                 <button 
+                  type="button"
+                  style={{ pointerEvents: 'auto', zIndex: 10, position: 'relative' }}
                   onClick={handleAction} 
-                  className="bg-[#FFD700] text-black hover:bg-yellow-400 text-xs font-black uppercase tracking-wider w-full py-3 rounded-xl transition duration-200 cursor-pointer active:scale-[0.98] flex items-center justify-center gap-1.5 shadow-md shadow-yellow-500/10 border-2 border-yellow-300"
+                  className="bg-[#FFD700] text-black hover:bg-yellow-400 text-xs font-black uppercase tracking-wider w-full py-3.5 rounded-xl transition duration-200 cursor-pointer active:scale-[0.98] flex items-center justify-center gap-1.5 shadow-md shadow-yellow-500/10 border-2 border-yellow-300"
                 >
-                  <span>{isAcademyPaid ? 'Start Learning' : '🔒 LOCK ACADEMY - 2 Pi'}</span>
+                  <span>{isAcademyPaid ? '✅ ACCESS NOW' : '🔒 LOCK - 2 Pi'}</span>
                   <ArrowRight size={13} />
                 </button>
               </div>
@@ -216,30 +204,21 @@ export const GoyeHero: React.FC<GoyeHeroProps> = ({
             <div className="group bg-[#0e0e0e] hover:bg-[#131313] rounded-2xl border border-zinc-800 hover:border-[#FFD700] transition duration-300 flex flex-col justify-between shadow-xl overflow-hidden">
               <div>
                 <div className="p-3">
-                  <div className="relative w-full aspect-[4/3] rounded-[16px] overflow-hidden shadow-lg border border-zinc-800 bg-zinc-950">
-                    <img 
+                  <div className="relative w-full rounded-[16px] overflow-hidden shadow-lg border border-zinc-800 bg-zinc-950">
+                    <ProductGradientImage
                       src="/images/specializations/smart_contract_solidity_1791357396617.jpg"
-                      alt="GOYE Store Sirwise AI WEB3 Academy Smart Contract Development"
-                      referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      loading="lazy"
+                      alt="Smart Contract Development"
+                      category="WEB3"
+                      title="Smart Contract Development"
+                      height="220px"
                     />
-                    <div className="absolute top-2.5 left-2.5 bg-black/80 backdrop-blur-md text-cyan-300 border border-cyan-500/40 text-[9px] font-black uppercase px-2.5 py-1 rounded">
-                      COURSERA VERIFIED
+                    <div className="absolute top-2.5 left-2.5 bg-black text-[#FFD700] border border-[#FFD700] text-[10px] font-black uppercase px-2.5 py-1 rounded-md tracking-wider z-10 shadow-md">
+                      🔒 LOCKED ACCESS
                     </div>
                   </div>
                 </div>
 
                 <div className="px-5 pb-4 space-y-2.5">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-[10px] uppercase font-bold text-[#FFD700] bg-zinc-900 px-2.5 py-0.5 rounded border border-[#FFD700]/30">
-                      Certified Track
-                    </span>
-                    <span className="text-[10px] uppercase font-bold text-gray-400 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">
-                      Developer
-                    </span>
-                  </div>
-
                   <h3 className="text-white font-black text-base uppercase tracking-tight group-hover:text-[#FFD700] transition-colors">
                     Smart Contract Development
                   </h3>
@@ -251,10 +230,12 @@ export const GoyeHero: React.FC<GoyeHeroProps> = ({
 
               <div className="p-4 pt-0">
                 <button 
+                  type="button"
+                  style={{ pointerEvents: 'auto', zIndex: 10, position: 'relative' }}
                   onClick={handleAction} 
-                  className="bg-[#FFD700] text-black hover:bg-yellow-400 text-xs font-black uppercase tracking-wider w-full py-3 rounded-xl transition duration-200 cursor-pointer active:scale-[0.98] flex items-center justify-center gap-1.5 shadow-md shadow-yellow-500/10 border-2 border-yellow-300"
+                  className="bg-[#FFD700] text-black hover:bg-yellow-400 text-xs font-black uppercase tracking-wider w-full py-3.5 rounded-xl transition duration-200 cursor-pointer active:scale-[0.98] flex items-center justify-center gap-1.5 shadow-md shadow-yellow-500/10 border-2 border-yellow-300"
                 >
-                  <span>{isAcademyPaid ? 'Start Learning' : '🔒 LOCK ACADEMY - 2 Pi'}</span>
+                  <span>{isAcademyPaid ? '✅ ACCESS NOW' : '🔒 LOCK - 2 Pi'}</span>
                   <ArrowRight size={13} />
                 </button>
               </div>

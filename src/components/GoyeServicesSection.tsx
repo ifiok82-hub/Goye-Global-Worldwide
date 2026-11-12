@@ -134,6 +134,7 @@ export const GoyeServicesSection: React.FC<GoyeServicesSectionProps> = ({
                 {/* 3. Button: 🔒 LOCK - 2 Pi */}
                 <button
                   type="button"
+                  style={{ pointerEvents: 'auto', zIndex: 10, position: 'relative' }}
                   onClick={() => handleAction(serv)}
                   className="w-full font-black uppercase text-xs tracking-widest py-3.5 rounded-xl transition duration-200 cursor-pointer active:scale-95 shadow-md flex items-center justify-center bg-[#FFD700] hover:bg-yellow-400 text-black shadow-yellow-500/20"
                 >

@@ -6,15 +6,11 @@ interface GoyeHeaderProps {
   currentTab: string;
   setTab: (tab: string) => void;
   onOpenConsultation?: () => void;
-  onOpenAdminLogin?: () => void;
-  logoTapCount?: React.MutableRefObject<number>;
 }
 
 export const GoyeHeader: React.FC<GoyeHeaderProps> = ({
   currentTab,
-  setTab,
-  onOpenAdminLogin,
-  logoTapCount
+  setTab
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -57,20 +53,9 @@ export const GoyeHeader: React.FC<GoyeHeaderProps> = ({
   };
 
   const handleLogoClick = () => {
-    if (logoTapCount) {
-      logoTapCount.current += 1;
-      const count = logoTapCount.current;
-      if (count >= 5) {
-        logoTapCount.current = 0;
-        if (onOpenAdminLogin) {
-          onOpenAdminLogin();
-        }
-      }
-      setTimeout(() => {
-        if (logoTapCount) logoTapCount.current = 0;
-      }, 4000);
-    }
     setTab('home');
+    window.location.hash = 'home';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const navLinks = [

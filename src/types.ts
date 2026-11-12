@@ -1,32 +1,28 @@
 export interface BundlePowerBankOption {
   id: string;
   name: string;
-  priceUSD: number;
-  priceNGN: number;
+  piPrice?: number;
   image: string;
 }
 
 export interface BundleEarbudsOption {
   id: string;
   name: string;
-  priceUSD: number;
-  priceNGN: number;
+  piPrice?: number;
   image?: string;
 }
 
 export interface BundleLipGlossOption {
   id: string;
   name: string;
-  priceUSD: number;
-  priceNGN: number;
+  piPrice?: number;
   image?: string;
 }
 
 export interface ProductVariation {
   id?: string;
   name: string;
-  priceUSD?: number;
-  priceNGN?: number;
+  piPrice?: number;
   options?: string[];
 }
 
@@ -34,13 +30,9 @@ export interface ShippingOption {
   country?: string;
   method?: string;
   days?: string;
-  feeUSD?: number;
-  feeNGN?: number;
+  feePi?: number;
   carrier?: string;
   note?: string;
-  usa?: { carrier?: string; feeUSD: number; days: string };
-  uk?: { carrier?: string; feeUSD: number; days: string };
-  nigeria?: { carrier?: string; feeUSD: number; days: string; note?: string };
 }
 
 export interface Product {
@@ -48,10 +40,6 @@ export interface Product {
   name: string;
   category: string;
   piPrice?: number;
-  price?: number;
-  priceUSD?: number;
-  priceGBP?: number;
-  priceNGN?: number;
   costUSD?: number;
   image: string;
   imageUrl?: string;

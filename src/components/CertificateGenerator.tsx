@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import jsPDF from 'jspdf';
 import { Download, Lock } from 'lucide-react';
 
-export default function CertificateGenerator({ isCompleted, isEnrolled, userProfile, priceUSD = 49.99, displaySymbol = "$", localPrice = "49.99", onUnlock, onToast }: any) {
+export default function CertificateGenerator({ isCompleted, isEnrolled, userProfile, onUnlock, onToast }: any) {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handleDownload = () => {
@@ -107,7 +107,7 @@ export default function CertificateGenerator({ isCompleted, isEnrolled, userProf
           className="bg-[#222] text-gray-500 font-black py-4 px-8 rounded-xl flex items-center justify-center gap-2 cursor-pointer pointer-events-auto z-10"
         >
           <Lock size={24} />
-          Payment Required {displaySymbol}{localPrice}
+          🔒 LOCK - 2 Pi
         </button>
         <p className="text-gray-500 text-xs mt-2 text-center">Enroll to unlock your certificate</p>
       </div>

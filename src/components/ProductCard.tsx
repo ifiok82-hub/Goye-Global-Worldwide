@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { loginWithPi, toPi } from '../lib/piAuth';
+import ProductGradientImage from './ProductGradientImage';
 
 export interface ProductItem {
   id: string;
@@ -7,9 +8,6 @@ export interface ProductItem {
   title?: string;
   slug?: string;
   piPrice?: number;
-  price?: number;
-  priceUSD?: number;
-  priceNGN?: number;
   isLocked?: boolean;
   is_locked?: boolean;
   preview_image?: string;
@@ -29,7 +27,6 @@ interface ProductCardProps {
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) => {
-  const [imageFailed, setImageFailed] = useState(false);
   const [isLocked, setIsLocked] = useState<boolean>(() => {
     if (typeof window === 'undefined') return true;
     return (
@@ -41,7 +38,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) =
 
   const productSlug = product.slug || product.id;
   const imgSrc = product.preview_image || (productSlug ? `/images/old/${productSlug}.jpg` : product.image);
-  const finalPiPrice = product.piPrice !== undefined ? product.piPrice : toPi(product.priceNGN, product.priceUSD || product.price, 2);
+  const finalPiPrice = product.piPrice !== undefined ? product.piPrice : 2;
+  const prodName = product.name || product.title || 'Digital Product';
 
   const handleAction = async () => {
     if (!isLocked) {
@@ -60,10 +58,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) =
       try {
         const paymentData = {
           amount: finalPiPrice,
-          memo: product.name || product.title || 'Digital Product',
+          memo: prodName,
           metadata: {
             productId: product.id,
-            productName: product.name || product.title,
+            productName: prodName,
             piPrice: finalPiPrice
           }
         };
@@ -115,24 +113,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) =
 
   return (
     <div className="bg-[#0e0e0e] rounded-2xl p-5 flex flex-col justify-between border border-zinc-800 shadow-xl">
-      {/* 1. Image with Badge */}
-      <div className="relative w-full aspect-[4/3] rounded-[16px] overflow-hidden shadow-lg border border-zinc-800 bg-zinc-950 mb-4 flex items-center justify-center">
-        {imgSrc && !imageFailed ? (
-          <img
-            src={imgSrc}
-            alt={product.name || product.title || 'Product'}
-            referrerPolicy="no-referrer"
-            className="w-full h-full object-cover"
-            onError={() => setImageFailed(true)}
-            loading="lazy"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-zinc-900 text-[#FFD700] font-black text-xs uppercase p-4 text-center">
-            {product.name || product.title}
-          </div>
-        )}
+      {/* 1. Image with LOCKED ACCESS Badge */}
+      <div className="relative w-full rounded-[16px] overflow-hidden shadow-lg border border-zinc-800 bg-zinc-950 mb-4">
+        <ProductGradientImage
+          src={imgSrc}
+          alt={prodName}
+          category={product.category}
+          title={prodName}
+          height="220px"
+        />
 
-        {/* Badge: 🔒 LOCKED ACCESS (black badge, yellow border) */}
+        {/* Badge: Strictly 🔒 LOCKED ACCESS */}
         <div className="absolute top-2.5 left-2.5 bg-black text-[#FFD700] border border-[#FFD700] text-[10px] font-black uppercase px-2.5 py-1 rounded-md tracking-wider z-10 shadow-md">
           {isLocked ? '🔒 LOCKED ACCESS' : '✅ ACCESS GRANTED'}
         </div>
@@ -140,11 +131,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) =
 
       {/* 2. Title */}
       <h3 className="text-white font-black text-base uppercase tracking-tight mb-4 line-clamp-2">
-        {product.name || product.title}
+        {prodName}
       </h3>
 
-      {/* 3. Button: 🔒 LOCK - {finalPiPrice} Pi */}
+      {/* 3. Button: Click directly triggers Pi payment */}
       <button
+        type="button"
+        style={{ pointerEvents: 'auto', zIndex: 10, position: 'relative' }}
         onClick={handleAction}
         className="w-full font-black uppercase text-xs tracking-widest py-3.5 rounded-xl transition duration-200 cursor-pointer active:scale-95 shadow-md flex items-center justify-center bg-[#FFD700] hover:bg-yellow-400 text-black shadow-yellow-500/20"
       >

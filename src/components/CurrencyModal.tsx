@@ -13,7 +13,6 @@ export const CURRENCIES = [
   { code: 'ZAR', symbol: 'R', rate: 18.9, name: 'South African Rand' },
   { code: 'GHS', symbol: '₵', rate: 12.5, name: 'Ghanaian Cedi' },
   { code: 'KES', symbol: 'KSh', rate: 155.0, name: 'Kenyan Shilling' },
-  { code: 'USDC', symbol: 'USDC', rate: 1, name: 'USD Coin' },
   { code: 'PI', symbol: 'π', rate: 1/314159, name: 'Pi Network GCV' }
 ];
 

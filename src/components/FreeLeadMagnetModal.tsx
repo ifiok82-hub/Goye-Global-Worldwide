@@ -415,12 +415,12 @@ Structure the output into 4 clear sections: Executive Summary, Project Scope, Ti
           <div className="overflow-y-auto pr-1">
             {/* Top Badge */}
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#FFD700]/10 border border-[#FFD700]/40 rounded-full text-[#FFD700] text-xs font-bold uppercase tracking-wider mb-4">
-              <Sparkles size={14} /> TRIPWIRE MICRO-OFFER (0.000003 Pi)
+              <Sparkles size={14} /> TRIPWIRE MICRO-OFFER (1 Pi)
             </div>
 
             {/* Headline */}
             <h2 className="text-2xl sm:text-3xl font-black text-white leading-tight mb-2">
-              Get the <span className="text-[#FFD700]">AI Starter & Global Travel Pass</span> for 0.000003 Pi
+              Get the <span className="text-[#FFD700]">AI Starter & Global Travel Pass</span> for 1 Pi
             </h2>
             <p className="text-gray-300 text-sm sm:text-base mb-6 font-medium">
               3 High-Impact Copy-Paste Prompts + 1GB Travel eSIM Trial + 1-Day Access to Sirwise AI Academy.

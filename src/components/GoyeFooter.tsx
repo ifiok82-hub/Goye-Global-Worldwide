@@ -4,12 +4,12 @@ import { Lock, MessageSquare, Mail, Globe, ShieldCheck, Heart, QrCode } from 'lu
 interface GoyeFooterProps {
   setTab: (tab: string) => void;
   onOpenConsultation?: () => void;
-  onOpenAdminLogin: () => void;
+  onLogoTap?: () => void;
 }
 
 export const GoyeFooter: React.FC<GoyeFooterProps> = ({
   setTab,
-  onOpenAdminLogin
+  onLogoTap
 }) => {
   const handleNav = (tabKey: string, e: React.MouseEvent) => {
     e.preventDefault();
@@ -27,7 +27,12 @@ export const GoyeFooter: React.FC<GoyeFooterProps> = ({
           
           {/* About Us */}
           <div className="space-y-4 md:col-span-1">
-            <div className="flex items-center gap-3">
+            <div 
+              onClick={onLogoTap}
+              style={{ cursor: 'pointer' }}
+              title="Tap 7 times for Admin"
+              className="flex items-center gap-3 select-none transition-transform active:scale-95"
+            >
               <div className="w-9 h-9 rounded-xl bg-[#FFD700] flex items-center justify-center font-black text-black text-lg shadow-lg">
                 🌎
               </div>
@@ -192,15 +197,6 @@ export const GoyeFooter: React.FC<GoyeFooterProps> = ({
           </p>
 
           <div className="flex items-center gap-4 text-[10px] text-gray-600">
-            <button
-              onClick={onOpenAdminLogin}
-              className="text-zinc-700 hover:text-[#FFD700] transition flex items-center gap-1 cursor-pointer"
-              title="Admin Access"
-            >
-              <Lock size={10} />
-              <span>Admin Access</span>
-            </button>
-            <span>•</span>
             <span className="text-[#FFD700] font-black">Built for Pi Network</span>
             <span>•</span>
             <span>https://gasv.store</span>

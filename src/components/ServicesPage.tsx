@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { SPECIALIZATIONS, Specialization } from '../data/specializations';
 import { loginWithPi } from '../lib/piAuth';
+import ProductGradientImage from './ProductGradientImage';
 
 interface ServicesPageProps {
   onBack?: () => void;
@@ -24,7 +25,11 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({
     : SPECIALIZATIONS.filter(s => s.category === selectedCategory);
 
   const handleAction = async (service: Specialization) => {
-    const isUnlocked = localStorage.getItem(`paid_${service.id}`) === 'true' || localStorage.getItem(`unlocked_${service.id}`) === 'true';
+    const isUnlocked = typeof window !== 'undefined' && (
+      localStorage.getItem(`paid_${service.id}`) === 'true' ||
+      localStorage.getItem(`unlocked_${service.id}`) === 'true'
+    );
+
     if (isUnlocked) {
       onSelectService(service);
       return;
@@ -37,7 +42,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({
       try {
         const paymentData = {
           amount: service.piPrice,
-          memo: service.title,
+          memo: `Specialization: ${service.title}`,
           metadata: {
             productId: service.id,
             productName: service.title,
@@ -94,7 +99,9 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({
       {/* Top Bar with Back Button */}
       <div className="flex items-center justify-between">
         <button
+          type="button"
           onClick={onBack}
+          style={{ pointerEvents: 'auto', zIndex: 10, position: 'relative' }}
           className="text-gray-400 hover:text-white text-xs font-bold uppercase tracking-wider bg-zinc-900 border border-zinc-800 px-4 py-2 rounded-xl transition cursor-pointer"
         >
           ← Back to Overview
@@ -113,6 +120,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({
         {categories.map((cat) => (
           <button
             key={cat}
+            type="button"
             onClick={() => setSelectedCategory(cat)}
             className={`px-4 py-2 text-xs font-bold rounded-xl transition duration-150 cursor-pointer ${
               selectedCategory === cat
@@ -125,7 +133,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({
         ))}
       </div>
 
-      {/* Grid: SHOW ONLY Image + Title + Button */}
+      {/* Grid: Image + Title + Button */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filtered.map((service) => {
           const isUnlocked = typeof window !== 'undefined' && (
@@ -139,13 +147,13 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({
               className="bg-[#0e0e0e] rounded-2xl p-5 flex flex-col justify-between border border-zinc-800 shadow-xl"
             >
               {/* 1. Image with LOCKED ACCESS Badge */}
-              <div className="relative w-full aspect-[4/3] rounded-[16px] overflow-hidden shadow-lg border border-zinc-800 bg-zinc-950 mb-4 flex items-center justify-center">
-                <img
+              <div className="relative w-full rounded-[16px] overflow-hidden shadow-lg border border-zinc-800 bg-zinc-950 mb-4">
+                <ProductGradientImage
                   src={service.imageUrl}
                   alt={service.imageAlt || service.title}
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover"
-                  loading="lazy"
+                  category={service.category}
+                  title={service.title}
+                  height="220px"
                 />
                 <div className="absolute top-2.5 left-2.5 bg-black text-[#FFD700] border border-[#FFD700] text-[10px] font-black uppercase px-2.5 py-1 rounded-md tracking-wider z-10 shadow-md">
                   {isUnlocked ? '✅ ACCESS GRANTED' : '🔒 LOCKED ACCESS'}
@@ -160,6 +168,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({
               {/* 3. Button */}
               <button
                 type="button"
+                style={{ pointerEvents: 'auto', zIndex: 10, position: 'relative' }}
                 onClick={() => handleAction(service)}
                 className="w-full font-black uppercase text-xs tracking-widest py-3.5 rounded-xl transition duration-200 cursor-pointer active:scale-95 shadow-md flex items-center justify-center bg-[#FFD700] hover:bg-yellow-400 text-black shadow-yellow-500/20"
               >

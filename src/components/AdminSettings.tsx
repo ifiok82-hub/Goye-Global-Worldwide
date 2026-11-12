@@ -11,8 +11,6 @@ export default function AdminSettings() {
   const [piGatewaySecret, setPiGatewaySecret] = useState('');
   const [piSubGatewayKey, setPiSubGatewayKey] = useState('');
   const [piSubGatewaySecret, setPiSubGatewaySecret] = useState('');
-  const [usdtAddress, setUsdtAddress] = useState('');
-  const [usdcAddress, setUsdcAddress] = useState('');
   const [piMerchantAccount, setPIMERCHANTAccount] = useState('');
   const [piMerchantName, setPIMERCHANTName] = useState('');
   const [enablePi, setEnablePi] = useState(false);
@@ -64,8 +62,6 @@ export default function AdminSettings() {
   const [showPiGatewaySecret, setShowPiGatewaySecret] = useState(false);
   const [showPiSubGatewayKey, setShowPiSubGatewayKey] = useState(false);
   const [showPiSubGatewaySecret, setShowPiSubGatewaySecret] = useState(false);
-  const [showUsdtAddress, setShowUsdtAddress] = useState(false);
-  const [showUsdcAddress, setShowUsdcAddress] = useState(false);
   const [showPIMERCHANTAccount, setShowPIMERCHANTAccount] = useState(false);
 
   useEffect(() => {
@@ -79,8 +75,6 @@ export default function AdminSettings() {
     const piGatewaySec = localStorage.getItem('piGateway_admin_sk') || localStorage.getItem('PIGATEWAY_SECRET_KEY') || '';
     const piSubGateway = localStorage.getItem('PISUBGATEWAY_KEY') || localStorage.getItem('PISUBGATEWAY_PUBLIC_KEY') || '';
     const piSubGatewaySec = localStorage.getItem('PISUBGATEWAY_SECRET_KEY') || '';
-    const usdt = localStorage.getItem('USDT_ADDRESS') || '0xdc7f804B36aB672Ec31642dF418F29e73281b040';
-    const usdc = localStorage.getItem('USDC_ADDRESS') || '0xdc7f804B36aB672Ec31642dF418F29e73281b040';
     const piMerchantAcc = localStorage.getItem('PIMERCHANT_ACCOUNT') || '6113541882';
     const piMerchantNm = localStorage.getItem('PIMERCHANT_NAME') || 'GOYE STORE GLOBAL';
     const isPiEnabled = localStorage.getItem('ENABLE_PI_PAYMENT') === 'true' || localStorage.getItem('enable_pi') === 'true';
@@ -94,22 +88,19 @@ export default function AdminSettings() {
     setPiGatewaySecret(piGatewaySec);
     setPiSubGatewayKey(piSubGateway);
     setPiSubGatewaySecret(piSubGatewaySec);
-    setUsdtAddress(usdt);
-    setUsdcAddress(usdc);
     setPIMERCHANTAccount(piMerchantAcc);
     setPIMERCHANTName(piMerchantNm);
     setEnablePi(isPiEnabled);
 
-    // Fetch keys from server with RBAC Admin Authentication
-    const adminToken = localStorage.getItem('admin_token') || localStorage.getItem('admin_password') || 'GoyeBN3583878';
+    // Fetch keys from server with Admin Token Authentication
+    const adminToken = localStorage.getItem('admin_token') || 'admin_session';
     setIsLoading(true);
 
     fetch('/api/admin/settings', {
       headers: {
         'Accept': 'application/json',
         'Authorization': `Bearer ${adminToken}`,
-        'x-admin-token': adminToken,
-        'x-admin-password': adminToken
+        'x-admin-token': adminToken
       }
     })
       .then(r => r.json())
@@ -125,8 +116,6 @@ export default function AdminSettings() {
           if (d.piGateway_secret) setPiGatewaySecret(d.piGateway_secret);
           if (d.piSubGateway) setPiSubGatewayKey(d.piSubGateway);
           if (d.piSubGateway_secret) setPiSubGatewaySecret(d.piSubGateway_secret);
-          if (d.usdt !== undefined) setUsdtAddress(d.usdt || '');
-          if (d.usdc !== undefined) setUsdcAddress(d.usdc || '');
           if (d.piMerchant !== undefined) setPIMERCHANTAccount(d.piMerchant || '');
           if (d.piMerchant_name) setPIMERCHANTName(d.piMerchant_name);
         }
@@ -160,8 +149,6 @@ export default function AdminSettings() {
     localStorage.setItem('PISUBGATEWAY_KEY', piSubGatewayKey);
     localStorage.setItem('PISUBGATEWAY_PUBLIC_KEY', piSubGatewayKey);
     if (piSubGatewaySecret) localStorage.setItem('PISUBGATEWAY_SECRET_KEY', piSubGatewaySecret);
-    localStorage.setItem('USDT_ADDRESS', usdtAddress || '0xdc7f804B36aB672Ec31642dF418F29e73281b040');
-    localStorage.setItem('USDC_ADDRESS', usdcAddress || '0xdc7f804B36aB672Ec31642dF418F29e73281b040');
     localStorage.setItem('PIMERCHANT_ACCOUNT', piMerchantAccount || '6113541882');
     localStorage.setItem('PIMERCHANT_NAME', piMerchantName || 'GOYE STORE GLOBAL');
     localStorage.setItem('ENABLE_PI_PAYMENT', enablePi ? 'true' : 'false');
@@ -178,14 +165,12 @@ export default function AdminSettings() {
       piGateway_secret: piGatewaySecret,
       piSubGateway: piSubGatewayKey,
       piSubGateway_secret: piSubGatewaySecret,
-      usdt: usdtAddress || '0xdc7f804B36aB672Ec31642dF418F29e73281b040',
-      usdc: usdcAddress || '0xdc7f804B36aB672Ec31642dF418F29e73281b040',
       piMerchant: piMerchantAccount || '6113541882',
       piMerchant_name: piMerchantName || 'GOYE STORE GLOBAL',
       enable_pi: enablePi
     };
 
-    const adminToken = localStorage.getItem('admin_token') || localStorage.getItem('admin_password') || 'GoyeBN3583878';
+    const adminToken = localStorage.getItem('admin_token') || 'admin_session';
 
     try {
       setIsLoading(true);
@@ -194,8 +179,7 @@ export default function AdminSettings() {
         headers: { 
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${adminToken}`,
-          'x-admin-token': adminToken,
-          'x-admin-password': adminToken
+          'x-admin-token': adminToken
         },
         body: JSON.stringify(payload)
       });
@@ -225,7 +209,7 @@ export default function AdminSettings() {
     }
 
     setIsLoading(true);
-    const adminToken = localStorage.getItem('admin_token') || localStorage.getItem('admin_password') || 'GoyeBN3583878';
+    const adminToken = localStorage.getItem('admin_token') || 'admin_session';
 
     try {
       const res = await fetch('/api/admin/change-password', {
@@ -233,7 +217,7 @@ export default function AdminSettings() {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${adminToken}`,
-          'x-admin-password': adminToken
+          'x-admin-token': adminToken
         },
         body: JSON.stringify({
           currentPassword: adminToken,
@@ -612,59 +596,11 @@ export default function AdminSettings() {
           </div>
         </div>
 
-        {/* 3. WEB3 & CRYPTO WALLET DESTINATIONS */}
+        {/* 3. PI MERCHANT DESTINATIONS */}
         <div className="bg-[#111] border border-[#333] rounded-2xl p-5 space-y-4">
           <div className="flex items-center gap-2 text-[#FFD700] font-bold text-base border-b border-[#222] pb-3">
             <Wallet size={18} />
-            <span>3. Web3 &amp; Crypto Wallet Destinations (Zero Hardcoded Fallbacks)</span>
-          </div>
-
-          <div>
-            <label className="text-xs font-bold text-gray-300 block mb-1">
-              USDT Crypto Wallet Address (BEP20 / BSC)
-            </label>
-            <div className="relative">
-              <input
-                id="usdt_address"
-                type={showUsdtAddress ? 'text' : 'password'}
-                autoComplete="new-password"
-                value={usdtAddress}
-                onChange={(e) => setUsdtAddress(e.target.value)}
-                placeholder="Empty by default — Enter verified 0x... destination wallet"
-                className="w-full bg-black border border-[#333] focus:border-[#FFD700] rounded-xl px-4 py-3 text-sm text-white pr-10 font-mono"
-              />
-              <button
-                type="button"
-                onClick={() => setShowUsdtAddress(!showUsdtAddress)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
-              >
-                {showUsdtAddress ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <label className="text-xs font-bold text-gray-300 block mb-1">
-              USDC Wallet Address (Base Network)
-            </label>
-            <div className="relative">
-              <input
-                id="usdc_address"
-                type={showUsdcAddress ? 'text' : 'password'}
-                autoComplete="new-password"
-                value={usdcAddress}
-                onChange={(e) => setUsdcAddress(e.target.value)}
-                placeholder="Empty by default — Enter verified 0x... destination wallet"
-                className="w-full bg-black border border-[#333] focus:border-[#FFD700] rounded-xl px-4 py-3 text-sm text-white pr-10 font-mono"
-              />
-              <button
-                type="button"
-                onClick={() => setShowUsdcAddress(!showUsdcAddress)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
-              >
-                {showUsdcAddress ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
+            <span>3. Pi Network Merchant Destinations</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -803,9 +739,8 @@ export default function AdminSettings() {
         <div className="bg-[#1a1a00] rounded-2xl p-4 border border-[#FFD700]/40 space-y-2">
           <p className="text-[#FFD700] font-black text-xs uppercase tracking-wider">Quick Access:</p>
           <div className="text-gray-300 text-xs space-y-1 font-mono">
-            <p>• Direct: <span className="text-white font-bold">https://www.gasv.store/#admin-settings</span> (no tapping)</p>
-            <p>• Tap: Tap GOYE logo 5 times FAST in 2.5 sec</p>
-            <p>• Password: <span className="text-[#FFD700] font-bold">GoyeBN3583878</span></p>
+            <p>• Access: <span className="text-white font-bold">Tap Footer GOYE Logo 7 times within 3 seconds</span></p>
+            <p>• Authentication: <span className="text-[#FFD700] font-bold">Pi Network Account (Zero Password)</span></p>
           </div>
           <button 
             onClick={() => { window.location.hash = 'support'; }} 

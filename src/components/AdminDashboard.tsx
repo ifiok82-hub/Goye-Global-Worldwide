@@ -6,7 +6,13 @@ import { safeParse, safeGetNumber, safeFormatDate, safeFormatDateTime } from '..
 import AdminSettings from './AdminSettings';
 import GoyeCustomerIntelligence from './GoyeCustomerIntelligence';
 
-export default function AdminDashboard({ showToast }: { showToast: (m: string, t?: string) => void }) {
+export default function AdminDashboard({ 
+  showToast, 
+  onClose 
+}: { 
+  showToast: (m: string, t?: string) => void; 
+  onClose?: () => void; 
+}) {
   const [activeTab, setActiveTab] = useState('intelligence');
   
   // LocalStorage Data
@@ -66,7 +72,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
         },
         body: JSON.stringify({
           secretKey: keyToSave,
-          adminPassword: inputAdminPass || localStorage.getItem('admin_password') || localStorage.getItem('admin_token') || 'GoyeBN3583878'
+          adminPassword: inputAdminPass || localStorage.getItem('admin_token') || ''
         })
       });
 
@@ -161,7 +167,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
     localStorage.setItem('ENABLE_PI_PAYMENT', enable ? 'true' : 'false');
     localStorage.setItem('enable_pi', enable ? 'true' : 'false');
     
-    const activeToken = localStorage.getItem('admin_password') || localStorage.getItem('admin_token') || 'GoyeBN3583878';
+    const activeToken = localStorage.getItem('admin_token') || 'admin_session';
     await fetch('/api/admin/toggle-pi-customer-payments', {
       method: 'POST',
       headers: {
@@ -182,7 +188,7 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
   const handleAuditDbForTestnet = async () => {
     setIsAuditingDb(true);
     try {
-      const activeToken = localStorage.getItem('admin_password') || localStorage.getItem('admin_token') || 'GoyeBN3583878';
+      const activeToken = localStorage.getItem('admin_token') || 'admin_session';
       const res = await fetch('/api/admin/audit-pi-testnet', {
         method: 'POST',
         headers: {
@@ -682,11 +688,11 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
           piSandboxMode: paymentConfig.piSandboxMode,
           piSandbox: paymentConfig.piSandboxMode,
           piWallet: activePiWallet,
-          adminPassword: localStorage.getItem('admin_password') || localStorage.getItem('admin_token') || 'GoyeBN3583878'
+          adminPassword: localStorage.getItem('admin_token') || ''
         })
       }).catch(e => {});
 
-      const activeToken = localStorage.getItem('admin_password') || localStorage.getItem('admin_token') || 'GoyeBN3583878';
+      const activeToken = localStorage.getItem('admin_token') || 'admin_session';
       await fetch('/api/admin/settings', {
         method: 'POST',
         headers: {
@@ -987,8 +993,12 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
     localStorage.removeItem('is_admin');
     localStorage.removeItem('admin_token');
     localStorage.removeItem('admin_password');
-    window.location.hash = 'home';
-    window.location.reload();
+    if (onClose) {
+      onClose();
+    } else {
+      window.location.hash = 'home';
+      window.location.reload();
+    }
   };
 
   return (
@@ -998,7 +1008,15 @@ export default function AdminDashboard({ showToast }: { showToast: (m: string, t
           <h2 className="text-3xl font-black text-white">Store Management Suite</h2>
           <p className="text-gray-400 text-sm">Real-time store management, completed sales tracking, & access control.</p>
         </div>
-        <div className="flex gap-2 items-center">
+        <div className="flex flex-wrap gap-2 items-center">
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="flex items-center gap-2 bg-[#FFD700] hover:bg-yellow-400 text-black px-4 py-2 rounded-xl text-sm font-black transition cursor-pointer"
+            >
+              ← Back to Store
+            </button>
+          )}
           <button 
             onClick={refreshOrders} 
             disabled={isLoadingOrders || isAuditing}

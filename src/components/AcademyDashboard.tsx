@@ -2,14 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { GraduationCap, CheckCircle, Circle, Play, Lock, ChevronRight, Globe, Award, ShieldCheck, DollarSign, Download, Sparkles, X, FileText, Video, BookOpen, ExternalLink, HelpCircle, CreditCard, Send, Mail } from 'lucide-react';
 import CertificateGenerator from './CertificateGenerator';
 import VideoModalPlayer from './VideoModalPlayer';
-import { cleanUserEmail } from '../lib/contact';
-import { RECEIVING_WALLET_ADDRESS, PI_WALLET_ADDRESS } from '../config/payment';
+import { PI_WALLET_ADDRESS } from '../config/payment';
 import { loginWithPi } from '../lib/piAuth';
 
 const showToast = (msg: string, type?: string) => {
   if (typeof (window as any).showToast === 'function') {
     (window as any).showToast(msg, type);
   }
+};
+
+const cleanUserEmail = (email: string) => {
+  const e = (email || '').trim().toLowerCase();
+  if (e && e.includes('@') && e.includes('.')) return e;
+  return '';
 };
 
 const GLOBAL_MODULES = [
@@ -92,11 +97,11 @@ const GLOBAL_MODULES = [
     id: 6, 
     title: 'Crypto, DeFi & Pi Network Global Economy', 
     shortTitle: 'Crypto, DeFi & Pi Network',
-    desc: 'Understanding Pi Network, DeFi, USDT BEP20 (BNB Smart Chain), How to earn globally',
+    desc: 'Understanding Pi Network, DeFi, Smart Contracts, and How to earn globally',
     duration: '40-45 mins',
     videoUrl: 'https://www.youtube.com/embed/aircAruvnKk',
     pdfTitle: 'Pi Network & DeFi Staking Manual (PDF)',
-    exercise: 'Calculate your global Pi GCV portfolio value and set up a USDT BEP20 settlement address.',
+    exercise: 'Calculate your global Pi portfolio value and set up your verified Pi wallet address.',
     quiz: [
       { q: 'What does GCV stand for in the Pi Network ecosystem?', options: ['Global Consensus Value', 'General Currency Variable', 'Grand Crypto Value', 'Gold Coin Vault'], ans: 0 }
     ],
@@ -207,123 +212,12 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
     showToast('✅ Inquiry sent successfully! Our team will contact ' + cleanEmail + ' shortly.', 'success');
   };
 
-  const copyUSDC = () => {
-    const addr = RECEIVING_WALLET_ADDRESS;
-    navigator.clipboard.writeText(addr).then(() => {
-      showToast('✅ Copied: ' + addr + ' - Send USDT on BNB Smart Chain (BEP20) only', 'success');
-    });
-  };
-
-  const verifyUSDCPayment = async () => {
-    const txInput = (document.getElementById('usdtTxHash') || document.getElementById('usdcTxHash')) as HTMLInputElement;
-    const tx = (txInput?.value || usdcTxHash || '').trim();
-    const emailInput = document.getElementById('customerEmail') as HTMLInputElement;
-    const email = (emailInput?.value || customerEmail || localStorage.getItem('user_email') || '').trim();
-
-    if (!email.includes('@') || !email.includes('.')) {
-      showToast('Enter complete valid email first', 'error');
-      return;
-    }
-    if (!tx || tx.length < 20) {
-      showToast('Paste Transaction Hash after you sent USDT BEP20 2 Pi', 'error');
-      return;
-    }
-
-    if (!tx.startsWith('0x') || tx.length !== 66) {
-      showToast('Invalid Tx Hash - Must start with 0x and 66 chars', 'error');
-      return;
-    }
-
-    localStorage.setItem('user_email', email);
-    localStorage.setItem('sirwise_paid', 'true');
-    localStorage.setItem('academy_unlocked', 'true');
-    localStorage.setItem('payment_verified', 'true');
-    localStorage.setItem('payment_method', 'USDT BEP20');
-    localStorage.setItem('payment_ref', tx);
-    localStorage.setItem('crypto_address', RECEIVING_WALLET_ADDRESS);
-
-    const record = {
-      id: tx,
-      customer: email.split('@')[0],
-      email: email,
-      country: '🌍 Global USDT BEP20',
-      product: 'Sirwise AI Web3 Academy - 2 Pi',
-      amount: '2 Pi',
-      amount_num: 2,
-      status: 'Verified',
-      verified: 'VERIFIED',
-      payment_method: 'USDT BEP20',
-      crypto_address: RECEIVING_WALLET_ADDRESS,
-      date: new Date().toLocaleDateString('en-GB'),
-      date_wat: new Date().toLocaleString('en-GB', { timeZone: 'Africa/Lagos' }) + ' WAT Lagos'
-    };
-
-    let orders = JSON.parse(localStorage.getItem('live_orders') || '[]');
-    if (!Array.isArray(orders)) orders = [];
-    orders.unshift(record);
-    localStorage.setItem('live_orders', JSON.stringify(orders));
-
-    let users = JSON.parse(localStorage.getItem('registered_customers') || '[]');
-    if (!Array.isArray(users)) users = [];
-    users.unshift(record);
-    localStorage.setItem('registered_customers', JSON.stringify(users));
-
-    try {
-      await fetch('https://formsubmit.co/ajax/goyedagosmess@gmail.com', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          subject: 'New USDT BEP20 Payment 2 Pi - ' + email + ' - ' + tx,
-          message: 'USDT BEP20 Payment Received\nEmail: ' + email + '\nTx: ' + tx + '\nAmount: 2 Pi\nAddress: 0xdc7f804B36aB672Ec31642dF418F29e73281b040\nVerify: https://bscscan.io/tx/' + tx
-        })
-      });
-    } catch (e) {}
-
-    showToast('✅ USDT BEP20 Payment Verified! Tx: ' + tx + '. Academy Unlocked!', 'success');
-    setTimeout(() => window.location.reload(), 1000);
-  };
-
-  useEffect(() => {
-    (window as any).copyUSDC = copyUSDC;
-    (window as any).verifyUSDCPayment = verifyUSDCPayment;
-  }, [customerEmail, usdcTxHash]);
-
-  const priceUSD = 2;
-  const currencies: Record<string, { symbol: string; name: string; rate: number }> = {
-    USD: { symbol: "$", name: "US Dollar", rate: 1 },
-    NGN: { symbol: "Pi", name: "Pi Network", rate: 1 },
-    GBP: { symbol: "£", name: "Pound", rate: 0.79 },
-    EUR: { symbol: "€", name: "Euro", rate: 0.92 },
-    CAD: { symbol: "C$", name: "Canadian", rate: 1.35 },
-    AUD: { symbol: "A$", name: "Australian", rate: 1.52 },
-    INR: { symbol: "₹", name: "Rupee", rate: 83 },
-    ZAR: { symbol: "R", name: "Rand", rate: 18.5 },
-    GHS: { symbol: "₵", name: "Cedi", rate: 15 },
-    KES: { symbol: "KSh", name: "Shilling", rate: 130 },
-    AED: { symbol: "AED", name: "Dirham", rate: 3.67 }
-  };
-  const userCurrency = localStorage.getItem("goye_currency") || localStorage.getItem("currency") || "USD";
-  const currentCurrency = currencies[userCurrency] || { symbol: "$", name: "US Dollar", rate: 1 };
-  const displaySymbol = currentCurrency.symbol || "$";
-  const displayPrice = (priceUSD * currentCurrency.rate).toFixed(2);
-  const localPrice = displayPrice;
-
   useEffect(() => {
     try {
-      const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-      if (params && (params.get('admin') === 'RCBN3583878' || params.get('admin_unlock') === 'RCBN3583878')) {
-        localStorage.setItem('sirwise_paid', 'true');
-        localStorage.setItem('payment_verified', 'true');
-        localStorage.setItem('academy_unlocked', 'true');
-        localStorage.setItem('is_admin', 'true');
-      }
-
       const isPaid = localStorage.getItem('sirwise_paid') === 'true';
       const isVerified = localStorage.getItem('payment_verified') === 'true';
       const isUnlocked = localStorage.getItem('academy_unlocked') === 'true';
-      const isAdmin = localStorage.getItem('is_admin') === 'true' || (params && (params.get('admin') === 'RCBN3583878' || params.get('admin_unlock') === 'RCBN3583878'));
-
-      const hasAccess = (isPaid || isVerified || isAdmin) && (isUnlocked || isAdmin);
+      const hasAccess = (isPaid || isVerified) && isUnlocked;
 
       if (hasAccess) {
         setIsEnrolled(true);
@@ -696,9 +590,6 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
           isCompleted={percentComplete === 100} 
           isEnrolled={isEnrolled} 
           userProfile={userProfile} 
-          priceUSD={priceUSD} 
-          displaySymbol={displaySymbol} 
-          localPrice={localPrice} 
           onUnlock={handleBuyUnlockNow} 
           onToast={onToast} 
         />

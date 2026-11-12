@@ -3,19 +3,18 @@ export type PaymentEnvironment = 'STANDARD_WEB' | 'PI_BROWSER';
 export interface ProductPricing {
   id: string;
   name: string;
-  priceUSD: number;
   piPrice: number;
 }
 
-const PRICING_REGISTRY: Record<string, { priceUSD: number; piPrice: number }> = {
-  'esim-global': { priceUSD: 0.5, piPrice: 0.5 },
-  '1000-prompts': { priceUSD: 1, piPrice: 1 },
-  'pi-network': { priceUSD: 1.5, piPrice: 1.5 },
-  'canada-lmia': { priceUSD: 2, piPrice: 2 },
-  'uk-care-visa': { priceUSD: 3, piPrice: 3 },
-  'ai-starter-tripwire': { priceUSD: 1, piPrice: 1 },
-  'ai-starter-tripwire-pass': { priceUSD: 1, piPrice: 1 },
-  'sirwise-academy-full': { priceUSD: 2, piPrice: 2 }
+const PRICING_REGISTRY: Record<string, { piPrice: number }> = {
+  'esim-global': { piPrice: 0.5 },
+  '1000-prompts': { piPrice: 1 },
+  'pi-network': { piPrice: 1.5 },
+  'canada-lmia': { piPrice: 2 },
+  'uk-care-visa': { piPrice: 3 },
+  'ai-starter-tripwire': { piPrice: 1 },
+  'ai-starter-tripwire-pass': { piPrice: 1 },
+  'sirwise-academy-full': { piPrice: 2 }
 };
 
 export function getPaymentEnvironment(): PaymentEnvironment {

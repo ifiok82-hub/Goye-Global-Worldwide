@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
 import { SPECIALIZATIONS, Specialization } from '../data/specializations';
 import { loginWithPi } from '../lib/piAuth';
+import ProductGradientImage from './ProductGradientImage';
 
 interface SpecializationsSectionProps {
   onSelectService: (service: Specialization) => void;
-  onExploreAllServices: () => void;
+  onNavigateTab?: (newTab: string) => void;
+  onExploreAllServices?: () => void;
 }
 
 export const SpecializationsSection: React.FC<SpecializationsSectionProps> = ({
   onSelectService,
+  onNavigateTab,
   onExploreAllServices
 }) => {
   const [selectedFilter, setSelectedFilter] = useState<string>('ALL');
@@ -19,8 +22,12 @@ export const SpecializationsSection: React.FC<SpecializationsSectionProps> = ({
     ? SPECIALIZATIONS
     : SPECIALIZATIONS.filter(s => s.category === selectedFilter);
 
-  const handleCardAction = async (spec: Specialization) => {
-    const isUnlocked = localStorage.getItem(`paid_${spec.id}`) === 'true' || localStorage.getItem(`unlocked_${spec.id}`) === 'true';
+  const handleAction = async (spec: Specialization) => {
+    const isUnlocked = typeof window !== 'undefined' && (
+      localStorage.getItem(`paid_${spec.id}`) === 'true' ||
+      localStorage.getItem(`unlocked_${spec.id}`) === 'true'
+    );
+
     if (isUnlocked) {
       onSelectService(spec);
       return;
@@ -33,7 +40,7 @@ export const SpecializationsSection: React.FC<SpecializationsSectionProps> = ({
       try {
         const paymentData = {
           amount: spec.piPrice,
-          memo: spec.title,
+          memo: `Specialization: ${spec.title}`,
           metadata: {
             productId: spec.id,
             productName: spec.title,
@@ -102,6 +109,7 @@ export const SpecializationsSection: React.FC<SpecializationsSectionProps> = ({
           {categories.map((cat) => (
             <button
               key={cat}
+              type="button"
               onClick={() => setSelectedFilter(cat)}
               className={`px-4 py-2 text-xs font-bold rounded-xl transition duration-150 cursor-pointer ${
                 selectedFilter === cat
@@ -115,7 +123,7 @@ export const SpecializationsSection: React.FC<SpecializationsSectionProps> = ({
         </div>
       </div>
 
-      {/* Specializations Grid - SHOW ONLY Image + Title + Button */}
+      {/* Specializations Grid - Image + Title + Button */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredSpecializations.map((spec) => {
           const isUnlocked = typeof window !== 'undefined' && (
@@ -129,15 +137,16 @@ export const SpecializationsSection: React.FC<SpecializationsSectionProps> = ({
               className="bg-[#0e0e0e] rounded-2xl p-5 flex flex-col justify-between border border-zinc-800 shadow-xl"
             >
               {/* 1. Image with LOCKED ACCESS Badge */}
-              <div className="relative w-full aspect-[4/3] rounded-[16px] overflow-hidden shadow-lg border border-zinc-800 bg-zinc-950 mb-4 flex items-center justify-center">
-                <img
+              <div className="relative w-full rounded-[16px] overflow-hidden shadow-lg border border-zinc-800 bg-zinc-950 mb-4">
+                <ProductGradientImage
                   src={spec.imageUrl}
                   alt={spec.imageAlt || spec.title}
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover"
-                  loading="lazy"
+                  category={spec.category}
+                  title={spec.title}
+                  height="220px"
                 />
-                {/* Badge: 🔒 LOCKED ACCESS (black badge, yellow border) */}
+
+                {/* Badge: Strictly 🔒 LOCKED ACCESS */}
                 <div className="absolute top-2.5 left-2.5 bg-black text-[#FFD700] border border-[#FFD700] text-[10px] font-black uppercase px-2.5 py-1 rounded-md tracking-wider z-10 shadow-md">
                   {isUnlocked ? '✅ ACCESS GRANTED' : '🔒 LOCKED ACCESS'}
                 </div>
@@ -148,10 +157,11 @@ export const SpecializationsSection: React.FC<SpecializationsSectionProps> = ({
                 {spec.title}
               </h3>
 
-              {/* 3. Button: 🔒 LOCK - {spec.piPrice} Pi */}
+              {/* 3. Button */}
               <button
                 type="button"
-                onClick={() => handleCardAction(spec)}
+                style={{ pointerEvents: 'auto', zIndex: 10, position: 'relative' }}
+                onClick={() => handleAction(spec)}
                 className="w-full font-black uppercase text-xs tracking-widest py-3.5 rounded-xl transition duration-200 cursor-pointer active:scale-95 shadow-md flex items-center justify-center bg-[#FFD700] hover:bg-yellow-400 text-black shadow-yellow-500/20"
               >
                 <span>{isUnlocked ? '✅ ACCESS NOW / DOWNLOAD' : `🔒 LOCK - ${spec.piPrice} Pi`}</span>
@@ -160,16 +170,8 @@ export const SpecializationsSection: React.FC<SpecializationsSectionProps> = ({
           );
         })}
       </div>
-
-      {/* Bottom Action Button */}
-      <div className="text-center pt-4">
-        <button
-          onClick={onExploreAllServices}
-          className="inline-flex items-center gap-2 bg-[#FFD700] hover:bg-yellow-400 text-black font-black text-xs uppercase tracking-widest px-8 py-4 rounded-xl shadow-xl shadow-yellow-500/20 transition active:scale-95 cursor-pointer border border-yellow-200"
-        >
-          <span>View All Specializations</span>
-        </button>
-      </div>
     </section>
   );
 };
+
+export default SpecializationsSection;
