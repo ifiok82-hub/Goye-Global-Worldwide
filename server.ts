@@ -862,103 +862,100 @@ app.get('/api/pi-config', (req, res) => {
   });
 });
 
+app.options(['/api/pi/approve', '/api/pi-approve', '/api/pi/complete', '/api/pi-complete', '/api/pi/incomplete', '/api/pi-incomplete'], (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  return res.status(200).end();
+});
+
+app.get(['/api/pi/approve', '/api/pi-approve'], (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  return res.status(200).json({ ok: true, hasKey: !!process.env.PI_API_KEY });
+});
+
 app.post(['/api/pi/approve', '/api/pi-approve'], express.json(), async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  console.log('APPROVE HIT', req.method, req.body, 'KEY_EXISTS:', !!process.env.PI_API_KEY, 'KEY_LENGTH:', process.env.PI_API_KEY?.length);
+
+  const apiKey = (process.env.PI_API_KEY || '').trim();
+  if (!apiKey) {
+    return res.status(500).json({ error: 'PI_API_KEY missing - check Vercel Env' });
+  }
+
   try {
     const paymentId = req.body?.paymentId || req.body?.payment_id || req.body?.id;
-    const apiKey = getPiApiKey();
-
-    console.log(`[PI_LOG] PI_PAYMENT_APPROVAL_REQUESTED | paymentId: ${paymentId} | apiKeyPresent: ${Boolean(apiKey)}`);
-
     if (!paymentId) {
-      console.error('[PI_LOG] PI_PAYMENT_FAILED | approve error: missing paymentId');
-      return res.status(400).json({ approved: false, error: 'Missing paymentId in request body' });
+      return res.status(400).json({ error: 'Missing paymentId' });
     }
 
-    if (apiKey) {
-      console.log(`[PI_LOG] Fetching and approving payment on Pi Platform API: ${paymentId}`);
+    const piRes = await fetch(`https://api.minepi.com/v2/payments/${paymentId}/approve`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Key ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({})
+    });
 
-      // 1. Validate payment details from Pi Platform
-      try {
-        const getRes = await fetch(`https://api.minepi.com/v2/payments/${paymentId}`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Key ${apiKey}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        if (getRes.ok) {
-          const paymentData = await getRes.json();
-          if (paymentData?.status?.developer_approved) {
-            console.log(`[PI_LOG] Payment ${paymentId} is already developer_approved (idempotent).`);
-            return res.status(200).json({ approved: true, paymentId, status: 'APPROVED', idempotent: true });
-          }
-        }
-      } catch (getErr) {
-        console.warn(`[PI_LOG] Payment fetch warning for ${paymentId}:`, getErr);
-      }
+    const resText = await piRes.text().catch(() => '');
+    let data: any = {};
+    try { data = resText ? JSON.parse(resText) : {}; } catch { data = { raw: resText }; }
 
-      // 2. Call Pi Platform API approve endpoint
-      const piRes = await fetch(`https://api.minepi.com/v2/payments/${paymentId}/approve`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Key ${apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({})
-      });
-
-      const resText = await piRes.text().catch(() => '');
-      let resJson: any = {};
-      try { resJson = JSON.parse(resText); } catch (e) {}
-
-      console.log(`[PI_LOG] PI_PAYMENT_APPROVED | Pi Platform response status: ${piRes.status}`, resJson || resText);
-    } else {
-      console.warn(`[PI_LOG] PI_NETWORK_API_KEY missing on server. Local approval granted for ${paymentId}`);
+    if (!piRes.ok) {
+      return res.status(piRes.status).json(data);
     }
 
-    return res.status(200).json({ approved: true, paymentId, status: 'APPROVED' });
+    return res.status(200).json({ approved: true, success: true, paymentId, data });
   } catch (err: any) {
     console.error('[PI_LOG] PI_PAYMENT_FAILED | Exception in /api/pi/approve:', err?.message || err);
-    return res.status(200).json({ approved: true, paymentId: req.body?.paymentId, status: 'APPROVED' });
+    return res.status(500).json({ error: err?.message || 'Approve failed' });
   }
 });
 
 app.post(['/api/pi/complete', '/api/pi-complete'], express.json(), async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  console.log('COMPLETE HIT', req.method, req.body, 'KEY_EXISTS:', !!process.env.PI_API_KEY, 'KEY_LENGTH:', process.env.PI_API_KEY?.length);
+
+  const apiKey = (process.env.PI_API_KEY || '').trim();
+  if (!apiKey) {
+    return res.status(500).json({ error: 'PI_API_KEY missing - check Vercel Env' });
+  }
+
   try {
     const paymentId = req.body?.paymentId || req.body?.payment_id || req.body?.id;
     const txid = req.body?.txid || req.body?.txId || req.body?.transactionId;
-    const { email, productName, amount, productId } = req.body || {};
-    const apiKey = getPiApiKey();
-
-    console.log(`[PI_LOG] PI_PAYMENT_COMPLETION_REQUESTED | paymentId: ${paymentId} | txid: ${txid}`);
+    const { productName, amount, productId } = req.body || {};
 
     if (!paymentId || !txid) {
-      console.error('[PI_LOG] PI_PAYMENT_FAILED | complete warning: missing paymentId or txid');
-      return res.status(400).json({ completed: false, error: 'Missing paymentId or txid' });
+      return res.status(400).json({ error: 'Missing paymentId or txid' });
     }
 
-    // Call Pi API Platform completion if API key present
-    if (apiKey) {
-      console.log(`[PI_LOG] Sending POST to Pi Platform API: https://api.minepi.com/v2/payments/${paymentId}/complete with txid: ${txid}`);
-      const piRes = await fetch(`https://api.minepi.com/v2/payments/${paymentId}/complete`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Key ${apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ txid })
-      });
+    const piRes = await fetch(`https://api.minepi.com/v2/payments/${paymentId}/complete`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Key ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ txid })
+    });
 
-      const resText = await piRes.text().catch(() => '');
-      let resJson: any = {};
-      try { resJson = JSON.parse(resText); } catch (e) {}
+    const resText = await piRes.text().catch(() => '');
+    let data: any = {};
+    try { data = resText ? JSON.parse(resText) : {}; } catch { data = { raw: resText }; }
 
-      console.log(`[PI_LOG] Pi Platform complete response:`, piRes.status, resJson || resText);
-    } else {
-      console.warn(`[PI_LOG] PI_NETWORK_API_KEY missing on server. Local completion granted for ${paymentId}`);
+    if (!piRes.ok) {
+      return res.status(piRes.status).json(data);
     }
 
-    // Record verified purchase
     const orderRecord = {
       orderId: paymentId,
       txid,
@@ -974,10 +971,10 @@ app.post(['/api/pi/complete', '/api/pi-complete'], express.json(), async (req, r
     leadsDB.unshift(orderRecord);
     try { fs.writeFileSync('./leads.json', JSON.stringify(leadsDB.slice(0, 500))); } catch (e) {}
 
-    return res.status(200).json({ completed: true, paymentId, txid, status: 'COMPLETED', unlocked: true });
+    return res.status(200).json({ completed: true, success: true, paymentId, txid, status: 'COMPLETED', unlocked: true, data });
   } catch (err: any) {
     console.error('[PI_LOG] PI_PAYMENT_FAILED | Exception in /api/pi/complete:', err?.message || err);
-    return res.status(200).json({ completed: true, paymentId: req.body?.paymentId, txid: req.body?.txid, status: 'COMPLETED', unlocked: true });
+    return res.status(500).json({ error: err?.message || 'Complete failed' });
   }
 });
 

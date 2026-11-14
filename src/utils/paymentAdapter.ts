@@ -1,4 +1,5 @@
-import { isPiEnvironment, ensurePiInit } from '../lib/piAuth';
+import { isPiEnvironment } from '../lib/piAuth';
+import { postPiBackend } from '../lib/piPayment';
 
 export type PaymentEnvironment = 'STANDARD_WEB' | 'PI_BROWSER';
 
@@ -95,7 +96,7 @@ export async function processPayment(
     return;
   }
   try {
-    await ensurePiInit();
+    await win.Pi.init({ version: '2.0', sandbox: false });
     const piAmount = getPiPrice(product);
     await win.Pi.createPayment({
       amount: piAmount,
@@ -103,18 +104,10 @@ export async function processPayment(
       metadata: { productId: product.id, piPrice: piAmount }
     }, {
       onReadyForServerApproval: async (paymentId: string) => {
-        await fetch('/api/pi/approve', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ paymentId, productId: product.id })
-        });
+        await postPiBackend('/api/pi/approve', { paymentId, productId: product.id });
       },
       onReadyForServerCompletion: async (paymentId: string, txid: string) => {
-        await fetch('/api/pi/complete', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ paymentId, txid, productId: product.id, amount: piAmount })
-        });
+        await postPiBackend('/api/pi/complete', { paymentId, txid, productId: product.id, amount: piAmount });
         await verifyPayment(product, txid, 'Pi Network', userEmail);
         if (callbacks.onSuccess) callbacks.onSuccess(txid);
         alert("🎉 Pi Payment Verified! Access Unlocked.");

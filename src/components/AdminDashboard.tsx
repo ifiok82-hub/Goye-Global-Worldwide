@@ -5,7 +5,8 @@ import { SEED_CUSTOMERS, SEED_ORDERS, isAdminClick } from '../utils/analytics';
 import { safeParse, safeGetNumber, safeFormatDate, safeFormatDateTime } from '../utils/safeParse';
 import AdminSettings from './AdminSettings';
 import GoyeCustomerIntelligence from './GoyeCustomerIntelligence';
-import { isPiEnvironment, ensurePiInit } from '../lib/piAuth';
+import { isPiEnvironment } from '../lib/piAuth';
+import { postPiBackend } from '../lib/piPayment';
 
 export default function AdminDashboard({ 
   showToast, 
@@ -2272,41 +2273,41 @@ export default function AdminDashboard({
                   return; 
                 }
                 try {
-                  showToast('Initializing Admin Pi Testnet 0.01 Pi Diagnostic Payment...');
-                  await ensurePiInit();
+                  showToast('Initializing Admin Pi 0.01 Pi Diagnostic Payment...');
                   const Pi = (window as any).Pi;
+                  await Pi.init({ version: '2.0', sandbox: false });
                   await Pi.authenticate(['username', 'payments'], (inc: any) => { 
                     if (inc && inc.identifier) {
-                      fetch('/api/pi/complete', {
-                        method: 'POST', 
-                        headers: { 'Content-Type': 'application/json' }, 
-                        body: JSON.stringify({ paymentId: inc.identifier, txid: inc.transaction?.txid || inc.txid, email, productName: 'Pi Testnet Admin Diagnostic', isDiagnostic: true })
-                      }).catch(() => {}); 
+                      postPiBackend('/api/pi/complete', {
+                        paymentId: inc.identifier,
+                        txid: inc.transaction?.txid || inc.txid,
+                        email,
+                        productName: 'Pi Admin Diagnostic',
+                        isDiagnostic: true
+                      }).catch(() => {});
                     }
                   });
                   await Pi.createPayment({
                     amount: 0.01, 
-                    memo: 'START NEW TESTNET PAYMENT - Admin Developer Diagnostic (0.01 Pi Testnet)', 
-                    metadata: { type: 'pi-admin-diagnostic', product: 'testnet-diagnostic', email }
+                    memo: 'START NEW PAYMENT - Admin Developer Diagnostic (0.01 Pi)', 
+                    metadata: { type: 'pi-admin-diagnostic', product: 'admin-diagnostic', email }
                   }, {
                     onReadyForServerApproval: async (id: string) => { 
-                      console.log('[Admin Pi Testnet] Server Approval for paymentId:', id); 
-                      await fetch('/api/pi/approve', {
-                        method: 'POST', 
-                        headers: { 'Content-Type': 'application/json' }, 
-                        body: JSON.stringify({ paymentId: id })
-                      }).catch(() => {});
+                      console.log('[Admin Pi] Server Approval for paymentId:', id); 
+                      await postPiBackend('/api/pi/approve', { paymentId: id });
                     },
                     onReadyForServerCompletion: async (id: string, txid: string) => { 
-                      console.log('[Admin Pi Testnet] Server Completion for paymentId:', id, 'txid:', txid);
-                      const res = await fetch('/api/pi/complete', {
-                        method: 'POST', 
-                        headers: { 'Content-Type': 'application/json' }, 
-                        body: JSON.stringify({ paymentId: id, txid, email, productName: 'Pi Testnet Admin Diagnostic', amount: 0.01, isDiagnostic: true })
+                      console.log('[Admin Pi] Server Completion for paymentId:', id, 'txid:', txid);
+                      const data = await postPiBackend('/api/pi/complete', {
+                        paymentId: id,
+                        txid,
+                        email,
+                        productName: 'Pi Admin Diagnostic',
+                        amount: 0.01,
+                        isDiagnostic: true
                       });
-                      const data = await res.json().catch(() => ({}));
-                      console.log('[Admin Pi Testnet] Complete response:', data);
-                      showToast('✅ Testnet Diagnostic Completed! Status: TESTNET_TEST_ONLY (TxID: ' + txid + ')', 'success');
+                      console.log('[Admin Pi] Complete response:', data);
+                      showToast('✅ Diagnostic Completed! TxID: ' + txid, 'success');
                     },
                     onCancel: (id: string) => {
                       if (id) fetch('/api/pi/cancel', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paymentId: id }) }).catch(() => {});

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Specialization } from '../data/specializations';
 import { X, Clock, Sparkles, CheckCircle, ArrowRight, MessageSquare } from 'lucide-react';
-import { loginWithPi, isPiEnvironment, ensurePiInit } from '../lib/piAuth';
+import { loginWithPi, isPiEnvironment } from '../lib/piAuth';
+import { postPiBackend } from '../lib/piPayment';
 
 interface ServiceBookingModalProps {
   service: Specialization;
@@ -41,7 +42,7 @@ export const ServiceBookingModal: React.FC<ServiceBookingModalProps> = ({
     }
 
     setIsProcessing(true);
-    await ensurePiInit();
+    await (window as any).Pi.init({ version: '2.0', sandbox: false });
     const auth = await loginWithPi();
     if (!auth) {
       setIsProcessing(false);
@@ -62,24 +63,16 @@ export const ServiceBookingModal: React.FC<ServiceBookingModalProps> = ({
             piPrice: finalPiPrice
           }
         }, {
-          onReadyForServerApproval: (paymentId: string) => {
-            fetch('/api/pi/approve', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ paymentId })
-            }).catch(() => {});
+          onReadyForServerApproval: async (paymentId: string) => {
+            await postPiBackend('/api/pi/approve', { paymentId });
           },
-          onReadyForServerCompletion: (paymentId: string, txid: string) => {
-            fetch('/api/pi/complete', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                paymentId,
-                txid,
-                productId: service.id,
-                amount: finalPiPrice
-              })
-            }).catch(() => {});
+          onReadyForServerCompletion: async (paymentId: string, txid: string) => {
+            await postPiBackend('/api/pi/complete', {
+              paymentId,
+              txid,
+              productId: service.id,
+              amount: finalPiPrice
+            });
 
             saveBooking(txid || paymentId);
           },

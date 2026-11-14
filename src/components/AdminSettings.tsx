@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldCheck, Eye, EyeOff, Lock, Save, Key, Wallet, RefreshCw, AlertTriangle, CheckCircle, LogOut, Play, Check, X } from 'lucide-react';
-import { isPiEnvironment, ensurePiInit } from '../lib/piAuth';
+import { isPiEnvironment } from '../lib/piAuth';
+import { postPiBackend } from '../lib/piPayment';
 
 export default function AdminSettings() {
   const [piApiKey, setPiApiKey] = useState('');
@@ -837,8 +838,8 @@ export default function AdminSettings() {
               });
 
               try {
-                await ensurePiInit();
                 const Pi = (window as any).Pi;
+                await Pi.init({ version: '2.0', sandbox: false });
                 freshLog.push(`[${new Date().toLocaleTimeString()}] Authenticating Pi user...`);
                 
                 const authUser = await Pi.authenticate(['username', 'payments'], (inc: any) => {
@@ -855,12 +856,12 @@ export default function AdminSettings() {
                 }));
 
                 // BRAND NEW PAYMENT REQUEST - fresh timestamp prevents old/expired payment ID reuse
-                const freshTxMemo = `Pi Testnet Diagnostic Test (0.01 Pi) - ${Date.now()} - gasv.store`;
+                const freshTxMemo = `Pi Mainnet Diagnostic Test (0.01 Pi) - ${Date.now()} - gasv.store`;
                 
                 await Pi.createPayment({
                   amount: 0.01, 
                   memo: freshTxMemo, 
-                  metadata: { type: 'testnet_diagnostic', timestamp: Date.now() }
+                  metadata: { type: 'mainnet_diagnostic', timestamp: Date.now() }
                 }, {
                   onReadyForServerApproval: async (paymentId: string) => {
                     setDiagState(prev => ({
@@ -871,13 +872,8 @@ export default function AdminSettings() {
                     }));
 
                     try {
-                      const appRes = await fetch('/api/pi/approve', {
-                        method: 'POST', 
-                        headers: { 'Content-Type': 'application/json' }, 
-                        body: JSON.stringify({ paymentId })
-                      });
-                      const appData = await appRes.json();
-                      if (appRes.ok && appData.approved) {
+                      const appData = await postPiBackend('/api/pi/approve', { paymentId });
+                      if (appData.approved || appData.success) {
                         setDiagState(prev => ({
                           ...prev,
                           approvalStatus: 'APPROVED ✅ (DEVELOPER_APPROVED)',
@@ -908,20 +904,20 @@ export default function AdminSettings() {
                     }));
 
                     try {
-                      const compRes = await fetch('/api/pi/complete', {
-                        method: 'POST', 
-                        headers: { 'Content-Type': 'application/json' }, 
-                        body: JSON.stringify({ paymentId, txid, amount: 0.01, productName: 'Pi Testnet Diagnostic Payment' })
+                      const compData = await postPiBackend('/api/pi/complete', {
+                        paymentId,
+                        txid,
+                        amount: 0.01,
+                        productName: 'Pi Diagnostic Payment'
                       });
-                      const compData = await compRes.json();
-                      if (compRes.ok) {
+                      if (compData) {
                         setDiagState(prev => ({
                           ...prev,
                           running: false,
                           verificationStatus: 'SERVER VERIFIED & RECORDED ✅',
                           logs: [...prev.logs, `[${new Date().toLocaleTimeString()}] PI_PAYMENT_VERIFIED & RECORDED IN DATABASE`]
                         }));
-                        alert(`✅ PI TESTNET DIAGNOSTIC PAYMENT SUCCESSFUL!\nPayment ID: ${paymentId}\nTxID: ${txid}`);
+                        alert(`✅ PI DIAGNOSTIC PAYMENT SUCCESSFUL!\nPayment ID: ${paymentId}\nTxID: ${txid}`);
                       } else {
                         setDiagState(prev => ({
                           ...prev,
