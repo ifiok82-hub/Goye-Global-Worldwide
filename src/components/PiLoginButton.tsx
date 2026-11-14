@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { loginWithPi, logoutPi } from '../lib/piAuth';
+import { loginWithPi, logoutPi, isPiEnvironment } from '../lib/piAuth';
 
 export default function PiLoginButton() {
   const [user, setUser] = useState<string | null>(
@@ -7,6 +7,10 @@ export default function PiLoginButton() {
   );
 
   const handleLogin = async () => {
+    if (!isPiEnvironment()) {
+      alert('Please open https://gasv.store inside Pi Browser app to sign in with Pi.');
+      return;
+    }
     const verified = await loginWithPi();
     if (verified?.username) {
       setUser(verified.username);

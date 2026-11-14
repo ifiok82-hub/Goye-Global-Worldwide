@@ -1,7 +1,7 @@
 import React from 'react';
 import { GOYE_SERVICES, GoyeService } from '../data/goyeServices';
 import { Layers, Bot, Globe, Code, MessageSquare, Zap, Target, Search, Sparkles } from 'lucide-react';
-import { loginWithPi } from '../lib/piAuth';
+import { startPiPayment } from '../lib/piPayment';
 
 interface GoyeServicesSectionProps {
   onSelectService: (serviceSlug: string) => void;
@@ -26,70 +26,11 @@ export const GoyeServicesSection: React.FC<GoyeServicesSectionProps> = ({
     }
   };
 
-  const handleAction = async (serv: GoyeService) => {
-    const isUnlocked = localStorage.getItem(`paid_service_${serv.id}`) === 'true';
-    if (isUnlocked) {
-      onSelectService(serv.slug);
-      return;
-    }
-
-    const auth = await loginWithPi();
-    if (!auth) return;
-
-    if (typeof window !== 'undefined' && (window as any).Pi && typeof (window as any).Pi.createPayment === 'function') {
-      try {
-        const paymentData = {
-          amount: 2,
-          memo: serv.title,
-          metadata: {
-            productId: serv.id,
-            productName: serv.title,
-            piPrice: 2
-          }
-        };
-
-        await (window as any).Pi.createPayment(paymentData, {
-          onReadyForServerApproval: async (paymentId: string) => {
-            try {
-              await fetch('/api/pi/approve', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ paymentId, productId: serv.id })
-              });
-            } catch (err) {
-              console.error('Approval error:', err);
-            }
-          },
-          onReadyForServerCompletion: async (paymentId: string, txid: string) => {
-            try {
-              const res = await fetch('/api/pi/complete', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ paymentId, txid, productId: serv.id, amount: 2 })
-              });
-              if (res.ok) {
-                localStorage.setItem(`paid_service_${serv.id}`, 'true');
-                window.location.reload();
-              }
-            } catch (err) {
-              console.error('Completion error:', err);
-              localStorage.setItem(`paid_service_${serv.id}`, 'true');
-              window.location.reload();
-            }
-          },
-          onCancel: (paymentId: string) => {
-            console.log('Payment cancelled', paymentId);
-          },
-          onError: (error: any) => {
-            console.error('Pi Payment error', error);
-          }
-        });
-      } catch (e) {
-        console.error('Pi Payment failed', e);
-      }
-    } else {
-      onSelectService(serv.slug);
-    }
+  const handlePiPayment = (product: { id: string; title: string; piPrice: number }) => {
+    startPiPayment(product, () => {
+      localStorage.setItem(`paid_service_${product.id}`, 'true');
+      window.location.reload();
+    });
   };
 
   return (
@@ -121,7 +62,7 @@ export const GoyeServicesSection: React.FC<GoyeServicesSectionProps> = ({
                   <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center">
                     {getIcon(serv.iconName)}
                   </div>
-                  <div className="absolute top-2.5 left-2.5 bg-black text-[#FFD700] border border-[#FFD700] text-[10px] font-black uppercase px-2.5 py-1 rounded-md tracking-wider z-10 shadow-md">
+                  <div className="absolute top-2.5 left-2.5 bg-black text-[#FFD700] border border-[#FFD700] text-[10px] font-black uppercase px-2.5 py-1 rounded-md tracking-wider z-10 shadow-md pointer-events-none">
                     {isUnlocked ? '✅ ACCESS GRANTED' : '🔒 LOCKED ACCESS'}
                   </div>
                 </div>
@@ -134,8 +75,16 @@ export const GoyeServicesSection: React.FC<GoyeServicesSectionProps> = ({
                 {/* 3. Button: 🔒 LOCK - 2 Pi */}
                 <button
                   type="button"
-                  style={{ pointerEvents: 'auto', zIndex: 10, position: 'relative' }}
-                  onClick={() => handleAction(serv)}
+                  style={{ position: 'relative', zIndex: 10, pointerEvents: 'auto', cursor: 'pointer' }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (isUnlocked) {
+                      onSelectService(serv.slug);
+                    } else {
+                      handlePiPayment({ id: serv.id, title: serv.title, piPrice: 2 });
+                    }
+                  }}
                   className="w-full font-black uppercase text-xs tracking-widest py-3.5 rounded-xl transition duration-200 cursor-pointer active:scale-95 shadow-md flex items-center justify-center bg-[#FFD700] hover:bg-yellow-400 text-black shadow-yellow-500/20"
                 >
                   <span>{isUnlocked ? '✅ ACCESS NOW / DOWNLOAD' : '🔒 LOCK - 2 Pi'}</span>

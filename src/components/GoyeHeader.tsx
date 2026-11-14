@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Globe, Award, Download, Smartphone, Menu, X, ArrowRight, ShieldCheck, Mail, MessageSquare, Sparkles } from 'lucide-react';
-import { loginWithPi } from '../lib/piAuth';
+import { loginWithPi, isPiEnvironment } from '../lib/piAuth';
 
 interface GoyeHeaderProps {
   currentTab: string;
@@ -20,6 +20,10 @@ export const GoyeHeader: React.FC<GoyeHeaderProps> = ({
   });
 
   const handlePiLogin = async () => {
+    if (!isPiEnvironment()) {
+      alert('Please open https://gasv.store inside Pi Browser app to sign in with Pi.');
+      return;
+    }
     const auth = await loginWithPi();
     if (auth?.username) {
       setPiUsername(auth.username);

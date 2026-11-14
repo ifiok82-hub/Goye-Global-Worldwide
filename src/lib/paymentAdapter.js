@@ -3,6 +3,8 @@
  * Registered: Goyedagosmess Enterprise (RC BN: 3583778)
  */
 
+import { isPiEnvironment, ensurePiInit } from './piAuth';
+
 export const isPiBrowser = typeof window !== 'undefined' && typeof navigator !== 'undefined' && (
   navigator.userAgent.includes('Pi Browser') || navigator.userAgent.includes('PiBrowser') || navigator.userAgent.includes('Pi/1')
 );
@@ -48,13 +50,14 @@ export async function verifyPayment(product, refOrTx, method, email) {
 
 export async function triggerPayment(product, _method, callbacks = {}) {
   const win = window;
-  if (!win.Pi || !win.Pi.createPayment) {
+  if (!win.Pi || !win.Pi.createPayment || !isPiEnvironment()) {
     alert("Open in Pi Browser to pay with Pi Network");
     return;
   }
 
   const piPrice = product?.piPrice || 2;
   try {
+    await ensurePiInit();
     await win.Pi.createPayment({
       amount: piPrice,
       memo: product.name,

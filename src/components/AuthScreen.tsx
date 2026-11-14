@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Mail, Lock, User, Phone, Globe, ShieldCheck, ChevronRight, MessageCircle, RefreshCw } from 'lucide-react';
 import { safeParse } from '../utils/safeParse';
+import { loginWithPi, isPiEnvironment } from '../lib/piAuth';
 
 export const COUNTRIES = [
   {
@@ -1957,27 +1958,29 @@ export default function AuthScreen({ onAuthenticated, onClose }: { onAuthenticat
           <button 
             type="button" 
             onClick={async () => {
-              if (typeof (window as any).loginWithPi === 'function') {
-                const auth = await (window as any).loginWithPi();
-                if (auth && auth.user) {
-                  const piUser = {
-                    id: 'pi_' + auth.user.username,
-                    email: auth.user.username + '@pi.network',
-                    name: auth.user.username,
-                    role: 'student'
-                  };
-                  const piProfile = {
-                    uid: piUser.id,
-                    email: piUser.email,
-                    displayName: auth.user.username,
-                    country: 'Pi Network'
-                  };
-                  onAuthenticated(piUser, piProfile);
-                }
-              } else {
+              if (!isPiEnvironment()) {
                 if (typeof (window as any).showToast === 'function') {
-                  (window as any).showToast('Pi SDK loading... Open gasv.store in Pi Browser app!');
+                  (window as any).showToast('Open https://gasv.store in Pi Browser app to sign in with Pi!', 'info');
+                } else {
+                  alert('Open https://gasv.store inside Pi Browser app to sign in with Pi!');
                 }
+                return;
+              }
+              const auth = await loginWithPi();
+              if (auth && auth.username) {
+                const piUser = {
+                  id: 'pi_' + auth.username,
+                  email: auth.username + '@pi.network',
+                  name: auth.username,
+                  role: 'student'
+                };
+                const piProfile = {
+                  uid: piUser.id,
+                  email: piUser.email,
+                  displayName: auth.username,
+                  country: 'Pi Network'
+                };
+                onAuthenticated(piUser, piProfile);
               }
             }}
             style={{ height: '52px', background: '#7D2AE7', color: 'white', borderRadius: '14px', fontWeight: 'bold', fontSize: '15px', width: '100%', cursor: 'pointer', border: '2px solid #9d52f8' }}

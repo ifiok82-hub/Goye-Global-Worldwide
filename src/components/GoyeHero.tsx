@@ -1,6 +1,6 @@
 import React from 'react';
 import { ArrowRight, Star, Award, ShieldCheck, CheckCircle2 } from 'lucide-react';
-import { loginWithPi } from '../lib/piAuth';
+import { startPiPayment } from '../lib/piPayment';
 import ProductGradientImage from './ProductGradientImage';
 
 interface GoyeHeroProps {
@@ -27,59 +27,12 @@ export const GoyeHero: React.FC<GoyeHeroProps> = ({
     }
   };
 
-  const handleAction = async () => {
-    if (isAcademyPaid) {
-      handleScrollToAcademy();
-      return;
-    }
-
-    if (typeof window !== 'undefined' && (window as any).Pi && typeof (window as any).Pi.createPayment === 'function') {
-      const auth = await loginWithPi();
-      if (!auth) return;
-
-      try {
-        const paymentData = {
-          amount: 2,
-          memo: 'Sirwise AI Web3 Academy (8 Modules)',
-          metadata: { productId: 'academy_bundle', piPrice: 2 }
-        };
-        const callbacks = {
-          onReadyForServerApproval: async (paymentId: string) => {
-            try {
-              await fetch('/api/pi/approve', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ paymentId })
-              });
-            } catch (e) {}
-          },
-          onReadyForServerCompletion: async (paymentId: string, txid: string) => {
-            try {
-              await fetch('/api/pi/complete', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ paymentId, txid, productId: 'academy_bundle', amount: 2 })
-              });
-              localStorage.setItem('sirwise_paid', 'true');
-              localStorage.setItem('academy_full_unlocked', 'true');
-              window.location.reload();
-            } catch (e) {}
-          },
-          onCancel: (paymentId: string) => console.log('Payment cancelled:', paymentId),
-          onError: (err: any) => console.error('Payment error:', err)
-        };
-        await (window as any).Pi.createPayment(paymentData, callbacks);
-        return;
-      } catch (e) {
-        console.error('Pi createPayment exception in GoyeHero:', e);
-      }
-    }
-
-    if (onPurchaseAcademy) {
-      onPurchaseAcademy();
-    } else {
-      handleScrollToAcademy();
-    }
+  const handlePiPayment = (product: { id: string; title: string; piPrice: number }) => {
+    startPiPayment(product, () => {
+      localStorage.setItem('sirwise_paid', 'true');
+      localStorage.setItem('academy_full_unlocked', 'true');
+      window.location.reload();
+    });
   };
 
   return (
@@ -99,8 +52,12 @@ export const GoyeHero: React.FC<GoyeHeroProps> = ({
             
             <button 
               type="button"
-              style={{ pointerEvents: 'auto', zIndex: 10, position: 'relative' }}
-              onClick={onOpenTripwire || onOpenLeadMagnet}
+              style={{ position: 'relative', zIndex: 10, pointerEvents: 'auto', cursor: 'pointer' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handlePiPayment({ id: 'ai-starter-tripwire', title: 'AI Starter & Global Travel Pass', piPrice: 1 });
+              }}
               className="bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 hover:from-yellow-300 hover:to-amber-300 text-black font-black text-xs sm:text-sm py-4 px-8 rounded-2xl mx-auto flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(255,215,0,0.35)] transition active:scale-95 cursor-pointer border-2 border-yellow-200"
             >
               <span>Get the AI Starter & Global Travel Pass for 1 Pi</span>
@@ -130,7 +87,7 @@ export const GoyeHero: React.FC<GoyeHeroProps> = ({
                       title="AI Training & Solutions"
                       height="220px"
                     />
-                    <div className="absolute top-2.5 left-2.5 bg-black text-[#FFD700] border border-[#FFD700] text-[10px] font-black uppercase px-2.5 py-1 rounded-md tracking-wider z-10 shadow-md">
+                    <div className="absolute top-2.5 left-2.5 bg-black text-[#FFD700] border border-[#FFD700] text-[10px] font-black uppercase px-2.5 py-1 rounded-md tracking-wider z-10 shadow-md pointer-events-none">
                       🔒 LOCKED ACCESS
                     </div>
                   </div>
@@ -149,8 +106,16 @@ export const GoyeHero: React.FC<GoyeHeroProps> = ({
               <div className="p-4 pt-0">
                 <button 
                   type="button"
-                  style={{ pointerEvents: 'auto', zIndex: 10, position: 'relative' }}
-                  onClick={handleAction} 
+                  style={{ position: 'relative', zIndex: 10, pointerEvents: 'auto', cursor: 'pointer' }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (isAcademyPaid) {
+                      handleScrollToAcademy();
+                    } else {
+                      handlePiPayment({ id: 'academy_bundle', title: 'AI Training & Solutions (Academy)', piPrice: 2 });
+                    }
+                  }}
                   className="bg-[#FFD700] text-black hover:bg-yellow-400 text-xs font-black uppercase tracking-wider w-full py-3.5 rounded-xl transition duration-200 cursor-pointer active:scale-[0.98] flex items-center justify-center gap-1.5 shadow-md shadow-yellow-500/10 border-2 border-yellow-300"
                 >
                   <span>{isAcademyPaid ? '✅ ACCESS NOW' : '🔒 LOCK - 2 Pi'}</span>
@@ -171,7 +136,7 @@ export const GoyeHero: React.FC<GoyeHeroProps> = ({
                       title="DeFi Yield Farming"
                       height="220px"
                     />
-                    <div className="absolute top-2.5 left-2.5 bg-black text-[#FFD700] border border-[#FFD700] text-[10px] font-black uppercase px-2.5 py-1 rounded-md tracking-wider z-10 shadow-md">
+                    <div className="absolute top-2.5 left-2.5 bg-black text-[#FFD700] border border-[#FFD700] text-[10px] font-black uppercase px-2.5 py-1 rounded-md tracking-wider z-10 shadow-md pointer-events-none">
                       🔒 LOCKED ACCESS
                     </div>
                   </div>
@@ -190,8 +155,16 @@ export const GoyeHero: React.FC<GoyeHeroProps> = ({
               <div className="p-4 pt-0">
                 <button 
                   type="button"
-                  style={{ pointerEvents: 'auto', zIndex: 10, position: 'relative' }}
-                  onClick={handleAction} 
+                  style={{ position: 'relative', zIndex: 10, pointerEvents: 'auto', cursor: 'pointer' }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (isAcademyPaid) {
+                      handleScrollToAcademy();
+                    } else {
+                      handlePiPayment({ id: 'academy_bundle', title: 'DeFi Yield Farming (Academy)', piPrice: 2 });
+                    }
+                  }}
                   className="bg-[#FFD700] text-black hover:bg-yellow-400 text-xs font-black uppercase tracking-wider w-full py-3.5 rounded-xl transition duration-200 cursor-pointer active:scale-[0.98] flex items-center justify-center gap-1.5 shadow-md shadow-yellow-500/10 border-2 border-yellow-300"
                 >
                   <span>{isAcademyPaid ? '✅ ACCESS NOW' : '🔒 LOCK - 2 Pi'}</span>
@@ -212,7 +185,7 @@ export const GoyeHero: React.FC<GoyeHeroProps> = ({
                       title="Smart Contract Development"
                       height="220px"
                     />
-                    <div className="absolute top-2.5 left-2.5 bg-black text-[#FFD700] border border-[#FFD700] text-[10px] font-black uppercase px-2.5 py-1 rounded-md tracking-wider z-10 shadow-md">
+                    <div className="absolute top-2.5 left-2.5 bg-black text-[#FFD700] border border-[#FFD700] text-[10px] font-black uppercase px-2.5 py-1 rounded-md tracking-wider z-10 shadow-md pointer-events-none">
                       🔒 LOCKED ACCESS
                     </div>
                   </div>
@@ -231,8 +204,16 @@ export const GoyeHero: React.FC<GoyeHeroProps> = ({
               <div className="p-4 pt-0">
                 <button 
                   type="button"
-                  style={{ pointerEvents: 'auto', zIndex: 10, position: 'relative' }}
-                  onClick={handleAction} 
+                  style={{ position: 'relative', zIndex: 10, pointerEvents: 'auto', cursor: 'pointer' }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (isAcademyPaid) {
+                      handleScrollToAcademy();
+                    } else {
+                      handlePiPayment({ id: 'academy_bundle', title: 'Smart Contract Development (Academy)', piPrice: 2 });
+                    }
+                  }}
                   className="bg-[#FFD700] text-black hover:bg-yellow-400 text-xs font-black uppercase tracking-wider w-full py-3.5 rounded-xl transition duration-200 cursor-pointer active:scale-[0.98] flex items-center justify-center gap-1.5 shadow-md shadow-yellow-500/10 border-2 border-yellow-300"
                 >
                   <span>{isAcademyPaid ? '✅ ACCESS NOW' : '🔒 LOCK - 2 Pi'}</span>

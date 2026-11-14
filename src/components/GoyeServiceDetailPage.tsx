@@ -1,7 +1,7 @@
 import React from 'react';
 import { GOYE_SERVICES, GoyeService } from '../data/goyeServices';
 import { ArrowLeft, MessageSquare } from 'lucide-react';
-import { loginWithPi } from '../lib/piAuth';
+import { startPiPayment } from '../lib/piPayment';
 
 interface GoyeServiceDetailPageProps {
   serviceSlug: string;
@@ -23,63 +23,17 @@ export const GoyeServiceDetailPage: React.FC<GoyeServiceDetailPageProps> = ({
       return;
     }
 
-    const auth = await loginWithPi();
-    if (!auth) return;
-
-    if (typeof window !== 'undefined' && (window as any).Pi && typeof (window as any).Pi.createPayment === 'function') {
-      try {
-        const paymentData = {
-          amount: 2,
-          memo: service.title,
-          metadata: {
-            productId: service.id,
-            productName: service.title,
-            piPrice: 2
-          }
-        };
-
-        await (window as any).Pi.createPayment(paymentData, {
-          onReadyForServerApproval: async (paymentId: string) => {
-            try {
-              await fetch('/api/pi/approve', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ paymentId, productId: service.id })
-              });
-            } catch (err) {
-              console.error('Approval error:', err);
-            }
-          },
-          onReadyForServerCompletion: async (paymentId: string, txid: string) => {
-            try {
-              const res = await fetch('/api/pi/complete', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ paymentId, txid, productId: service.id, amount: 2 })
-              });
-              if (res.ok) {
-                localStorage.setItem(`paid_service_${service.id}`, 'true');
-                window.location.reload();
-              }
-            } catch (err) {
-              console.error('Completion error:', err);
-              localStorage.setItem(`paid_service_${service.id}`, 'true');
-              window.location.reload();
-            }
-          },
-          onCancel: (paymentId: string) => {
-            console.log('Payment cancelled', paymentId);
-          },
-          onError: (error: any) => {
-            console.error('Pi Payment error', error);
-          }
-        });
-      } catch (e) {
-        console.error('Pi Payment failed', e);
+    await startPiPayment(
+      {
+        id: service.id,
+        title: service.title,
+        piPrice: 2
+      },
+      () => {
+        localStorage.setItem(`paid_service_${service.id}`, 'true');
+        window.location.reload();
       }
-    } else {
-      alert('Open in Pi Browser to Pay with Pi');
-    }
+    );
   };
 
   return (

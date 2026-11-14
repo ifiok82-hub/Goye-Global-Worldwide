@@ -1,63 +1,27 @@
-import { useState, useEffect } from 'react';
-import { loginWithPi } from '../lib/piAuth';
+import { useState } from 'react';
+import { startPiPayment } from '../lib/piPayment';
 
 export default function PaymentModal({ piPrice = 2, onClose = () => {} }) {
-  const [isPiBrowser, setIsPiBrowser] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && typeof navigator !== 'undefined') {
-      const ua = navigator.userAgent || '';
-      if (ua.includes('Pi Browser') || ua.includes('PiBrowser') || ua.includes('Pi/1')) {
-        setIsPiBrowser(true);
-      }
-    }
-  }, []);
 
   const handlePiPay = async () => {
     setLoading(true);
-    const auth = await loginWithPi();
-    if (!auth) {
+    try {
+      await startPiPayment(
+        {
+          id: 'goye_store_modal',
+          title: 'Goye Store - Pi Payment',
+          piPrice
+        },
+        () => {
+          localStorage.setItem('sirwise_paid', 'true');
+          localStorage.setItem('payment_verified', 'true');
+          alert('🎉 Pi Payment Verified! Access Unlocked.');
+          window.location.reload();
+        }
+      );
+    } finally {
       setLoading(false);
-      return;
-    }
-
-    if (window.Pi && window.Pi.createPayment) {
-      try {
-        await window.Pi.createPayment({
-          amount: piPrice,
-          memo: 'Goye Store - Pi Payment',
-          metadata: { piPrice }
-        }, {
-          onReadyForServerApproval: async (paymentId) => {
-            await fetch('/api/pi/approve', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ paymentId })
-            }).catch(() => {});
-          },
-          onReadyForServerCompletion: async (paymentId, txid) => {
-            await fetch('/api/pi/complete', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ paymentId, txid, amount: piPrice })
-            }).catch(() => {});
-            localStorage.setItem('sirwise_paid', 'true');
-            localStorage.setItem('payment_verified', 'true');
-            alert('🎉 Pi Payment Verified! Access Unlocked.');
-            window.location.reload();
-          },
-          onCancel: (id) => console.log('Cancelled', id),
-          onError: (err) => console.error('Error', err)
-        });
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    } else {
-      setLoading(false);
-      alert('Open in Pi Browser to Pay with Pi');
     }
   };
 

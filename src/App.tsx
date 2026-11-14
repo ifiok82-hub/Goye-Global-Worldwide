@@ -22,7 +22,7 @@ import { ALL_PRODUCTS } from './data';
 import { SPECIALIZATIONS, Specialization } from './data/specializations';
 import { safeParse } from './utils/safeParse';
 import { getPaymentEnvironment, getDisplayPrice, getBuyButtonLabel, getPiPrice } from './utils/paymentAdapter';
-import { autoLoginWithPi, loginWithPi } from './lib/piAuth';
+import { autoLoginWithPi, loginWithPi, isPiEnvironment } from './lib/piAuth';
 import PiLoginButton from './components/PiLoginButton';
 import AutoPiConverter from './components/AutoPiConverter';
 export default function App() {
@@ -103,23 +103,6 @@ export default function App() {
       setCurrentUser({ uid: 'usr_pioneer', email: 'pioneer@gasv.store' });
       setUserProfile({ uid: 'usr_pioneer', email: 'pioneer@gasv.store', displayName: 'Pioneer' });
     }
-  }, []);
-
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.src = "https://sdk.minepi.com/pi-sdk.js";
-    script.async = true;
-    script.onload = () => {
-      try {
-        if ((window as any).Pi) {
-          const isSandbox = (localStorage.getItem('PI_SANDBOX_MODE') || 'true') !== 'false';
-          (window as any).Pi.init({ version: "2.0", sandbox: false });
-        }
-      } catch (e) {
-        console.error('Pi SDK init error:', e);
-      }
-    };
-    document.body.appendChild(script);
   }, []);
 
   useEffect(() => {
@@ -507,6 +490,10 @@ export default function App() {
                   <button
                     type="button"
                     onClick={async () => {
+                      if (!isPiEnvironment()) {
+                        showToast('Please open https://gasv.store inside Pi Browser app to verify Pi Admin.', 'info');
+                        return;
+                      }
                       const res = await loginWithPi();
                       if (res?.username || localStorage.getItem('pi_username') || localStorage.getItem('pi_username_trusted')) {
                         showToast('✅ Pi Network Admin Authenticated', 'success');
@@ -541,7 +528,7 @@ export default function App() {
 
       {/* Floating Toast Notification */}
       {toastMsg && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[99999] bg-[#FFD700] text-black px-6 py-3.5 rounded-full font-black text-xs shadow-2xl flex items-center gap-2 border border-white/20">
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[99999] bg-[#FFD700] text-black px-6 py-3.5 rounded-full font-black text-xs shadow-2xl flex items-center gap-2 border border-white/20 pointer-events-none">
           <CheckCircle size={18} /> {toastMsg}
         </div>
       )}

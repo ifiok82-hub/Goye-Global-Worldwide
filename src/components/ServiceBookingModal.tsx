@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Specialization } from '../data/specializations';
 import { X, Clock, Sparkles, CheckCircle, ArrowRight, MessageSquare } from 'lucide-react';
-import { loginWithPi } from '../lib/piAuth';
+import { loginWithPi, isPiEnvironment, ensurePiInit } from '../lib/piAuth';
 
 interface ServiceBookingModalProps {
   service: Specialization;
@@ -34,16 +34,24 @@ export const ServiceBookingModal: React.FC<ServiceBookingModalProps> = ({
   };
 
   const handlePiPay = async () => {
+    if (typeof window === 'undefined' || !(window as any).Pi || !isPiEnvironment()) {
+      onToast('Open https://gasv.store in Pi Browser to pay with Pi Network', 'info');
+      alert('Please open https://gasv.store inside Pi Browser app to pay with Pi');
+      return;
+    }
+
+    setIsProcessing(true);
+    await ensurePiInit();
     const auth = await loginWithPi();
     if (!auth) {
+      setIsProcessing(false);
       onToast('Please login with Pi Browser to proceed.', 'error');
       return;
     }
-    setIsProcessing(true);
 
     if (typeof (window as any).Pi && typeof (window as any).Pi.createPayment === 'function') {
       try {
-        (window as any).Pi.createPayment({
+        await (window as any).Pi.createPayment({
           amount: finalPiPrice,
           memo: `Booking: ${service.title} (${finalPiPrice} Pi)`,
           metadata: {

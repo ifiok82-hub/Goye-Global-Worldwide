@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { getPiPrice } from '../utils/paymentAdapter';
-import { loginWithPi } from '../lib/piAuth';
+import { startPiPayment } from '../lib/piPayment';
 
 interface PaymentOptionsModalProps {
   onClose: () => void;
@@ -14,52 +14,25 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ onClos
 
   const handlePiPay = async () => {
     setLoading(true);
-    const auth = await loginWithPi();
-    if (!auth) {
+    try {
+      await startPiPayment(
+        {
+          id: product?.id || 'product',
+          title: productName,
+          piPrice
+        },
+        () => {
+          if (product?.id) {
+            localStorage.setItem(`paid_${product.id}`, 'true');
+          }
+          localStorage.setItem('sirwise_paid', 'true');
+          localStorage.setItem('payment_verified', 'true');
+          alert('🎉 Payment Verified! Access Unlocked.');
+          window.location.reload();
+        }
+      );
+    } finally {
       setLoading(false);
-      return;
-    }
-
-    const win = window as any;
-    if (win.Pi && win.Pi.createPayment) {
-      try {
-        await win.Pi.createPayment({
-          amount: piPrice,
-          memo: productName,
-          metadata: { productId: product?.id || 'product', piPrice }
-        }, {
-          onReadyForServerApproval: async (paymentId: string) => {
-            await fetch('/api/pi/approve', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ paymentId, productId: product?.id })
-            }).catch(() => {});
-          },
-          onReadyForServerCompletion: async (paymentId: string, txid: string) => {
-            await fetch('/api/pi/complete', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ paymentId, txid, productId: product?.id, amount: piPrice })
-            }).catch(() => {});
-            if (product?.id) {
-              localStorage.setItem(`paid_${product.id}`, 'true');
-            }
-            localStorage.setItem('sirwise_paid', 'true');
-            localStorage.setItem('payment_verified', 'true');
-            alert('🎉 Payment Verified! Access Unlocked.');
-            window.location.reload();
-          },
-          onCancel: (id: string) => console.log('Cancelled', id),
-          onError: (err: any) => console.error('Error', err)
-        });
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    } else {
-      setLoading(false);
-      alert('Open in Pi Browser to Pay with Pi');
     }
   };
 

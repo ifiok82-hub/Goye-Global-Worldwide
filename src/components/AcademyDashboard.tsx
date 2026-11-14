@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { GraduationCap, CheckCircle, Circle, Play, Lock, ChevronRight, Globe, Award, ShieldCheck, DollarSign, Download, Sparkles, X, FileText, Video, BookOpen, ExternalLink, HelpCircle, CreditCard, Send, Mail } from 'lucide-react';
 import CertificateGenerator from './CertificateGenerator';
 import VideoModalPlayer from './VideoModalPlayer';
-import { PI_WALLET_ADDRESS } from '../config/payment';
-import { loginWithPi } from '../lib/piAuth';
+import { startPiPayment } from '../lib/piPayment';
 
 const showToast = (msg: string, type?: string) => {
   if (typeof (window as any).showToast === 'function') {
@@ -292,50 +291,20 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
   };
 
   // Pi Network is the single payment method
-  const payWithPi = async () => {
-    const auth = await loginWithPi();
-    if (!auth) return;
-    if (typeof (window as any).Pi && typeof (window as any).Pi.createPayment === 'function') {
-      try {
-        (window as any).Pi.createPayment({
-          amount: 2,
-          memo: "Sirwise AI WEB3 Academy (2 Pi)",
-          metadata: { productId: 'academy_bundle', piPrice: 2 }
-        }, {
-          onReadyForServerApproval: (paymentId: string) => {
-            fetch('/api/pi/approve', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ paymentId })
-            }).catch(() => {});
-          },
-          onReadyForServerCompletion: (paymentId: string, txid: string) => {
-            fetch('/api/pi/complete', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ paymentId, txid, productId: 'academy_bundle', amount: 2 })
-            }).catch(() => {});
-            localStorage.setItem('sirwise_paid', 'true');
-            localStorage.setItem('academy_unlocked', 'true');
-            localStorage.setItem('academy_full_unlocked', 'true');
-            showToast('✅ Pi Payment Verified! Academy Access Granted.', 'success');
-            setTimeout(() => window.location.reload(), 1000);
-          },
-          onCancel: (paymentId: string) => console.log('Pi payment cancelled:', paymentId),
-          onError: (err: any) => console.error('Pi payment error:', err)
-        });
-      } catch (err) {
-        console.error('Pi createPayment exception:', err);
-      }
-    } else if (typeof (window as any).showPiGuideReal === 'function') {
-      (window as any).showPiGuideReal();
-    } else {
-      showToast('Open https://gasv.store inside Pi Browser app to pay with Pi Network', 'info');
-    }
+  const handlePiPayment = async (product = { id: 'academy_bundle', title: 'Sirwise AI WEB3 Academy', piPrice: 2 }) => {
+    await startPiPayment(product, () => {
+      localStorage.setItem('sirwise_paid', 'true');
+      localStorage.setItem('academy_unlocked', 'true');
+      localStorage.setItem('academy_full_unlocked', 'true');
+      showToast('✅ Pi Payment Verified! Academy Access Granted.', 'success');
+      setTimeout(() => window.location.reload(), 1000);
+    });
   };
 
+  const payWithPi = () => handlePiPayment({ id: 'academy_bundle', title: 'Sirwise AI WEB3 Academy', piPrice: 2 });
+
   const handleBuyUnlockNow = () => {
-    payWithPi();
+    handlePiPayment({ id: 'academy_bundle', title: 'Sirwise AI WEB3 Academy', piPrice: 2 });
   };
 
   const toggleModule = (id: number) => {
@@ -440,8 +409,13 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
                 <p style={{ fontSize: '18px', fontWeight: '900', margin: '4px 0 0 0' }}>Lifetime Access · 2 Pi</p>
               </div>
               <button 
-                onClick={handleBuyUnlockNow} 
-                style={{ width: '100%', height: '56px', background: '#FFD700', color: 'black', borderRadius: '12px', fontWeight: '900', fontSize: '17px', cursor: 'pointer', border: 'none' }}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handlePiPayment({ id: 'academy_bundle', title: 'Sirwise AI WEB3 Academy', piPrice: 2 });
+                }}
+                style={{ width: '100%', height: '56px', background: '#FFD700', color: 'black', borderRadius: '12px', fontWeight: '900', fontSize: '17px', cursor: 'pointer', border: 'none', position: 'relative', zIndex: 10, pointerEvents: 'auto' }}
               >
                 🔒 LOCK - 2 Pi
               </button>
@@ -464,8 +438,13 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
           </p>
           <button 
             id="buyUnlockBtn" 
-            onClick={payWithPi}
-            style={{ width: '100%', maxWidth: '360px', height: '54px', background: '#FFD700', color: 'black', borderRadius: '14px', fontWeight: '900', fontSize: '16px', cursor: 'pointer', border: 'none', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handlePiPayment({ id: 'academy_bundle', title: 'Sirwise AI WEB3 Academy', piPrice: 2 });
+            }}
+            style={{ width: '100%', maxWidth: '360px', height: '54px', background: '#FFD700', color: 'black', borderRadius: '14px', fontWeight: '900', fontSize: '16px', cursor: 'pointer', border: 'none', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 10, pointerEvents: 'auto' }}
           >
             🔒 LOCK - 2 Pi
           </button>
@@ -515,7 +494,13 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
               <div className="flex flex-col sm:flex-row gap-2">
                 {!isEnrolled ? (
                   <button 
-                    onClick={handleBuyUnlockNow}
+                    type="button"
+                    style={{ position: 'relative', zIndex: 10, pointerEvents: 'auto', cursor: 'pointer' }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handlePiPayment({ id: 'academy_bundle', title: mod.title, piPrice: 2 });
+                    }}
                     className="w-full py-3.5 bg-[#FFD700] hover:bg-yellow-400 text-black font-black text-xs uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-2"
                   >
                     🔒 LOCK - 2 Pi
@@ -624,11 +609,14 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
                   Pay to unlock HD Video Class + 50+ Prompts PDF + Quiz + Certificate
                 </p>
                 <button 
-                  onClick={() => {
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
                     setActiveModule(null);
-                    handleBuyUnlockNow();
+                    handlePiPayment({ id: 'academy_bundle', title: 'Sirwise AI WEB3 Academy', piPrice: 2 });
                   }}
-                  style={{ background: '#FFD700', color: '#000', padding: '16px 24px', fontWeight: '900', borderRadius: '14px', width: '100%', cursor: 'pointer', fontSize: '13px', border: 'none' }}
+                  style={{ background: '#FFD700', color: '#000', padding: '16px 24px', fontWeight: '900', borderRadius: '14px', width: '100%', cursor: 'pointer', fontSize: '13px', border: 'none', position: 'relative', zIndex: 10, pointerEvents: 'auto' }}
                 >
                   🔒 LOCK - 2 Pi
                 </button>

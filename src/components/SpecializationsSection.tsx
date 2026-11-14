@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { SPECIALIZATIONS, Specialization } from '../data/specializations';
-import { loginWithPi } from '../lib/piAuth';
+import { startPiPayment } from '../lib/piPayment';
 import ProductGradientImage from './ProductGradientImage';
 
 interface SpecializationsSectionProps {
@@ -22,74 +22,8 @@ export const SpecializationsSection: React.FC<SpecializationsSectionProps> = ({
     ? SPECIALIZATIONS
     : SPECIALIZATIONS.filter(s => s.category === selectedFilter);
 
-  const handleAction = async (spec: Specialization) => {
-    const isUnlocked = typeof window !== 'undefined' && (
-      localStorage.getItem(`paid_${spec.id}`) === 'true' ||
-      localStorage.getItem(`unlocked_${spec.id}`) === 'true'
-    );
-
-    if (isUnlocked) {
-      onSelectService(spec);
-      return;
-    }
-
-    const auth = await loginWithPi();
-    if (!auth) return;
-
-    if (typeof window !== 'undefined' && (window as any).Pi && typeof (window as any).Pi.createPayment === 'function') {
-      try {
-        const paymentData = {
-          amount: spec.piPrice,
-          memo: `Specialization: ${spec.title}`,
-          metadata: {
-            productId: spec.id,
-            productName: spec.title,
-            piPrice: spec.piPrice
-          }
-        };
-
-        await (window as any).Pi.createPayment(paymentData, {
-          onReadyForServerApproval: async (paymentId: string) => {
-            try {
-              await fetch('/api/pi/approve', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ paymentId, productId: spec.id })
-              });
-            } catch (err) {
-              console.error('Approval error:', err);
-            }
-          },
-          onReadyForServerCompletion: async (paymentId: string, txid: string) => {
-            try {
-              const res = await fetch('/api/pi/complete', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ paymentId, txid, productId: spec.id, amount: spec.piPrice })
-              });
-              if (res.ok) {
-                localStorage.setItem(`paid_${spec.id}`, 'true');
-                window.location.reload();
-              }
-            } catch (err) {
-              console.error('Completion error:', err);
-              localStorage.setItem(`paid_${spec.id}`, 'true');
-              window.location.reload();
-            }
-          },
-          onCancel: (paymentId: string) => {
-            console.log('Payment cancelled', paymentId);
-          },
-          onError: (error: any) => {
-            console.error('Pi Payment error', error);
-          }
-        });
-      } catch (e) {
-        console.error('Pi Payment error', e);
-      }
-    } else {
-      onSelectService(spec);
-    }
+  const handlePiPayment = (product: { id: string; title: string; piPrice: number }) => {
+    startPiPayment(product);
   };
 
   return (
@@ -110,6 +44,7 @@ export const SpecializationsSection: React.FC<SpecializationsSectionProps> = ({
             <button
               key={cat}
               type="button"
+              style={{ position: 'relative', zIndex: 10, pointerEvents: 'auto', cursor: 'pointer' }}
               onClick={() => setSelectedFilter(cat)}
               className={`px-4 py-2 text-xs font-bold rounded-xl transition duration-150 cursor-pointer ${
                 selectedFilter === cat
@@ -147,7 +82,7 @@ export const SpecializationsSection: React.FC<SpecializationsSectionProps> = ({
                 />
 
                 {/* Badge: Strictly 🔒 LOCKED ACCESS */}
-                <div className="absolute top-2.5 left-2.5 bg-black text-[#FFD700] border border-[#FFD700] text-[10px] font-black uppercase px-2.5 py-1 rounded-md tracking-wider z-10 shadow-md">
+                <div className="absolute top-2.5 left-2.5 bg-black text-[#FFD700] border border-[#FFD700] text-[10px] font-black uppercase px-2.5 py-1 rounded-md tracking-wider z-10 shadow-md pointer-events-none">
                   {isUnlocked ? '✅ ACCESS GRANTED' : '🔒 LOCKED ACCESS'}
                 </div>
               </div>
@@ -160,8 +95,16 @@ export const SpecializationsSection: React.FC<SpecializationsSectionProps> = ({
               {/* 3. Button */}
               <button
                 type="button"
-                style={{ pointerEvents: 'auto', zIndex: 10, position: 'relative' }}
-                onClick={() => handleAction(spec)}
+                style={{ position: 'relative', zIndex: 10, pointerEvents: 'auto', cursor: 'pointer' }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (isUnlocked) {
+                    onSelectService(spec);
+                  } else {
+                    handlePiPayment({ id: spec.id, title: spec.title, piPrice: spec.piPrice });
+                  }
+                }}
                 className="w-full font-black uppercase text-xs tracking-widest py-3.5 rounded-xl transition duration-200 cursor-pointer active:scale-95 shadow-md flex items-center justify-center bg-[#FFD700] hover:bg-yellow-400 text-black shadow-yellow-500/20"
               >
                 <span>{isUnlocked ? '✅ ACCESS NOW / DOWNLOAD' : `🔒 LOCK - ${spec.piPrice} Pi`}</span>

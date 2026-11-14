@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldCheck, Eye, EyeOff, Lock, Save, Key, Wallet, RefreshCw, AlertTriangle, CheckCircle, LogOut, Play, Check, X } from 'lucide-react';
+import { isPiEnvironment, ensurePiInit } from '../lib/piAuth';
 
 export default function AdminSettings() {
   const [piApiKey, setPiApiKey] = useState('');
@@ -818,8 +819,8 @@ export default function AdminSettings() {
           <button 
             disabled={diagState.running}
             onClick={async () => {
-              if (!(window as any).Pi) { 
-                alert('Open https://www.gasv.store inside Pi Browser to test Pi payments!'); 
+              if (!(window as any).Pi || !isPiEnvironment()) { 
+                alert('Open https://gasv.store inside Pi Browser to test Pi payments!'); 
                 return; 
               }
 
@@ -836,6 +837,7 @@ export default function AdminSettings() {
               });
 
               try {
+                await ensurePiInit();
                 const Pi = (window as any).Pi;
                 freshLog.push(`[${new Date().toLocaleTimeString()}] Authenticating Pi user...`);
                 

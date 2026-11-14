@@ -1,3 +1,5 @@
+import { isPiEnvironment, ensurePiInit } from '../lib/piAuth';
+
 export type PaymentEnvironment = 'STANDARD_WEB' | 'PI_BROWSER';
 
 export interface ProductPricing {
@@ -88,11 +90,12 @@ export async function processPayment(
   }
 ) {
   const win = window as any;
-  if (!win.Pi || !win.Pi.createPayment) {
+  if (!win.Pi || !win.Pi.createPayment || !isPiEnvironment()) {
     alert("Open in Pi Browser to pay with Pi");
     return;
   }
   try {
+    await ensurePiInit();
     const piAmount = getPiPrice(product);
     await win.Pi.createPayment({
       amount: piAmount,

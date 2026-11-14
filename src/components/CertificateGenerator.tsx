@@ -103,8 +103,14 @@ export default function CertificateGenerator({ isCompleted, isEnrolled, userProf
     return (
       <div className="flex flex-col items-center justify-center mt-8">
         <button 
-          onClick={onUnlock}
-          className="bg-[#222] text-gray-500 font-black py-4 px-8 rounded-xl flex items-center justify-center gap-2 cursor-pointer pointer-events-auto z-10"
+          type="button"
+          style={{ position: 'relative', zIndex: 10, pointerEvents: 'auto', cursor: 'pointer' }}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onUnlock();
+          }}
+          className="bg-[#FFD700] text-black font-black py-4 px-8 rounded-xl flex items-center justify-center gap-2 cursor-pointer"
         >
           <Lock size={24} />
           🔒 LOCK - 2 Pi

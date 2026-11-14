@@ -20,13 +20,11 @@ declare global {
   }
 }
 
-// Pi SDK Initialization
-if (typeof window !== 'undefined' && window.Pi) {
-  try {
-    window.Pi.init({ version: "2.0" });
-  } catch (e) {
-    console.warn('Pi init error:', e);
-  }
+import { ensurePiInit, isPiEnvironment } from './lib/piAuth';
+
+// Pi SDK Initialization (only inside Pi Browser / Pi App Studio host)
+if (typeof window !== 'undefined' && window.Pi && isPiEnvironment()) {
+  ensurePiInit().catch((e) => console.warn('Pi init error:', e));
 }
 
 // Service Worker cleanup

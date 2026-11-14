@@ -5,6 +5,7 @@ import { SEED_CUSTOMERS, SEED_ORDERS, isAdminClick } from '../utils/analytics';
 import { safeParse, safeGetNumber, safeFormatDate, safeFormatDateTime } from '../utils/safeParse';
 import AdminSettings from './AdminSettings';
 import GoyeCustomerIntelligence from './GoyeCustomerIntelligence';
+import { isPiEnvironment, ensurePiInit } from '../lib/piAuth';
 
 export default function AdminDashboard({ 
   showToast, 
@@ -2266,12 +2267,13 @@ export default function AdminDashboard({
             <button
               onClick={async () => {
                 const email = localStorage.getItem('userEmail') || localStorage.getItem('user_email') || localStorage.getItem('customer_email') || 'admin_testnet@gasv.store';
-                if (!(window as any).Pi) { 
+                if (!(window as any).Pi || !isPiEnvironment()) { 
                   alert('Open https://gasv.store inside Pi Browser app to initiate Pi Testnet diagnostic payment.'); 
                   return; 
                 }
                 try {
                   showToast('Initializing Admin Pi Testnet 0.01 Pi Diagnostic Payment...');
+                  await ensurePiInit();
                   const Pi = (window as any).Pi;
                   await Pi.authenticate(['username', 'payments'], (inc: any) => { 
                     if (inc && inc.identifier) {

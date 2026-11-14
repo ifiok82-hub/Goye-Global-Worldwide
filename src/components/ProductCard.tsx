@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { loginWithPi, toPi } from '../lib/piAuth';
+import { startPiPayment } from '../lib/piPayment';
 import ProductGradientImage from './ProductGradientImage';
 
 export interface ProductItem {
@@ -41,74 +41,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) =
   const finalPiPrice = product.piPrice !== undefined ? product.piPrice : 2;
   const prodName = product.name || product.title || 'Digital Product';
 
-  const handleAction = async () => {
-    if (!isLocked) {
-      if (product.downloadUrl) {
-        window.location.href = product.downloadUrl;
-      } else if (onSelect) {
-        onSelect(product);
-      }
-      return;
-    }
-
-    const auth = await loginWithPi();
-    if (!auth) return;
-
-    if (typeof window !== 'undefined' && (window as any).Pi && typeof (window as any).Pi.createPayment === 'function') {
-      try {
-        const paymentData = {
-          amount: finalPiPrice,
-          memo: prodName,
-          metadata: {
-            productId: product.id,
-            productName: prodName,
-            piPrice: finalPiPrice
-          }
-        };
-
-        await (window as any).Pi.createPayment(paymentData, {
-          onReadyForServerApproval: async (paymentId: string) => {
-            try {
-              await fetch('/api/pi/approve', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ paymentId, productId: product.id })
-              });
-            } catch (err) {
-              console.error('Approval error:', err);
-            }
-          },
-          onReadyForServerCompletion: async (paymentId: string, txid: string) => {
-            try {
-              const res = await fetch('/api/pi/complete', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ paymentId, txid, productId: product.id, amount: finalPiPrice })
-              });
-              if (res.ok) {
-                localStorage.setItem(`paid_${product.id}`, 'true');
-                if (product.slug) localStorage.setItem(`paid_${product.slug}`, 'true');
-                setIsLocked(false);
-              }
-            } catch (err) {
-              console.error('Completion error:', err);
-              localStorage.setItem(`paid_${product.id}`, 'true');
-              setIsLocked(false);
-            }
-          },
-          onCancel: (paymentId: string) => {
-            console.log('Payment cancelled', paymentId);
-          },
-          onError: (error: any) => {
-            console.error('Pi Payment error', error);
-          }
-        });
-      } catch (e) {
-        console.error('Pi Payment failed', e);
-      }
-    } else {
-      alert('Open in Pi Browser to Pay with Pi');
-    }
+  const handlePiPayment = (prod: { id: string; title: string; piPrice: number }) => {
+    startPiPayment(prod, () => {
+      localStorage.setItem(`paid_${prod.id}`, 'true');
+      if (product.slug) localStorage.setItem(`paid_${product.slug}`, 'true');
+      setIsLocked(false);
+    });
   };
 
   return (
@@ -124,7 +62,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) =
         />
 
         {/* Badge: Strictly 🔒 LOCKED ACCESS */}
-        <div className="absolute top-2.5 left-2.5 bg-black text-[#FFD700] border border-[#FFD700] text-[10px] font-black uppercase px-2.5 py-1 rounded-md tracking-wider z-10 shadow-md">
+        <div className="absolute top-2.5 left-2.5 bg-black text-[#FFD700] border border-[#FFD700] text-[10px] font-black uppercase px-2.5 py-1 rounded-md tracking-wider z-10 shadow-md pointer-events-none">
           {isLocked ? '🔒 LOCKED ACCESS' : '✅ ACCESS GRANTED'}
         </div>
       </div>
@@ -137,8 +75,20 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) =
       {/* 3. Button: Click directly triggers Pi payment */}
       <button
         type="button"
-        style={{ pointerEvents: 'auto', zIndex: 10, position: 'relative' }}
-        onClick={handleAction}
+        style={{ position: 'relative', zIndex: 10, pointerEvents: 'auto', cursor: 'pointer' }}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (!isLocked) {
+            if (product.downloadUrl) {
+              window.location.href = product.downloadUrl;
+            } else if (onSelect) {
+              onSelect(product);
+            }
+          } else {
+            handlePiPayment({ id: product.id, title: prodName, piPrice: finalPiPrice });
+          }
+        }}
         className="w-full font-black uppercase text-xs tracking-widest py-3.5 rounded-xl transition duration-200 cursor-pointer active:scale-95 shadow-md flex items-center justify-center bg-[#FFD700] hover:bg-yellow-400 text-black shadow-yellow-500/20"
       >
         <span>{isLocked ? `🔒 LOCK - ${finalPiPrice} Pi` : '✅ ACCESS NOW / DOWNLOAD'}</span>

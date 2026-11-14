@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, ShieldCheck } from 'lucide-react';
-import { loginWithPi } from '../lib/piAuth';
+import { startPiPayment } from '../lib/piPayment';
 
 interface UnifiedCheckoutModalProps {
   product: any;
@@ -25,76 +25,27 @@ export const UnifiedCheckoutModal: React.FC<UnifiedCheckoutModalProps> = ({
 
   const handlePiPayment = async () => {
     setLoading(true);
-    const auth = await loginWithPi();
-    if (!auth) {
-      setLoading(false);
-      return;
-    }
-
-    const win = window as any;
-    if (win.Pi && win.Pi.createPayment) {
-      try {
-        await win.Pi.createPayment({
-          amount: piPrice,
-          memo: productName,
-          metadata: {
-            productId: product?.id || 'product',
-            productName: productName,
-            piPrice: piPrice
+    try {
+      await startPiPayment(
+        {
+          id: product?.id || 'product',
+          title: productName,
+          piPrice
+        },
+        () => {
+          if (product?.id) {
+            localStorage.setItem(`paid_${product.id}`, 'true');
+            if (product.slug) localStorage.setItem(`paid_${product.slug}`, 'true');
           }
-        }, {
-          onReadyForServerApproval: async (paymentId: string) => {
-            try {
-              await fetch('/api/pi/approve', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ paymentId, productId: product?.id })
-              });
-            } catch (err) {
-              console.error('Approval error:', err);
-            }
-          },
-          onReadyForServerCompletion: async (paymentId: string, txid: string) => {
-            try {
-              const res = await fetch('/api/pi/complete', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ paymentId, txid, productId: product?.id, amount: piPrice })
-              });
-              if (res.ok) {
-                if (product?.id) {
-                  localStorage.setItem(`paid_${product.id}`, 'true');
-                  if (product.slug) localStorage.setItem(`paid_${product.slug}`, 'true');
-                }
-                localStorage.setItem('sirwise_paid', 'true');
-                localStorage.setItem('payment_verified', 'true');
-                if (onToast) onToast('✅ Pi Payment Verified! Access Unlocked.', 'success');
-                alert('🎉 Pi Payment Verified! Access Unlocked.');
-                window.location.reload();
-              }
-            } catch (err) {
-              console.error('Completion error:', err);
-              if (product?.id) localStorage.setItem(`paid_${product.id}`, 'true');
-              window.location.reload();
-            }
-          },
-          onCancel: (paymentId: string) => {
-            console.log('Payment cancelled', paymentId);
-            if (onToast) onToast('Pi payment was cancelled', 'info');
-          },
-          onError: (error: any) => {
-            console.error('Pi Payment error', error);
-            if (onToast) onToast('Pi payment error occurred', 'error');
-          }
-        });
-      } catch (e) {
-        console.error('Pi Payment failed', e);
-      } finally {
-        setLoading(false);
-      }
-    } else {
+          localStorage.setItem('sirwise_paid', 'true');
+          localStorage.setItem('payment_verified', 'true');
+          if (onToast) onToast('✅ Pi Payment Verified! Access Unlocked.', 'success');
+          alert('🎉 Pi Payment Verified! Access Unlocked.');
+          window.location.reload();
+        }
+      );
+    } finally {
       setLoading(false);
-      alert('Open in Pi Browser to Pay with Pi');
     }
   };
 
