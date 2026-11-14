@@ -17,6 +17,7 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('fetch', event => {
+  if (new URL(event.request.url).pathname.startsWith('/api/')) return;
   event.respondWith(
     caches.match(event.request).then(response => {
       return response || fetch(event.request);

@@ -15,6 +15,7 @@ export default async function handler(req: any, res: any) {
   );
 
   if (req.method === 'GET') {
+    res.setHeader('Content-Type', 'application/json');
     return res.status(200).json({
       ok: true,
       hasKey: !!process.env.PI_API_KEY,

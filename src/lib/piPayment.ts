@@ -71,18 +71,30 @@ export async function startPiPayment(
     // Force Mainnet (sandbox: false) for all customer payments
     await (window as any).Pi.init({ version: '2.0', sandbox: false });
 
-    const auth = await Promise.race([
-      (window as any).Pi.authenticate(['username', 'payments'], async (payment: any) => {
-        if (payment && payment.identifier) {
-          try {
-            await postPiBackend('/api/pi/incomplete', { payment });
-          } catch {}
-        }
-      }),
-      new Promise<null>((_, reject) =>
-        setTimeout(() => reject(new Error('Pi authentication timed out waiting for Pi Browser host.')), 15000)
-      )
-    ]);
+    const onIncompletePayment = async (payment: any) => {
+      if (payment && payment.identifier) {
+        try {
+          await postPiBackend('/api/pi/incomplete', { payment });
+        } catch {}
+      }
+    };
+
+    let auth: any = null;
+    try {
+      auth = await Promise.race([
+        (window as any).Pi.authenticate(['username', 'payments'], onIncompletePayment),
+        new Promise<null>((_, reject) =>
+          setTimeout(() => reject(new Error('Pi authentication timed out waiting for Pi Browser host.')), 15000)
+        )
+      ]);
+    } catch (e: any) {
+      if (String(e?.message || e).includes('timed out') || String(e?.message || e).includes('host')) {
+        alert('Please open this app from Pi Browser > Pi Apps > GOYE Store (goyestoreuwg6251.pinet.com), not from gasv.store directly. Pi payment only works inside Pi App Platform.');
+        window.location.href = 'https://goyestoreuwg6251.pinet.com';
+        return false;
+      }
+      throw e;
+    }
 
     if (!auth || !auth.user) {
       alert('Please sign in with Pi first');
@@ -116,14 +128,26 @@ export async function startPiPayment(
         onCancel: (paymentId: string) => console.log('Pi cancelled', paymentId),
         onError: (err: any) => {
           console.error(err);
-          alert('Pi payment error: ' + (err?.message || String(err)));
+          const msg = String(err?.message || err);
+          if (msg.includes('timed out') || msg.includes('host')) {
+            alert('Please open this app from Pi Browser > Pi Apps > GOYE Store (goyestoreuwg6251.pinet.com), not from gasv.store directly. Pi payment only works inside Pi App Platform.');
+            window.location.href = 'https://goyestoreuwg6251.pinet.com';
+            return;
+          }
+          alert('Pi payment error: ' + msg);
         }
       }
     );
     return true;
   } catch (err: any) {
     console.error('Pi payment error:', err);
-    alert('Pi payment error: ' + (err?.message || String(err)));
+    const msg = String(err?.message || err);
+    if (msg.includes('timed out') || msg.includes('host')) {
+      alert('Please open this app from Pi Browser > Pi Apps > GOYE Store (goyestoreuwg6251.pinet.com), not from gasv.store directly. Pi payment only works inside Pi App Platform.');
+      window.location.href = 'https://goyestoreuwg6251.pinet.com';
+      return false;
+    }
+    alert('Pi payment error: ' + msg);
     return false;
   }
 }

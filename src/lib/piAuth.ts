@@ -85,26 +85,38 @@ export async function loginWithPi(): Promise<{ uid: string; username: string } |
       // Ensure Pi.init runs only once cleanly
       await ensurePiInit();
 
-      // STEP 1 - Extend Pi authentication with payments scope for U2A payments
-      const auth = await Promise.race([
-        window.Pi.authenticate(['username', 'payments'], async (payment: any) => {
-          console.log('Incomplete payment found:', payment);
-          if (payment && payment.identifier) {
-            try {
-              await fetch('/api/pi/incomplete', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ payment })
-              });
-            } catch (e) {
-              console.error('Error reporting incomplete payment:', e);
-            }
+      // STEP 1 - Extend Pi authentication with payments scope for U2A payments (one try only)
+      const onIncompletePayment = async (payment: any) => {
+        console.log('Incomplete payment found:', payment);
+        if (payment && payment.identifier) {
+          try {
+            await fetch('/api/pi/incomplete', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ payment })
+            });
+          } catch (e) {
+            console.error('Error reporting incomplete payment:', e);
           }
-        }),
-        new Promise<null>((_, reject) =>
-          setTimeout(() => reject(new Error('Pi authentication timed out waiting for Pi Browser host.')), 15000)
-        )
-      ]);
+        }
+      };
+
+      let auth: any = null;
+      try {
+        auth = await Promise.race([
+          window.Pi.authenticate(['username', 'payments'], onIncompletePayment),
+          new Promise<null>((_, reject) =>
+            setTimeout(() => reject(new Error('Pi authentication timed out waiting for Pi Browser host.')), 15000)
+          )
+        ]);
+      } catch (e: any) {
+        if (String(e?.message || e).includes('timed out') || String(e?.message || e).includes('host')) {
+          alert('Please open this app from Pi Browser > Pi Apps > GOYE Store (goyestoreuwg6251.pinet.com), not from gasv.store directly. Pi payment only works inside Pi App Platform.');
+          window.location.href = 'https://goyestoreuwg6251.pinet.com';
+          return null;
+        }
+        throw e;
+      }
 
       if (!auth?.accessToken) return null;
 
