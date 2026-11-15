@@ -52,6 +52,7 @@ export const ServiceBookingModal: React.FC<ServiceBookingModalProps> = ({
 
     if (typeof (window as any).Pi && typeof (window as any).Pi.createPayment === 'function') {
       try {
+        let approvedOnce = false;
         await (window as any).Pi.createPayment({
           amount: finalPiPrice,
           memo: `Booking: ${service.title} (${finalPiPrice} Pi)`,
@@ -64,9 +65,13 @@ export const ServiceBookingModal: React.FC<ServiceBookingModalProps> = ({
           }
         }, {
           onReadyForServerApproval: async (paymentId: string) => {
+            if (approvedOnce) return;
+            approvedOnce = true;
+            console.log('APPROVE fresh paymentId', paymentId);
             await postPiBackend('/api/pi/approve', { paymentId });
           },
           onReadyForServerCompletion: async (paymentId: string, txid: string) => {
+            approvedOnce = false;
             await postPiBackend('/api/pi/complete', {
               paymentId,
               txid,
@@ -77,12 +82,21 @@ export const ServiceBookingModal: React.FC<ServiceBookingModalProps> = ({
             saveBooking(txid || paymentId);
           },
           onCancel: (paymentId: string) => {
+            approvedOnce = false;
             setIsProcessing(false);
             console.log('Pi payment cancelled:', paymentId);
           },
           onError: (err: any) => {
+            approvedOnce = false;
             setIsProcessing(false);
             console.error('Pi payment error:', err);
+            const msg = String(err?.message || err);
+            if (msg.includes('No payment found') || msg.includes('Payment expired')) {
+              localStorage.removeItem('paymentId');
+              localStorage.removeItem('pi_payment_id');
+              alert('This payment expired. Please close and tap LOCK again for a new payment.');
+              return;
+            }
             onToast('Payment error. Please try again in Pi Browser.', 'error');
           }
         });

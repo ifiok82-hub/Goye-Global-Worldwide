@@ -907,6 +907,16 @@ app.post(['/api/pi/approve', '/api/pi-approve'], express.json(), async (req, res
     let data: any = {};
     try { data = resText ? JSON.parse(resText) : {}; } catch { data = { raw: resText }; }
 
+    console.log('Pi approve status', piRes.status, data);
+
+    if (piRes.status === 404) {
+      return res.status(404).json({
+        error: 'Payment expired - please tap LOCK again for a fresh payment',
+        status: 404,
+        data
+      });
+    }
+
     if (!piRes.ok) {
       return res.status(piRes.status).json(data);
     }

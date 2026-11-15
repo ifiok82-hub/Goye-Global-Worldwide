@@ -41,7 +41,7 @@ export async function ensurePiInit(): Promise<boolean> {
   if (typeof window === 'undefined' || !window.Pi) return false;
   if (!piInitPromise) {
     piInitPromise = Promise.resolve()
-      .then(() => window.Pi.init({ version: '2.0' }))
+      .then(() => window.Pi.init({ version: '2.0', sandbox: false }))
       .catch((err) => {
         piInitPromise = null;
         throw err;

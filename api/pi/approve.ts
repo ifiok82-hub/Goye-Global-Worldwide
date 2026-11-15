@@ -61,7 +61,15 @@ export default async function handler(req: any, res: any) {
       data = { raw: text };
     }
 
-    console.log('APPROVE PI RESPONSE', paymentId, r.status, data);
+    console.log('Pi approve status', r.status, data);
+
+    if (r.status === 404) {
+      return res.status(404).json({
+        error: 'Payment expired - please tap LOCK again for a fresh payment',
+        status: 404,
+        data,
+      });
+    }
 
     if (!r.ok) {
       return res.status(r.status).json({

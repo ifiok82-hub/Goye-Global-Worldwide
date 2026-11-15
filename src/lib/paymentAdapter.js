@@ -59,15 +59,20 @@ export async function triggerPayment(product, _method, callbacks = {}) {
   const piPrice = product?.piPrice || 2;
   try {
     await win.Pi.init({ version: '2.0', sandbox: false });
+    let approvedOnce = false;
     await win.Pi.createPayment({
       amount: piPrice,
       memo: product.name,
       metadata: { productId: product.id, piPrice }
     }, {
       onReadyForServerApproval: async (paymentId) => {
+        if (approvedOnce) return;
+        approvedOnce = true;
+        console.log('APPROVE fresh paymentId', paymentId);
         await postPiBackend('/api/pi/approve', { paymentId, productId: product.id });
       },
       onReadyForServerCompletion: async (paymentId, txid) => {
+        approvedOnce = false;
         await postPiBackend('/api/pi/complete', { paymentId, txid, productId: product.id, amount: piPrice });
         await verifyPayment(product, txid, 'Pi Network');
         if (callbacks.onSuccess) callbacks.onSuccess(txid);
@@ -75,10 +80,18 @@ export async function triggerPayment(product, _method, callbacks = {}) {
         window.location.reload();
       },
       onCancel: (paymentId) => {
+        approvedOnce = false;
         if (callbacks.onCancel) callbacks.onCancel(paymentId);
       },
       onError: (err) => {
+        approvedOnce = false;
         console.error('Pi error:', err);
+        const msg = String(err?.message || err);
+        if (msg.includes('No payment found') || msg.includes('Payment expired')) {
+          localStorage.removeItem('paymentId');
+          localStorage.removeItem('pi_payment_id');
+          alert('This payment expired. Please close and tap LOCK again for a new payment.');
+        }
       }
     });
   } catch (err) {

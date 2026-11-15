@@ -2,58 +2,94 @@ import { isPiEnvironment } from './piAuth';
 
 export const API_BASE = 'https://gasv.store';
 
+// Guard so approve is called ONLY ONCE per payment
+const approvingRef = { current: false };
+
+function clearStoredPaymentIds() {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.removeItem('paymentId');
+    localStorage.removeItem('pi_payment_id');
+    localStorage.removeItem('last_payment_id');
+    sessionStorage.removeItem('paymentId');
+    sessionStorage.removeItem('pi_payment_id');
+  } catch {}
+}
+
 export interface PiPaymentProduct {
   id: string;
   title: string;
   piPrice: number;
 }
 
-function getBackendUrls(path: string): string[] {
-  if (
-    typeof window !== 'undefined' &&
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-  ) {
-    return [path];
+function getBackendUrl(path: string): string {
+  if (typeof window !== 'undefined') {
+    const { hostname, origin } = window.location;
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || origin === API_BASE) {
+      return path;
+    }
   }
-  return [`${API_BASE}${path}`, path];
+  return `${API_BASE}${path}`;
 }
 
 export async function postPiBackend(
   path: '/api/pi/approve' | '/api/pi/complete' | '/api/pi/incomplete',
   payload: Record<string, any>
 ): Promise<any> {
-  const urls = getBackendUrls(path);
-  let lastError: any = null;
+  const url = getBackendUrl(path);
+  let res: Response;
 
-  for (const url of urls) {
-    try {
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        const msg = data?.error || data?.message || `HTTP ${res.status}`;
-        throw new Error(msg);
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+  } catch (networkErr: any) {
+    // Only fall back to same-origin relative path on genuine network error from cross-origin host
+    if (url !== path) {
+      try {
+        res = await fetch(path, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+      } catch {
+        console.error(`${path} network error`, networkErr);
+        if (path === '/api/pi/approve') {
+          alert('Approve failed - check Vercel Logs: ' + (networkErr?.message || String(networkErr)));
+        }
+        throw networkErr;
       }
-      return data;
-    } catch (e: any) {
-      lastError = e;
-      console.error(`${path} fetch failed (${url}):`, e);
+    } else {
+      console.error(`${path} network error`, networkErr);
+      if (path === '/api/pi/approve') {
+        alert('Approve failed - check Vercel Logs: ' + (networkErr?.message || String(networkErr)));
+      }
+      throw networkErr;
     }
   }
 
-  if (path === '/api/pi/approve') {
-    console.error('Approve fetch failed', lastError);
-    alert('Approve failed - check Vercel Logs: ' + (lastError?.message || String(lastError)));
-  } else if (path === '/api/pi/complete') {
-    console.error('Complete fetch failed', lastError);
-    alert('Complete failed - check Vercel Logs: ' + (lastError?.message || String(lastError)));
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg = data?.error_message || data?.error || data?.message || `HTTP ${res.status}`;
+    const err = new Error(msg);
+    if (path === '/api/pi/approve') {
+      console.error('Approve failed:', res.status, data);
+      if (msg.includes('No payment found') || msg.includes('Payment expired') || res.status === 404) {
+        clearStoredPaymentIds();
+        alert('This payment expired. Please close and tap LOCK again for a new payment.');
+      } else {
+        alert('Approve failed - check Vercel Logs: ' + msg);
+      }
+    } else if (path === '/api/pi/complete') {
+      console.error('Complete failed:', res.status, data);
+      alert('Complete failed - check Vercel Logs: ' + msg);
+    }
+    throw err;
   }
 
-  throw lastError || new Error(`Failed request to ${path}`);
+  return data;
 }
 
 export async function startPiPayment(
@@ -67,8 +103,11 @@ export async function startPiPayment(
     return false;
   }
 
+  clearStoredPaymentIds();
+  approvingRef.current = false;
+
   try {
-    // Force Mainnet (sandbox: false) for all customer payments
+    // Mainnet only
     await (window as any).Pi.init({ version: '2.0', sandbox: false });
 
     const onIncompletePayment = async (payment: any) => {
@@ -109,26 +148,43 @@ export async function startPiPayment(
       },
       {
         onReadyForServerApproval: async (paymentId: string) => {
+          if (approvingRef.current) return;
+          approvingRef.current = true;
+          console.log('APPROVE fresh paymentId', paymentId);
           await postPiBackend('/api/pi/approve', { paymentId });
         },
         onReadyForServerCompletion: async (paymentId: string, txid: string) => {
-          await postPiBackend('/api/pi/complete', {
-            paymentId,
-            txid,
-            productId: product.id,
-            amount: product.piPrice
-          });
-          localStorage.setItem(`paid_${product.id}`, 'true');
-          if (onCompleted) {
-            onCompleted();
-          } else {
-            window.location.reload();
+          try {
+            await postPiBackend('/api/pi/complete', {
+              paymentId,
+              txid,
+              productId: product.id,
+              amount: product.piPrice
+            });
+            localStorage.setItem(`paid_${product.id}`, 'true');
+            if (onCompleted) {
+              onCompleted();
+            } else {
+              window.location.reload();
+            }
+          } finally {
+            approvingRef.current = false;
           }
         },
-        onCancel: (paymentId: string) => console.log('Pi cancelled', paymentId),
+        onCancel: (paymentId: string) => {
+          approvingRef.current = false;
+          clearStoredPaymentIds();
+          console.log('Pi cancelled', paymentId);
+        },
         onError: (err: any) => {
+          approvingRef.current = false;
           console.error(err);
           const msg = String(err?.message || err);
+          if (msg.includes('No payment found') || msg.includes('Payment expired')) {
+            clearStoredPaymentIds();
+            alert('This payment expired. Please close and tap LOCK again for a new payment.');
+            return;
+          }
           if (msg.includes('timed out') || msg.includes('host')) {
             alert('Please open this app from Pi Browser > Pi Apps > GOYE Store (goyestoreuwg6251.pinet.com), not from gasv.store directly. Pi payment only works inside Pi App Platform.');
             window.location.href = 'https://goyestoreuwg6251.pinet.com';
@@ -140,8 +196,14 @@ export async function startPiPayment(
     );
     return true;
   } catch (err: any) {
+    approvingRef.current = false;
     console.error('Pi payment error:', err);
     const msg = String(err?.message || err);
+    if (msg.includes('No payment found') || msg.includes('Payment expired')) {
+      clearStoredPaymentIds();
+      alert('This payment expired. Please close and tap LOCK again for a new payment.');
+      return false;
+    }
     if (msg.includes('timed out') || msg.includes('host')) {
       alert('Please open this app from Pi Browser > Pi Apps > GOYE Store (goyestoreuwg6251.pinet.com), not from gasv.store directly. Pi payment only works inside Pi App Platform.');
       window.location.href = 'https://goyestoreuwg6251.pinet.com';
