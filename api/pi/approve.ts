@@ -1,4 +1,4 @@
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const PI_APP_ID = 'piappstudio-QVT1FNbDcNvVGzNMN-1f2LWG9MHQ5pUr';
 
 async function callPiApprove(paymentId: string, apiKey: string) {
   const r = await fetch(`https://api.minepi.com/v2/payments/${encodeURIComponent(paymentId)}/approve`, {
@@ -29,21 +29,20 @@ export default async function handler(req: any, res: any) {
 
   const apiKey = (process.env.PI_API_KEY || '').trim().replace(/^['"]|['"]$/g, '');
 
-  console.log(
-    'APPROVE HIT',
-    req.method,
-    req.body,
-    'KEY_EXISTS:',
-    !!apiKey,
-    'KEY_LENGTH:',
-    apiKey.length
-  );
+  console.log('APPROVE app check', {
+    hasKey: !!process.env.PI_API_KEY,
+    keyPrefix: process.env.PI_API_KEY?.slice(0, 7),
+    keyLength: process.env.PI_API_KEY?.length,
+  });
 
   if (req.method === 'GET') {
     res.setHeader('Content-Type', 'application/json');
     return res.status(200).json({
       ok: true,
       hasKey: !!apiKey,
+      keyPrefix: apiKey ? apiKey.slice(0, 8) : '',
+      appId: PI_APP_ID,
+      sandbox: true,
     });
   }
 
@@ -55,7 +54,9 @@ export default async function handler(req: any, res: any) {
     return res.status(500).json({ error: 'PI_API_KEY missing - check Vercel Env' });
   }
   if (apiKey.startsWith('sk_live_')) {
-    console.warn('KEY MISMATCH: Testnet mode but Live key');
+    return res.status(400).json({
+      error: 'KEY MISMATCH: Live key in Testnet mode - use sk_test_ from SAME Pi App',
+    });
   }
 
   try {
@@ -71,20 +72,13 @@ export default async function handler(req: any, res: any) {
       return res.status(400).json({ error: 'Missing paymentId' });
     }
 
-    let { r, data } = await callPiApprove(paymentId, apiKey);
-
-    // Handle Pi Platform database propagation lag on freshly created payments
-    if (r.status === 404) {
-      console.log('Pi approve initial 404 - retrying after 700ms propagation wait for', paymentId);
-      await wait(700);
-      ({ r, data } = await callPiApprove(paymentId, apiKey));
-    }
+    const { r, data } = await callPiApprove(paymentId, apiKey);
 
     console.log('Pi approve status', r.status, data);
 
     if (r.status === 404) {
       return res.status(404).json({
-        error: 'Payment expired - please tap LOCK again for a fresh payment',
+        error: 'Key mismatch or expired - close Pi Browser and tap LOCK once for fresh payment',
         status: 404,
         data,
       });

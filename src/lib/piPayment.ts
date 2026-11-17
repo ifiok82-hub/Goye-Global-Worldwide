@@ -1,4 +1,5 @@
 import {
+  PI_APP_ID,
   ensurePiInit,
   ensurePiAuthForPayment,
   handleIncompletePiPayment,
@@ -9,8 +10,9 @@ export const API_BASE = 'https://gasv.store';
 
 // Guard so approve is called ONLY ONCE per payment
 const approvingRef = { current: false };
+const EXPIRED_OR_MISMATCH_MSG = 'Key mismatch or expired - close Pi Browser and tap LOCK once for fresh payment';
 
-function clearStoredPaymentIds() {
+export function clearStoredPaymentIds() {
   if (typeof window === 'undefined') return;
   try {
     localStorage.removeItem('paymentId');
@@ -20,6 +22,9 @@ function clearStoredPaymentIds() {
     sessionStorage.removeItem('pi_payment_id');
   } catch {}
 }
+
+// Clear any stale paymentId immediately when module loads
+clearStoredPaymentIds();
 
 export interface PiPaymentProduct {
   id: string;
@@ -35,6 +40,18 @@ function getBackendUrl(path: string): string {
     }
   }
   return `${API_BASE}${path}`;
+}
+
+function isNotFoundOrExpiredMessage(msg: string, status?: number): boolean {
+  const lower = String(msg || '').toLowerCase();
+  return (
+    status === 404 ||
+    lower.includes('404') ||
+    lower.includes('payment_not_found') ||
+    lower.includes('no payment found') ||
+    lower.includes('payment expired') ||
+    lower.includes('key mismatch or expired')
+  );
 }
 
 export async function postPiBackend(
@@ -60,36 +77,30 @@ export async function postPiBackend(
         });
       } catch {
         console.error(`${path} network error`, networkErr);
-        if (path === '/api/pi/approve') {
-          alert('Approve network error: ' + (networkErr?.message || String(networkErr)));
-        }
         throw networkErr;
       }
     } else {
       console.error(`${path} network error`, networkErr);
-      if (path === '/api/pi/approve') {
-        alert('Approve network error: ' + (networkErr?.message || String(networkErr)));
-      }
       throw networkErr;
     }
   }
 
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const msg = data?.error_message || data?.error || data?.message || `HTTP ${res.status}`;
-    const err = new Error(msg);
+    const rawMsg = data?.error_message || data?.error || data?.message || `HTTP ${res.status}`;
     if (path === '/api/pi/approve') {
       console.error('Approve failed:', res.status, data);
-      if (res.status === 404 || msg.includes('No payment found') || msg.includes('Payment expired')) {
+      if (isNotFoundOrExpiredMessage(rawMsg, res.status)) {
         clearStoredPaymentIds();
-        alert('This payment expired or app key mismatch occurred. Please tap LOCK again or check PI_API_KEY in Vercel.');
-      } else {
-        alert('Approve failed: ' + msg);
+        const err: any = new Error(EXPIRED_OR_MISMATCH_MSG);
+        err.status = 404;
+        throw err;
       }
     } else if (path === '/api/pi/complete') {
       console.error('Complete failed:', res.status, data);
-      alert('Complete failed: ' + msg);
     }
+    const err: any = new Error(rawMsg);
+    err.status = res.status;
     throw err;
   }
 
@@ -109,9 +120,31 @@ export async function startPiPayment(
 
   clearStoredPaymentIds();
   approvingRef.current = false;
+  let errorAlertShown = false;
+
+  const showPaymentErrorOnce = (err: any) => {
+    if (errorAlertShown) return;
+    errorAlertShown = true;
+    const msg = String(err?.message || err || '');
+    if (isNotFoundOrExpiredMessage(msg, err?.status)) {
+      clearStoredPaymentIds();
+      alert(EXPIRED_OR_MISMATCH_MSG);
+      return;
+    }
+    if (msg.includes('KEY MISMATCH')) {
+      alert(msg);
+      return;
+    }
+    if (msg.includes('timed out') || msg.includes('host')) {
+      alert('Please open goyestoreuwg6251.pinet.com inside Pi Browser > Pi Apps > GOYE Store');
+      return;
+    }
+    alert('Pi payment error: ' + msg);
+  };
 
   try {
     await ensurePiInit();
+    await (window as any).Pi.init({ version: '2.0', sandbox: true });
 
     const authUser = await ensurePiAuthForPayment();
     if (!authUser || !authUser.username) {
@@ -119,7 +152,6 @@ export async function startPiPayment(
       return false;
     }
 
-    // Ensure Pi SDK has incomplete callback primed if user restarted app mid-payment
     void handleIncompletePiPayment;
 
     const amount = Number(product.piPrice) > 0 ? Number(product.piPrice) : 1;
@@ -128,7 +160,7 @@ export async function startPiPayment(
       {
         amount,
         memo: `${product.title} (${amount} Pi)`,
-        metadata: { productId: product.id, piPrice: amount, uid: authUser.uid }
+        metadata: { productId: product.id, piPrice: amount, uid: authUser.uid, appId: PI_APP_ID }
       },
       {
         onReadyForServerApproval: async (paymentId: string) => {
@@ -137,8 +169,9 @@ export async function startPiPayment(
           console.log('APPROVE fresh paymentId', paymentId);
           try {
             await postPiBackend('/api/pi/approve', { paymentId });
-          } catch (err) {
+          } catch (err: any) {
             approvingRef.current = false;
+            showPaymentErrorOnce(err);
             throw err;
           }
         },
@@ -161,6 +194,8 @@ export async function startPiPayment(
             } else {
               window.location.reload();
             }
+          } catch (err: any) {
+            showPaymentErrorOnce(err);
           } finally {
             approvingRef.current = false;
           }
@@ -172,36 +207,18 @@ export async function startPiPayment(
         },
         onError: (err: any) => {
           approvingRef.current = false;
+          clearStoredPaymentIds();
           console.error('Pi SDK onError:', err);
-          const msg = String(err?.message || err);
-          if (msg.includes('No payment found') || msg.includes('Payment expired')) {
-            clearStoredPaymentIds();
-            alert('This payment expired. Please tap LOCK again for a new payment.');
-            return;
-          }
-          if (msg.includes('timed out') || msg.includes('host')) {
-            alert('Please open goyestoreuwg6251.pinet.com inside Pi Browser > Pi Apps > GOYE Store');
-            return;
-          }
-          alert('Pi payment error: ' + msg);
+          showPaymentErrorOnce(err);
         }
       }
     );
     return true;
   } catch (err: any) {
     approvingRef.current = false;
+    clearStoredPaymentIds();
     console.error('Pi payment error:', err);
-    const msg = String(err?.message || err);
-    if (msg.includes('No payment found') || msg.includes('Payment expired')) {
-      clearStoredPaymentIds();
-      alert('This payment expired. Please tap LOCK again for a new payment.');
-      return false;
-    }
-    if (msg.includes('timed out') || msg.includes('host')) {
-      alert('Please open goyestoreuwg6251.pinet.com inside Pi Browser > Pi Apps > GOYE Store');
-      return false;
-    }
-    alert('Pi payment error: ' + msg);
+    showPaymentErrorOnce(err);
     return false;
   }
 }

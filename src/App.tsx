@@ -27,8 +27,15 @@ import PiLoginButton from './components/PiLoginButton';
 import AutoPiConverter from './components/AutoPiConverter';
 export default function App() {
   const env = getPaymentEnvironment();
-    // AUTO Pi Auth - runs on page load, shows your Pi username automatically
+  // Clear any stale payment IDs on page load and run auto Pi auth
   useEffect(() => {
+    try {
+      localStorage.removeItem('pi_payment_id');
+      localStorage.removeItem('paymentId');
+      localStorage.removeItem('last_payment_id');
+      sessionStorage.removeItem('pi_payment_id');
+      sessionStorage.removeItem('paymentId');
+    } catch {}
     autoLoginWithPi();
   }, []);
   const isPiBrowserMode = env === 'PI_BROWSER';

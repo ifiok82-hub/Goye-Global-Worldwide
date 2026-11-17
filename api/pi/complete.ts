@@ -6,15 +6,11 @@ export default async function handler(req: any, res: any) {
 
   const apiKey = (process.env.PI_API_KEY || '').trim().replace(/^['"]|['"]$/g, '');
 
-  console.log(
-    'COMPLETE HIT',
-    req.method,
-    req.body,
-    'KEY_EXISTS:',
-    !!apiKey,
-    'KEY_LENGTH:',
-    apiKey.length
-  );
+  console.log('APPROVE app check', {
+    hasKey: !!process.env.PI_API_KEY,
+    keyPrefix: process.env.PI_API_KEY?.slice(0, 7),
+    keyLength: process.env.PI_API_KEY?.length,
+  });
 
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -24,7 +20,9 @@ export default async function handler(req: any, res: any) {
     return res.status(500).json({ error: 'PI_API_KEY missing - check Vercel Env' });
   }
   if (apiKey.startsWith('sk_live_')) {
-    console.warn('KEY MISMATCH: Testnet mode but Live key');
+    return res.status(400).json({
+      error: 'KEY MISMATCH: Live key in Testnet mode - use sk_test_ from SAME Pi App',
+    });
   }
 
   try {

@@ -43,7 +43,7 @@ export default async function handler(req: any, res: any) {
       return res.status(500).json({ error: 'PI_API_KEY missing - check Vercel Env' });
     }
     if (apiKey.startsWith('sk_live_')) {
-      console.warn('KEY MISMATCH: Testnet mode but Live key');
+      return res.status(400).json({ error: 'KEY MISMATCH: Live key in Testnet mode - use sk_test_ from SAME Pi App' });
     }
 
     let action = 'none';

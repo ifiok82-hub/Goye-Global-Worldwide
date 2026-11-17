@@ -7,6 +7,7 @@ declare global {
   }
 }
 
+export const PI_APP_ID = 'piappstudio-QVT1FNbDcNvVGzNMN-1f2LWG9MHQ5pUr';
 const API_BASE = 'https://gasv.store';
 
 let sessionToken: string | null = null;
@@ -14,25 +15,6 @@ let currentUser: { uid: string; username: string } | null = null;
 let sessionAuthenticated = false;
 let piInitPromise: Promise<void> | null = null;
 let inFlightAuthPromise: Promise<{ uid: string; username: string } | null> | null = null;
-
-function isSandboxHost(): boolean {
-  if (typeof window === 'undefined') return false;
-  try {
-    const hostname = window.location.hostname || '';
-    const origins = window.location.ancestorOrigins ? Array.from(window.location.ancestorOrigins) : [];
-    const ref = document.referrer || '';
-    if (
-      hostname.includes('sandbox.minepi.com') ||
-      origins.some((o) => o.includes('sandbox.minepi.com')) ||
-      ref.includes('sandbox.minepi.com') ||
-      hostname === 'localhost' ||
-      hostname === '127.0.0.1'
-    ) {
-      return true;
-    }
-  } catch {}
-  return false;
-}
 
 export function isPiEnvironment(): boolean {
   if (typeof window === 'undefined') return false;
@@ -68,12 +50,16 @@ export async function ensurePiInit(): Promise<boolean> {
   try {
     localStorage.removeItem('PI_API_KEY');
     localStorage.removeItem('pi_api_key');
+    localStorage.removeItem('pi_payment_id');
+    localStorage.removeItem('paymentId');
+    localStorage.removeItem('last_payment_id');
+    sessionStorage.removeItem('pi_payment_id');
+    sessionStorage.removeItem('paymentId');
   } catch {}
   if (!window.Pi) return false;
   if (!piInitPromise) {
-    const sandboxFlag = isSandboxHost();
     piInitPromise = Promise.resolve()
-      .then(() => window.Pi.init({ version: '2.0', sandbox: sandboxFlag }))
+      .then(() => window.Pi.init({ version: '2.0', sandbox: true }))
       .catch((err) => {
         piInitPromise = null;
         throw err;
