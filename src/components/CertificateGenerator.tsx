@@ -2,19 +2,19 @@ import React, { useState } from 'react';
 import jsPDF from 'jspdf';
 import { Download, Lock } from 'lucide-react';
 
-export default function CertificateGenerator({ isCompleted, isEnrolled, userProfile, onUnlock, onToast }: any) {
+export default function CertificateGenerator({ isCompleted, isActiveStudent, userProfile, onPay, onToast }: any) {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handleDownload = () => {
-    if (!isEnrolled) {
-      if (onUnlock) onUnlock();
+    if (!isActiveStudent) {
+      if (onPay) onPay();
       return;
     }
     if (!isCompleted) {
       if (onToast) {
-        onToast("Please complete all 4 modules to unlock your official Certificate.", "info");
+        onToast("Please complete all 4 modules to claim your official Certificate.", "info");
       } else if (typeof (window as any).showToast === 'function') {
-        (window as any).showToast("Please complete all 4 modules to unlock your official Certificate.", "info");
+        (window as any).showToast("Please complete all 4 modules to claim your official Certificate.", "info");
       }
       return;
     }
@@ -69,7 +69,7 @@ export default function CertificateGenerator({ isCompleted, isEnrolled, userProf
       doc.setTextColor(255, 215, 0);
       doc.setFontSize(10);
       doc.text('AI Prompting | GenAI Business | No-Code Automation | Web3 Fundamentals', 400, 410, { align: 'center' });
-      doc.text('Cyber Security | Crypto & Pi GCV | Remote Income | Capstone Showcase', 400, 425, { align: 'center' });
+      doc.text('Cyber Security | Crypto & Pi Network | Remote Income | Capstone Showcase', 400, 425, { align: 'center' });
 
       // Footer
       doc.setTextColor(255, 255, 255);
@@ -99,7 +99,7 @@ export default function CertificateGenerator({ isCompleted, isEnrolled, userProf
     setIsGenerating(false);
   };
 
-  if (!isEnrolled) {
+  if (!isActiveStudent) {
     return (
       <div className="flex flex-col items-center justify-center mt-8">
         <button 
@@ -108,14 +108,14 @@ export default function CertificateGenerator({ isCompleted, isEnrolled, userProf
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            onUnlock();
+            if (onPay) onPay();
           }}
           className="bg-[#FFD700] text-black font-black py-4 px-8 rounded-xl flex items-center justify-center gap-2 cursor-pointer"
         >
           <Lock size={24} />
           🔒 LOCK - 2 Pi
         </button>
-        <p className="text-gray-500 text-xs mt-2 text-center">Enroll to unlock your certificate</p>
+        <p className="text-gray-500 text-xs mt-2 text-center">Complete 2 Pi access to claim your certificate</p>
       </div>
     );
   }
@@ -130,7 +130,7 @@ export default function CertificateGenerator({ isCompleted, isEnrolled, userProf
           <Lock size={24} />
           DOWNLOAD E-CERTIFICATE
         </button>
-        <p className="text-[#FFD700] text-xs mt-2 text-center font-bold">Complete all modules to unlock</p>
+        <p className="text-[#FFD700] text-xs mt-2 text-center font-bold">Complete all modules to claim</p>
       </div>
     );
   }

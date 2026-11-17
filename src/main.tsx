@@ -52,14 +52,18 @@ if (typeof window !== 'undefined' && import.meta.env.PROD) {
   } catch (e) {}
 }
 
+const isVercelHost =
+  typeof window !== 'undefined' &&
+  /(gasv\.store|vercel\.app|pinet\.com)$/i.test(window.location.hostname);
+
 const rootElement = document.getElementById('root');
 if (rootElement) {
   createRoot(rootElement).render(
     <StrictMode>
       <ErrorBoundary>
         <App />
-        <Analytics />
-        <SpeedInsights />
+        {isVercelHost && <Analytics />}
+        {isVercelHost && <SpeedInsights />}
       </ErrorBoundary>
     </StrictMode>
   );

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldCheck, Eye, EyeOff, Lock, Save, Key, Wallet, RefreshCw, AlertTriangle, CheckCircle, LogOut, Play, Check, X } from 'lucide-react';
 import { isPiEnvironment } from '../lib/piAuth';
-import { postPiBackend } from '../lib/piPayment';
+import { startPiPayment } from '../lib/piPayment';
 
 export default function AdminSettings() {
   const [piApiKey, setPiApiKey] = useState('');
@@ -42,18 +42,10 @@ export default function AdminSettings() {
 
   const handleLogout = () => {
     localStorage.removeItem('isAdmin');
-    localStorage.removeItem('is_admin');
     localStorage.removeItem('admin_token');
     window.location.hash = 'home';
     window.location.reload();
   };
-
-  // Password Change States
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [passStatus, setPassStatus] = useState<string | null>(null);
 
   // Field Visibility Masking States (Default ALL to FALSE -> MASKED PASSWORD TYPE)
   const [showPiApiKey, setShowPiApiKey] = useState(false);
@@ -192,56 +184,6 @@ export default function AdminSettings() {
     } catch (e) {
       alert(`✅ Keys Saved Locally to Browser Storage!`);
       setSavedStatus(`✅ Keys Saved Locally to Browser Storage! (RC BN3583878)`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleChangePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setPassStatus(null);
-    const clean = newPassword.trim();
-    if (!clean || clean.length < 4) {
-      setPassStatus('❌ Password must be at least 4 characters long.');
-      return;
-    }
-    if (clean !== confirmPassword.trim()) {
-      setPassStatus('❌ Passwords do not match.');
-      return;
-    }
-
-    setIsLoading(true);
-    const adminToken = localStorage.getItem('admin_token') || 'admin_session';
-
-    try {
-      const res = await fetch('/api/admin/change-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminToken}`,
-          'x-admin-token': adminToken
-        },
-        body: JSON.stringify({
-          currentPassword: adminToken,
-          newPassword: clean
-        })
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        localStorage.setItem('admin_password', clean);
-        localStorage.setItem('custom_admin_password', clean);
-        setPassStatus('✅ Admin Password Updated & Secured Successfully!');
-        setNewPassword('');
-        setConfirmPassword('');
-      } else {
-        setPassStatus(`❌ ${data.error || 'Failed to update admin password'}`);
-      }
-    } catch (err) {
-      localStorage.setItem('admin_password', clean);
-      localStorage.setItem('custom_admin_password', clean);
-      setPassStatus('✅ Password Updated Locally to Browser Storage!');
-      setNewPassword('');
-      setConfirmPassword('');
     } finally {
       setIsLoading(false);
     }
@@ -646,85 +588,6 @@ export default function AdminSettings() {
           </div>
         </div>
 
-        {/* 3. CHANGE MASTER ADMIN PASSWORD */}
-        <div className="bg-[#111] border border-[#333] rounded-2xl p-5 space-y-4">
-          <div className="flex items-center gap-2 text-[#FFD700] font-bold text-base border-b border-[#222] pb-3">
-            <Lock size={18} />
-            <span>3. Change Master Admin Password</span>
-          </div>
-
-          <p className="text-gray-400 text-xs">
-            Update your master store password securely. Changes apply instantly to both local browser access and server API authorization.
-          </p>
-
-          {passStatus && (
-            <div className={`p-3 rounded-xl font-bold text-xs flex items-center gap-2 ${passStatus.includes('✅') ? 'bg-emerald-950/80 border border-emerald-500/40 text-emerald-300' : 'bg-red-950/80 border border-red-500/40 text-red-300'}`}>
-              {passStatus}
-            </div>
-          )}
-
-          <form onSubmit={handleChangePassword} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="text-xs font-bold text-gray-300 block mb-1">
-                  New Admin Password
-                </label>
-                <div className="relative">
-                  <input
-                    id="new_admin_password"
-                    type={showNewPassword ? 'text' : 'password'}
-                    autoComplete="new-password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Enter new master password"
-                    className="w-full bg-black border border-[#333] focus:border-[#FFD700] rounded-xl px-4 py-3 text-sm text-white pr-10 font-mono"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
-                  >
-                    {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-gray-300 block mb-1">
-                  Confirm New Password
-                </label>
-                <div className="relative">
-                  <input
-                    id="confirm_admin_password"
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    autoComplete="new-password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Re-enter new password"
-                    className="w-full bg-black border border-[#333] focus:border-[#FFD700] rounded-xl px-4 py-3 text-sm text-white pr-10 font-mono"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
-                  >
-                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading || !newPassword}
-              className="bg-[#1a1a1a] hover:bg-[#222] text-[#FFD700] border border-[#FFD700]/50 font-bold px-5 py-2.5 rounded-xl text-xs flex items-center gap-2 transition disabled:opacity-50 cursor-pointer"
-            >
-              {isLoading ? <RefreshCw size={14} className="animate-spin" /> : <Lock size={14} />}
-              Update Admin Password
-            </button>
-          </form>
-        </div>
-
         {/* Submit Actions */}
         <div className="pt-2">
           <button
@@ -821,7 +684,7 @@ export default function AdminSettings() {
             disabled={diagState.running}
             onClick={async () => {
               if (!(window as any).Pi || !isPiEnvironment()) { 
-                alert('Open https://gasv.store inside Pi Browser to test Pi payments!'); 
+                alert('Please open goyestoreuwg6251.pinet.com inside Pi Browser > Pi Apps > GOYE Store'); 
                 return; 
               }
 
@@ -830,134 +693,48 @@ export default function AdminSettings() {
                 running: true,
                 sdkStatus: 'SDK LOADED ✅',
                 authStatus: 'AUTHENTICATING...',
-                creationStatus: 'IDLE',
-                approvalStatus: 'IDLE',
-                completionStatus: 'IDLE',
-                verificationStatus: 'IDLE',
+                creationStatus: 'CREATING...',
+                approvalStatus: 'WAITING...',
+                completionStatus: 'WAITING...',
+                verificationStatus: 'WAITING...',
                 logs: freshLog
               });
 
               try {
-                const Pi = (window as any).Pi;
-                await Pi.init({ version: '2.0', sandbox: false });
-                freshLog.push(`[${new Date().toLocaleTimeString()}] Authenticating Pi user...`);
-                
-                const authUser = await Pi.authenticate(['username', 'payments'], (inc: any) => {
-                  if (inc && inc.identifier) {
-                    freshLog.push(`[${new Date().toLocaleTimeString()}] Incomplete payment detected: ${inc.identifier}`);
-                  }
-                });
-
-                setDiagState(prev => ({
-                  ...prev,
-                  authStatus: `AUTHENTICATED ✅ (@${authUser?.user?.username || 'pioneer'})`,
-                  creationStatus: 'CREATING NEW PAYMENT...',
-                  logs: [...prev.logs, `[${new Date().toLocaleTimeString()}] Authenticated as @${authUser?.user?.username || 'pioneer'}`]
-                }));
-
-                // BRAND NEW PAYMENT REQUEST - fresh timestamp prevents old/expired payment ID reuse
-                const freshTxMemo = `Pi Mainnet Diagnostic Test (0.01 Pi) - ${Date.now()} - gasv.store`;
-                
-                await Pi.createPayment({
-                  amount: 0.01, 
-                  memo: freshTxMemo, 
-                  metadata: { type: 'mainnet_diagnostic', timestamp: Date.now() }
-                }, {
-                  onReadyForServerApproval: async (paymentId: string) => {
-                    setDiagState(prev => ({
-                      ...prev,
-                      creationStatus: `CREATED ✅ (${paymentId.substring(0, 10)}...)`,
-                      approvalStatus: 'APPROVAL REQUESTED...',
-                      logs: [...prev.logs, `[${new Date().toLocaleTimeString()}] PI_PAYMENT_CREATED: ${paymentId}`, `[${new Date().toLocaleTimeString()}] PI_PAYMENT_APPROVAL_REQUESTED`]
-                    }));
-
-                    try {
-                      const appData = await postPiBackend('/api/pi/approve', { paymentId });
-                      if (appData.approved || appData.success) {
-                        setDiagState(prev => ({
-                          ...prev,
-                          approvalStatus: 'APPROVED ✅ (DEVELOPER_APPROVED)',
-                          completionStatus: 'WAITING FOR USER IN-APP SIGNATURE...',
-                          logs: [...prev.logs, `[${new Date().toLocaleTimeString()}] PI_PAYMENT_APPROVED by server`]
-                        }));
-                      } else {
-                        setDiagState(prev => ({
-                          ...prev,
-                          approvalStatus: `FAILED ❌ (${appData.error || 'Approval rejected'})`,
-                          logs: [...prev.logs, `[${new Date().toLocaleTimeString()}] PI_PAYMENT_FAILED during approval: ${appData.error || 'Server error'}`]
-                        }));
-                      }
-                    } catch (e: any) {
-                      setDiagState(prev => ({
-                        ...prev,
-                        approvalStatus: `FAILED ❌ (${e.message})`,
-                        logs: [...prev.logs, `[${new Date().toLocaleTimeString()}] PI_PAYMENT_FAILED approval exception: ${e.message}`]
-                      }));
-                    }
+                const ok = await startPiPayment(
+                  {
+                    id: 'pi-testnet-diagnostic',
+                    title: 'Pi Testnet Diagnostic Test (0.01 Pi)',
+                    piPrice: 0.01
                   },
-                  onReadyForServerCompletion: async (paymentId: string, txid: string) => {
-                    setDiagState(prev => ({
-                      ...prev,
-                      completionStatus: `COMPLETED ✅ (TxID: ${txid.substring(0, 10)}...)`,
-                      verificationStatus: 'SERVER VERIFYING...',
-                      logs: [...prev.logs, `[${new Date().toLocaleTimeString()}] PI_PAYMENT_COMPLETION_REQUESTED`, `[${new Date().toLocaleTimeString()}] TxID: ${txid}`]
-                    }));
-
-                    try {
-                      const compData = await postPiBackend('/api/pi/complete', {
-                        paymentId,
-                        txid,
-                        amount: 0.01,
-                        productName: 'Pi Diagnostic Payment'
-                      });
-                      if (compData) {
-                        setDiagState(prev => ({
-                          ...prev,
-                          running: false,
-                          verificationStatus: 'SERVER VERIFIED & RECORDED ✅',
-                          logs: [...prev.logs, `[${new Date().toLocaleTimeString()}] PI_PAYMENT_VERIFIED & RECORDED IN DATABASE`]
-                        }));
-                        alert(`✅ PI DIAGNOSTIC PAYMENT SUCCESSFUL!\nPayment ID: ${paymentId}\nTxID: ${txid}`);
-                      } else {
-                        setDiagState(prev => ({
-                          ...prev,
-                          running: false,
-                          verificationStatus: 'FAILED ❌',
-                          logs: [...prev.logs, `[${new Date().toLocaleTimeString()}] PI_PAYMENT_FAILED completion server check`]
-                        }));
-                      }
-                    } catch (e: any) {
-                      setDiagState(prev => ({
-                        ...prev,
-                        running: false,
-                        verificationStatus: `FAILED ❌ (${e.message})`,
-                        logs: [...prev.logs, `[${new Date().toLocaleTimeString()}] PI_PAYMENT_FAILED completion exception: ${e.message}`]
-                      }));
-                    }
-                  },
-                  onCancel: (paymentId: string) => {
+                  (txid) => {
                     setDiagState(prev => ({
                       ...prev,
                       running: false,
-                      completionStatus: 'CANCELLED BY USER ❌',
-                      logs: [...prev.logs, `[${new Date().toLocaleTimeString()}] PI_PAYMENT_CANCELLED: ${paymentId}`]
+                      authStatus: 'AUTHENTICATED ✅',
+                      creationStatus: 'CREATED ✅',
+                      approvalStatus: 'APPROVED ✅',
+                      completionStatus: `COMPLETED ✅${txid ? ` (TxID: ${txid.substring(0, 10)}...)` : ''}`,
+                      verificationStatus: 'SERVER VERIFIED ✅',
+                      logs: [...prev.logs, `[${new Date().toLocaleTimeString()}] PI_DIAGNOSTIC_COMPLETE TxID: ${txid || 'verified'}`]
                     }));
-                  },
-                  onError: (err: any) => {
-                    setDiagState(prev => ({
-                      ...prev,
-                      running: false,
-                      creationStatus: `FAILED ❌ (${err?.message || 'Error'})`,
-                      logs: [...prev.logs, `[${new Date().toLocaleTimeString()}] PI_PAYMENT_FAILED: ${err?.message || JSON.stringify(err)}`]
-                    }));
+                    alert(`✅ PI TESTNET DIAGNOSTIC SUCCESSFUL!\nTxID: ${txid || 'verified'}`);
                   }
-                });
+                );
+                if (!ok) {
+                  setDiagState(prev => ({
+                    ...prev,
+                    running: false,
+                    authStatus: 'STOPPED',
+                    logs: [...prev.logs, `[${new Date().toLocaleTimeString()}] PI_PAYMENT_CANCELLED_OR_BLOCKED`]
+                  }));
+                }
               } catch (err: any) { 
                 setDiagState(prev => ({
                   ...prev,
                   running: false,
                   authStatus: `FAILED ❌ (${err?.message || 'Auth error'})`,
-                  logs: [...prev.logs, `[${new Date().toLocaleTimeString()}] PI_PAYMENT_FAILED auth: ${err?.message || JSON.stringify(err)}`]
+                  logs: [...prev.logs, `[${new Date().toLocaleTimeString()}] PI_PAYMENT_FAILED: ${err?.message || JSON.stringify(err)}`]
                 }));
               }
             }} 

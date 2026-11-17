@@ -15,7 +15,7 @@ export function getProductEmoji(title: string = '', category: string = ''): stri
   if (t.includes('travel') || t.includes('lmia') || t.includes('relocation') || t.includes('dubai') || t.includes('passport')) return '✈️';
   if (t.includes('esim') || t.includes('roaming') || t.includes('phone') || t.includes('data')) return '📱';
   if (t.includes('care') || t.includes('worker') || t.includes('job') || t.includes('employment') || t.includes('resume')) return '💼';
-  if (t.includes('pi ') || t.includes('crypto') || t.includes('defi') || t.includes('blockchain') || t.includes('gcv') || t.includes('token')) return '🪙';
+  if (t.includes('pi ') || t.includes('crypto') || t.includes('defi') || t.includes('blockchain') || t.includes('token') || t.includes('web3')) return '🪙';
   if (t.includes('course') || t.includes('book') || t.includes('doc') || t.includes('archiving') || t.includes('design')) return '📚';
   return '🤖';
 }
@@ -28,44 +28,52 @@ export const ProductGradientImage: React.FC<ProductGradientImageProps> = ({
   className = '',
   height = '220px'
 }) => {
-  const [imageError, setImageError] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const emoji = getProductEmoji(title || alt, category);
+  const validLocalSrc = src && src.trim().length > 0 && !imgError;
 
-  if (!src || imageError) {
+  if (validLocalSrc) {
     return (
       <div
         style={{
           height,
-          background: 'linear-gradient(135deg, #FFD700, #000000)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '60px',
-          borderRadius: '16px 16px 0 0',
           width: '100%',
-          userSelect: 'none'
+          backgroundColor: '#111111',
+          overflow: 'hidden'
         }}
-        className={className}
-        role="img"
-        aria-label={alt}
+        className={`relative ${className}`}
       >
-        <span className="transform hover:scale-110 transition-transform duration-300">
-          {emoji}
-        </span>
+        <img
+          src={src}
+          alt={alt}
+          decoding="async"
+          onError={() => setImgError(true)}
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+        />
       </div>
     );
   }
 
   return (
-    <div className={`relative w-full overflow-hidden bg-black ${className}`} style={{ height }}>
-      <img
-        src={src}
-        alt={alt}
-        referrerPolicy="no-referrer"
-        loading="lazy"
-        className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-        onError={() => setImageError(true)}
-      />
+    <div
+      style={{
+        height,
+        background: 'linear-gradient(135deg, #FFD700, #000000)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '60px',
+        borderRadius: '16px 16px 0 0',
+        width: '100%',
+        userSelect: 'none'
+      }}
+      className={className}
+      role="img"
+      aria-label={alt}
+    >
+      <span className="transform hover:scale-110 transition-transform duration-300">
+        {emoji}
+      </span>
     </div>
   );
 };

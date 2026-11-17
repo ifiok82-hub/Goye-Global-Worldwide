@@ -25,13 +25,13 @@ export default defineConfig(() => {
           navigateFallbackDenylist: [/^\/api\//]
         },
         devOptions: {
-          enabled: true
+          enabled: false
         },
         manifest: {
           id: '/',
           name: 'Sirwise AI WEB3 Academy - GOYE Store Global',
           short_name: 'Sirwise AI',
-          description: 'GOYE Store Global and Sirwise AI WEB3 Academy — digital products, AI education, Web3 and Pi GCV checkout.',
+          description: 'GOYE Store Global and Sirwise AI WEB3 Academy — digital products, AI education, Web3 and Pi checkout.',
           theme_color: '#FFD700',
           background_color: '#0B0E14',
           display: 'standalone',

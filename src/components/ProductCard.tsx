@@ -31,13 +31,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) =
     if (typeof window === 'undefined') return true;
     return (
       localStorage.getItem(`paid_${product.id}`) !== 'true' &&
-      localStorage.getItem(`paid_${product.slug}`) !== 'true' &&
-      localStorage.getItem(`unlocked_${product.id}`) !== 'true'
+      localStorage.getItem(`paid_${product.slug}`) !== 'true'
     );
   });
 
-  const productSlug = product.slug || product.id;
-  const imgSrc = product.preview_image || (productSlug ? `/images/old/${productSlug}.jpg` : product.image);
   const finalPiPrice = product.piPrice !== undefined ? product.piPrice : 2;
   const prodName = product.name || product.title || 'Digital Product';
 
@@ -54,7 +51,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) =
       {/* 1. Image with LOCKED ACCESS Badge */}
       <div className="relative w-full rounded-[16px] overflow-hidden shadow-lg border border-zinc-800 bg-zinc-950 mb-4">
         <ProductGradientImage
-          src={imgSrc}
+          src={product.image || product.preview_image}
           alt={prodName}
           category={product.category}
           title={prodName}
@@ -91,7 +88,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) =
         }}
         className="w-full font-black uppercase text-xs tracking-widest py-3.5 rounded-xl transition duration-200 cursor-pointer active:scale-95 shadow-md flex items-center justify-center bg-[#FFD700] hover:bg-yellow-400 text-black shadow-yellow-500/20"
       >
-        <span>{isLocked ? `🔒 LOCK - ${finalPiPrice} Pi` : '✅ ACCESS NOW / DOWNLOAD'}</span>
+        <span>{isLocked ? `🔒 LOCK - ${finalPiPrice} Pi` : '✅ ACCESS NOW'}</span>
       </button>
     </div>
   );

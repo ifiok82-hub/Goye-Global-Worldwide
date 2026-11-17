@@ -20,8 +20,12 @@ export function isPiEnvironment(): boolean {
   const ua = typeof navigator !== 'undefined' ? navigator.userAgent || '' : '';
   if (/PiBrowser|Pi Browser|Pi\/1/i.test(ua)) return true;
 
+  const piHosts = ['minepi.com', 'pinet.com', 'piappengine.com', 'pi.app'];
   try {
-    const piHosts = ['minepi.com', 'pinet.com', 'piappengine.com', 'pi.app'];
+    const hostname = window.location.hostname || '';
+    if (piHosts.some((host) => hostname.includes(host))) {
+      return true;
+    }
     const origins = window.location.ancestorOrigins ? Array.from(window.location.ancestorOrigins) : [];
     if (origins.some((origin) => piHosts.some((host) => origin.includes(host)))) {
       return true;
@@ -41,7 +45,7 @@ export async function ensurePiInit(): Promise<boolean> {
   if (typeof window === 'undefined' || !window.Pi) return false;
   if (!piInitPromise) {
     piInitPromise = Promise.resolve()
-      .then(() => window.Pi.init({ version: '2.0', sandbox: false }))
+      .then(() => window.Pi.init({ version: '2.0', sandbox: true }))
       .catch((err) => {
         piInitPromise = null;
         throw err;
@@ -72,6 +76,16 @@ export function toPi(naira?: number, usd?: number, piPrice?: number): number {
   return 2;
 }
 
+function getIncompleteEndpoint(): string {
+  if (typeof window !== 'undefined') {
+    const { hostname, origin } = window.location;
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || origin === 'https://gasv.store') {
+      return '/api/pi/incomplete';
+    }
+  }
+  return 'https://gasv.store/api/pi/incomplete';
+}
+
 // STEP 1 - Sign in, in the browser
 export async function loginWithPi(): Promise<{ uid: string; username: string } | null> {
   if (inFlightAuthPromise) return inFlightAuthPromise;
@@ -79,18 +93,18 @@ export async function loginWithPi(): Promise<{ uid: string; username: string } |
   inFlightAuthPromise = (async () => {
     try {
       if (typeof window === 'undefined' || !window.Pi || !isPiEnvironment()) {
+        alert('Please open goyestoreuwg6251.pinet.com inside Pi Browser > Pi Apps > GOYE Store');
         return null;
       }
 
-      // Ensure Pi.init runs only once cleanly
+      // Ensure Pi.init runs only once cleanly (Testnet sandbox: true)
       await ensurePiInit();
 
-      // STEP 1 - Extend Pi authentication with payments scope for U2A payments (one try only)
       const onIncompletePayment = async (payment: any) => {
         console.log('Incomplete payment found:', payment);
         if (payment && payment.identifier) {
           try {
-            await fetch('/api/pi/incomplete', {
+            await fetch(getIncompleteEndpoint(), {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ payment })
@@ -111,8 +125,7 @@ export async function loginWithPi(): Promise<{ uid: string; username: string } |
         ]);
       } catch (e: any) {
         if (String(e?.message || e).includes('timed out') || String(e?.message || e).includes('host')) {
-          alert('Please open this app from Pi Browser > Pi Apps > GOYE Store (goyestoreuwg6251.pinet.com), not from gasv.store directly. Pi payment only works inside Pi App Platform.');
-          window.location.href = 'https://goyestoreuwg6251.pinet.com';
+          alert('Please open goyestoreuwg6251.pinet.com inside Pi Browser > Pi Apps > GOYE Store');
           return null;
         }
         throw e;
@@ -121,7 +134,6 @@ export async function loginWithPi(): Promise<{ uid: string; username: string } |
       if (!auth?.accessToken) return null;
 
       // STEP 2 - Exchange accessToken with App Studio. One exchange per sign-in.
-      // Never call /v2/me yourself. App Studio checks token against Pi Platform.
       const res = await fetch(APP_STUDIO_LOGIN, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -131,23 +143,25 @@ export async function loginWithPi(): Promise<{ uid: string; username: string } |
       if (!res.ok) {
         console.error('App Studio login failed', await res.text().catch(() => ''));
         if (auth.user?.username) {
-          return { uid: auth.user.uid || '', username: auth.user.username };
+          currentUser = { uid: auth.user.uid || '', username: auth.user.username };
+          localStorage.setItem('pi_username_trusted', currentUser.username);
+          localStorage.setItem('pi_uid_trusted', currentUser.uid || '');
+          sessionStorage.setItem('pi_has_session', '1');
+          window.dispatchEvent(new Event('piAuthChanged'));
+          return currentUser;
         }
         return null;
       }
 
       const data = await res.json();
-      // STEP 2 result - ONLY this identity is trusted
-      // { sessionToken, user: { uid, username } }
       sessionToken = data.sessionToken || null;
       currentUser = data.user || null;
 
       if (currentUser?.username) {
-        // Store ONLY trusted username for display. Never store browser uid/username.
         localStorage.setItem('pi_username_trusted', currentUser.username);
         localStorage.setItem('pi_uid_trusted', currentUser.uid || '');
-        // Keep a flag so refresh can restore display, but sessionToken stays in memory
         sessionStorage.setItem('pi_has_session', '1');
+        window.dispatchEvent(new Event('piAuthChanged'));
       }
 
       return currentUser;
@@ -169,6 +183,7 @@ export function logoutPi() {
     localStorage.removeItem('pi_username_trusted');
     localStorage.removeItem('pi_uid_trusted');
     sessionStorage.removeItem('pi_has_session');
+    window.dispatchEvent(new Event('piAuthChanged'));
   }
 }
 

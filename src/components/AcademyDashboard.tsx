@@ -36,7 +36,7 @@ const GLOBAL_MODULES = [
     id: 2, 
     title: 'Generative AI for Business & Content Creation', 
     shortTitle: 'Generative AI & Content',
-    desc: 'Create logos, videos, websites, social media content with AI - No coding - Sell services on Fiverr, Upwork globally $500-$2000/month',
+    desc: 'Create logos, videos, websites, and digital content with AI — no coding required.',
     duration: '35-45 mins',
     videoUrl: 'https://www.youtube.com/embed/aircAruvnKk',
     pdfTitle: 'Fiverr & Upwork AI Freelance Client Script (PDF)',
@@ -44,7 +44,7 @@ const GLOBAL_MODULES = [
     quiz: [
       { q: 'Which tool suite is ideal for AI video & image creation without coding?', options: ['Excel', 'Canva AI, Leonardo & CapCut AI', 'Notepad', 'CMD'], ans: 1 }
     ],
-    globalAppeal: 'Freelancing skill worldwide ($500-$2000/mo)',
+    globalAppeal: 'Practical digital design skill worldwide',
     badge: '🎨 AI Content Specialist'
   },
   { 
@@ -57,7 +57,7 @@ const GLOBAL_MODULES = [
     pdfTitle: 'Zapier & Make.com Automation Blueprint (PDF)',
     exercise: 'Design an automated lead magnet capture workflow connected to Google Sheets or Notion.',
     quiz: [
-      { q: 'What is the main benefit of No-Code AI automation?', options: ['Slows down business', 'Automates repetitive tasks 24/7 without code', 'Requires $10k servers', 'Deletes emails'], ans: 1 }
+      { q: 'What is the main benefit of No-Code AI automation?', options: ['Slows down business', 'Automates repetitive tasks 24/7 without code', 'Requires complex servers', 'Deletes emails'], ans: 1 }
     ],
     globalAppeal: 'Automation is a high-demand global job skill',
     badge: '⚙️ Automation Architect'
@@ -66,15 +66,15 @@ const GLOBAL_MODULES = [
     id: 4, 
     title: 'Web3 Fundamentals & Blockchain for Everyone', 
     shortTitle: 'Web3 & Blockchain Basics',
-    desc: 'Understand blockchain, wallets, Metamask, smart contracts simplified for beginners worldwide - No technical jargon',
+    desc: 'Understand blockchain, wallets, smart contracts simplified for beginners worldwide - No technical jargon',
     duration: '30-40 mins',
     videoUrl: 'https://www.youtube.com/embed/aircAruvnKk',
     pdfTitle: 'Web3 Starter & Wallet Setup Security Guide (PDF)',
-    exercise: 'Create a testnet Metamask wallet and practice signing a secure digital transaction.',
+    exercise: 'Create a testnet wallet and practice signing a secure digital transaction.',
     quiz: [
-      { q: 'Should you ever share your Metamask 12-word seed phrase with anyone?', options: ['Yes, always', 'NEVER under any circumstances', 'Only on WhatsApp', 'If requested by email'], ans: 1 }
+      { q: 'Should you ever share your 12-word or 24-word seed phrase with anyone?', options: ['Yes, always', 'NEVER under any circumstances', 'Only on WhatsApp', 'If requested by email'], ans: 1 }
     ],
-    globalAppeal: 'Web3 jobs in USA, UAE, UK, Singapore',
+    globalAppeal: 'Web3 skills used worldwide',
     badge: '🌐 Web3 Certified Pioneer'
   },
   { 
@@ -96,41 +96,41 @@ const GLOBAL_MODULES = [
     id: 6, 
     title: 'Crypto, DeFi & Pi Network Global Economy', 
     shortTitle: 'Crypto, DeFi & Pi Network',
-    desc: 'Understanding Pi Network, DeFi, Smart Contracts, and How to earn globally',
+    desc: 'Understanding Pi Network, DeFi, Smart Contracts, and peer-to-peer Web3 commerce.',
     duration: '40-45 mins',
     videoUrl: 'https://www.youtube.com/embed/aircAruvnKk',
     pdfTitle: 'Pi Network & DeFi Staking Manual (PDF)',
-    exercise: 'Calculate your global Pi portfolio value and set up your verified Pi wallet address.',
+    exercise: 'Set up your Pi Wallet securely and verify your passphrase backup offline.',
     quiz: [
-      { q: 'What does GCV stand for in the Pi Network ecosystem?', options: ['Global Consensus Value', 'General Currency Variable', 'Grand Crypto Value', 'Gold Coin Vault'], ans: 0 }
+      { q: 'Which browser is designed to run verified Pi Network Web3 apps?', options: ['Pi Browser', 'Notepad', 'Terminal', 'Legacy IE'], ans: 0 }
     ],
-    globalAppeal: 'Pi 60M+ users worldwide - Huge market',
-    badge: '💎 Pi GCV & DeFi Expert'
+    globalAppeal: 'Global Pi Pioneer Community',
+    badge: '💎 Pi & DeFi Explorer'
   },
   { 
     id: 7, 
     title: 'Digital Marketing & Remote Work Mastery', 
-    shortTitle: 'Digital Marketing & Remote Income',
-    desc: 'How to sell Sirwise skills globally - Fiverr, Upwork, LinkedIn, TikTok marketing - Earn in USD from Nigeria, India, etc',
+    shortTitle: 'Digital Marketing & Remote Work',
+    desc: 'How to present digital skills globally on freelance marketplaces and remote teams.',
     duration: '40-50 mins',
     videoUrl: 'https://www.youtube.com/embed/aircAruvnKk',
     pdfTitle: '2 Pi Client Pitching Templates & Proposal Kit (PDF)',
-    exercise: 'Draft a killer Upwork proposal pitching an AI Content Creation service for $200.',
+    exercise: 'Draft a clear proposal pitching an AI Content Creation workflow for a client brief.',
     quiz: [
-      { q: 'Which strategy works best for getting high-paying remote USD clients on LinkedIn?', options: ['Spamming links', 'Optimized profile + showcasing real AI portfolio projects', 'Complaining about jobs', 'Using fake names'], ans: 1 }
+      { q: 'Which strategy works best for getting remote clients online?', options: ['Spamming links', 'Optimized profile + showcasing real AI portfolio projects', 'Complaining about jobs', 'Using fake names'], ans: 1 }
     ],
-    globalAppeal: 'Everyone wants remote USD income',
-    badge: '💼 USD Remote Freelancer'
+    globalAppeal: 'Remote digital work readiness',
+    badge: '💼 Digital Marketing Graduate'
   },
   { 
     id: 8, 
     title: 'Capstone Showcase & Blockchain Verified Certificate', 
     shortTitle: 'Capstone Showcase & Certificate',
-    desc: 'Final interactive project submission - Build your portfolio - Get blockchain verified certificate RC BN3583878 recognized in 190+ countries',
+    desc: 'Final interactive project submission - Build your portfolio - Get blockchain verified certificate RC BN3583878',
     duration: '45-60 mins',
     videoUrl: 'https://www.youtube.com/embed/aircAruvnKk',
     pdfTitle: 'Capstone Portfolio Submission Template & Verification Guide',
-    exercise: 'Submit your capstone summary project to unlock your official downloadable E-Certificate with QR verification!',
+    exercise: 'Submit your capstone summary project to access your official downloadable E-Certificate with QR verification!',
     quiz: [
       { q: 'Where can employers verify your Sirwise AI Web3 Academy E-Certificate?', options: ['www.gasv.store/verify', 'Random Facebook group', 'It cannot be verified', 'Newspaper'], ans: 0 }
     ],
@@ -140,16 +140,15 @@ const GLOBAL_MODULES = [
 ];
 
 const TESTIMONIALS = [
-  { flag: '🇳🇬', country: 'Nigeria', quote: 'Earned $300 my first month using Sirwise AI prompt templates on Upwork & Fiverr!', author: 'Adebayo O.' },
+  { flag: '🇳🇬', country: 'Nigeria', quote: 'Completed the Sirwise AI prompt templates module and built a strong design portfolio!', author: 'Adebayo O.' },
   { flag: '🇺🇸', country: 'USA', quote: 'Best AI & Web3 course online! Clear, structured, and worth far more than 2 Pi.', author: 'Sarah M., California' },
-  { flag: '🇮🇳', country: 'India', quote: 'Got hired for a remote AI content creation role within 2 weeks of completing Module 2!', author: 'Rajesh K., Bangalore' },
-  { flag: '🇬🇧', country: 'UK', quote: 'The blockchain verified certificate with QR code was verified on LinkedIn instantly.', author: 'David P., London' },
-  { flag: '🇬🇭', country: 'Ghana', quote: 'The Pi Network GCV and DeFi modules opened up incredible global opportunities.', author: 'Kwame A., Accra' },
+  { flag: '🇮🇳', country: 'India', quote: 'Completed Module 2 and improved my digital workflow productivity immediately.', author: 'Rajesh K., Bangalore' },
+  { flag: '🇬🇧', country: 'UK', quote: 'The blockchain verified certificate with QR code verified smoothly on LinkedIn.', author: 'David P., London' },
+  { flag: '🇬🇭', country: 'Ghana', quote: 'The Pi Network and Web3 modules were super easy to follow.', author: 'Kwame A., Accra' },
 ];
 
-export default function AcademyDashboard({ currentUser, userProfile, onPurchase, onToast }: any) {
-  const [isEnrolled, setIsEnrolled] = useState(false);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
+export default function AcademyDashboard({ currentUser, userProfile, onPurchase: _onPurchase, onToast }: any) {
+  const [hasCourseAccess, setHasCourseAccess] = useState(false);
   const [progress, setProgress] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeModule, setActiveModule] = useState<any>(null);
@@ -157,7 +156,6 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
   const [quizAnswers, setQuizAnswers] = useState<Record<number, number>>({});
   const [capstoneSubmission, setCapstoneSubmission] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
-  const [usdcTxHash, setUsdcTxHash] = useState('');
   const [supportMessage, setSupportMessage] = useState('');
   const [isSubmittingSupport, setIsSubmittingSupport] = useState(false);
 
@@ -215,12 +213,11 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
     try {
       const isPaid = localStorage.getItem('sirwise_paid') === 'true';
       const isVerified = localStorage.getItem('payment_verified') === 'true';
-      const isUnlocked = localStorage.getItem('academy_unlocked') === 'true';
-      const hasAccess = (isPaid || isVerified) && isUnlocked;
+      const hasPaidBundle = localStorage.getItem('paid_academy_bundle') === 'true';
+      const hasAccess = (isPaid || isVerified || hasPaidBundle);
 
       if (hasAccess) {
-        setIsEnrolled(true);
-        setShowPaymentModal(false);
+        setHasCourseAccess(true);
         const savedCompleted: number[] = [];
         GLOBAL_MODULES.forEach(m => {
           if (
@@ -244,14 +241,14 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
             } else {
               setProgress(savedCompleted);
             }
-          } catch (e) {
+          } catch {
             setProgress([]);
           }
         } else {
           setProgress([]);
         }
       } else {
-        setIsEnrolled(false);
+        setHasCourseAccess(false);
         setProgress([]);
       }
 
@@ -267,49 +264,31 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
     }
     setLoading(false);
 
-    const handleUnlocked = () => {
-      setIsEnrolled(true);
-      setShowPaymentModal(false);
+    const handlePaidEvent = () => {
+      setHasCourseAccess(true);
       setProgress([]);
     };
-    window.addEventListener('academyUnlocked', handleUnlocked);
-    return () => window.removeEventListener('academyUnlocked', handleUnlocked);
+    window.addEventListener('academyPaidAccess', handlePaidEvent);
+    return () => window.removeEventListener('academyPaidAccess', handlePaidEvent);
   }, [currentUser, userProfile]);
-
-  const validateCustomerEmail = (emailStr: string): boolean => {
-    const email = emailStr.trim();
-    const clean = cleanUserEmail(email);
-    if (!clean) {
-      showToast('Enter complete valid email e.g. name@gmail.com', 'error');
-      return false;
-    }
-    try {
-      localStorage.setItem('user_email', clean);
-      localStorage.setItem('customer_email', clean);
-    } catch (e) {}
-    return true;
-  };
 
   // Pi Network is the single payment method
   const handlePiPayment = async (product = { id: 'academy_bundle', title: 'Sirwise AI WEB3 Academy', piPrice: 2 }) => {
     await startPiPayment(product, () => {
       localStorage.setItem('sirwise_paid', 'true');
-      localStorage.setItem('academy_unlocked', 'true');
-      localStorage.setItem('academy_full_unlocked', 'true');
+      localStorage.setItem('paid_academy_bundle', 'true');
       showToast('✅ Pi Payment Verified! Academy Access Granted.', 'success');
       setTimeout(() => window.location.reload(), 1000);
     });
   };
 
-  const payWithPi = () => handlePiPayment({ id: 'academy_bundle', title: 'Sirwise AI WEB3 Academy', piPrice: 2 });
-
-  const handleBuyUnlockNow = () => {
+  const handleBuyAccessNow = () => {
     handlePiPayment({ id: 'academy_bundle', title: 'Sirwise AI WEB3 Academy', piPrice: 2 });
   };
 
   const toggleModule = (id: number) => {
-    if (!isEnrolled) {
-      handleBuyUnlockNow();
+    if (!hasCourseAccess) {
+      handleBuyAccessNow();
       return;
     }
     const isCurrentlyCompleted = progress.includes(id);
@@ -323,7 +302,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
       localStorage.setItem(`module_${id}_completed`, isNowCompleted.toString());
       localStorage.setItem(`module-${id}-completed`, isNowCompleted.toString());
       const localKey = `goye_academy_progress_${currentUser?.uid || 'guest'}`;
-      localStorage.setItem(localKey, JSON.stringify({ isEnrolled: true, progress: newProgress }));
+      localStorage.setItem(localKey, JSON.stringify({ hasCourseAccess: true, progress: newProgress }));
       const percent = Math.min(100, Math.round((newProgress.length / GLOBAL_MODULES.length) * 100));
       localStorage.setItem('progress', percent.toString());
     } catch (e) {
@@ -331,7 +310,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
     }
   };
 
-  const percentComplete = isEnrolled ? Math.min(100, Math.round((progress.length / GLOBAL_MODULES.length) * 100)) : 0;
+  const percentComplete = hasCourseAccess ? Math.min(100, Math.round((progress.length / GLOBAL_MODULES.length) * 100)) : 0;
 
   if (loading) return <div className="text-center text-gray-500 py-12">Loading global academy portal...</div>;
 
@@ -369,8 +348,8 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
             <span className="bg-[#222] text-[#FFD700] text-[11px] font-bold py-1.5 px-3 rounded-lg border border-[#333] text-center">🌐 Trusted Worldwide</span>
             <span className="bg-[#222] text-[#10B981] text-[11px] font-bold py-1.5 px-3 rounded-lg border border-[#333] text-center">🏆 Blockchain Verified</span>
             <span className="bg-[#222] text-[#FFD700] text-[11px] font-bold py-1.5 px-3 rounded-lg border border-[#333] text-center">📜 RC BN3583878</span>
-            <span className="bg-[#222] text-[#FFD700] text-[11px] font-bold py-1.5 px-3 rounded-lg border border-[#333] text-center">💼 Job Ready Skills</span>
-            <span className="bg-[#222] text-[#10B981] text-[11px] font-bold py-1.5 px-3 rounded-lg border border-[#333] text-center">💰 Earn in USD</span>
+            <span className="bg-[#222] text-[#10B981] text-[11px] font-bold py-1.5 px-3 rounded-lg border border-[#333] text-center">💼 Job Ready Skills</span>
+            <span className="bg-[#222] text-[#10B981] text-[11px] font-bold py-1.5 px-3 rounded-lg border border-[#333] text-center">🟣 Pi Network Native</span>
           </div>
         </div>
       </div>
@@ -381,12 +360,12 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
         try {
           const hashQuery = window.location.hash.includes('?') ? window.location.hash.split('?')[1] : '';
           urlParams = new URLSearchParams(hashQuery || window.location.search);
-        } catch (e) {}
+        } catch {}
 
         const reminderFromUrl = urlParams ? urlParams.get('reminder') === 'true' : false;
         const leadName = (urlParams?.get('name') || localStorage.getItem('lead_name') || localStorage.getItem('user_name') || '').trim();
         const leadEmail = (urlParams?.get('free_lead') || localStorage.getItem('user_email') || '').trim();
-        const showReminder = !isEnrolled && (reminderFromUrl || (leadName && leadEmail));
+        const showReminder = !hasCourseAccess && (reminderFromUrl || (leadName && leadEmail));
 
         if (!showReminder) return null;
 
@@ -396,7 +375,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
               🎉 Welcome {leadName || 'Student'}! Your Blueprint is Downloading...
             </h2>
             <p style={{ fontWeight: 'bold', fontSize: '14px', margin: '0 0 6px 0' }}>
-              You now have 4 Battle-Tested Prompts - Next: Unlock 8 Full Modules + Certificate
+              You now have 4 Battle-Tested Prompts - Next: Access 8 Full Modules + Certificate
             </p>
             {leadEmail && (
               <p style={{ fontSize: '12px', margin: '0 0 10px 0' }}>
@@ -425,7 +404,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
       })()}
 
       {/* Paywall Banner at Top */}
-      {!isEnrolled && (
+      {!hasCourseAccess && (
         <div id="paywall" style={{ background: '#0e0e0e', border: '2px solid #FFD700', padding: '24px', borderRadius: '16px', textAlign: 'center', marginBottom: '20px', boxShadow: '0 10px 30px rgba(255, 215, 0, 0.15)' }}>
           <div className="inline-block bg-black text-[#FFD700] border border-[#FFD700] text-xs font-black uppercase px-3 py-1 rounded-md tracking-wider mb-3">
             🔒 LOCKED ACCESS
@@ -437,7 +416,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
             Lifetime Access · 2 Pi
           </p>
           <button 
-            id="buyUnlockBtn" 
+            id="buyAccessBtn" 
             type="button"
             onClick={(e) => {
               e.preventDefault();
@@ -456,7 +435,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
         <div className="flex justify-between items-end mb-3">
           <div>
             <h3 className="text-white font-black text-lg mb-0.5">Your Progress</h3>
-            <p className="text-gray-400 text-xs">Complete all 8 global modules to unlock your official E-Certificate.</p>
+            <p className="text-gray-400 text-xs">Complete all 8 global modules to claim your official E-Certificate.</p>
           </div>
           <div className="text-3xl font-black text-[#FFD700]">{percentComplete}%</div>
         </div>
@@ -473,7 +452,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
       {/* Modules List (8 Global Modules) */}
       <div className="flex flex-col gap-4">
         {GLOBAL_MODULES.map((mod) => {
-          const isCompleted = isEnrolled && progress.includes(mod.id);
+          const isCompleted = hasCourseAccess && progress.includes(mod.id);
           return (
             <div 
               key={mod.id} 
@@ -482,7 +461,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
               <div className="flex justify-between items-start mb-3">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-black px-2.5 py-1 rounded-lg bg-black text-[#FFD700] border border-[#FFD700]">
-                    {!isEnrolled ? '🔒 LOCKED ACCESS' : isCompleted ? '✅ COMPLETED' : 'MODULE ' + mod.id}
+                    {!hasCourseAccess ? '🔒 LOCKED ACCESS' : isCompleted ? '✅ COMPLETED' : 'MODULE ' + mod.id}
                   </span>
                 </div>
               </div>
@@ -492,7 +471,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
               </h4>
 
               <div className="flex flex-col sm:flex-row gap-2">
-                {!isEnrolled ? (
+                {!hasCourseAccess ? (
                   <button 
                     type="button"
                     style={{ position: 'relative', zIndex: 10, pointerEvents: 'auto', cursor: 'pointer' }}
@@ -507,10 +486,11 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
                   </button>
                 ) : (
                   <button 
+                    type="button"
                     onClick={() => setActiveModule(mod)} 
                     className="w-full py-3.5 bg-[#FFD700] hover:bg-yellow-400 text-black font-black text-xs uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-2"
                   >
-                    ✅ ACCESS NOW / DOWNLOAD
+                    ✅ ACCESS NOW
                   </button>
                 )}
               </div>
@@ -519,12 +499,12 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
         })}
       </div>
 
-      {/* Inquiry / Support Form submitting to goyedagosmess@gmail.com */}
+      {/* Inquiry / Support Form */}
       <div className="bg-[#111] rounded-3xl p-6 border border-[#222] mt-8">
         <h3 className="text-[#FFD700] font-black text-lg mb-2 flex items-center gap-2">
-          <Mail size={20} /> Direct Support Inquiry (RC BN3583878)
+          <Mail size={20} /> Direct Support Inquiry (CAC BN3583878)
         </h3>
-        <p className="text-gray-400 text-xs mb-4">Send an official inquiry or payment proof to GOYE Support.</p>
+        <p className="text-gray-400 text-xs mb-4">Send an official inquiry or Pi payment reference to GOYE Support.</p>
         <form onSubmit={handleSupportInquirySubmit} className="space-y-3">
           <input 
             type="email" 
@@ -538,13 +518,13 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
           <textarea 
             name="message" 
             required 
-            placeholder="Enter your message or bank transfer payment details..." 
+            placeholder="Enter your message or Pi transaction details..." 
             value={supportMessage}
             onChange={(e) => setSupportMessage(e.target.value)}
             className="w-full bg-black border border-[#333] focus:border-[#FFD700] rounded-xl p-3 text-white text-xs outline-none h-24"
           ></textarea>
           <button type="submit" disabled={isSubmittingSupport} className="w-full bg-[#FFD700] text-black font-black py-3 rounded-xl text-xs hover:bg-yellow-400 flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer">
-            <Send size={14} /> {isSubmittingSupport ? 'Sending Inquiry...' : 'Send to goyedagosmess@gmail.com'}
+            <Send size={14} /> {isSubmittingSupport ? 'Sending Inquiry...' : 'Send to support@gasv.store'}
           </button>
         </form>
       </div>
@@ -552,9 +532,9 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
       {/* Global Student Testimonials */}
       <div className="mt-8 bg-[#111] rounded-3xl p-6 border border-[#222]">
         <h3 className="text-[#FFD700] font-black text-xl mb-2 flex items-center gap-2">
-          <Globe size={22} /> Global Success Stories & Reviews
+          <Globe size={22} /> Global Student Reviews
         </h3>
-        <p className="text-gray-400 text-xs mb-6">Students in 190+ countries transforming their careers with Sirwise AI Web3 Academy.</p>
+        <p className="text-gray-400 text-xs mb-6">Students learning with Sirwise AI Web3 Academy worldwide.</p>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {TESTIMONIALS.map((t, idx) => (
@@ -569,13 +549,13 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
         </div>
       </div>
 
-      {/* Certificate Unlock Section */}
+      {/* Certificate Access Section */}
       <div className="mt-8">
         <CertificateGenerator 
           isCompleted={percentComplete === 100} 
-          isEnrolled={isEnrolled} 
+          isActiveStudent={hasCourseAccess} 
           userProfile={userProfile} 
-          onUnlock={handleBuyUnlockNow} 
+          onPay={handleBuyAccessNow} 
           onToast={onToast} 
         />
       </div>
@@ -585,6 +565,7 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
         <div className="fixed inset-0 bg-black/90 z-[99999] flex items-center justify-center p-4 pointer-events-auto">
           <div className="bg-[#111] border-2 border-[#FFD700] text-white w-full max-w-[650px] rounded-3xl p-6 max-h-[92vh] overflow-y-auto relative shadow-2xl space-y-6">
             <button 
+              type="button"
               onClick={() => setActiveModule(null)} 
               className="absolute top-4 right-4 text-gray-400 hover:text-white p-2 rounded-full cursor-pointer"
             >
@@ -599,14 +580,14 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase,
               <p className="text-gray-400 text-xs mt-1">{activeModule.desc}</p>
             </div>
 
-            {!isEnrolled ? (
+            {!hasCourseAccess ? (
               <div style={{ border: '2px solid #FFD700', background: '#000', padding: '30px', textAlign: 'center', borderRadius: '20px' }}>
                 <div style={{ fontSize: '50px', marginBottom: '10px' }}>🔒</div>
                 <h2 style={{ fontSize: '22px', fontWeight: '900', color: '#FFD700', margin: '0 0 10px 0' }} className="uppercase">
                   MODULE {activeModule.id} LOCKED
                 </h2>
                 <p style={{ color: '#ccc', fontSize: '13px', marginBottom: '20px', lineHeight: '1.5' }}>
-                  Pay to unlock HD Video Class + 50+ Prompts PDF + Quiz + Certificate
+                  Pay 2 Pi for HD Video Class + 50+ Prompts PDF + Quiz + Certificate
                 </p>
                 <button 
                   type="button"

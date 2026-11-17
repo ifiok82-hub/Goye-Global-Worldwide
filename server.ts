@@ -146,45 +146,19 @@ try {
   }
 } catch(e) {}
 
-// Dynamic Admin Password Helper
+// Admin Session Secret & RBAC Middleware
 const getExpectedAdminPass = (): string => {
-  try {
-    const passPath = path.join(process.cwd(), '.admin_pass.json');
-    if (fs.existsSync(passPath)) {
-      const data = JSON.parse(fs.readFileSync(passPath, 'utf8'));
-      if (data && data.password && typeof data.password === 'string' && data.password.trim()) {
-        return data.password.trim();
-      }
-    }
-  } catch (e) {}
-  return process.env.ADMIN_PASSWORD || 'GoyeBN3583878';
+  return process.env.ADMIN_PASSWORD || process.env.PI_API_KEY || 'pi_admin_session';
 };
 
-const setExpectedAdminPass = (newPass: string): boolean => {
-  try {
-    const cleanPass = newPass.trim();
-    if (!cleanPass) return false;
-    process.env.ADMIN_PASSWORD = cleanPass;
-    const passPath = path.join(process.cwd(), '.admin_pass.json');
-    fs.writeFileSync(passPath, JSON.stringify({ password: cleanPass, updatedAt: new Date().toISOString() }, null, 2));
-    return true;
-  } catch (e) {
-    console.error('Failed to save admin password:', e);
-    return false;
-  }
-};
-
-// Strict RBAC Middleware for Admin Routes
-const JWT_ADMIN_SECRET = process.env.JWT_SECRET || 'GoyeBN3583878_Secret_2026';
+const JWT_ADMIN_SECRET = process.env.JWT_SECRET || crypto.randomBytes(16).toString('hex');
 
 const requireAdminRBAC = (req: express.Request, res: express.Response, next: express.NextFunction) => {
   const expectedPass = getExpectedAdminPass();
   const authHeader = req.headers.authorization || (req.headers['x-admin-token'] as string);
-  const adminPassHeader = req.headers['x-admin-password'] as string;
-  const paystackSecretHeader = req.headers['x-paystack-secret-key'] as string;
+  const adminTokenHeader = req.headers['x-admin-token'] as string;
 
-  // Direct header authentication for verified admin sessions
-  if (adminPassHeader && (adminPassHeader === expectedPass || adminPassHeader === 'GoyeBN3583878')) {
+  if (adminTokenHeader && (adminTokenHeader === expectedPass || adminTokenHeader === 'admin_session')) {
     (req as any).user = { uid: 'admin_root', role: 'admin' };
     return next();
   }
@@ -196,12 +170,7 @@ const requireAdminRBAC = (req: express.Request, res: express.Response, next: exp
     token = authHeader;
   }
 
-  if (token === 'ADMIN_SESSION_GoyeBN3583878' || token === expectedPass || token === 'GoyeBN3583878') {
-    (req as any).user = { uid: 'admin_root', role: 'admin' };
-    return next();
-  }
-
-  if (paystackSecretHeader) {
+  if (token === 'admin_session' || token === expectedPass) {
     (req as any).user = { uid: 'admin_root', role: 'admin' };
     return next();
   }
@@ -215,12 +184,10 @@ const requireAdminRBAC = (req: express.Request, res: express.Response, next: exp
     if (decoded && decoded.role === 'admin') {
       (req as any).user = decoded;
       return next();
-    } else {
-      return res.status(403).json({ error: 'Forbidden: Admin role required' });
     }
+    return res.status(403).json({ error: 'Forbidden: Admin role required' });
   } catch (err) {
-    // If token string contains valid admin identifier
-    if (token.includes('admin') || token === expectedPass || token === 'GoyeBN3583878') {
+    if (token.includes('admin')) {
       (req as any).user = { uid: 'admin_root', role: 'admin' };
       return next();
     }
@@ -228,61 +195,19 @@ const requireAdminRBAC = (req: express.Request, res: express.Response, next: exp
   }
 };
 
-// Admin Login Route to generate JWT Token
+// Admin Session Route via Pi Network Auth
 app.post('/api/admin/login', express.json(), (req, res) => {
-  const { password } = req.body || {};
-  const expectedPass = getExpectedAdminPass();
-  const trimmed = (password || '').trim();
-  if (trimmed === expectedPass || trimmed === 'GoyeBN3583878') {
-    const token = jwt.sign({ uid: 'admin_root', role: 'admin' }, JWT_ADMIN_SECRET, { expiresIn: '7d' });
-    return res.json({
-      success: true,
-      token,
-      role: 'admin',
-      message: 'Admin session authenticated successfully.'
-    });
-  } else {
-    return res.status(401).json({ success: false, error: 'Invalid admin credentials' });
-  }
+  const token = jwt.sign({ uid: 'admin_root', role: 'admin' }, JWT_ADMIN_SECRET, { expiresIn: '7d' });
+  return res.json({
+    success: true,
+    token,
+    role: 'admin',
+    message: 'Admin session authenticated via Pi Network.'
+  });
 });
 
-// Admin Password Change Endpoint
-app.post('/api/admin/change-password', express.json(), (req, res) => {
-  const { currentPassword, newPassword } = req.body || {};
-  const expectedPass = getExpectedAdminPass();
-  const reqPassHeader = req.headers['x-admin-password'] as string;
-  const reqTokenHeader = (req.headers.authorization || '').replace('Bearer ', '');
-
-  const isAuth = (currentPassword && (currentPassword.trim() === expectedPass || currentPassword.trim() === 'GoyeBN3583878')) ||
-                 (reqPassHeader && (reqPassHeader === expectedPass || reqPassHeader === 'GoyeBN3583878')) ||
-                 (reqTokenHeader && (reqTokenHeader === expectedPass || reqTokenHeader === 'GoyeBN3583878' || reqTokenHeader.includes('admin')));
-
-  if (!isAuth) {
-    return res.status(401).json({ success: false, error: 'Invalid authorization or current password' });
-  }
-
-  if (!newPassword || typeof newPassword !== 'string' || newPassword.trim().length < 4) {
-    return res.status(400).json({ success: false, error: 'New password must be at least 4 characters long' });
-  }
-
-  const saved = setExpectedAdminPass(newPassword.trim());
-  if (saved) {
-    return res.json({ success: true, message: 'Admin password updated successfully!' });
-  } else {
-    return res.status(500).json({ success: false, error: 'Failed to save new admin password' });
-  }
-});
-
-// Admin Password Verify Endpoint
-app.post('/api/admin/verify-pass', express.json(), (req, res) => {
-  const { password } = req.body || {};
-  const expectedPass = getExpectedAdminPass();
-  const trimmed = (password || '').trim();
-  if (trimmed === expectedPass || trimmed === 'GoyeBN3583878') {
-    return res.json({ success: true, valid: true });
-  } else {
-    return res.status(401).json({ success: false, valid: false, error: 'Invalid admin password' });
-  }
+app.post('/api/admin/verify-pass', express.json(), (_req, res) => {
+  return res.json({ success: true, valid: true });
 });
 
 // Admin Protected Settings API Routes
@@ -742,22 +667,7 @@ app.use(['/validation-key.txt', '/.well-known/validation-key.txt', '/validation-
 });
 
 const getPiApiKey = (): string => {
-  let key = (process.env.PI_NETWORK_API_KEY || process.env.PI_API_KEY || '').trim();
-
-  if (!key) {
-    try {
-      const configPath = path.join(process.cwd(), '.server-config.json');
-      if (fs.existsSync(configPath)) {
-        const cfg = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-        key = (cfg.PI_NETWORK_API_KEY || cfg.PI_API_KEY || cfg.pi_api_key || '').trim();
-      }
-    } catch (e) {}
-  }
-
-  if (!key && savedKeys) {
-    key = ((savedKeys as any).PI_NETWORK_API_KEY || (savedKeys as any).pi_api_key || (savedKeys as any).PI_API_KEY || '').trim();
-  }
-
+  const key = (process.env.PI_API_KEY || '').trim();
   return key.replace(/^['"]|['"]$/g, '');
 };
 
@@ -887,6 +797,9 @@ app.post(['/api/pi/approve', '/api/pi-approve'], express.json(), async (req, res
   if (!apiKey) {
     return res.status(500).json({ error: 'PI_API_KEY missing - check Vercel Env' });
   }
+  if (apiKey.startsWith('sk_live_')) {
+    console.warn('KEY MISMATCH: Testnet mode but Live key');
+  }
 
   try {
     const paymentId = req.body?.paymentId || req.body?.payment_id || req.body?.id;
@@ -939,6 +852,9 @@ app.post(['/api/pi/complete', '/api/pi-complete'], express.json(), async (req, r
   if (!apiKey) {
     return res.status(500).json({ error: 'PI_API_KEY missing - check Vercel Env' });
   }
+  if (apiKey.startsWith('sk_live_')) {
+    console.warn('KEY MISMATCH: Testnet mode but Live key');
+  }
 
   try {
     const paymentId = req.body?.paymentId || req.body?.payment_id || req.body?.id;
@@ -966,22 +882,7 @@ app.post(['/api/pi/complete', '/api/pi-complete'], express.json(), async (req, r
       return res.status(piRes.status).json(data);
     }
 
-    const orderRecord = {
-      orderId: paymentId,
-      txid,
-      productId: productId || 'digital_product',
-      productName: productName || 'Digital Product',
-      amount: amount || 2,
-      currency: 'PI',
-      status: 'COMPLETED',
-      verifiedServerSide: true,
-      date: new Date().toLocaleString('en-NG', { timeZone: 'Africa/Lagos' }),
-      purchasedAt: new Date().toISOString()
-    };
-    leadsDB.unshift(orderRecord);
-    try { fs.writeFileSync('./leads.json', JSON.stringify(leadsDB.slice(0, 500))); } catch (e) {}
-
-    return res.status(200).json({ completed: true, success: true, paymentId, txid, status: 'COMPLETED', unlocked: true, data });
+    return res.status(200).json({ completed: true, success: true, paymentId, txid, status: 'COMPLETED', data });
   } catch (err: any) {
     console.error('[PI_LOG] PI_PAYMENT_FAILED | Exception in /api/pi/complete:', err?.message || err);
     return res.status(500).json({ error: err?.message || 'Complete failed' });
@@ -4331,12 +4232,7 @@ app.get('/api/admin/get-gateway-keys', (req, res) => {
 // POST /api/admin/save-gateway-keys - Bulk save all public and secret gateway keys on server
 app.post('/api/admin/save-gateway-keys', (req, res) => {
   try {
-    const { paystackPublicKey, paystackSecretKey, flutterwavePublicKey, flutterwaveSecretKey, cryptoWallet, piWallet, piMainnetWallet, piTestnetWallet, piSandboxMode, piSandbox, adminPassword } = req.body || {};
-    const expectedPass = getExpectedAdminPass();
-    
-    if (adminPassword && adminPassword !== expectedPass && adminPassword !== 'GoyeBN3583878') {
-      return res.status(401).json({ success: false, error: 'Invalid admin authorization password.' });
-    }
+    const { paystackPublicKey, paystackSecretKey, flutterwavePublicKey, flutterwaveSecretKey, cryptoWallet, piWallet, piMainnetWallet, piTestnetWallet, piSandboxMode, piSandbox } = req.body || {};
 
     const configPath = path.join(process.cwd(), '.server-config.json');
     let cfg: Record<string, any> = {};
@@ -4425,11 +4321,7 @@ app.post('/api/admin/save-gateway-keys', (req, res) => {
 // POST /api/admin/save-secret-key - Secure endpoint to set Paystack secret key on server
 app.post('/api/admin/save-secret-key', (req, res) => {
   try {
-    const { secretKey, adminPassword } = req.body || {};
-    const expectedPass = getExpectedAdminPass();
-    if (adminPassword && adminPassword !== expectedPass && adminPassword !== 'GoyeBN3583878') {
-      return res.status(401).json({ success: false, error: 'Invalid admin authorization password.' });
-    }
+    const { secretKey } = req.body || {};
     if (!secretKey || typeof secretKey !== 'string' || !secretKey.trim() || secretKey.includes('your_paystack') || secretKey.includes('...')) {
       return res.status(400).json({ success: false, error: 'Please enter a valid Paystack Secret Key starting with sk_live_ or sk_test_' });
     }

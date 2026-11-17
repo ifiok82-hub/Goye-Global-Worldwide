@@ -2,6 +2,7 @@ import React from 'react';
 import { GOYE_SERVICES, GoyeService } from '../data/goyeServices';
 import { ArrowLeft, MessageSquare } from 'lucide-react';
 import { startPiPayment } from '../lib/piPayment';
+import ProductGradientImage from './ProductGradientImage';
 
 interface GoyeServiceDetailPageProps {
   serviceSlug: string;
@@ -15,11 +16,11 @@ export const GoyeServiceDetailPage: React.FC<GoyeServiceDetailPageProps> = ({
   onOpenConsultation: _onOpenConsultation
 }) => {
   const service: GoyeService = GOYE_SERVICES.find(s => s.slug === serviceSlug) || GOYE_SERVICES[0];
-  const isUnlocked = typeof window !== 'undefined' && localStorage.getItem(`paid_service_${service.id}`) === 'true';
+  const hasPaidAccess = typeof window !== 'undefined' && localStorage.getItem(`paid_service_${service.id}`) === 'true';
 
   const handleAction = async () => {
-    if (isUnlocked) {
-      alert('Access already unlocked for ' + service.title);
+    if (hasPaidAccess) {
+      alert('Access already granted for ' + service.title);
       return;
     }
 
@@ -42,6 +43,7 @@ export const GoyeServiceDetailPage: React.FC<GoyeServiceDetailPageProps> = ({
         
         {/* Back Button */}
         <button
+          type="button"
           onClick={onBack}
           className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-[#FFD700] hover:text-yellow-400 text-xs font-bold transition cursor-pointer"
         >
@@ -52,14 +54,17 @@ export const GoyeServiceDetailPage: React.FC<GoyeServiceDetailPageProps> = ({
         {/* Card: SHOW ONLY Image + Title + Button */}
         <div className="bg-[#0e0e0e] border border-zinc-800 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
           {/* 1. Image with LOCKED ACCESS Badge */}
-          <div className="relative w-full aspect-[16/9] rounded-2xl overflow-hidden shadow-lg border border-zinc-800 bg-zinc-950 flex items-center justify-center">
-            <div className="text-center p-6 space-y-2">
-              <span className="text-4xl">💼</span>
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{service.category} Solution</p>
-            </div>
+          <div className="relative w-full rounded-2xl overflow-hidden shadow-lg border border-zinc-800 bg-zinc-950">
+            <ProductGradientImage
+              src={service.image}
+              alt={service.title}
+              category={service.category}
+              title={service.title}
+              height="260px"
+            />
 
-            <div className="absolute top-4 left-4 bg-black text-[#FFD700] border border-[#FFD700] text-xs font-black uppercase px-3 py-1.5 rounded-md tracking-wider z-10 shadow-md">
-              {isUnlocked ? '✅ ACCESS GRANTED' : '🔒 LOCKED ACCESS'}
+            <div className="absolute top-4 left-4 bg-black text-[#FFD700] border border-[#FFD700] text-xs font-black uppercase px-3 py-1.5 rounded-md tracking-wider z-10 shadow-md pointer-events-none">
+              {hasPaidAccess ? '✅ ACCESS GRANTED' : '🔒 LOCKED ACCESS'}
             </div>
           </div>
 
@@ -71,10 +76,16 @@ export const GoyeServiceDetailPage: React.FC<GoyeServiceDetailPageProps> = ({
           {/* 3. Button: 🔒 LOCK - 2 Pi */}
           <div className="pt-2 space-y-3">
             <button
-              onClick={handleAction}
+              type="button"
+              style={{ position: 'relative', zIndex: 10, pointerEvents: 'auto', cursor: 'pointer' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleAction();
+              }}
               className="w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-lg bg-[#FFD700] hover:bg-yellow-400 text-black shadow-yellow-500/20 active:scale-95 transition cursor-pointer"
             >
-              {isUnlocked ? '✅ ACCESS NOW / DOWNLOAD' : '🔒 LOCK - 2 Pi'}
+              {hasPaidAccess ? '✅ ACCESS NOW' : '🔒 LOCK - 2 Pi'}
             </button>
 
             <a

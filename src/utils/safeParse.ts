@@ -179,7 +179,7 @@ export function cleanupBadLocalStorage(): void {
       'completed_orders', 'verified_live_orders', 'registered_customers',
       'live_orders', 'academy_leads', 'live_traffic_activity', 'traffic_log',
       'captured_leads', 'excluded_admin_clicks', 'my_downloads', 'payout_requests',
-      'customers_list', 'orders_list', 'CUSTOM_PRODUCTS', 'goye_unlocked_products'
+      'customers_list', 'orders_list', 'CUSTOM_PRODUCTS', 'goye_paid_products'
     ];
     arrayKeys.forEach(k => {
       const v = localStorage.getItem(k);

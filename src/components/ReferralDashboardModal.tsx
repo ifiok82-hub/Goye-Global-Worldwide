@@ -185,14 +185,13 @@ export default function ReferralDashboardModal({ onClose, onToast, currentUser, 
             <form onSubmit={handleWithdrawRequest} className="bg-black border border-[#333] p-4 rounded-2xl space-y-4 animate-fade-in">
               <h3 className="text-white font-bold">Request Payout</h3>
               <div className="grid grid-cols-2 gap-2">
-                <button type="button" onClick={() => setWithdrawMethod('bank')} className={`py-2 rounded-lg text-xs font-bold transition-colors \${withdrawMethod === 'bank' ? 'bg-[#FFD700] text-black' : 'bg-[#222] text-white'}`}>Bank / Momo</button>
-                <button type="button" onClick={() => setWithdrawMethod('crypto')} className={`py-2 rounded-lg text-xs font-bold transition-colors \${withdrawMethod === 'crypto' ? 'bg-[#FFD700] text-black' : 'bg-[#222] text-white'}`}>USDC Crypto</button>
-                <button type="button" onClick={() => setWithdrawMethod('pi')} className={`py-2 rounded-lg text-xs font-bold transition-colors col-span-2 \${withdrawMethod === 'pi' ? 'bg-[#FFD700] text-black' : 'bg-[#222] text-white'}`}>Pi Network</button>
+                <button type="button" onClick={() => setWithdrawMethod('bank')} className={`py-2 rounded-lg text-xs font-bold transition-colors ${withdrawMethod === 'bank' ? 'bg-[#FFD700] text-black' : 'bg-[#222] text-white'}`}>Bank / Momo</button>
+                <button type="button" onClick={() => setWithdrawMethod('pi')} className={`py-2 rounded-lg text-xs font-bold transition-colors ${withdrawMethod === 'pi' ? 'bg-[#FFD700] text-black' : 'bg-[#222] text-white'}`}>Pi Network</button>
               </div>
               <input 
                 required 
                 type="text" 
-                placeholder={withdrawMethod === 'crypto' ? 'USDC Wallet Address' : withdrawMethod === 'pi' ? 'Pi Wallet Address' : 'Bank Account / Phone Number'} 
+                placeholder={withdrawMethod === 'pi' ? 'Pi Wallet Address' : 'Bank Account / Phone Number'} 
                 className="w-full bg-[#111] border border-[#333] p-3 rounded-xl text-white text-sm focus:border-[#FFD700] outline-none"
                 value={withdrawDetails}
                 onChange={e => setWithdrawDetails(e.target.value)}

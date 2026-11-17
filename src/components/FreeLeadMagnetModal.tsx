@@ -21,14 +21,14 @@ const BLUEPRINT_TEXT_CONTENT = `================================================
 🎁 FREE BLUEPRINT ACCESS | RC BN3583878
 Title: The 5-Minute AI Prompt Blueprint for Entrepreneurs
 Publisher: Sirwise AI Web3 Academy
-Official Site: https://www.gasv.store | Contact: goyedagosmess@gmail.com
+Official Site: https://www.gasv.store | Contact: support@gasv.store
 
 --------------------------------------------------------------------------------
 [PAGE 2: WHAT YOU WILL GET IN THE NEXT 5 MINUTES]
 --------------------------------------------------------------------------------
 1. TEASER PROMPT 1: High-Converting Sales & Copy Generator (1 of 4 core prompts).
 2. REAL CASE STUDY: How a student built a high-earning digital agency using AI automation.
-3. ACADEMY ROADMAP: What 109+ entrepreneurs unlock in the full 8-Module Masterclass.
+3. ACADEMY ROADMAP: What 109+ entrepreneurs access in the full 8-Module Masterclass.
 
 --------------------------------------------------------------------------------
 [PAGE 3: TEASER PROMPT 1 - COPY & PASTE SALES PROMPT]
@@ -71,12 +71,12 @@ Your Free Blueprint is only 10% of the puzzle. Access the remaining 90% today!
 - Price: 2 Pi Lifetime Access (190+ Countries)
 - Special Link: https://www.gasv.store/#academy?from=blueprint
 - Verified Checkout: Pi Network Direct Payment
-- 100% Secure Pi Blockchain | Official Contact: goyedagosmess@gmail.com | RC BN3583878
+- 100% Secure Pi Blockchain | Official Contact: support@gasv.store | RC BN3583878
 
 --------------------------------------------------------------------------------
 [PAGE 7: ACADEMY PAYWALL & VIDEO TOUR LINK]
 --------------------------------------------------------------------------------
-Scan or click to watch the 2-minute Academy Tour video and unlock all 8 modules:
+Scan or click to watch the 2-minute Academy Tour video and access all 8 modules:
 👉 https://www.gasv.store/#academy
 
 ================================================================================`;
@@ -184,7 +184,7 @@ export default function FreeLeadMagnetModal({ isOpen, onClose, onClaimTripwire, 
       doc.rect(0, 280, 210, 17, 'F');
       doc.setTextColor(255, 215, 0);
       doc.setFontSize(8);
-      doc.text('© Goyedagosmess Enterprise | Sirwise AI Web3 Academy | RC BN3583878 | goyedagosmess@gmail.com', 105, 289, { align: 'center' });
+      doc.text('© Goyedagosmess Enterprise | Sirwise AI Web3 Academy | RC BN3583878 | support@gasv.store', 105, 289, { align: 'center' });
 
       doc.save('5-Minute-AI-Prompt-Blueprint-Master-SER-Sirwise.pdf');
       
@@ -319,7 +319,7 @@ export default function FreeLeadMagnetModal({ isOpen, onClose, onClaimTripwire, 
           Country: country,
           Source: '5-Minute AI Prompt Blueprint',
           Date: lead.date_wat,
-          Action: 'Send Academy course reminder to enroll 2 Pi',
+          Action: 'Send Academy course reminder to join for 2 Pi',
           Link: 'www.gasv.store/academy?lead=' + cleanEmail
         })
       }).catch(() => {});
@@ -508,7 +508,7 @@ Structure the output into 4 clear sections: Executive Summary, Project Scope, Ti
               </button>
 
               <p style={{ fontSize: '10px', color: '#888', textAlign: 'center', marginTop: '8px' }}>
-                100% Privacy Guaranteed. Zero Spam. Official: goyedagosmess@gmail.com RC BN3583878
+                100% Privacy Protected. Zero Spam. Official: support@gasv.store RC BN3583878
               </p>
             </form>
           </div>

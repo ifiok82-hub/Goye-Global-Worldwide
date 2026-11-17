@@ -277,7 +277,7 @@ export const GoyeAiAssessment: React.FC<GoyeAiAssessmentProps> = ({
                 </div>
 
                 <p className="text-[10px] text-gray-400 italic pt-2">
-                  * {results?.disclaimer || 'Recommendations are tailored guidance for your digital operations and do not constitute guaranteed financial returns.'}
+                  * {results?.disclaimer || 'Recommendations are tailored guidance for your digital operations and do not constitute promised financial returns.'}
                 </p>
               </div>
 

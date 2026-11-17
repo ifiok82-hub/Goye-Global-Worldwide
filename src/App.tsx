@@ -21,7 +21,7 @@ import { ProductCard } from './components/ProductCard';
 import { ALL_PRODUCTS } from './data';
 import { SPECIALIZATIONS, Specialization } from './data/specializations';
 import { safeParse } from './utils/safeParse';
-import { getPaymentEnvironment, getDisplayPrice, getBuyButtonLabel, getPiPrice } from './utils/paymentAdapter';
+import { getPaymentEnvironment } from './utils/paymentAdapter';
 import { autoLoginWithPi, loginWithPi, isPiEnvironment } from './lib/piAuth';
 import PiLoginButton from './components/PiLoginButton';
 import AutoPiConverter from './components/AutoPiConverter';
@@ -183,7 +183,7 @@ export default function App() {
                 const academyProd = {
                   id: 'academy_bundle',
                   name: 'Sirwise AI Web3 Academy (8 Modules)',
-                  piPrice: 2, price: 2
+                  piPrice: 2
                 };
                 setSelectedProduct(academyProd);
                 setShowCheckoutModal(true);
@@ -192,7 +192,7 @@ export default function App() {
                 const tripwireProd = {
                   id: 'ai-starter-tripwire',
                   name: 'AI Starter & Global Travel Pass (Pi)',
-                  price: 1.00
+                  piPrice: 1
                 };
                 setSelectedProduct(tripwireProd);
                 setShowCheckoutModal(true);
@@ -201,7 +201,7 @@ export default function App() {
                 const tripwireProd = {
                   id: 'ai-starter-tripwire',
                   name: 'AI Starter & Global Travel Pass (Pi)',
-                  price: 1.00
+                  piPrice: 1
                 };
                 setSelectedProduct(tripwireProd);
                 setShowCheckoutModal(true);
@@ -462,7 +462,7 @@ export default function App() {
       {showAdmin && (
         <div className="fixed inset-0 bg-black/95 backdrop-blur-md z-[99999] overflow-y-auto p-4 sm:p-6">
           <div className="max-w-6xl mx-auto">
-            {Boolean(typeof window !== 'undefined' && (localStorage.getItem('pi_username') || localStorage.getItem('pi_username_trusted'))) ? (
+            {Boolean(typeof window !== 'undefined' && localStorage.getItem('pi_username_trusted')) ? (
               <AdminDashboard 
                 showToast={showToast} 
                 onClose={() => setShowAdmin(false)} 
@@ -472,6 +472,7 @@ export default function App() {
                 <div className="bg-[#0c0c0c] border border-[#FFD700]/40 rounded-3xl p-8 max-w-md w-full shadow-2xl space-y-4">
                   <div className="flex justify-end">
                     <button
+                      type="button"
                       onClick={() => setShowAdmin(false)}
                       className="text-gray-400 hover:text-white text-lg cursor-pointer"
                     >
@@ -491,17 +492,17 @@ export default function App() {
                     type="button"
                     onClick={async () => {
                       if (!isPiEnvironment()) {
-                        showToast('Please open https://gasv.store inside Pi Browser app to verify Pi Admin.', 'info');
+                        showToast('Please open goyestoreuwg6251.pinet.com inside Pi Browser > Pi Apps > GOYE Store', 'info');
                         return;
                       }
                       const res = await loginWithPi();
-                      if (res?.username || localStorage.getItem('pi_username') || localStorage.getItem('pi_username_trusted')) {
+                      if (res?.username || localStorage.getItem('pi_username_trusted')) {
                         showToast('✅ Pi Network Admin Authenticated', 'success');
                       }
                     }}
                     className="w-full py-3.5 rounded-xl bg-[#7D2AE7] hover:bg-purple-700 text-white font-black text-xs uppercase tracking-widest transition cursor-pointer flex items-center justify-center gap-2 shadow-lg"
                   >
-                    <img src="https://minepi.com/favicon.png" className="w-4 h-4" alt="Pi" />
+                    <span>π</span>
                     <span>Login with Pi Network</span>
                   </button>
                 </div>

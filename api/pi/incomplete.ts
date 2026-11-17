@@ -53,6 +53,9 @@ export default async function handler(req: any, res: any) {
         headers: { 'Content-Type': 'application/json' }
       });
     }
+    if (apiKey.startsWith('sk_live_')) {
+      console.warn('KEY MISMATCH: Testnet mode but Live key');
+    }
 
     if (paymentId) {
       if (txid) {

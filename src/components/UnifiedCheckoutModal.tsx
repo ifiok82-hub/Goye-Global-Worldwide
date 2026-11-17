@@ -39,8 +39,8 @@ export const UnifiedCheckoutModal: React.FC<UnifiedCheckoutModalProps> = ({
           }
           localStorage.setItem('sirwise_paid', 'true');
           localStorage.setItem('payment_verified', 'true');
-          if (onToast) onToast('✅ Pi Payment Verified! Access Unlocked.', 'success');
-          alert('🎉 Pi Payment Verified! Access Unlocked.');
+          if (onToast) onToast('✅ Pi Payment Verified! Access Granted.', 'success');
+          alert('🎉 Pi Payment Verified! Access Granted.');
           window.location.reload();
         }
       );

@@ -54,7 +54,7 @@ export const VerifyCertificatePage: React.FC = () => {
       // Dynamic verification for student ID
       setSearchResult({
         id: clean,
-        studentName: 'Pioneer Graduate / Enrolled Student',
+        studentName: 'Pioneer Graduate / Certified Student',
         course: 'Sirwise AI WEB3 Academy Certified Program',
         issueDate: 'Verified 2026',
         grade: 'Verified Pass',

@@ -16,12 +16,24 @@ export const GoyeHeader: React.FC<GoyeHeaderProps> = ({
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState(false);
   const [piUsername, setPiUsername] = useState(() => {
-    return typeof window !== 'undefined' ? localStorage.getItem('pi_username') || '' : '';
+    return typeof window !== 'undefined' ? localStorage.getItem('pi_username_trusted') || '' : '';
   });
+
+  useEffect(() => {
+    const syncAuth = () => {
+      setPiUsername(localStorage.getItem('pi_username_trusted') || '');
+    };
+    window.addEventListener('piAuthChanged', syncAuth);
+    window.addEventListener('storage', syncAuth);
+    return () => {
+      window.removeEventListener('piAuthChanged', syncAuth);
+      window.removeEventListener('storage', syncAuth);
+    };
+  }, []);
 
   const handlePiLogin = async () => {
     if (!isPiEnvironment()) {
-      alert('Please open https://gasv.store inside Pi Browser app to sign in with Pi.');
+      alert('Please open goyestoreuwg6251.pinet.com inside Pi Browser > Pi Apps > GOYE Store');
       return;
     }
     const auth = await loginWithPi();
@@ -83,12 +95,12 @@ export const GoyeHeader: React.FC<GoyeHeaderProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           
-          {/* Logo with 5-Tap Admin Action */}
-          <div onClick={handleLogoClick} className="flex items-center gap-3 cursor-pointer group select-none">
+          {/* Logo */}
+          <div onClick={handleLogoClick} className="flex items-center gap-2 sm:gap-3 cursor-pointer group select-none min-w-0">
             <img
               src="/logo.png"
               alt="SIRWISE AI • WEB3 • ACADEMY"
-              className="h-11 w-auto max-w-[140px] object-contain rounded-lg group-hover:scale-105 transition-transform duration-300"
+              className="h-9 sm:h-11 w-auto max-w-[100px] sm:max-w-[140px] object-contain rounded-lg group-hover:scale-105 transition-transform duration-300 shrink-0"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
                 const fb = document.getElementById('goye-header-text-logo');
@@ -96,17 +108,17 @@ export const GoyeHeader: React.FC<GoyeHeaderProps> = ({
               }}
             />
             <div id="goye-header-text-logo" className="hidden items-center gap-2">
-              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#FFD700] via-yellow-500 to-[#FFA500] p-0.5 shadow-lg shadow-yellow-500/20">
+              <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-[#FFD700] via-yellow-500 to-[#FFA500] p-0.5 shadow-lg shadow-yellow-500/20">
                 <div className="w-full h-full bg-black rounded-[14px] flex items-center justify-center font-black text-[#FFD700]">
-                  <Globe className="text-[#FFD700]" size={22} />
+                  <Globe className="text-[#FFD700]" size={20} />
                 </div>
               </div>
             </div>
-            <div className="flex flex-col">
-              <span className="text-lg font-black tracking-tight text-white group-hover:text-[#FFD700] transition-colors leading-tight">
+            <div className="flex flex-col min-w-0">
+              <span className="text-base sm:text-lg font-black tracking-tight text-white group-hover:text-[#FFD700] transition-colors leading-tight truncate">
                 GOYE <span className="text-[#FFD700]">STORE</span>
               </span>
-              <span className="text-[10px] font-black uppercase tracking-widest text-[#FFD700]">
+              <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-wider sm:tracking-widest text-[#FFD700] truncate">
                 SIRWISE AI • WEB3 • ACADEMY
               </span>
             </div>
@@ -119,6 +131,7 @@ export const GoyeHeader: React.FC<GoyeHeaderProps> = ({
               return (
                 <button
                   key={link.id}
+                  type="button"
                   onClick={() => handleNavClick(link.id)}
                   className={`px-3 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
                     isActive
@@ -132,18 +145,26 @@ export const GoyeHeader: React.FC<GoyeHeaderProps> = ({
             })}
           </nav>
 
-          {/* Header Action Buttons (Install PWA & WhatsApp & Pi Login) */}
+          {/* Header Action Buttons */}
           <div className="hidden sm:flex items-center gap-3">
-            <button
-              onClick={handlePiLogin}
-              className="px-4 py-2.5 rounded-xl bg-[#7D2AE7] hover:bg-purple-700 text-white font-black text-xs shadow-md flex items-center gap-2 active:scale-95 transition cursor-pointer"
-            >
-              <img src="https://minepi.com/favicon.png" className="w-4 h-4" alt="Pi" />
-              <span>{piUsername ? `Welcome @${piUsername}` : "Login with Pi"}</span>
-            </button>
+            {piUsername ? (
+              <span className="px-3.5 py-2 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 font-black text-xs flex items-center gap-1.5">
+                ✅ Signed in as @{piUsername}
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={handlePiLogin}
+                className="px-4 py-2.5 rounded-xl bg-[#7D2AE7] hover:bg-purple-700 text-white font-black text-xs shadow-md flex items-center gap-2 active:scale-95 transition cursor-pointer"
+              >
+                <span>π</span>
+                <span>Login with Pi</span>
+              </button>
+            )}
 
             {isInstallable && (
               <button
+                type="button"
                 onClick={handleInstallApp}
                 className="px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-700 text-gray-200 font-bold text-xs flex items-center gap-1.5 hover:bg-zinc-800 transition cursor-pointer"
               >
@@ -165,15 +186,23 @@ export const GoyeHeader: React.FC<GoyeHeaderProps> = ({
 
           {/* Mobile Action and Menu Button */}
           <div className="flex sm:hidden items-center gap-2">
-            <button
-              onClick={handlePiLogin}
-              className="px-2.5 py-1.5 rounded-xl bg-[#7D2AE7] hover:bg-purple-700 text-white font-black text-[11px] shadow-md flex items-center gap-1 active:scale-95 transition cursor-pointer"
-            >
-              <img src="https://minepi.com/favicon.png" className="w-3.5 h-3.5" alt="Pi" />
-              <span>{piUsername ? `@${piUsername}` : "Login with Pi"}</span>
-            </button>
+            {piUsername ? (
+              <span className="px-2.5 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 font-black text-[10px]">
+                ✅ @{piUsername}
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={handlePiLogin}
+                className="px-2.5 py-1.5 rounded-xl bg-[#7D2AE7] hover:bg-purple-700 text-white font-black text-[11px] shadow-md flex items-center gap-1 active:scale-95 transition cursor-pointer"
+              >
+                <span>π</span>
+                <span>Login with Pi</span>
+              </button>
+            )}
 
             <button
+              type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 rounded-xl bg-zinc-900 text-[#FFD700] border border-zinc-800 hover:bg-zinc-800"
             >
@@ -184,6 +213,7 @@ export const GoyeHeader: React.FC<GoyeHeaderProps> = ({
           {/* Tablet (sm to lg) Menu Button */}
           <div className="hidden sm:flex lg:hidden items-center gap-2">
             <button
+              type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2.5 rounded-xl bg-zinc-900 text-[#FFD700] border border-zinc-800 hover:bg-zinc-800"
             >
@@ -198,13 +228,20 @@ export const GoyeHeader: React.FC<GoyeHeaderProps> = ({
       {mobileMenuOpen && (
         <div className="lg:hidden bg-black border-b border-[#FFD700]/30 px-4 py-6 space-y-3 animate-in fade-in duration-200">
           <div className="grid gap-2">
-            <button
-              onClick={() => { setMobileMenuOpen(false); handlePiLogin(); }}
-              className="w-full text-center py-3 rounded-xl bg-[#7D2AE7] text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-lg"
-            >
-              <img src="https://minepi.com/favicon.png" className="w-4 h-4" alt="Pi" />
-              <span>{piUsername ? `Welcome @${piUsername}` : "Login with Pi"}</span>
-            </button>
+            {piUsername ? (
+              <div className="w-full text-center py-3 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 font-black text-xs uppercase tracking-wider">
+                ✅ Signed in as @{piUsername}
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => { setMobileMenuOpen(false); handlePiLogin(); }}
+                className="w-full text-center py-3 rounded-xl bg-[#7D2AE7] text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-lg"
+              >
+                <span>π</span>
+                <span>Login with Pi</span>
+              </button>
+            )}
 
             {navLinks.map((link) => {
               const isActive = currentTab === link.id || (link.id === 'home' && currentTab === 'academy');

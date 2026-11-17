@@ -32,7 +32,7 @@ export function isAdminClick(name?: string, email?: string): boolean {
   // Real admin session verification
   const hasAdminAuth = 
     localStorage.getItem('isAdmin') === 'true' && 
-    Boolean(localStorage.getItem('admin_token') || localStorage.getItem('admin_password'));
+    Boolean(localStorage.getItem('pi_username_trusted') || localStorage.getItem('admin_token'));
 
   if (hasAdminAuth) return true;
 
@@ -212,7 +212,7 @@ export async function saveGlobalClick(type: string = 'page_view', product: strin
   const excludeAdminSetting = localStorage.getItem('excludeAdminClicks') === 'true';
   const excludeMyClicksSetting = localStorage.getItem('exclude_my_clicks') !== 'false';
   const isExcludeActive = excludeAdminSetting || excludeMyClicksSetting;
-  const isUserAdmin = isAdminClick(name, email) || localStorage.getItem('is_admin') === 'true' || localStorage.getItem('is_owner') === 'true';
+  const isUserAdmin = isAdminClick(name, email) || localStorage.getItem('isAdmin') === 'true' || localStorage.getItem('is_owner') === 'true';
 
   // IF EXCLUDE ON AND IS ADMIN - EARLY RETURN - DO NOT INCREMENT CLICKS OR LOG TRAFFIC
   if (isExcludeActive && isUserAdmin) {
@@ -241,7 +241,7 @@ export async function saveGlobalClick(type: string = 'page_view', product: strin
   const country = await getCountryFlag();
   const isMobile = /Mobi|Android/i.test(navigator.userAgent);
   const record = {
-    id: ref || 'PAYSTACK-' + Date.now(),
+    id: ref || 'PI-' + Date.now(),
     location: country,
     country: country,
     customer_name: 'Guest Customer',

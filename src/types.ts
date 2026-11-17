@@ -72,7 +72,7 @@ export interface Product {
   isPremium?: boolean;
   teaser?: string;
   teaserModules?: string[];
-  unlockedContent?: string;
+  accessContent?: string;
   downloadUrl?: string;
   fileFormat?: string;
   status?: string;

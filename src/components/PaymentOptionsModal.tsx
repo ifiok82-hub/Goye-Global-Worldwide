@@ -27,7 +27,7 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ onClos
           }
           localStorage.setItem('sirwise_paid', 'true');
           localStorage.setItem('payment_verified', 'true');
-          alert('🎉 Payment Verified! Access Unlocked.');
+          alert('🎉 Payment Verified! Access Granted.');
           window.location.reload();
         }
       );

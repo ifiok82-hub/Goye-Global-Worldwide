@@ -1,8 +1,7 @@
 import { useEffect } from 'react';
 
 // AutoPiConverter - Pure DOM text-node walker
-// NEVER modifies innerHTML (which breaks React event listeners)
-// Never creates screen overlays
+// NEVER modifies innerHTML and never creates full-screen overlays
 export default function AutoPiConverter() {
   useEffect(() => {
     if (typeof window === 'undefined' || typeof document === 'undefined') return;
@@ -15,7 +14,6 @@ export default function AutoPiConverter() {
 
     const convertAll = () => {
       try {
-        // 1. Text node walker for leaf elements
         const walker = document.createTreeWalker(
           document.body,
           NodeFilter.SHOW_TEXT,
@@ -41,27 +39,7 @@ export default function AutoPiConverter() {
 
           let updated = false;
 
-          // Replace old payment wording if found
-          if (text.includes('Paystack') || text.includes('Flutterwave') || text.includes('OPay') || text.includes('PayPal')) {
-            text = text.replace(/Pay securely with .*\./gi, 'Pay securely with Pi.');
-            updated = true;
-          }
-
-          // Replace 0.000003 Pi with 1 Pi
-          if (text.includes('0.000003')) {
-            text = text.replace(/0\.000003\s*Pi/gi, '1 Pi');
-            updated = true;
-          }
-
-          // Replace ENROLL / UNLOCK
-          if (/\bENROLL\b/i.test(text)) {
-            text = text.replace(/\bENROLL\b(?:\s*→)?/gi, '🔒 LOCK - 2 Pi');
-            updated = true;
-          }
-
-          // Handle Naira / USD in text
           if (text.includes('₦') || (text.includes('$') && !text.includes('Pi'))) {
-            // Replace dual pattern like ₦25,000 ($18)
             text = text.replace(/₦\s*([\d,]+(?:\.\d+)?)\s*(?:\(\s*\$?\s*([\d,]+(?:\.\d+)?)\s*\))?/gi, (_m, nairaVal, usdVal) => {
               const n = parseFloat((nairaVal || '').replace(/,/g, ''));
               const u = usdVal ? parseFloat(usdVal.replace(/,/g, '')) : undefined;
@@ -69,7 +47,6 @@ export default function AutoPiConverter() {
               return `${pi} Pi`;
             });
 
-            // Replace single $ pattern
             text = text.replace(/\$\s*([\d,]+(?:\.\d+)?)/gi, (_m, usdVal) => {
               const u = parseFloat(usdVal.replace(/,/g, ''));
               const pi = toPi(undefined, u);
@@ -84,17 +61,16 @@ export default function AutoPiConverter() {
           }
         }
 
-        // Apply text node updates without disrupting DOM listeners
         for (const item of nodesToUpdate) {
           item.node.nodeValue = item.text;
         }
-      } catch (err) {
+      } catch {
         // fail-safe
       }
     };
 
     convertAll();
-    const interval = setInterval(convertAll, 1000);
+    const interval = setInterval(convertAll, 1500);
     const obs = new MutationObserver(() => convertAll());
     obs.observe(document.body, { childList: true, subtree: true, characterData: true });
 
@@ -104,5 +80,5 @@ export default function AutoPiConverter() {
     };
   }, []);
 
-  return null;
+  return <span style={{ pointerEvents: 'none', position: 'static' }} aria-hidden="true" />;
 }

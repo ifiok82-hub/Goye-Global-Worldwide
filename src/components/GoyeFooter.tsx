@@ -51,13 +51,13 @@ export const GoyeFooter: React.FC<GoyeFooterProps> = ({
                 About Us
               </p>
               <p>
-                Goyedagosmess Enterprise BN: 3583878 is parent company of Goye Store and Sirwise AI WEB3 Academy.
+                Goyedagosmess Enterprise, CAC BN3583878 is the parent company of Goye Store and Sirwise AI WEB3 Academy.
               </p>
             </div>
 
             <div className="space-y-1 text-[11px] font-mono text-gray-400 pt-1">
               <p>Website: <a href="https://gasv.store" className="text-[#FFD700] hover:underline">https://gasv.store</a></p>
-              <p>Email: <a href="mailto:goyedagosmessenterprise@gmail.com" className="text-[#FFD700] hover:underline">goyedagosmessenterprise@gmail.com</a></p>
+              <p>Contact: <a href="mailto:support@gasv.store" className="text-[#FFD700] hover:underline">support@gasv.store</a></p>
               <p>WhatsApp: <a href="https://wa.me/2348033584736" target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:underline">+2348033584736</a></p>
             </div>
           </div>
@@ -67,32 +67,32 @@ export const GoyeFooter: React.FC<GoyeFooterProps> = ({
             <h4 className="text-xs font-black uppercase tracking-wider text-white">Platform Menu</h4>
             <ul className="space-y-2 text-xs">
               <li>
-                <button onClick={(e) => handleNav('home', e)} className="hover:text-[#FFD700] font-bold text-left transition cursor-pointer">
+                <button type="button" onClick={(e) => handleNav('home', e)} className="hover:text-[#FFD700] font-bold text-left transition cursor-pointer">
                   Sirwise AI Classroom
                 </button>
               </li>
               <li>
-                <button onClick={(e) => handleNav('specializations', e)} className="hover:text-[#FFD700] font-bold text-left transition cursor-pointer">
-                  Certified Specializations
+                <button type="button" onClick={(e) => handleNav('specializations', e)} className="hover:text-[#FFD700] font-bold text-left transition cursor-pointer">
+                  Specializations
                 </button>
               </li>
               <li>
-                <button onClick={(e) => handleNav('courses', e)} className="hover:text-[#FFD700] font-bold text-left transition cursor-pointer">
-                  Certified Courses
+                <button type="button" onClick={(e) => handleNav('courses', e)} className="hover:text-[#FFD700] font-bold text-left transition cursor-pointer">
+                  Courses
                 </button>
               </li>
               <li>
-                <button onClick={(e) => handleNav('services', e)} className="hover:text-[#FFD700] font-bold text-left transition cursor-pointer">
+                <button type="button" onClick={(e) => handleNav('services', e)} className="hover:text-[#FFD700] font-bold text-left transition cursor-pointer">
                   Global Store & eSIM (Pi)
                 </button>
               </li>
               <li>
-                <button onClick={(e) => handleNav('verify', e)} className="hover:text-[#FFD700] font-bold text-left transition cursor-pointer">
+                <button type="button" onClick={(e) => handleNav('verify', e)} className="hover:text-[#FFD700] font-bold text-left transition cursor-pointer">
                   Verify Certificate
                 </button>
               </li>
               <li>
-                <button onClick={(e) => handleNav('contact', e)} className="hover:text-[#FFD700] font-bold text-left transition cursor-pointer">
+                <button type="button" onClick={(e) => handleNav('contact', e)} className="hover:text-[#FFD700] font-bold text-left transition cursor-pointer">
                   Contact Support
                 </button>
               </li>
@@ -105,11 +105,20 @@ export const GoyeFooter: React.FC<GoyeFooterProps> = ({
             <ul className="space-y-2 text-xs">
               <li>
                 <a 
+                  href="/about" 
+                  onClick={(e) => handleNav('contact', e)}
+                  className="hover:text-[#FFD700] font-bold block transition"
+                >
+                  About
+                </a>
+              </li>
+              <li>
+                <a 
                   href="/terms" 
                   onClick={(e) => handleNav('terms', e)}
                   className="hover:text-[#FFD700] font-bold block transition"
                 >
-                  Terms of Service
+                  Terms
                 </a>
               </li>
               <li>
@@ -118,7 +127,7 @@ export const GoyeFooter: React.FC<GoyeFooterProps> = ({
                   onClick={(e) => handleNav('privacy', e)}
                   className="hover:text-[#FFD700] font-bold block transition"
                 >
-                  Privacy Policy
+                  Privacy
                 </a>
               </li>
               <li>
@@ -127,34 +136,33 @@ export const GoyeFooter: React.FC<GoyeFooterProps> = ({
                   onClick={(e) => handleNav('refund', e)}
                   className="hover:text-[#FFD700] font-bold block transition"
                 >
-                  Refund Policy
+                  Refund
                 </a>
               </li>
             </ul>
 
             <div className="pt-2 text-[11px] text-gray-400 leading-relaxed">
-              Global e-learning, digital products, and certified technology specializations.
+              Global e-learning, digital products, and Web3 education on Pi Network.
             </div>
           </div>
 
-          {/* Accepted Gateways & QR */}
+          {/* Accepted Payment Method */}
           <div className="space-y-4">
-            <h4 className="text-xs font-black uppercase tracking-wider text-white">Accepted Gateways</h4>
+            <h4 className="text-xs font-black uppercase tracking-wider text-white">Pi Network Payment</h4>
             
             <div className="flex flex-wrap gap-2">
               <span className="bg-[#111] border border-[#FFD700] text-[10px] font-black text-[#FFD700] px-2.5 py-1 rounded">Pi Network Direct</span>
               <span className="bg-[#111] border border-[#FFD700]/40 text-[10px] font-black text-[#FFD700] px-2.5 py-1 rounded">Pi Browser App</span>
-              <span className="bg-[#111] border border-gray-800 text-[10px] font-black text-gray-300 px-2.5 py-1 rounded">Web3 Blockchain</span>
             </div>
 
             {/* Support Box */}
             <div className="bg-gradient-to-br from-[#111] to-[#1a1400] border border-[#FFD700]/40 p-3.5 rounded-2xl flex flex-col items-center justify-center text-center space-y-2">
               <h4 className="text-[10px] font-black uppercase text-[#FFD700] flex items-center gap-1">
                 <QrCode size={12} />
-                <span>Verified Pi & WhatsApp Support</span>
+                <span>Support Email</span>
               </h4>
               <p className="text-[10px] text-gray-300 font-mono">
-                +2348033584736
+                support@gasv.store
               </p>
             </div>
           </div>
@@ -164,6 +172,14 @@ export const GoyeFooter: React.FC<GoyeFooterProps> = ({
         {/* Legal Menu Line */}
         <div className="pt-6 border-t border-zinc-900 text-center">
           <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-xs font-bold text-gray-300">
+            <a 
+              href="/about" 
+              onClick={(e) => handleNav('contact', e)} 
+              className="hover:text-[#FFD700] transition"
+            >
+              About
+            </a>
+            <span className="text-zinc-700">|</span>
             <a 
               href="/terms" 
               onClick={(e) => handleNav('terms', e)} 
@@ -190,17 +206,11 @@ export const GoyeFooter: React.FC<GoyeFooterProps> = ({
           </div>
         </div>
 
-        {/* Exact Mandatory Footer String Requested by User */}
+        {/* Legal Footer Line */}
         <div className="pt-4 border-t border-[#FFD700]/10 flex flex-col items-center justify-between gap-4 text-[11px] text-gray-400 text-center">
           <p className="leading-relaxed max-w-5xl font-medium text-gray-300">
-            © 2026 Goyedagosmess Enterprise BN: 3583878 | Goye Store | Sirwise AI WEB3 Academy | goyedagosmessenterprise@gmail.com | WhatsApp +2348033584736 | https://gasv.store
+            © 2026 Goyedagosmess Enterprise, CAC BN3583878 | Goye Store | Sirwise AI WEB3 Academy | support@gasv.store | https://gasv.store
           </p>
-
-          <div className="flex items-center gap-4 text-[10px] text-gray-600">
-            <span className="text-[#FFD700] font-black">Built for Pi Network</span>
-            <span>•</span>
-            <span>https://gasv.store</span>
-          </div>
         </div>
 
       </div>

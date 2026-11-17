@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Specialization } from '../data/specializations';
-import { X, Clock, Sparkles, CheckCircle, ArrowRight, MessageSquare } from 'lucide-react';
-import { loginWithPi, isPiEnvironment } from '../lib/piAuth';
-import { postPiBackend } from '../lib/piPayment';
+import { X, Clock, Sparkles, ArrowRight, MessageSquare } from 'lucide-react';
+import { startPiPayment } from '../lib/piPayment';
+import ProductGradientImage from './ProductGradientImage';
 
 interface ServiceBookingModalProps {
   service: Specialization;
@@ -35,78 +35,19 @@ export const ServiceBookingModal: React.FC<ServiceBookingModalProps> = ({
   };
 
   const handlePiPay = async () => {
-    if (typeof window === 'undefined' || !(window as any).Pi || !isPiEnvironment()) {
-      onToast('Open https://gasv.store in Pi Browser to pay with Pi Network', 'info');
-      alert('Please open https://gasv.store inside Pi Browser app to pay with Pi');
-      return;
-    }
-
     setIsProcessing(true);
-    await (window as any).Pi.init({ version: '2.0', sandbox: false });
-    const auth = await loginWithPi();
-    if (!auth) {
-      setIsProcessing(false);
-      onToast('Please login with Pi Browser to proceed.', 'error');
-      return;
-    }
-
-    if (typeof (window as any).Pi && typeof (window as any).Pi.createPayment === 'function') {
-      try {
-        let approvedOnce = false;
-        await (window as any).Pi.createPayment({
-          amount: finalPiPrice,
-          memo: `Booking: ${service.title} (${finalPiPrice} Pi)`,
-          metadata: {
-            serviceId: service.id,
-            serviceTitle: service.title,
-            clientName: fullName,
-            clientEmail: email,
-            piPrice: finalPiPrice
-          }
-        }, {
-          onReadyForServerApproval: async (paymentId: string) => {
-            if (approvedOnce) return;
-            approvedOnce = true;
-            console.log('APPROVE fresh paymentId', paymentId);
-            await postPiBackend('/api/pi/approve', { paymentId });
-          },
-          onReadyForServerCompletion: async (paymentId: string, txid: string) => {
-            approvedOnce = false;
-            await postPiBackend('/api/pi/complete', {
-              paymentId,
-              txid,
-              productId: service.id,
-              amount: finalPiPrice
-            });
-
-            saveBooking(txid || paymentId);
-          },
-          onCancel: (paymentId: string) => {
-            approvedOnce = false;
-            setIsProcessing(false);
-            console.log('Pi payment cancelled:', paymentId);
-          },
-          onError: (err: any) => {
-            approvedOnce = false;
-            setIsProcessing(false);
-            console.error('Pi payment error:', err);
-            const msg = String(err?.message || err);
-            if (msg.includes('No payment found') || msg.includes('Payment expired')) {
-              localStorage.removeItem('paymentId');
-              localStorage.removeItem('pi_payment_id');
-              alert('This payment expired. Please close and tap LOCK again for a new payment.');
-              return;
-            }
-            onToast('Payment error. Please try again in Pi Browser.', 'error');
-          }
-        });
-      } catch (err) {
-        setIsProcessing(false);
-        console.error('Pi createPayment exception:', err);
+    const ok = await startPiPayment(
+      {
+        id: service.id,
+        title: `Booking: ${service.title}`,
+        piPrice: finalPiPrice
+      },
+      (txid?: string) => {
+        saveBooking(txid || 'PI-' + Date.now());
       }
-    } else {
+    );
+    if (!ok) {
       setIsProcessing(false);
-      onToast('Open in Pi Browser to pay with Pi Network', 'info');
     }
   };
 
@@ -163,19 +104,18 @@ Please commence digital specialization.`;
 
         {/* Modal Header */}
         <div className="space-y-3 mb-6">
-          {service.imageUrl && (
-            <div className="relative w-full h-36 rounded-2xl overflow-hidden border border-zinc-800 shadow-lg">
-              <img
-                src={service.imageUrl}
-                alt={service.imageAlt || service.title}
-                referrerPolicy="no-referrer"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute top-2.5 left-2.5 bg-black/80 backdrop-blur-md text-[#FFD700] border border-[#FFD700]/40 text-[9px] font-black uppercase px-2 py-0.5 rounded">
-                🔒 LOCKED ACCESS
-              </div>
+          <div className="relative w-full h-36 rounded-2xl overflow-hidden border border-zinc-800 shadow-lg">
+            <ProductGradientImage
+              src={service.image}
+              alt={service.imageAlt || service.title}
+              category={service.category}
+              title={service.title}
+              height="144px"
+            />
+            <div className="absolute top-2.5 left-2.5 bg-black/80 backdrop-blur-md text-[#FFD700] border border-[#FFD700]/40 text-[9px] font-black uppercase px-2 py-0.5 rounded">
+              🔒 LOCKED ACCESS
             </div>
-          )}
+          </div>
           <div className="flex items-center gap-2">
             <span className="bg-[#FFD700]/15 text-[#FFD700] border border-[#FFD700]/40 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full">
               Specialization #{service.number} · {service.category}

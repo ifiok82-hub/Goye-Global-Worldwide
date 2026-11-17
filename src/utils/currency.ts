@@ -1,6 +1,5 @@
 import { isPiCustomerPaymentEnabled } from '../config/payment';
 
-export const GCV_RATE = 314159;
 export const PI_RATE = 30;
 
 export interface CurrencyInfo {

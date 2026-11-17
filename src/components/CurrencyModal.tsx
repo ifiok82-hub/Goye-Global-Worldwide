@@ -13,7 +13,7 @@ export const CURRENCIES = [
   { code: 'ZAR', symbol: 'R', rate: 18.9, name: 'South African Rand' },
   { code: 'GHS', symbol: '₵', rate: 12.5, name: 'Ghanaian Cedi' },
   { code: 'KES', symbol: 'KSh', rate: 155.0, name: 'Kenyan Shilling' },
-  { code: 'PI', symbol: 'π', rate: 1/314159, name: 'Pi Network GCV' }
+  { code: 'PI', symbol: 'π', rate: 1, name: 'Pi Network' }
 ];
 
 export default function CurrencyModal({ onClose, currentCurrency, onSelectCurrency, rates }: any) {

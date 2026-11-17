@@ -34,7 +34,7 @@ export const SpecializationsSection: React.FC<SpecializationsSectionProps> = ({
           <span>GOYE STORE · SIRWISE AI WEB3 ACADEMY</span>
         </div>
 
-        <h2 className="text-2xl sm:text-4xl md:text-5xl font-black text-white uppercase tracking-tight">
+        <h2 className="text-xl sm:text-4xl md:text-5xl font-black text-white uppercase tracking-tight">
           Our Certified Specializations
         </h2>
 
@@ -61,9 +61,8 @@ export const SpecializationsSection: React.FC<SpecializationsSectionProps> = ({
       {/* Specializations Grid - Image + Title + Button */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredSpecializations.map((spec) => {
-          const isUnlocked = typeof window !== 'undefined' && (
-            localStorage.getItem(`paid_${spec.id}`) === 'true' ||
-            localStorage.getItem(`unlocked_${spec.id}`) === 'true'
+          const hasPaidAccess = typeof window !== 'undefined' && (
+            localStorage.getItem(`paid_${spec.id}`) === 'true'
           );
 
           return (
@@ -74,7 +73,7 @@ export const SpecializationsSection: React.FC<SpecializationsSectionProps> = ({
               {/* 1. Image with LOCKED ACCESS Badge */}
               <div className="relative w-full rounded-[16px] overflow-hidden shadow-lg border border-zinc-800 bg-zinc-950 mb-4">
                 <ProductGradientImage
-                  src={spec.imageUrl}
+                  src={spec.image}
                   alt={spec.imageAlt || spec.title}
                   category={spec.category}
                   title={spec.title}
@@ -83,7 +82,7 @@ export const SpecializationsSection: React.FC<SpecializationsSectionProps> = ({
 
                 {/* Badge: Strictly 🔒 LOCKED ACCESS */}
                 <div className="absolute top-2.5 left-2.5 bg-black text-[#FFD700] border border-[#FFD700] text-[10px] font-black uppercase px-2.5 py-1 rounded-md tracking-wider z-10 shadow-md pointer-events-none">
-                  {isUnlocked ? '✅ ACCESS GRANTED' : '🔒 LOCKED ACCESS'}
+                  {hasPaidAccess ? '✅ ACCESS GRANTED' : '🔒 LOCKED ACCESS'}
                 </div>
               </div>
 
@@ -99,7 +98,7 @@ export const SpecializationsSection: React.FC<SpecializationsSectionProps> = ({
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  if (isUnlocked) {
+                  if (hasPaidAccess) {
                     onSelectService(spec);
                   } else {
                     handlePiPayment({ id: spec.id, title: spec.title, piPrice: spec.piPrice });
@@ -107,7 +106,7 @@ export const SpecializationsSection: React.FC<SpecializationsSectionProps> = ({
                 }}
                 className="w-full font-black uppercase text-xs tracking-widest py-3.5 rounded-xl transition duration-200 cursor-pointer active:scale-95 shadow-md flex items-center justify-center bg-[#FFD700] hover:bg-yellow-400 text-black shadow-yellow-500/20"
               >
-                <span>{isUnlocked ? '✅ ACCESS NOW / DOWNLOAD' : `🔒 LOCK - ${spec.piPrice} Pi`}</span>
+                <span>{hasPaidAccess ? '✅ ACCESS NOW' : `🔒 LOCK - ${spec.piPrice} Pi`}</span>
               </button>
             </div>
           );

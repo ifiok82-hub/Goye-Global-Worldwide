@@ -41,7 +41,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onToast }) => {
         </h1>
 
         <p className="text-xs sm:text-sm text-gray-400 max-w-xl mx-auto">
-          Need custom graphic design, Web3 smart contract consultations, or course access? Reach our direct digital support channels. Response guaranteed within 24 hours.
+          Need custom graphic design, Web3 smart contract consultations, or course access? Reach our direct digital support channels. Response provided within 24 hours.
         </p>
       </div>
 
@@ -61,7 +61,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onToast }) => {
               <h3 className="text-lg font-black text-white">Email Inquiries</h3>
             </div>
             <p className="text-xs text-gray-300 break-all font-mono">
-              goyedagosmessenterprise@gmail.com
+              support@gasv.store
             </p>
             <p className="text-[11px] text-gray-500">
               For corporate proposals, course registrations, soft copy design briefs, and accounting verification.
@@ -69,7 +69,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onToast }) => {
           </div>
 
           <a
-            href="mailto:goyedagosmessenterprise@gmail.com"
+            href="mailto:support@gasv.store"
             className="w-full inline-flex items-center justify-center gap-2 bg-zinc-900 hover:bg-zinc-800 text-white font-black text-xs uppercase tracking-wider py-3 rounded-xl border border-zinc-700 transition"
           >
             <Mail size={14} />

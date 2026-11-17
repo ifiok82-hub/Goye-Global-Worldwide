@@ -11,6 +11,7 @@ export interface GoyeService {
   processSteps: { title: string; desc: string }[];
   ctaText: string;
   iconName: string;
+  image?: string;
 }
 
 export const CORE_CATEGORIES = [
@@ -114,7 +115,8 @@ export const GOYE_SERVICES: GoyeService[] = [
       { title: '5. GROW', desc: 'Optional ongoing maintenance, updates, and conversion optimization.' }
     ],
     ctaText: 'Build My Website',
-    iconName: 'Globe'
+    iconName: 'Globe',
+    image: '/images/specializations/uiux_design_laptop_1791357324507.jpg'
   },
   {
     id: 'web-apps',
@@ -147,7 +149,8 @@ export const GOYE_SERVICES: GoyeService[] = [
       { title: '5. GROW', desc: 'Feature iterations, security audits, and continuous scaling.' }
     ],
     ctaText: 'Build My Web App',
-    iconName: 'Code'
+    iconName: 'Code',
+    image: '/images/specializations/smart_contract_solidity_1791357396617.jpg'
   },
   {
     id: 'ai-assistants',
@@ -179,7 +182,8 @@ export const GOYE_SERVICES: GoyeService[] = [
       { title: '5. GROW', desc: 'Monitor chat logs, refine knowledge base, and expand capabilities.' }
     ],
     ctaText: 'Deploy AI Assistant',
-    iconName: 'Bot'
+    iconName: 'Bot',
+    image: '/images/specializations/ai_training_solutions_1791357439223.jpg'
   },
   {
     id: 'automation',
@@ -211,7 +215,8 @@ export const GOYE_SERVICES: GoyeService[] = [
       { title: '5. GROW', desc: 'Audit workflow analytics and optimize execution speeds.' }
     ],
     ctaText: 'Automate Workflows',
-    iconName: 'Zap'
+    iconName: 'Zap',
+    image: '/images/specializations/digital_recharge_voucher_1791357335034.jpg'
   },
   {
     id: 'whatsapp',
@@ -243,7 +248,8 @@ export const GOYE_SERVICES: GoyeService[] = [
       { title: '5. GROW', desc: 'Track conversation metrics, conversion rates, and reply speeds.' }
     ],
     ctaText: 'Automate WhatsApp',
-    iconName: 'MessageSquare'
+    iconName: 'MessageSquare',
+    image: '/images/esim-global.jpg'
   },
   {
     id: 'digital-marketing',
@@ -275,7 +281,8 @@ export const GOYE_SERVICES: GoyeService[] = [
       { title: '5. GROW', desc: 'Analyze funnel conversion rates and optimize ad/landing performance.' }
     ],
     ctaText: 'Grow My Business',
-    iconName: 'Target'
+    iconName: 'Target',
+    image: '/images/specializations/crypto_digital_marketing_1791357405791.jpg'
   },
   {
     id: 'seo',
@@ -307,7 +314,8 @@ export const GOYE_SERVICES: GoyeService[] = [
       { title: '5. GROW', desc: 'Track organic impressions, click-through rates, and ranking gains.' }
     ],
     ctaText: 'Optimize Search Visibility',
-    iconName: 'Search'
+    iconName: 'Search',
+    image: '/images/specializations/documentation_archiving_scanner_1791357344446.jpg'
   },
   {
     id: 'branding',
@@ -339,7 +347,8 @@ export const GOYE_SERVICES: GoyeService[] = [
       { title: '5. GROW', desc: 'Provide ongoing design support for campaign collateral.' }
     ],
     ctaText: 'Elevate My Brand',
-    iconName: 'Sparkles'
+    iconName: 'Sparkles',
+    image: '/images/specializations/graphic_design_studio_1791357449970.jpg'
   }
 ];
 

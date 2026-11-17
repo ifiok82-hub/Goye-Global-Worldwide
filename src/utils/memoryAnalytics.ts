@@ -15,7 +15,6 @@ export function recordClick(body: any = {}) {
   const email = (body.customerEmail || body.email || '').toLowerCase();
   const isAdmin = Boolean(
     body.isAdmin ||
-    body.is_admin ||
     email.includes('goyedagos') ||
     email.includes('ifiok82') ||
     email.includes('godswill') ||

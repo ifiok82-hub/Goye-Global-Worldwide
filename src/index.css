@@ -123,7 +123,7 @@ button {
   z-index: 10 !important;
 }
 
-#upgradeToAcademyBtn, #downloadBlueprintBtn, #buyUnlockBtn {
+#upgradeToAcademyBtn, #downloadBlueprintBtn, #buyAccessBtn {
   pointer-events: auto !important;
   cursor: pointer !important;
   position: relative !important;

@@ -71,7 +71,7 @@ export default function PostPurchaseUpsellModal({ isOpen, onClose, onAcceptUpsel
 
         <div className="flex items-center justify-center gap-2 mt-4 text-gray-500 text-[11px]">
           <ShieldCheck size={14} className="text-[#10B981]" />
-          <span>Guaranteed 100% Secure Checkout via Pi Network</span>
+          <span>Verified 100% Secure Checkout via Pi Network</span>
         </div>
       </div>
     </div>

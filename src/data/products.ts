@@ -1,4 +1,4 @@
-import { ALL_PRODUCTS, PI_GCV_USD, ACADEMY_PRICE_USD } from '../data';
+import { ALL_PRODUCTS, ACADEMY_PRICE_PI } from '../data';
 
-export { ALL_PRODUCTS, PI_GCV_USD, ACADEMY_PRICE_USD };
+export { ALL_PRODUCTS, ACADEMY_PRICE_PI };
 export default ALL_PRODUCTS;

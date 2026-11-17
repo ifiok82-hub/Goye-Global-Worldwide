@@ -71,9 +71,8 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({
       {/* Grid: Image + Title + Button */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filtered.map((service) => {
-          const isUnlocked = typeof window !== 'undefined' && (
-            localStorage.getItem(`paid_${service.id}`) === 'true' ||
-            localStorage.getItem(`unlocked_${service.id}`) === 'true'
+          const hasPaidAccess = typeof window !== 'undefined' && (
+            localStorage.getItem(`paid_${service.id}`) === 'true'
           );
 
           return (
@@ -84,14 +83,14 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({
               {/* 1. Image with LOCKED ACCESS Badge */}
               <div className="relative w-full rounded-[16px] overflow-hidden shadow-lg border border-zinc-800 bg-zinc-950 mb-4">
                 <ProductGradientImage
-                  src={service.imageUrl}
+                  src={service.image}
                   alt={service.imageAlt || service.title}
                   category={service.category}
                   title={service.title}
                   height="220px"
                 />
                 <div className="absolute top-2.5 left-2.5 bg-black text-[#FFD700] border border-[#FFD700] text-[10px] font-black uppercase px-2.5 py-1 rounded-md tracking-wider z-10 shadow-md pointer-events-none">
-                  {isUnlocked ? '✅ ACCESS GRANTED' : '🔒 LOCKED ACCESS'}
+                  {hasPaidAccess ? '✅ ACCESS GRANTED' : '🔒 LOCKED ACCESS'}
                 </div>
               </div>
 
@@ -107,7 +106,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  if (isUnlocked) {
+                  if (hasPaidAccess) {
                     onSelectService(service);
                   } else {
                     handlePiPayment({ id: service.id, title: service.title, piPrice: service.piPrice });
@@ -115,7 +114,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({
                 }}
                 className="w-full font-black uppercase text-xs tracking-widest py-3.5 rounded-xl transition duration-200 cursor-pointer active:scale-95 shadow-md flex items-center justify-center bg-[#FFD700] hover:bg-yellow-400 text-black shadow-yellow-500/20"
               >
-                <span>{isUnlocked ? '✅ ACCESS NOW / DOWNLOAD' : `🔒 LOCK - ${service.piPrice} Pi`}</span>
+                <span>{hasPaidAccess ? '✅ ACCESS NOW' : `🔒 LOCK - ${service.piPrice} Pi`}</span>
               </button>
             </div>
           );

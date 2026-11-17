@@ -2,6 +2,7 @@ import React from 'react';
 import { GOYE_SERVICES, GoyeService } from '../data/goyeServices';
 import { Layers, Bot, Globe, Code, MessageSquare, Zap, Target, Search, Sparkles } from 'lucide-react';
 import { startPiPayment } from '../lib/piPayment';
+import ProductGradientImage from './ProductGradientImage';
 
 interface GoyeServicesSectionProps {
   onSelectService: (serviceSlug: string) => void;
@@ -50,20 +51,32 @@ export const GoyeServicesSection: React.FC<GoyeServicesSectionProps> = ({
         {/* Detailed Service Cards Grid - SHOW ONLY Image/Icon + Title + Button */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {GOYE_SERVICES.map((serv: GoyeService) => {
-            const isUnlocked = typeof window !== 'undefined' && localStorage.getItem(`paid_service_${serv.id}`) === 'true';
+            const hasPaidAccess = typeof window !== 'undefined' && localStorage.getItem(`paid_service_${serv.id}`) === 'true';
 
             return (
               <div
                 key={serv.id}
                 className="bg-[#0e0e0e] rounded-2xl p-5 flex flex-col justify-between border border-zinc-800 shadow-xl"
               >
-                {/* 1. Image/Icon Container with LOCKED ACCESS Badge */}
-                <div className="relative w-full aspect-[4/3] rounded-[16px] overflow-hidden shadow-lg border border-zinc-800 bg-zinc-950 mb-4 flex items-center justify-center">
-                  <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center">
-                    {getIcon(serv.iconName)}
-                  </div>
+                {/* 1. Image Container with LOCKED ACCESS Badge */}
+                <div className="relative w-full rounded-[16px] overflow-hidden shadow-lg border border-zinc-800 bg-zinc-950 mb-4">
+                  {serv.image ? (
+                    <ProductGradientImage
+                      src={serv.image}
+                      alt={serv.title}
+                      category={serv.category}
+                      title={serv.title}
+                      height="190px"
+                    />
+                  ) : (
+                    <div className="w-full h-[190px] flex items-center justify-center">
+                      <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center">
+                        {getIcon(serv.iconName)}
+                      </div>
+                    </div>
+                  )}
                   <div className="absolute top-2.5 left-2.5 bg-black text-[#FFD700] border border-[#FFD700] text-[10px] font-black uppercase px-2.5 py-1 rounded-md tracking-wider z-10 shadow-md pointer-events-none">
-                    {isUnlocked ? '✅ ACCESS GRANTED' : '🔒 LOCKED ACCESS'}
+                    {hasPaidAccess ? '✅ ACCESS GRANTED' : '🔒 LOCKED ACCESS'}
                   </div>
                 </div>
 
@@ -79,7 +92,7 @@ export const GoyeServicesSection: React.FC<GoyeServicesSectionProps> = ({
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    if (isUnlocked) {
+                    if (hasPaidAccess) {
                       onSelectService(serv.slug);
                     } else {
                       handlePiPayment({ id: serv.id, title: serv.title, piPrice: 2 });
@@ -87,7 +100,7 @@ export const GoyeServicesSection: React.FC<GoyeServicesSectionProps> = ({
                   }}
                   className="w-full font-black uppercase text-xs tracking-widest py-3.5 rounded-xl transition duration-200 cursor-pointer active:scale-95 shadow-md flex items-center justify-center bg-[#FFD700] hover:bg-yellow-400 text-black shadow-yellow-500/20"
                 >
-                  <span>{isUnlocked ? '✅ ACCESS NOW / DOWNLOAD' : '🔒 LOCK - 2 Pi'}</span>
+                  <span>{hasPaidAccess ? '✅ ACCESS NOW' : '🔒 LOCK - 2 Pi'}</span>
                 </button>
               </div>
             );

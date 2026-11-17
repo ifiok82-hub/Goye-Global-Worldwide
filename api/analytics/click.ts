@@ -5,7 +5,6 @@ function isAdmin(body: Record<string, unknown>) {
   const email = String(body.customerEmail || body.email || '').toLowerCase();
   return Boolean(
     body.isAdmin ||
-    body.is_admin ||
     email.includes('goyedagos') ||
     email.includes('ifiok82') ||
     email.includes('godswill') ||

@@ -6,7 +6,7 @@ import { safeParse, safeGetNumber, safeFormatDate, safeFormatDateTime } from '..
 import AdminSettings from './AdminSettings';
 import GoyeCustomerIntelligence from './GoyeCustomerIntelligence';
 import { isPiEnvironment } from '../lib/piAuth';
-import { postPiBackend } from '../lib/piPayment';
+import { startPiPayment } from '../lib/piPayment';
 
 export default function AdminDashboard({ 
   showToast, 
@@ -41,7 +41,6 @@ export default function AdminDashboard({
   // Secret Key Configuration Modal State
   const [showKeyModal, setShowKeyModal] = useState(false);
   const [inputSecretKey, setInputSecretKey] = useState('');
-  const [inputAdminPass, setInputAdminPass] = useState('');
   const [isSavingKey, setIsSavingKey] = useState(false);
   const [keySaveError, setKeySaveError] = useState<string | null>(null);
 
@@ -73,8 +72,7 @@ export default function AdminDashboard({
           'x-piDirect-secret-key': keyToSave
         },
         body: JSON.stringify({
-          secretKey: keyToSave,
-          adminPassword: inputAdminPass || localStorage.getItem('admin_token') || ''
+          secretKey: keyToSave
         })
       });
 
@@ -100,7 +98,6 @@ export default function AdminDashboard({
     showToast('✅ Server Secret Key configured successfully!');
     setShowKeyModal(false);
     setInputSecretKey('');
-    setInputAdminPass('');
     await auditPayments(undefined, keyToSave);
   };
   
@@ -133,8 +130,6 @@ export default function AdminDashboard({
     piDirectSecret: localStorage.getItem('piDirect_secret_key') || localStorage.getItem('piDirect_admin_sk') || '',
     piGateway: localStorage.getItem('piGateway_public_key') || '',
     piGatewaySecret: localStorage.getItem('piGateway_secret_key') || '',
-    usdcBase: localStorage.getItem('usdc_base_address') || localStorage.getItem('USDC_ADDRESS') || localStorage.getItem('crypto_wallet') || '',
-    usdtBep20: localStorage.getItem('usdt_bep20_address') || localStorage.getItem('USDT_ADDRESS') || '',
     piMainnet: localStorage.getItem('pi_mainnet_wallet') || localStorage.getItem('PI_MAINNET_WALLET_ADDRESS') || '',
     piTestnet: localStorage.getItem('pi_testnet_wallet') || localStorage.getItem('PI_TESTNET_WALLET_ADDRESS') || '',
     piSandboxMode: localStorage.getItem('PI_SANDBOX_MODE') || localStorage.getItem('PI_SANDBOX') || 'true',
@@ -148,7 +143,7 @@ export default function AdminDashboard({
   const [settings, setSettings] = useState({
     freeQueries: 3,
     referralCommission: 20,
-    contactEmail: 'goyedagosmess@gmail.com'
+    contactEmail: 'support@gasv.store'
   });
 
   const [excludeMyClicks, setExcludeMyClicks] = useState(
@@ -174,14 +169,14 @@ export default function AdminDashboard({
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-admin-password': activeToken,
+        'x-admin-token': activeToken,
         'Authorization': `Bearer ${activeToken}`
       },
       body: JSON.stringify({ enabled: enable })
     }).catch(() => {});
 
     if (enable) {
-      showToast('⚠️ Customer Pi Payments ENABLED. Make sure Pi Mainnet / Production is properly configured.', 'success');
+      showToast('⚠️ Customer Pi Payments ENABLED. Make sure Pi Network configuration is active.', 'success');
     } else {
       showToast('✅ Customer Pi Payments DISABLED. Pi options are hidden from checkout.');
     }
@@ -195,7 +190,7 @@ export default function AdminDashboard({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-admin-password': activeToken,
+          'x-admin-token': activeToken,
           'Authorization': `Bearer ${activeToken}`
         }
       });
@@ -260,14 +255,14 @@ export default function AdminDashboard({
       return;
     }
 
-    alert(`✅ UPGRADE REMINDER SENT TO ${email}:\n\nDear ${name},\n\nUnlock the full Sirwise AI WEB3 Academy 8-Module Masterclass (2 Pi)!\n\nLink: https://www.gasv.store/#shop\nIncludes: Certificate, 50+ Prompts, Pi Network GCV Guide\n\nOfficial RC BN3583878 | www.gasv.store`);
+    alert(`✅ UPGRADE REMINDER SENT TO ${email}:\n\nDear ${name},\n\nAccess the full Sirwise AI WEB3 Academy 8-Module Masterclass (2 Pi)!\n\nLink: https://www.gasv.store/#shop\nIncludes: Certificate, 50+ Prompts, Pi Network Guide\n\nOfficial RC BN3583878 | www.gasv.store`);
 
     try {
       const fd = new FormData();
       fd.append('email', email);
       fd.append('name', name);
       fd.append('_subject', `Academy Reminder for ${name}: Upgrade to Full Academy 2 Pi (RC BN3583878)`);
-      fd.append('_autoresponse', `Hi ${name}!\n\nThis is an automated reminder from Sirwise AI WEB3 Academy (RC BN3583878).\n\nYou downloaded our Free AI Prompt Blueprint. Don't miss out on unlocking all 8 full modules, certificate, and Web3 tools!\n\nEnroll now for 2 Pi: https://www.gasv.store/#shop\nSupport: goyedagosmess@gmail.com\n\nwww.gasv.store`);
+      fd.append('_autoresponse', `Hi ${name}!\n\nThis is an automated reminder from Sirwise AI WEB3 Academy (RC BN3583878).\n\nYou downloaded our Free AI Prompt Blueprint. Don't miss out on accessing all 8 full modules, certificate, and Web3 tools!\n\nJoin now for 2 Pi: https://www.gasv.store/#shop\nSupport: support@gasv.store\n\nwww.gasv.store`);
       fd.append('_template', 'table');
       fetch('https://formsubmit.co/goyedagosmess@gmail.com', { method: 'POST', body: fd }).catch(() => {});
     } catch (e) {}
@@ -476,7 +471,7 @@ export default function AdminDashboard({
     });
     setOrders(cleanOrders);
 
-    // 3. Clicks count from database (where is_admin = false) with local fallback
+    // 3. Clicks count from database (non-admin only) with local fallback
     fetch('/api/analytics/click')
       .then(res => res.json())
       .then(data => {
@@ -500,7 +495,7 @@ export default function AdminDashboard({
     }
 
     if (excludeOn) {
-      logs = logs.filter((entry: any) => !isAdminClick(entry.customer_name || entry.customer || entry.name, entry.email) && entry.excluded !== 'EXCLUDED' && entry.is_admin !== true && entry.isAdmin !== true);
+      logs = logs.filter((entry: any) => !isAdminClick(entry.customer_name || entry.customer || entry.name, entry.email) && entry.excluded !== 'EXCLUDED' && entry.isAdmin !== true);
     }
     setPageViews(logs);
 
@@ -539,7 +534,6 @@ export default function AdminDashboard({
   useEffect(() => {
     try {
       localStorage.setItem('isAdmin', 'true');
-      localStorage.setItem('is_admin', 'true');
       localStorage.setItem('excludeAdminClicks', 'true');
       localStorage.setItem('exclude_my_clicks', 'true');
     } catch (e) {}
@@ -597,18 +591,6 @@ export default function AdminDashboard({
     showToast('All traffic and customer records cleared!', 'success');
   };
 
-  const handleAdminTestingUnlock = () => {
-    localStorage.setItem('sirwise_paid', 'true');
-    localStorage.setItem('payment_verified', 'true');
-    localStorage.setItem('academy_unlocked', 'true');
-    localStorage.setItem('is_admin', 'true');
-    localStorage.setItem('admin_device', 'true');
-    localStorage.setItem('goye_academy_progress_guest', JSON.stringify({ isEnrolled: true, progress: [] }));
-    showToast('🔓 Admin testing unlocked! Full access enabled', 'success');
-    console.log('Admin unlocked 100% testing mode');
-    window.location.hash = '#academy';
-  };
-
   const handleResetRegistered = () => {
     localStorage.removeItem('registered_customers');
     localStorage.removeItem('customers_list');
@@ -638,11 +620,6 @@ export default function AdminDashboard({
       localStorage.setItem('piDirect_admin_sk', paymentConfig.piDirectSecret.trim());
       localStorage.setItem('piGateway_public_key', paymentConfig.piGateway.trim());
       localStorage.setItem('piGateway_secret_key', paymentConfig.piGatewaySecret.trim());
-      localStorage.setItem('usdc_base_address', paymentConfig.usdcBase.trim());
-      localStorage.setItem('USDC_ADDRESS', paymentConfig.usdcBase.trim());
-      localStorage.setItem('usdt_bep20_address', paymentConfig.usdtBep20.trim());
-      localStorage.setItem('USDT_ADDRESS', paymentConfig.usdtBep20.trim());
-      localStorage.setItem('crypto_wallet', paymentConfig.usdcBase.trim() || paymentConfig.usdtBep20.trim());
       localStorage.setItem('pi_mainnet_wallet', paymentConfig.piMainnet.trim());
       localStorage.setItem('PI_MAINNET_WALLET_ADDRESS', paymentConfig.piMainnet.trim());
       localStorage.setItem('pi_testnet_wallet', paymentConfig.piTestnet.trim());
@@ -653,10 +630,6 @@ export default function AdminDashboard({
       if ((paymentConfig as any).piApiKey) {
         localStorage.setItem('pi_api_key', (paymentConfig as any).piApiKey.trim());
         localStorage.setItem('PI_API_KEY', (paymentConfig as any).piApiKey.trim());
-      }
-      if ((paymentConfig as any).piGcvRate) {
-        localStorage.setItem('pi_gcv_rate', (paymentConfig as any).piGcvRate.trim());
-        localStorage.setItem('PI_GCV_RATE', (paymentConfig as any).piGcvRate.trim());
       }
       
       const isSandbox = paymentConfig.piSandboxMode !== 'false';
@@ -679,18 +652,13 @@ export default function AdminDashboard({
           piDirectSecretKey: paymentConfig.piDirectSecret.trim(),
           piGatewayPublicKey: paymentConfig.piGateway.trim(),
           piGatewaySecretKey: paymentConfig.piGatewaySecret.trim(),
-          usdcAddress: paymentConfig.usdcBase.trim(),
-          usdtAddress: paymentConfig.usdtBep20.trim(),
-          cryptoWallet: paymentConfig.usdcBase.trim(),
           piMainnetWallet: paymentConfig.piMainnet.trim(),
           piTestnetWallet: paymentConfig.piTestnet.trim(),
           piApiKey: (paymentConfig as any).piApiKey ? (paymentConfig as any).piApiKey.trim() : undefined,
-          piGcvRate: (paymentConfig as any).piGcvRate ? (paymentConfig as any).piGcvRate.trim() : '314159',
           piCustomerPaymentEnabled,
           piSandboxMode: paymentConfig.piSandboxMode,
           piSandbox: paymentConfig.piSandboxMode,
-          piWallet: activePiWallet,
-          adminPassword: localStorage.getItem('admin_token') || ''
+          piWallet: activePiWallet
         })
       }).catch(e => {});
 
@@ -699,7 +667,7 @@ export default function AdminDashboard({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-admin-password': activeToken,
+          'x-admin-token': activeToken,
           'Authorization': `Bearer ${activeToken}`
         },
         body: JSON.stringify({
@@ -707,8 +675,6 @@ export default function AdminDashboard({
           piDirect_secret: paymentConfig.piDirectSecret.trim(),
           piGateway: paymentConfig.piGateway.trim(),
           piGateway_secret: paymentConfig.piGatewaySecret.trim(),
-          usdc: paymentConfig.usdcBase.trim(),
-          usdt: paymentConfig.usdtBep20.trim(),
           pi_mainnet_wallet: paymentConfig.piMainnet.trim(),
           pi_testnet_wallet: paymentConfig.piTestnet.trim(),
           pi_sandbox_mode: paymentConfig.piSandboxMode,
@@ -992,9 +958,7 @@ export default function AdminDashboard({
 
   const handleAdminLogout = () => {
     localStorage.removeItem('isAdmin');
-    localStorage.removeItem('is_admin');
     localStorage.removeItem('admin_token');
-    localStorage.removeItem('admin_password');
     if (onClose) {
       onClose();
     } else {
@@ -1141,17 +1105,6 @@ export default function AdminDashboard({
                         placeholder="sk_live_xxxxxxxxxxxxxxxxxxxxxxxx"
                         value={inputSecretKey}
                         onChange={e => setInputSecretKey(e.target.value)}
-                        className="w-full bg-black border border-[#333] focus:border-[#FFD700] text-white px-3.5 py-2.5 rounded-xl font-mono text-xs outline-none transition"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-bold text-gray-300 uppercase mb-1.5">Admin Password</label>
-                      <input
-                        type="password"
-                        placeholder="Enter Admin Password"
-                        value={inputAdminPass}
-                        onChange={e => setInputAdminPass(e.target.value)}
                         className="w-full bg-black border border-[#333] focus:border-[#FFD700] text-white px-3.5 py-2.5 rounded-xl font-mono text-xs outline-none transition"
                       />
                     </div>
@@ -1324,9 +1277,6 @@ export default function AdminDashboard({
           </div>
           
           <div className="flex gap-2 flex-wrap mb-4 z-5 relative">
-              <button onClick={handleAdminTestingUnlock} className="h-[40px] rounded-[8px] border border-[#FFD700] bg-[#FFD700] text-black px-4 flex items-center gap-2 pointer-events-auto cursor-pointer hover:bg-yellow-400 text-xs font-black transition shadow-lg">
-                 🔓 Admin Testing Unlock (100%)
-              </button>
               <button onClick={handleResetClicks} className="h-[40px] rounded-[8px] border border-red-500 bg-[#111] text-white px-4 flex items-center gap-2 pointer-events-auto cursor-pointer hover:bg-red-500/20 text-xs font-bold transition">
                  🗑️ Reset Clicks to 0
               </button>
@@ -1390,7 +1340,7 @@ export default function AdminDashboard({
                 </thead>
                 <tbody className="divide-y divide-white/5">
                   {pageViews.map((v: any, idx: number) => {
-                    const isAdminClick = v.is_admin || v.isAdmin || v.customerName === 'Admin (Owner)' || v.customer_name === 'Admin (Owner)' || String(v.customerName || v.customer_name || '').includes('Admin');
+                    const isAdminClick = v.isAdmin || v.customerName === 'Admin (Owner)' || v.customer_name === 'Admin (Owner)' || String(v.customerName || v.customer_name || '').includes('Admin');
                     
                     let locStr = '🇳🇬 NG (Lagos)';
                     if (typeof v.location === 'string' && v.location.trim()) {
@@ -1591,29 +1541,7 @@ export default function AdminDashboard({
                   </div>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-                  <div>
-                    <label className="text-xs text-gray-300 font-bold block mb-1">USDC Wallet (Base)</label>
-                    <input
-                      type="text"
-                      className="w-full bg-[#111] border border-[#333] rounded-xl p-3 text-white text-xs font-mono focus:border-[#FFD700] outline-none transition"
-                      value={paymentConfig.usdcBase}
-                      onChange={e => setPaymentConfig({ ...paymentConfig, usdcBase: e.target.value })}
-                      placeholder="0x... (Base Network)"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs text-gray-300 font-bold block mb-1">USDT Wallet (BEP20)</label>
-                    <input
-                      type="text"
-                      className="w-full bg-[#111] border border-[#333] rounded-xl p-3 text-white text-xs font-mono focus:border-[#FFD700] outline-none transition"
-                      value={paymentConfig.usdtBep20}
-                      onChange={e => setPaymentConfig({ ...paymentConfig, usdtBep20: e.target.value })}
-                      placeholder="0x... (BEP20 / BSC)"
-                    />
-                  </div>
-
+                <div className="grid gap-4 md:grid-cols-3">
                   <div>
                     <label className="text-xs text-purple-400 font-bold block mb-1">Pi Network Mode (PI_SANDBOX_MODE)</label>
                     <select
@@ -1760,21 +1688,6 @@ export default function AdminDashboard({
                       <p className="text-[10px] text-gray-400">Used by server to automatically approve and complete payments with MinePi Platform API.</p>
                     </div>
 
-                    {/* Pi GCV Rate Setting */}
-                    <div className="bg-black/60 border border-zinc-800 rounded-xl p-4 space-y-2">
-                      <label className="text-xs text-amber-300 font-bold block flex justify-between items-center">
-                        <span>💎 Pi GCV Consensus Rate (USD / Pi)</span>
-                        <span className="text-[10px] text-amber-400 font-mono">Global Value</span>
-                      </label>
-                      <input
-                        type="text"
-                        className="w-full bg-[#111] border border-amber-900/60 focus:border-amber-400 rounded-xl p-3 text-white text-xs font-mono outline-none transition"
-                        value={(paymentConfig as any).piGcvRate || '314159'}
-                        onChange={e => setPaymentConfig({ ...paymentConfig, piGcvRate: e.target.value } as any)}
-                        placeholder="0.38 ($0.38 USD per Pi)"
-                      />
-                      <p className="text-[10px] text-gray-400">Used for calculating Pi amount equivalent for store items & subscriptions.</p>
-                    </div>
                   </div>
 
                   {/* Diagnostic & Audit Actions Bar */}
@@ -1984,7 +1897,7 @@ export default function AdminDashboard({
                     <td colSpan={8} className="p-8 text-center text-gray-500">
                       <ShoppingCart size={32} className="mx-auto mb-2 opacity-30" />
                       <p className="font-bold text-gray-400">No orders recorded yet.</p>
-                      <p className="text-xs text-gray-600 mt-1">Orders placed via PiDirect, PiGateway, PiWallet, Crypto, or Pi GCV will automatically appear here in real-time.</p>
+                      <p className="text-xs text-gray-600 mt-1">Orders placed via Pi Network will automatically appear here in real-time.</p>
                     </td>
                   </tr>
                 )}
@@ -2247,7 +2160,7 @@ export default function AdminDashboard({
             <div className="bg-purple-950/40 border border-purple-600/50 rounded-xl p-4 mb-4 text-xs text-purple-200 leading-relaxed">
               <strong className="text-purple-300 block mb-1">⚠️ DEVELOPER TESTNET ISOLATION POLICY:</strong>
               Testnet transactions executed here are strictly for Pi Developer Portal verification.
-              They are tagged on the server as <span className="font-mono bg-purple-900 px-1.5 py-0.5 rounded text-amber-300 font-bold">TESTNET_TEST_ONLY</span> and will <strong>NEVER</strong> mark customer orders as PAID, unlock digital products, or grant Academy access.
+              They are tagged on the server as <span className="font-mono bg-purple-900 px-1.5 py-0.5 rounded text-amber-300 font-bold">TESTNET_TEST_ONLY</span> and will <strong>NEVER</strong> mark customer orders as PAID or grant paid Academy access.
             </div>
 
             <div className="bg-black border border-zinc-800 rounded-xl p-4 mb-5">
@@ -2267,58 +2180,21 @@ export default function AdminDashboard({
 
             <button
               onClick={async () => {
-                const email = localStorage.getItem('userEmail') || localStorage.getItem('user_email') || localStorage.getItem('customer_email') || 'admin_testnet@gasv.store';
                 if (!(window as any).Pi || !isPiEnvironment()) { 
-                  alert('Open https://gasv.store inside Pi Browser app to initiate Pi Testnet diagnostic payment.'); 
+                  alert('Please open goyestoreuwg6251.pinet.com inside Pi Browser > Pi Apps > GOYE Store'); 
                   return; 
                 }
-                try {
-                  showToast('Initializing Admin Pi 0.01 Pi Diagnostic Payment...');
-                  const Pi = (window as any).Pi;
-                  await Pi.init({ version: '2.0', sandbox: false });
-                  await Pi.authenticate(['username', 'payments'], (inc: any) => { 
-                    if (inc && inc.identifier) {
-                      postPiBackend('/api/pi/complete', {
-                        paymentId: inc.identifier,
-                        txid: inc.transaction?.txid || inc.txid,
-                        email,
-                        productName: 'Pi Admin Diagnostic',
-                        isDiagnostic: true
-                      }).catch(() => {});
-                    }
-                  });
-                  await Pi.createPayment({
-                    amount: 0.01, 
-                    memo: 'START NEW PAYMENT - Admin Developer Diagnostic (0.01 Pi)', 
-                    metadata: { type: 'pi-admin-diagnostic', product: 'admin-diagnostic', email }
-                  }, {
-                    onReadyForServerApproval: async (id: string) => { 
-                      console.log('[Admin Pi] Server Approval for paymentId:', id); 
-                      await postPiBackend('/api/pi/approve', { paymentId: id });
-                    },
-                    onReadyForServerCompletion: async (id: string, txid: string) => { 
-                      console.log('[Admin Pi] Server Completion for paymentId:', id, 'txid:', txid);
-                      const data = await postPiBackend('/api/pi/complete', {
-                        paymentId: id,
-                        txid,
-                        email,
-                        productName: 'Pi Admin Diagnostic',
-                        amount: 0.01,
-                        isDiagnostic: true
-                      });
-                      console.log('[Admin Pi] Complete response:', data);
-                      showToast('✅ Diagnostic Completed! TxID: ' + txid, 'success');
-                    },
-                    onCancel: (id: string) => {
-                      if (id) fetch('/api/pi/cancel', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paymentId: id }) }).catch(() => {});
-                    },
-                    onError: (e: any, payment: any) => {
-                      console.error('[Admin Pi Testnet] Error:', e, payment);
-                    }
-                  });
-                } catch (err: any) { 
-                  console.error('Admin Testnet Exception:', err);
-                }
+                showToast('Initializing Admin Pi 0.01 Pi Diagnostic Payment...');
+                await startPiPayment(
+                  {
+                    id: 'pi-admin-diagnostic',
+                    title: 'Pi Admin Diagnostic (0.01 Pi)',
+                    piPrice: 0.01
+                  },
+                  (txid) => {
+                    showToast('✅ Diagnostic Completed! TxID: ' + (txid || 'verified'), 'success');
+                  }
+                );
               }}
               className="w-full bg-purple-600 hover:bg-purple-500 text-white font-black text-sm py-3.5 rounded-xl transition shadow-lg flex items-center justify-center gap-2 mb-3"
             >

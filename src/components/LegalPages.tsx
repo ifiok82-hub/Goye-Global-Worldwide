@@ -26,7 +26,7 @@ export const TermsPage: React.FC<LegalPageProps> = ({ onBack, setTab }) => {
             Terms & Conditions
           </h1>
           <p className="text-xs text-gray-400">
-            Effective: 6 Oct 2026 · goyedagosmessenterprise@gmail.com · WhatsApp: +2348033584736
+            Effective: 6 Oct 2026 · Goyedagosmess Enterprise (CAC BN3583878) · support@gasv.store · WhatsApp: +2348033584736
           </p>
         </div>
 
@@ -73,7 +73,7 @@ export const TermsPage: React.FC<LegalPageProps> = ({ onBack, setTab }) => {
             </h2>
             <div className="bg-black/60 border border-zinc-800 rounded-xl p-4 text-xs space-y-2 font-mono">
               <p className="text-gray-300">
-                Email: <strong className="text-white">goyedagosmessenterprise@gmail.com</strong>
+                Email: <strong className="text-white">support@gasv.store</strong>
               </p>
               <p className="text-gray-300">
                 WhatsApp: <strong className="text-white">+2348033584736</strong>
@@ -115,7 +115,7 @@ export const PrivacyPage: React.FC<LegalPageProps> = ({ onBack, setTab }) => {
             Privacy Policy
           </h1>
           <p className="text-xs text-gray-400">
-            Effective: 6 Oct 2026 · goyedagosmessenterprise@gmail.com
+            Effective: 6 Oct 2026 · support@gasv.store
           </p>
         </div>
 
@@ -170,7 +170,7 @@ export const PrivacyPage: React.FC<LegalPageProps> = ({ onBack, setTab }) => {
               <span className="text-[#FFD700]">6.</span> Your Rights
             </h2>
             <p className="text-gray-300 text-xs sm:text-sm">
-              Request correction/deletion via <strong className="text-white">goyedagosmessenterprise@gmail.com</strong> or WhatsApp <strong className="text-white">+2348033584736</strong>.
+              Request correction/deletion via <strong className="text-white">support@gasv.store</strong> or WhatsApp <strong className="text-white">+2348033584736</strong>.
             </p>
           </div>
         </div>
@@ -205,7 +205,7 @@ export const RefundPage: React.FC<LegalPageProps> = ({ onBack, setTab }) => {
             Refund Policy
           </h1>
           <p className="text-xs text-gray-400">
-            Effective: 6 Oct 2026 · goyedagosmessenterprise@gmail.com · WhatsApp: +2348033584736
+            Effective: 6 Oct 2026 · support@gasv.store · WhatsApp: +2348033584736
           </p>
         </div>
 
@@ -251,7 +251,7 @@ export const RefundPage: React.FC<LegalPageProps> = ({ onBack, setTab }) => {
               <span className="text-[#FFD700]">5.</span> How to Request
             </h2>
             <div className="bg-black/60 border border-zinc-800 rounded-xl p-4 text-xs space-y-1 text-gray-300 font-mono">
-              <p>Email: <strong className="text-white">goyedagosmessenterprise@gmail.com</strong></p>
+              <p>Email: <strong className="text-white">support@gasv.store</strong></p>
               <p>WhatsApp: <strong className="text-white">+2348033584736</strong></p>
               <p>Include: Order ID, payment reference, and reason.</p>
             </div>

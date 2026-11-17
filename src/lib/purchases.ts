@@ -7,7 +7,7 @@ export interface PurchasedProduct {
   amountUsd: number;
   downloadUrl?: string;
   fileFormat?: string;
-  unlockedContent?: string;
+  accessContent?: string;
 }
 
 const STORAGE_KEY = 'goye_purchased_digital_products';

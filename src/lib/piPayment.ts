@@ -1,4 +1,4 @@
-import { isPiEnvironment } from './piAuth';
+import { ensurePiInit, isPiEnvironment } from './piAuth';
 
 export const API_BASE = 'https://gasv.store';
 
@@ -46,7 +46,6 @@ export async function postPiBackend(
       body: JSON.stringify(payload),
     });
   } catch (networkErr: any) {
-    // Only fall back to same-origin relative path on genuine network error from cross-origin host
     if (url !== path) {
       try {
         res = await fetch(path, {
@@ -94,12 +93,12 @@ export async function postPiBackend(
 
 export async function startPiPayment(
   product: PiPaymentProduct,
-  onCompleted?: () => void
+  onCompleted?: (txid?: string) => void
 ): Promise<boolean> {
   console.log('LOCK tapped', product);
 
   if (typeof window === 'undefined' || !(window as any).Pi || !isPiEnvironment()) {
-    alert('Please open https://gasv.store inside Pi Browser app to pay with Pi');
+    alert('Please open goyestoreuwg6251.pinet.com inside Pi Browser > Pi Apps > GOYE Store');
     return false;
   }
 
@@ -107,8 +106,8 @@ export async function startPiPayment(
   approvingRef.current = false;
 
   try {
-    // Mainnet only
-    await (window as any).Pi.init({ version: '2.0', sandbox: false });
+    // Testnet only via central ensurePiInit()
+    await ensurePiInit();
 
     const onIncompletePayment = async (payment: any) => {
       if (payment && payment.identifier) {
@@ -128,8 +127,7 @@ export async function startPiPayment(
       ]);
     } catch (e: any) {
       if (String(e?.message || e).includes('timed out') || String(e?.message || e).includes('host')) {
-        alert('Please open this app from Pi Browser > Pi Apps > GOYE Store (goyestoreuwg6251.pinet.com), not from gasv.store directly. Pi payment only works inside Pi App Platform.');
-        window.location.href = 'https://goyestoreuwg6251.pinet.com';
+        alert('Please open goyestoreuwg6251.pinet.com inside Pi Browser > Pi Apps > GOYE Store');
         return false;
       }
       throw e;
@@ -138,6 +136,13 @@ export async function startPiPayment(
     if (!auth || !auth.user) {
       alert('Please sign in with Pi first');
       return false;
+    }
+
+    if (auth.user?.username) {
+      localStorage.setItem('pi_username_trusted', auth.user.username);
+      localStorage.setItem('pi_uid_trusted', auth.user.uid || '');
+      sessionStorage.setItem('pi_has_session', '1');
+      window.dispatchEvent(new Event('piAuthChanged'));
     }
 
     await (window as any).Pi.createPayment(
@@ -162,8 +167,11 @@ export async function startPiPayment(
               amount: product.piPrice
             });
             localStorage.setItem(`paid_${product.id}`, 'true');
+            if (product.id === 'sirwise-academy-full') {
+              localStorage.setItem('sirwise_paid', 'true');
+            }
             if (onCompleted) {
-              onCompleted();
+              onCompleted(txid);
             } else {
               window.location.reload();
             }
@@ -186,8 +194,7 @@ export async function startPiPayment(
             return;
           }
           if (msg.includes('timed out') || msg.includes('host')) {
-            alert('Please open this app from Pi Browser > Pi Apps > GOYE Store (goyestoreuwg6251.pinet.com), not from gasv.store directly. Pi payment only works inside Pi App Platform.');
-            window.location.href = 'https://goyestoreuwg6251.pinet.com';
+            alert('Please open goyestoreuwg6251.pinet.com inside Pi Browser > Pi Apps > GOYE Store');
             return;
           }
           alert('Pi payment error: ' + msg);
@@ -205,8 +212,7 @@ export async function startPiPayment(
       return false;
     }
     if (msg.includes('timed out') || msg.includes('host')) {
-      alert('Please open this app from Pi Browser > Pi Apps > GOYE Store (goyestoreuwg6251.pinet.com), not from gasv.store directly. Pi payment only works inside Pi App Platform.');
-      window.location.href = 'https://goyestoreuwg6251.pinet.com';
+      alert('Please open goyestoreuwg6251.pinet.com inside Pi Browser > Pi Apps > GOYE Store');
       return false;
     }
     alert('Pi payment error: ' + msg);
