@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Globe, Award, Download, Smartphone, Menu, X, ArrowRight, ShieldCheck, Mail, MessageSquare, Sparkles } from 'lucide-react';
-import { loginWithPi, isPiEnvironment } from '../lib/piAuth';
+import { Globe, Smartphone, Menu, X, ArrowRight, MessageSquare } from 'lucide-react';
 
 interface GoyeHeaderProps {
   currentTab: string;
   setTab: (tab: string) => void;
   onOpenConsultation?: () => void;
 }
+
+const getStoredPiUsername = () => {
+  if (typeof window === 'undefined') return '';
+  return localStorage.getItem('pi_username') || localStorage.getItem('pi_username_trusted') || '';
+};
 
 export const GoyeHeader: React.FC<GoyeHeaderProps> = ({
   currentTab,
@@ -15,14 +19,13 @@ export const GoyeHeader: React.FC<GoyeHeaderProps> = ({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState(false);
-  const [piUsername, setPiUsername] = useState(() => {
-    return typeof window !== 'undefined' ? localStorage.getItem('pi_username_trusted') || '' : '';
-  });
+  const [piUsername, setPiUsername] = useState(getStoredPiUsername);
 
   useEffect(() => {
     const syncAuth = () => {
-      setPiUsername(localStorage.getItem('pi_username_trusted') || '');
+      setPiUsername(getStoredPiUsername());
     };
+    syncAuth();
     window.addEventListener('piAuthChanged', syncAuth);
     window.addEventListener('storage', syncAuth);
     return () => {
@@ -30,17 +33,6 @@ export const GoyeHeader: React.FC<GoyeHeaderProps> = ({
       window.removeEventListener('storage', syncAuth);
     };
   }, []);
-
-  const handlePiLogin = async () => {
-    if (!isPiEnvironment()) {
-      alert('Please open goyestoreuwg6251.pinet.com inside Pi Browser > Pi Apps > GOYE Store');
-      return;
-    }
-    const auth = await loginWithPi();
-    if (auth?.username) {
-      setPiUsername(auth.username);
-    }
-  };
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: any) => {
@@ -147,19 +139,10 @@ export const GoyeHeader: React.FC<GoyeHeaderProps> = ({
 
           {/* Header Action Buttons */}
           <div className="hidden sm:flex items-center gap-3">
-            {piUsername ? (
+            {piUsername && (
               <span className="px-3.5 py-2 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 font-black text-xs flex items-center gap-1.5">
                 ✅ Signed in as @{piUsername}
               </span>
-            ) : (
-              <button
-                type="button"
-                onClick={handlePiLogin}
-                className="px-4 py-2.5 rounded-xl bg-[#7D2AE7] hover:bg-purple-700 text-white font-black text-xs shadow-md flex items-center gap-2 active:scale-95 transition cursor-pointer"
-              >
-                <span>π</span>
-                <span>Login with Pi</span>
-              </button>
             )}
 
             {isInstallable && (
@@ -186,19 +169,10 @@ export const GoyeHeader: React.FC<GoyeHeaderProps> = ({
 
           {/* Mobile Action and Menu Button */}
           <div className="flex sm:hidden items-center gap-2">
-            {piUsername ? (
+            {piUsername && (
               <span className="px-2.5 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 font-black text-[10px]">
                 ✅ @{piUsername}
               </span>
-            ) : (
-              <button
-                type="button"
-                onClick={handlePiLogin}
-                className="px-2.5 py-1.5 rounded-xl bg-[#7D2AE7] hover:bg-purple-700 text-white font-black text-[11px] shadow-md flex items-center gap-1 active:scale-95 transition cursor-pointer"
-              >
-                <span>π</span>
-                <span>Login with Pi</span>
-              </button>
             )}
 
             <button
@@ -228,19 +202,10 @@ export const GoyeHeader: React.FC<GoyeHeaderProps> = ({
       {mobileMenuOpen && (
         <div className="lg:hidden bg-black border-b border-[#FFD700]/30 px-4 py-6 space-y-3 animate-in fade-in duration-200">
           <div className="grid gap-2">
-            {piUsername ? (
+            {piUsername && (
               <div className="w-full text-center py-3 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 font-black text-xs uppercase tracking-wider">
                 ✅ Signed in as @{piUsername}
               </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => { setMobileMenuOpen(false); handlePiLogin(); }}
-                className="w-full text-center py-3 rounded-xl bg-[#7D2AE7] text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-lg"
-              >
-                <span>π</span>
-                <span>Login with Pi</span>
-              </button>
             )}
 
             {navLinks.map((link) => {

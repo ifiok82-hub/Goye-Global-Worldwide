@@ -1,26 +1,5 @@
 const PI_APP_ID = 'piappstudio-QVT1FNbDcNvVGzNMN-1f2LWG9MHQ5pUr';
 
-async function callPiApprove(paymentId: string, apiKey: string) {
-  const r = await fetch(`https://api.minepi.com/v2/payments/${encodeURIComponent(paymentId)}/approve`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Key ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({}),
-  });
-
-  const text = await r.text().catch(() => '');
-  let data: any = {};
-  try {
-    data = text ? JSON.parse(text) : {};
-  } catch {
-    data = { raw: text };
-  }
-
-  return { r, data };
-}
-
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -28,12 +7,6 @@ export default async function handler(req: any, res: any) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const apiKey = (process.env.PI_API_KEY || '').trim().replace(/^['"]|['"]$/g, '');
-
-  console.log('APPROVE app check', {
-    hasKey: !!process.env.PI_API_KEY,
-    keyPrefix: process.env.PI_API_KEY?.slice(0, 7),
-    keyLength: process.env.PI_API_KEY?.length,
-  });
 
   if (req.method === 'GET') {
     res.setHeader('Content-Type', 'application/json');
@@ -68,11 +41,41 @@ export default async function handler(req: any, res: any) {
     }
 
     const paymentId = body.paymentId || body.payment_id || body.id;
+    console.log('APPROVE HIT', paymentId, {
+      hasKey: !!apiKey,
+      keyPrefix: apiKey.slice(0, 7),
+      keyLength: apiKey.length,
+    });
+
     if (!paymentId) {
       return res.status(400).json({ error: 'Missing paymentId' });
     }
 
-    const { r, data } = await callPiApprove(paymentId, apiKey);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 5500);
+    let r: Response;
+    let text = '';
+    try {
+      r = await fetch(`https://api.minepi.com/v2/payments/${encodeURIComponent(paymentId)}/approve`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Key ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({}),
+        signal: controller.signal,
+      });
+      text = await r.text().catch(() => '');
+    } finally {
+      clearTimeout(timer);
+    }
+
+    let data: any = {};
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch {
+      data = { raw: text };
+    }
 
     console.log('Pi approve status', r.status, data);
 
@@ -92,7 +95,7 @@ export default async function handler(req: any, res: any) {
       });
     }
 
-    return res.status(200).json({ approved: true, success: true, paymentId, data });
+    return res.status(200).json({ success: true, approved: true, paymentId, data });
   } catch (e: any) {
     console.error('APPROVE EXCEPTION', e);
     return res.status(500).json({ error: e?.message || 'Approve failed' });

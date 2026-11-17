@@ -76,7 +76,7 @@ export function getSessionToken() {
 export function getCurrentUser() {
   if (currentUser) return currentUser;
   if (typeof window !== 'undefined') {
-    const username = localStorage.getItem('pi_username_trusted');
+    const username = localStorage.getItem('pi_username') || localStorage.getItem('pi_username_trusted');
     const uid = localStorage.getItem('pi_uid_trusted') || '';
     if (username) return { uid, username };
   }
@@ -184,6 +184,8 @@ export async function loginWithPi(options?: { silent?: boolean }): Promise<{ uid
       if (verifiedUser?.username) {
         currentUser = verifiedUser;
         sessionAuthenticated = true;
+        if (auth.accessToken) localStorage.setItem('pi_access_token', auth.accessToken);
+        localStorage.setItem('pi_username', verifiedUser.username);
         localStorage.setItem('pi_username_trusted', verifiedUser.username);
         localStorage.setItem('pi_uid_trusted', verifiedUser.uid || '');
         sessionStorage.setItem('pi_has_session', '1');
@@ -215,6 +217,8 @@ export function logoutPi() {
   currentUser = null;
   sessionAuthenticated = false;
   if (typeof window !== 'undefined') {
+    localStorage.removeItem('pi_access_token');
+    localStorage.removeItem('pi_username');
     localStorage.removeItem('pi_username_trusted');
     localStorage.removeItem('pi_uid_trusted');
     sessionStorage.removeItem('pi_has_session');

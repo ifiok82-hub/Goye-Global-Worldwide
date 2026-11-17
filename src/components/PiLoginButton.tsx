@@ -1,15 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { loginWithPi, logoutPi, isPiEnvironment } from '../lib/piAuth';
 
+const readPiUsername = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('pi_username') || localStorage.getItem('pi_username_trusted');
+};
+
 export default function PiLoginButton() {
-  const [user, setUser] = useState<string | null>(
-    typeof window !== 'undefined' ? localStorage.getItem('pi_username_trusted') : null
-  );
+  const [user, setUser] = useState<string | null>(readPiUsername);
 
   useEffect(() => {
     const syncAuth = () => {
-      setUser(localStorage.getItem('pi_username_trusted'));
+      setUser(readPiUsername());
     };
+    syncAuth();
     window.addEventListener('piAuthChanged', syncAuth);
     window.addEventListener('storage', syncAuth);
     return () => {
@@ -23,7 +27,7 @@ export default function PiLoginButton() {
       alert('Please open goyestoreuwg6251.pinet.com inside Pi Browser > Pi Apps > GOYE Store');
       return;
     }
-    const verified = await loginWithPi();
+    const verified = await loginWithPi({ silent: false });
     if (verified?.username) {
       setUser(verified.username);
     } else {
@@ -51,9 +55,9 @@ export default function PiLoginButton() {
     <button
       type="button"
       onClick={handleLogin}
-      className="w-full bg-[#FFD700] hover:bg-yellow-400 text-black font-black uppercase text-sm tracking-widest py-3.5 px-4 rounded-full cursor-pointer transition active:scale-[0.99]"
+      className="w-full bg-[#FFD700] hover:bg-yellow-400 text-black font-black uppercase text-sm tracking-widest py-3.5 px-4 cursor-pointer transition active:scale-[0.99]"
     >
-      🔐 Sign in with Pi
+      Sign in with Pi
     </button>
   );
 }

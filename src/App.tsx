@@ -27,7 +27,7 @@ import PiLoginButton from './components/PiLoginButton';
 import AutoPiConverter from './components/AutoPiConverter';
 export default function App() {
   const env = getPaymentEnvironment();
-  // Clear any stale payment IDs on page load and run auto Pi auth
+  // Clear any stale payment IDs on page load
   useEffect(() => {
     try {
       localStorage.removeItem('pi_payment_id');
@@ -36,7 +36,6 @@ export default function App() {
       sessionStorage.removeItem('pi_payment_id');
       sessionStorage.removeItem('paymentId');
     } catch {}
-    autoLoginWithPi();
   }, []);
   const isPiBrowserMode = env === 'PI_BROWSER';
 

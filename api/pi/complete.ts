@@ -6,12 +6,6 @@ export default async function handler(req: any, res: any) {
 
   const apiKey = (process.env.PI_API_KEY || '').trim().replace(/^['"]|['"]$/g, '');
 
-  console.log('APPROVE app check', {
-    hasKey: !!process.env.PI_API_KEY,
-    keyPrefix: process.env.PI_API_KEY?.slice(0, 7),
-    keyLength: process.env.PI_API_KEY?.length,
-  });
-
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -35,20 +29,35 @@ export default async function handler(req: any, res: any) {
 
     const paymentId = body.paymentId || body.payment_id || body.id;
     const txid = body.txid || body.txId || body.transactionId;
+    console.log('COMPLETE HIT', paymentId, txid, {
+      hasKey: !!apiKey,
+      keyPrefix: apiKey.slice(0, 7),
+      keyLength: apiKey.length,
+    });
+
     if (!paymentId || !txid) {
       return res.status(400).json({ error: 'Missing paymentId or txid' });
     }
 
-    const r = await fetch(`https://api.minepi.com/v2/payments/${paymentId}/complete`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Key ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ txid }),
-    });
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 5500);
+    let r: Response;
+    let text = '';
+    try {
+      r = await fetch(`https://api.minepi.com/v2/payments/${encodeURIComponent(paymentId)}/complete`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Key ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ txid }),
+        signal: controller.signal,
+      });
+      text = await r.text().catch(() => '');
+    } finally {
+      clearTimeout(timer);
+    }
 
-    const text = await r.text().catch(() => '');
     let data: any = {};
     try {
       data = text ? JSON.parse(text) : {};
@@ -66,7 +75,7 @@ export default async function handler(req: any, res: any) {
       });
     }
 
-    return res.status(200).json({ completed: true, success: true, paymentId, txid, data });
+    return res.status(200).json({ success: true, completed: true, paymentId, txid, data });
   } catch (e: any) {
     console.error('COMPLETE EXCEPTION', e);
     return res.status(500).json({ error: e?.message || 'Complete failed' });
