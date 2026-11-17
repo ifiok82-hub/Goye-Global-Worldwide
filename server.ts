@@ -772,18 +772,65 @@ app.get('/api/pi-config', (req, res) => {
   });
 });
 
-app.options(['/api/pi/approve', '/api/pi-approve', '/api/pi/complete', '/api/pi-complete', '/api/pi/incomplete', '/api/pi-incomplete'], (req, res) => {
+app.options(['/api/pi/me', '/api/pi/approve', '/api/pi-approve', '/api/pi/complete', '/api/pi-complete', '/api/pi/incomplete', '/api/pi-incomplete'], (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   return res.status(200).end();
 });
 
+app.get('/api/pi/me', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  return res.status(200).json({ ok: true, endpoint: '/api/pi/me' });
+});
+
+app.post('/api/pi/me', express.json(), async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  try {
+    const authHeader = req.headers?.authorization || '';
+    const bearer = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+    const accessToken = (req.body?.accessToken || bearer || '').trim();
+    if (!accessToken) {
+      return res.status(400).json({ authenticated: false, error: 'Missing accessToken' });
+    }
+
+    const piRes = await fetch('https://api.minepi.com/v2/me', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Accept': 'application/json'
+      }
+    });
+    const text = await piRes.text().catch(() => '');
+    let data: any = {};
+    try { data = text ? JSON.parse(text) : {}; } catch { data = { raw: text }; }
+
+    if (!piRes.ok) {
+      return res.status(piRes.status).json({
+        authenticated: false,
+        error: data?.error_message || data?.error || `Pi /v2/me failed (${piRes.status})`,
+        data
+      });
+    }
+
+    return res.status(200).json({
+      authenticated: true,
+      user: { uid: data.uid || '', username: data.username || '' },
+      data
+    });
+  } catch (err: any) {
+    return res.status(500).json({ authenticated: false, error: err?.message || 'Auth verification failed' });
+  }
+});
+
 app.get(['/api/pi/approve', '/api/pi-approve'], (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  return res.status(200).json({ ok: true, hasKey: !!process.env.PI_API_KEY });
+  return res.status(200).json({ ok: true, hasKey: !!getPiApiKey() });
 });
 
 app.post(['/api/pi/approve', '/api/pi-approve'], express.json(), async (req, res) => {
@@ -791,9 +838,9 @@ app.post(['/api/pi/approve', '/api/pi-approve'], express.json(), async (req, res
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
-  console.log('APPROVE HIT', req.method, req.body, 'KEY_EXISTS:', !!process.env.PI_API_KEY, 'KEY_LENGTH:', process.env.PI_API_KEY?.length);
+  const apiKey = getPiApiKey();
+  console.log('APPROVE HIT', req.method, req.body, 'KEY_EXISTS:', !!apiKey, 'KEY_LENGTH:', apiKey.length);
 
-  const apiKey = (process.env.PI_API_KEY || '').trim();
   if (!apiKey) {
     return res.status(500).json({ error: 'PI_API_KEY missing - check Vercel Env' });
   }
@@ -807,18 +854,27 @@ app.post(['/api/pi/approve', '/api/pi-approve'], express.json(), async (req, res
       return res.status(400).json({ error: 'Missing paymentId' });
     }
 
-    const piRes = await fetch(`https://api.minepi.com/v2/payments/${paymentId}/approve`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Key ${apiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({})
-    });
+    const callApprove = async () => {
+      const r = await fetch(`https://api.minepi.com/v2/payments/${encodeURIComponent(paymentId)}/approve`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Key ${apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({})
+      });
+      const txt = await r.text().catch(() => '');
+      let d: any = {};
+      try { d = txt ? JSON.parse(txt) : {}; } catch { d = { raw: txt }; }
+      return { r, d };
+    };
 
-    const resText = await piRes.text().catch(() => '');
-    let data: any = {};
-    try { data = resText ? JSON.parse(resText) : {}; } catch { data = { raw: resText }; }
+    let { r: piRes, d: data } = await callApprove();
+    if (piRes.status === 404) {
+      console.log('Pi approve initial 404 - retrying after 700ms propagation wait for', paymentId);
+      await new Promise((resolve) => setTimeout(resolve, 700));
+      ({ r: piRes, d: data } = await callApprove());
+    }
 
     console.log('Pi approve status', piRes.status, data);
 
@@ -846,9 +902,9 @@ app.post(['/api/pi/complete', '/api/pi-complete'], express.json(), async (req, r
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
-  console.log('COMPLETE HIT', req.method, req.body, 'KEY_EXISTS:', !!process.env.PI_API_KEY, 'KEY_LENGTH:', process.env.PI_API_KEY?.length);
+  const apiKey = getPiApiKey();
+  console.log('COMPLETE HIT', req.method, req.body, 'KEY_EXISTS:', !!apiKey, 'KEY_LENGTH:', apiKey.length);
 
-  const apiKey = (process.env.PI_API_KEY || '').trim();
   if (!apiKey) {
     return res.status(500).json({ error: 'PI_API_KEY missing - check Vercel Env' });
   }
@@ -859,13 +915,12 @@ app.post(['/api/pi/complete', '/api/pi-complete'], express.json(), async (req, r
   try {
     const paymentId = req.body?.paymentId || req.body?.payment_id || req.body?.id;
     const txid = req.body?.txid || req.body?.txId || req.body?.transactionId;
-    const { productName, amount, productId } = req.body || {};
 
     if (!paymentId || !txid) {
       return res.status(400).json({ error: 'Missing paymentId or txid' });
     }
 
-    const piRes = await fetch(`https://api.minepi.com/v2/payments/${paymentId}/complete`, {
+    const piRes = await fetch(`https://api.minepi.com/v2/payments/${encodeURIComponent(paymentId)}/complete`, {
       method: 'POST',
       headers: {
         'Authorization': `Key ${apiKey}`,
@@ -891,6 +946,10 @@ app.post(['/api/pi/complete', '/api/pi-complete'], express.json(), async (req, r
 
 // INCOMPLETE PAYMENT RECOVERY
 app.post(['/api/pi/incomplete', '/api/pi-incomplete'], express.json(), async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
   try {
     const payment = req.body?.payment || req.body;
     const paymentId = payment?.identifier || payment?.paymentId || payment?.id;
@@ -900,8 +959,8 @@ app.post(['/api/pi/incomplete', '/api/pi-incomplete'], express.json(), async (re
     console.log(`[PI_LOG] Incomplete payment received on server: ${paymentId}, txid: ${txid}`);
 
     if (paymentId && apiKey) {
-      if (txid) {
-        await fetch(`https://api.minepi.com/v2/payments/${paymentId}/complete`, {
+      if (txid && !payment?.status?.developer_completed) {
+        await fetch(`https://api.minepi.com/v2/payments/${encodeURIComponent(paymentId)}/complete`, {
           method: 'POST',
           headers: {
             'Authorization': `Key ${apiKey}`,
@@ -910,14 +969,14 @@ app.post(['/api/pi/incomplete', '/api/pi-incomplete'], express.json(), async (re
           body: JSON.stringify({ txid })
         }).catch(e => console.error('[PI_LOG] Incomplete payment complete error:', e));
       } else if (!payment?.status?.developer_approved) {
-        await fetch(`https://api.minepi.com/v2/payments/${paymentId}/approve`, {
+        await fetch(`https://api.minepi.com/v2/payments/${encodeURIComponent(paymentId)}/cancel`, {
           method: 'POST',
           headers: {
             'Authorization': `Key ${apiKey}`,
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({})
-        }).catch(e => console.error('[PI_LOG] Incomplete payment approve error:', e));
+        }).catch(e => console.error('[PI_LOG] Incomplete payment cancel error:', e));
       }
     }
 

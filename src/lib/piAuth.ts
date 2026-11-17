@@ -1,4 +1,4 @@
-// src/lib/piAuth.ts - Pi Network Auth via App Studio backend
+// src/lib/piAuth.ts - Pi Network Authentication (Pi Browser + Sandbox aware)
 // Docs: https://developers.minepi.com/docs/authenticate-user/Authentication
 
 declare global {
@@ -7,18 +7,40 @@ declare global {
   }
 }
 
-const APP_STUDIO_LOGIN = 'https://backend.appstudio-u7cm9zhmha0ruwv8.piappengine.com/pi/auth/v1/login';
+const API_BASE = 'https://gasv.store';
 
-// sessionToken is kept in memory only - never in localStorage
 let sessionToken: string | null = null;
 let currentUser: { uid: string; username: string } | null = null;
+let sessionAuthenticated = false;
 let piInitPromise: Promise<void> | null = null;
 let inFlightAuthPromise: Promise<{ uid: string; username: string } | null> | null = null;
+
+function isSandboxHost(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    const hostname = window.location.hostname || '';
+    const origins = window.location.ancestorOrigins ? Array.from(window.location.ancestorOrigins) : [];
+    const ref = document.referrer || '';
+    if (
+      hostname.includes('sandbox.minepi.com') ||
+      origins.some((o) => o.includes('sandbox.minepi.com')) ||
+      ref.includes('sandbox.minepi.com') ||
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1'
+    ) {
+      return true;
+    }
+  } catch {}
+  return false;
+}
 
 export function isPiEnvironment(): boolean {
   if (typeof window === 'undefined') return false;
   const ua = typeof navigator !== 'undefined' ? navigator.userAgent || '' : '';
   if (/PiBrowser|Pi Browser|Pi\/1/i.test(ua)) return true;
+
+  // Native Pi WebView bridge check
+  if ((window as any).__PI__ || (window as any).ReactNativeWebView) return true;
 
   const piHosts = ['minepi.com', 'pinet.com', 'piappengine.com', 'pi.app'];
   try {
@@ -44,8 +66,9 @@ export function isPiEnvironment(): boolean {
 export async function ensurePiInit(): Promise<boolean> {
   if (typeof window === 'undefined' || !window.Pi) return false;
   if (!piInitPromise) {
+    const sandboxFlag = isSandboxHost();
     piInitPromise = Promise.resolve()
-      .then(() => window.Pi.init({ version: '2.0', sandbox: true }))
+      .then(() => window.Pi.init({ version: '2.0', sandbox: sandboxFlag }))
       .catch((err) => {
         piInitPromise = null;
         throw err;
@@ -76,95 +99,107 @@ export function toPi(naira?: number, usd?: number, piPrice?: number): number {
   return 2;
 }
 
-function getIncompleteEndpoint(): string {
+function getPiApiUrl(path: '/api/pi/me' | '/api/pi/incomplete'): string {
   if (typeof window !== 'undefined') {
     const { hostname, origin } = window.location;
-    if (hostname === 'localhost' || hostname === '127.0.0.1' || origin === 'https://gasv.store') {
-      return '/api/pi/incomplete';
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || origin === API_BASE) {
+      return path;
     }
   }
-  return 'https://gasv.store/api/pi/incomplete';
+  return `${API_BASE}${path}`;
 }
 
-// STEP 1 - Sign in, in the browser
-export async function loginWithPi(): Promise<{ uid: string; username: string } | null> {
+export async function handleIncompletePiPayment(payment: any): Promise<void> {
+  if (!payment || !payment.identifier) return;
+  const url = getPiApiUrl('/api/pi/incomplete');
+  try {
+    await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ payment })
+    });
+  } catch (e) {
+    console.error('Error reporting incomplete payment:', e);
+  }
+}
+
+export async function loginWithPi(options?: { silent?: boolean }): Promise<{ uid: string; username: string } | null> {
   if (inFlightAuthPromise) return inFlightAuthPromise;
+
+  const silent = options?.silent === true;
 
   inFlightAuthPromise = (async () => {
     try {
       if (typeof window === 'undefined' || !window.Pi || !isPiEnvironment()) {
-        alert('Please open goyestoreuwg6251.pinet.com inside Pi Browser > Pi Apps > GOYE Store');
+        if (!silent) {
+          alert('Please open goyestoreuwg6251.pinet.com inside Pi Browser > Pi Apps > GOYE Store');
+        }
         return null;
       }
 
-      // Ensure Pi.init runs only once cleanly (Testnet sandbox: true)
       await ensurePiInit();
-
-      const onIncompletePayment = async (payment: any) => {
-        console.log('Incomplete payment found:', payment);
-        if (payment && payment.identifier) {
-          try {
-            await fetch(getIncompleteEndpoint(), {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ payment })
-            });
-          } catch (e) {
-            console.error('Error reporting incomplete payment:', e);
-          }
-        }
-      };
 
       let auth: any = null;
       try {
         auth = await Promise.race([
-          window.Pi.authenticate(['username', 'payments'], onIncompletePayment),
+          window.Pi.authenticate(['username', 'payments'], handleIncompletePiPayment),
           new Promise<null>((_, reject) =>
-            setTimeout(() => reject(new Error('Pi authentication timed out waiting for Pi Browser host.')), 15000)
+            setTimeout(() => reject(new Error('Pi authentication timed out waiting for Pi Browser host.')), 45000)
           )
         ]);
       } catch (e: any) {
-        if (String(e?.message || e).includes('timed out') || String(e?.message || e).includes('host')) {
-          alert('Please open goyestoreuwg6251.pinet.com inside Pi Browser > Pi Apps > GOYE Store');
-          return null;
-        }
-        throw e;
-      }
-
-      if (!auth?.accessToken) return null;
-
-      // STEP 2 - Exchange accessToken with App Studio. One exchange per sign-in.
-      const res = await fetch(APP_STUDIO_LOGIN, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accessToken: auth.accessToken })
-      });
-
-      if (!res.ok) {
-        console.error('App Studio login failed', await res.text().catch(() => ''));
-        if (auth.user?.username) {
-          currentUser = { uid: auth.user.uid || '', username: auth.user.username };
-          localStorage.setItem('pi_username_trusted', currentUser.username);
-          localStorage.setItem('pi_uid_trusted', currentUser.uid || '');
-          sessionStorage.setItem('pi_has_session', '1');
-          window.dispatchEvent(new Event('piAuthChanged'));
-          return currentUser;
+        console.warn('Pi authenticate error:', e);
+        if (!silent) {
+          const msg = String(e?.message || e);
+          if (msg.includes('timed out') || msg.includes('host')) {
+            alert('Please open goyestoreuwg6251.pinet.com inside Pi Browser > Pi Apps > GOYE Store');
+          }
         }
         return null;
       }
 
-      const data = await res.json();
-      sessionToken = data.sessionToken || null;
-      currentUser = data.user || null;
+      if (!auth?.accessToken && !auth?.user?.username) {
+        return null;
+      }
 
-      if (currentUser?.username) {
-        localStorage.setItem('pi_username_trusted', currentUser.username);
-        localStorage.setItem('pi_uid_trusted', currentUser.uid || '');
+      // Verify accessToken against Pi /v2/me via our backend
+      let verifiedUser: { uid: string; username: string } | null = null;
+      if (auth.accessToken) {
+        sessionToken = auth.accessToken;
+        try {
+          const meRes = await fetch(getPiApiUrl('/api/pi/me'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ accessToken: auth.accessToken })
+          });
+          if (meRes.ok) {
+            const meData = await meRes.json().catch(() => null);
+            if (meData?.user?.username) {
+              verifiedUser = {
+                uid: meData.user.uid || auth.user?.uid || '',
+                username: meData.user.username
+              };
+            }
+          }
+        } catch (err) {
+          console.warn('Pi /api/pi/me check warning:', err);
+        }
+      }
+
+      if (!verifiedUser && auth.user?.username) {
+        verifiedUser = { uid: auth.user.uid || '', username: auth.user.username };
+      }
+
+      if (verifiedUser?.username) {
+        currentUser = verifiedUser;
+        sessionAuthenticated = true;
+        localStorage.setItem('pi_username_trusted', verifiedUser.username);
+        localStorage.setItem('pi_uid_trusted', verifiedUser.uid || '');
         sessionStorage.setItem('pi_has_session', '1');
         window.dispatchEvent(new Event('piAuthChanged'));
       }
 
-      return currentUser;
+      return verifiedUser;
     } catch (err) {
       console.error('loginWithPi failed', err);
       return null;
@@ -176,9 +211,18 @@ export async function loginWithPi(): Promise<{ uid: string; username: string } |
   return inFlightAuthPromise;
 }
 
+// Reuses authenticated JS session before payment so clicking LOCK never spawns duplicate prompts
+export async function ensurePiAuthForPayment(): Promise<{ uid: string; username: string } | null> {
+  if (sessionAuthenticated && currentUser?.username) {
+    return currentUser;
+  }
+  return loginWithPi({ silent: false });
+}
+
 export function logoutPi() {
   sessionToken = null;
   currentUser = null;
+  sessionAuthenticated = false;
   if (typeof window !== 'undefined') {
     localStorage.removeItem('pi_username_trusted');
     localStorage.removeItem('pi_uid_trusted');
@@ -187,13 +231,12 @@ export function logoutPi() {
   }
 }
 
-// STEP 3 - Auto-login on load ONLY inside real Pi Browser / Pi App Studio host
 export function autoLoginWithPi() {
   if (typeof window === 'undefined') return;
   if (!isPiEnvironment()) return;
   if (!window.Pi) return;
-  if (sessionStorage.getItem('pi_has_session')) return;
+  if (sessionAuthenticated) return;
   setTimeout(() => {
-    loginWithPi();
-  }, 800);
+    loginWithPi({ silent: true });
+  }, 600);
 }

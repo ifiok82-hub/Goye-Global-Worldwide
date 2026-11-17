@@ -1,24 +1,49 @@
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function callPiApprove(paymentId: string, apiKey: string) {
+  const r = await fetch(`https://api.minepi.com/v2/payments/${encodeURIComponent(paymentId)}/approve`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Key ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({}),
+  });
+
+  const text = await r.text().catch(() => '');
+  let data: any = {};
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    data = { raw: text };
+  }
+
+  return { r, data };
+}
+
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
+  const apiKey = (process.env.PI_API_KEY || '').trim().replace(/^['"]|['"]$/g, '');
+
   console.log(
     'APPROVE HIT',
     req.method,
     req.body,
     'KEY_EXISTS:',
-    !!process.env.PI_API_KEY,
+    !!apiKey,
     'KEY_LENGTH:',
-    process.env.PI_API_KEY?.length
+    apiKey.length
   );
 
   if (req.method === 'GET') {
     res.setHeader('Content-Type', 'application/json');
     return res.status(200).json({
       ok: true,
-      hasKey: !!process.env.PI_API_KEY,
+      hasKey: !!apiKey,
     });
   }
 
@@ -26,7 +51,6 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const apiKey = (process.env.PI_API_KEY || '').trim();
   if (!apiKey) {
     return res.status(500).json({ error: 'PI_API_KEY missing - check Vercel Env' });
   }
@@ -47,21 +71,13 @@ export default async function handler(req: any, res: any) {
       return res.status(400).json({ error: 'Missing paymentId' });
     }
 
-    const r = await fetch(`https://api.minepi.com/v2/payments/${paymentId}/approve`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Key ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({}),
-    });
+    let { r, data } = await callPiApprove(paymentId, apiKey);
 
-    const text = await r.text().catch(() => '');
-    let data: any = {};
-    try {
-      data = text ? JSON.parse(text) : {};
-    } catch {
-      data = { raw: text };
+    // Handle Pi Platform database propagation lag on freshly created payments
+    if (r.status === 404) {
+      console.log('Pi approve initial 404 - retrying after 700ms propagation wait for', paymentId);
+      await wait(700);
+      ({ r, data } = await callPiApprove(paymentId, apiKey));
     }
 
     console.log('Pi approve status', r.status, data);
