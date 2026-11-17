@@ -123,7 +123,6 @@ let savedKeys: Record<string, string> = {
   pi_testnet_wallet: process.env.PI_TESTNET_WALLET || process.env.PI_WALLET || '',
   pi_sandbox_mode: process.env.PI_SANDBOX_MODE || process.env.PI_SANDBOX || 'true',
   pi_sandbox: process.env.PI_SANDBOX || 'true',
-  pi_api_key: process.env.PI_API_KEY || '',
   pi_gcv_rate: process.env.PI_GCV_RATE || '314159',
   paystack: process.env.PAYSTACK_PUBLIC_KEY || '',
   paystack_secret: process.env.PAYSTACK_SECRET_KEY || '',
@@ -139,6 +138,9 @@ let savedKeys: Record<string, string> = {
 try {
   if (fs.existsSync('./keys.json')) {
     const loaded = JSON.parse(fs.readFileSync('./keys.json', 'utf8'));
+    delete loaded.pi_api_key;
+    delete loaded.PI_API_KEY;
+    delete loaded.piApiKey;
     if (loaded.usdt === '0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96') loaded.usdt = '0xdc7f804B36aB672Ec31642dF418F29e73281b040';
     if (loaded.usdc === '0x66e19089f1b2F87c92D98aF8657dA17Bf93ffe96') loaded.usdc = '0xdc7f804B36aB672Ec31642dF418F29e73281b040';
     if (!loaded.pi_wallet || loaded.pi_wallet.startsWith('0x')) loaded.pi_wallet = 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ7XE36YFQY6LKPVO6R';
@@ -148,7 +150,7 @@ try {
 
 // Admin Session Secret & RBAC Middleware
 const getExpectedAdminPass = (): string => {
-  return process.env.ADMIN_PASSWORD || process.env.PI_API_KEY || 'pi_admin_session';
+  return process.env.ADMIN_PASSWORD || 'pi_admin_session';
 };
 
 const JWT_ADMIN_SECRET = process.env.JWT_SECRET || crypto.randomBytes(16).toString('hex');
@@ -212,11 +214,16 @@ app.post('/api/admin/verify-pass', express.json(), (_req, res) => {
 
 // Admin Protected Settings API Routes
 app.get('/api/admin/settings', requireAdminRBAC, (req, res) => {
-  res.json({ success: true, settings: savedKeys });
+  const { pi_api_key: _a, PI_API_KEY: _b, piApiKey: _c, ...safeSettings } = savedKeys;
+  res.json({ success: true, settings: safeSettings });
 });
 
 app.post('/api/admin/settings', requireAdminRBAC, express.json(), (req, res) => {
-  savedKeys = { ...savedKeys, ...req.body };
+  const { pi_api_key: _a, PI_API_KEY: _b, piApiKey: _c, ...bodyWithoutPiKey } = req.body || {};
+  savedKeys = { ...savedKeys, ...bodyWithoutPiKey };
+  delete savedKeys.pi_api_key;
+  delete savedKeys.PI_API_KEY;
+  delete savedKeys.piApiKey;
   try {
     fs.writeFileSync('./keys.json', JSON.stringify(savedKeys));
   } catch(e) {}
@@ -224,12 +231,17 @@ app.post('/api/admin/settings', requireAdminRBAC, express.json(), (req, res) => 
 });
 
 app.get('/api/admin/keys', requireAdminRBAC, (req, res) => {
-  res.json(savedKeys);
+  const { pi_api_key: _a, PI_API_KEY: _b, piApiKey: _c, ...safeKeys } = savedKeys;
+  res.json(safeKeys);
 });
 
 app.post('/api/admin/save-keys', requireAdminRBAC, express.json(), (req, res) => {
-  savedKeys = { ...savedKeys, ...req.body };
-  console.log('Admin keys updated by authenticated admin. PI_API_KEY configured on server:', !!process.env.PI_API_KEY);
+  const { pi_api_key: _a, PI_API_KEY: _b, piApiKey: _c, ...bodyWithoutPiKey } = req.body || {};
+  savedKeys = { ...savedKeys, ...bodyWithoutPiKey };
+  delete savedKeys.pi_api_key;
+  delete savedKeys.PI_API_KEY;
+  delete savedKeys.piApiKey;
+  console.log('Admin settings updated. PI_API_KEY configured via server env:', !!process.env.PI_API_KEY);
   try {
     fs.writeFileSync('./keys.json', JSON.stringify(savedKeys));
   } catch(e) {}
@@ -1001,7 +1013,7 @@ app.post(['/api/pi/error', '/api/pi-error'], (req, res) => {
 
 app.get(['/api/pi/verify/:paymentId', '/api/pi/status/:paymentId'], async (req, res) => {
   const { paymentId } = req.params;
-  const apiKey = (process.env.PI_API_KEY || '').trim();
+  const apiKey = getPiApiKey();
   if (!apiKey) return res.status(500).json({ error: 'PI_API_KEY not configured on server' });
   try {
     const piRes = await fetch(`https://api.minepi.com/v2/payments/${paymentId}`, {
@@ -1093,7 +1105,7 @@ app.get('/api/clicks', (req, res) => {
 
 app.post('/api/pi-cancel', async (req, res) => {
   const { paymentId } = req.body || {};
-  const apiKey = process.env.PI_API_KEY;
+  const apiKey = getPiApiKey();
   if (!apiKey) return res.status(500).json({ error: 'PI_API_KEY not configured' });
   try {
     const piRes = await fetch(`https://api.minepi.com/v2/payments/${paymentId}/cancel`, {
@@ -4333,12 +4345,9 @@ app.post('/api/admin/save-gateway-keys', (req, res) => {
       process.env.PI_TESTNET_WALLET = piTestnetWallet.trim();
       savedKeys.pi_testnet_wallet = piTestnetWallet.trim();
     }
-    if (req.body?.piApiKey) {
-      const apiKeyVal = String(req.body.piApiKey).trim();
-      cfg.PI_API_KEY = apiKeyVal;
-      process.env.PI_API_KEY = apiKeyVal;
-      savedKeys.pi_api_key = apiKeyVal;
-    }
+    delete cfg.PI_API_KEY;
+    delete cfg.pi_api_key;
+    delete cfg.piApiKey;
     if (req.body?.piCustomerPaymentEnabled !== undefined) {
       const enabled = Boolean(req.body.piCustomerPaymentEnabled);
       isPiCustomerPaymentEnabledOnServer = enabled;

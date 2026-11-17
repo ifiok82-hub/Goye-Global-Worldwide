@@ -4,7 +4,7 @@ import { isPiEnvironment } from '../lib/piAuth';
 import { startPiPayment } from '../lib/piPayment';
 
 export default function AdminSettings() {
-  const [piApiKey, setPiApiKey] = useState('');
+  const [piServerKeyConfigured, setPiServerKeyConfigured] = useState<boolean | null>(null);
   const [piWalletAddress, setPiWalletAddress] = useState('');
   const [piMainnetWalletAddress, setPiMainnetWalletAddress] = useState('');
   const [piTestnetWalletAddress, setPiTestnetWalletAddress] = useState('');
@@ -48,7 +48,6 @@ export default function AdminSettings() {
   };
 
   // Field Visibility Masking States (Default ALL to FALSE -> MASKED PASSWORD TYPE)
-  const [showPiApiKey, setShowPiApiKey] = useState(false);
   const [showPiWallet, setShowPiWallet] = useState(false);
   const [showPiMainnetWallet, setShowPiMainnetWallet] = useState(false);
   const [showPiTestnetWallet, setShowPiTestnetWallet] = useState(false);
@@ -59,8 +58,13 @@ export default function AdminSettings() {
   const [showPIMERCHANTAccount, setShowPIMERCHANTAccount] = useState(false);
 
   useEffect(() => {
-    // Load local storage keys
-    const storedPiKey = localStorage.getItem('PI_API_KEY') || localStorage.getItem('pi_api_key') || '';
+    // Ensure no stale Pi API key ever remains cached in browser storage
+    try {
+      localStorage.removeItem('PI_API_KEY');
+      localStorage.removeItem('pi_api_key');
+    } catch {}
+
+    // Load local storage wallet/gateway preferences
     const piMainnet = localStorage.getItem('PI_MAINNET_WALLET_ADDRESS') || localStorage.getItem('pi_mainnet_wallet') || 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ7XE36YFQY6LKPVO6R';
     const piTestnet = localStorage.getItem('PI_TESTNET_WALLET_ADDRESS') || localStorage.getItem('pi_testnet_wallet') || 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ7XE36YFQY6LKPVO6R';
     const piWallet = localStorage.getItem('PI_WALLET_ADDRESS') || localStorage.getItem('pi_wallet') || 'GBR4B47WY7JDK2JKUUQQTWWQENOUUYTAQAOYLXZ7XE36YFQY6LKPVO6R';
@@ -73,7 +77,6 @@ export default function AdminSettings() {
     const piMerchantNm = localStorage.getItem('PIMERCHANT_NAME') || 'GOYE STORE GLOBAL';
     const isPiEnabled = localStorage.getItem('ENABLE_PI_PAYMENT') === 'true' || localStorage.getItem('enable_pi') === 'true';
 
-    setPiApiKey(storedPiKey);
     setPiMainnetWalletAddress(piMainnet || piWallet);
     setPiTestnetWalletAddress(piTestnet || piWallet);
     setPiWalletAddress(piWallet || piMainnet || piTestnet);
@@ -85,6 +88,11 @@ export default function AdminSettings() {
     setPIMERCHANTAccount(piMerchantAcc);
     setPIMERCHANTName(piMerchantNm);
     setEnablePi(isPiEnabled);
+
+    fetch('/api/pi/approve')
+      .then(r => r.json())
+      .then(d => setPiServerKeyConfigured(Boolean(d?.hasKey)))
+      .catch(() => setPiServerKeyConfigured(null));
 
     // Fetch keys from server with Admin Token Authentication
     const adminToken = localStorage.getItem('admin_token') || 'admin_session';
@@ -101,7 +109,6 @@ export default function AdminSettings() {
       .then(data => {
         const d = data.settings || data;
         if (d && typeof d === 'object') {
-          if (d.pi_api_key || d.PI_API_KEY) setPiApiKey(d.pi_api_key || d.PI_API_KEY || storedPiKey);
           if (d.pi_mainnet_wallet !== undefined) setPiMainnetWalletAddress(d.pi_mainnet_wallet || '');
           if (d.pi_testnet_wallet !== undefined) setPiTestnetWalletAddress(d.pi_testnet_wallet || '');
           if (d.pi_wallet !== undefined) setPiWalletAddress(d.pi_wallet || '');
@@ -121,11 +128,10 @@ export default function AdminSettings() {
   }, []);
 
   const handleSaveAllKeys = async () => {
-    const cleanPiKey = piApiKey.trim();
-    if (cleanPiKey) {
-      localStorage.setItem('PI_API_KEY', cleanPiKey);
-      localStorage.setItem('pi_api_key', cleanPiKey);
-    }
+    try {
+      localStorage.removeItem('PI_API_KEY');
+      localStorage.removeItem('pi_api_key');
+    } catch {}
     localStorage.setItem('PI_MAINNET_WALLET_ADDRESS', piMainnetWalletAddress);
     localStorage.setItem('pi_mainnet_wallet', piMainnetWalletAddress);
     localStorage.setItem('PI_TESTNET_WALLET_ADDRESS', piTestnetWalletAddress);
@@ -149,8 +155,6 @@ export default function AdminSettings() {
     localStorage.setItem('enable_pi', enablePi ? 'true' : 'false');
 
     const payload = {
-      pi_api_key: cleanPiKey,
-      PI_API_KEY: cleanPiKey,
       pi_mainnet_wallet: piMainnetWalletAddress,
       pi_testnet_wallet: piTestnetWalletAddress,
       pi_wallet: activePi,
@@ -168,7 +172,7 @@ export default function AdminSettings() {
 
     try {
       setIsLoading(true);
-      const res = await fetch('/api/admin/save-keys', {
+      await fetch('/api/admin/save-keys', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -177,13 +181,9 @@ export default function AdminSettings() {
         },
         body: JSON.stringify(payload)
       });
-      const data = await res.json();
-      const piSavedText = cleanPiKey ? 'SAVED ✅ - Now test Pi Testnet at bottom' : 'Empty';
-      alert(`✅ SAVED! PI_API_KEY ${piSavedText}`);
-      setSavedStatus(`✅ Settings & Gateway Keys Secured in Database! (RC BN3583878)`);
+      setSavedStatus(`✅ Wallet & Gateway Settings Saved! (RC BN3583878)`);
     } catch (e) {
-      alert(`✅ Keys Saved Locally to Browser Storage!`);
-      setSavedStatus(`✅ Keys Saved Locally to Browser Storage! (RC BN3583878)`);
+      setSavedStatus(`✅ Wallet Settings Saved Locally! (RC BN3583878)`);
     } finally {
       setIsLoading(false);
     }
@@ -330,36 +330,22 @@ export default function AdminSettings() {
             </p>
           </div>
 
-          <div>
-            <label className="text-xs font-bold text-[#FFD700] block mb-1">
-              PI_API_KEY (From develop.pi -&gt; API Keys) - PASTE HERE FOR GREEN
-            </label>
-            <div className="relative">
-              <input
-                id="pi_api_key"
-                type={showPiApiKey ? 'text' : 'password'}
-                value={piApiKey}
-                onChange={(e) => setPiApiKey(e.target.value)}
-                placeholder="Paste PI_API_KEY from https://develop.pi here - Long key"
-                className="w-full bg-black border-2 border-[#FFD700] focus:border-yellow-400 rounded-xl px-4 py-3 text-xs text-white pr-10 font-mono"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPiApiKey(!showPiApiKey)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
-              >
-                {showPiApiKey ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-            <p className="text-gray-400 text-[10px] mt-1">
-              Get: develop.pi -&gt; Your App gasv.store -&gt; API Keys -&gt; Copy -&gt; Paste here -&gt; SAVE
+          <div className="bg-black/60 border border-[#FFD700]/30 rounded-xl p-4 space-y-1.5">
+            <p className="text-xs font-bold text-[#FFD700]">
+              Server PI_API_KEY (Vercel Environment Variables Only)
             </p>
-            <p className="text-[#10B981] text-xs font-bold mt-1">
-              Current: <span id="current_pi_status">
-                {piApiKey || localStorage.getItem('PI_API_KEY')
-                  ? 'SAVED ✅ ' + (piApiKey || localStorage.getItem('PI_API_KEY') || '').substring(0, 10) + '...'
-                  : 'NOT SAVED ❌ - Paste now'}
+            <p className="text-xs text-gray-300">
+              Status:{' '}
+              <span id="current_pi_status" className={piServerKeyConfigured ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}>
+                {piServerKeyConfigured === null
+                  ? 'Checking server env...'
+                  : piServerKeyConfigured
+                  ? 'CONFIGURED IN SERVER ENV'
+                  : 'NOT SET - Add PI_API_KEY in Vercel Environment Variables'}
               </span>
+            </p>
+            <p className="text-gray-400 text-[11px]">
+              For security, PI_API_KEY is never stored in the browser or editable in the UI. Manage it strictly in Vercel Project Settings &gt; Environment Variables.
             </p>
           </div>
 

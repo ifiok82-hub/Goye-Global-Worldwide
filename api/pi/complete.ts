@@ -4,21 +4,22 @@ export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
+  const apiKey = (process.env.PI_API_KEY || '').trim().replace(/^['"]|['"]$/g, '');
+
   console.log(
     'COMPLETE HIT',
     req.method,
     req.body,
     'KEY_EXISTS:',
-    !!process.env.PI_API_KEY,
+    !!apiKey,
     'KEY_LENGTH:',
-    process.env.PI_API_KEY?.length
+    apiKey.length
   );
 
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const apiKey = (process.env.PI_API_KEY || '').trim();
   if (!apiKey) {
     return res.status(500).json({ error: 'PI_API_KEY missing - check Vercel Env' });
   }

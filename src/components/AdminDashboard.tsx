@@ -533,6 +533,8 @@ export default function AdminDashboard({
 
   useEffect(() => {
     try {
+      localStorage.removeItem('PI_API_KEY');
+      localStorage.removeItem('pi_api_key');
       localStorage.setItem('isAdmin', 'true');
       localStorage.setItem('excludeAdminClicks', 'true');
       localStorage.setItem('exclude_my_clicks', 'true');
@@ -540,13 +542,13 @@ export default function AdminDashboard({
 
     loadLocalData();
 
-    // Check Pi API Config
+    // Check Pi API Config (boolean status from server env only)
     fetch('/api/pi-config')
       .then(r => r.json())
       .then(c => {
         const el = document.getElementById('piApiStatus');
         if (el) {
-          el.textContent = c.apiKeyConfigured ? '✅ Pi API Key: CONFIGURED - Real Pi enabled' : '⚠️ Add PI_API_KEY in Environment Variables';
+          el.textContent = c.apiKeyConfigured ? '✅ PI_API_KEY configured in Vercel Env' : '⚠️ Add PI_API_KEY in Vercel Environment Variables';
           el.style.color = c.apiKeyConfigured ? '#00AA00' : '#FFAA00';
         }
       })
@@ -627,10 +629,10 @@ export default function AdminDashboard({
       localStorage.setItem('PI_SANDBOX_MODE', paymentConfig.piSandboxMode);
       localStorage.setItem('PI_SANDBOX', paymentConfig.piSandboxMode);
       localStorage.setItem('pi_sandbox', paymentConfig.piSandboxMode);
-      if ((paymentConfig as any).piApiKey) {
-        localStorage.setItem('pi_api_key', (paymentConfig as any).piApiKey.trim());
-        localStorage.setItem('PI_API_KEY', (paymentConfig as any).piApiKey.trim());
-      }
+      try {
+        localStorage.removeItem('pi_api_key');
+        localStorage.removeItem('PI_API_KEY');
+      } catch {}
       
       const isSandbox = paymentConfig.piSandboxMode !== 'false';
       const activePiWallet = isSandbox 
@@ -654,7 +656,6 @@ export default function AdminDashboard({
           piGatewaySecretKey: paymentConfig.piGatewaySecret.trim(),
           piMainnetWallet: paymentConfig.piMainnet.trim(),
           piTestnetWallet: paymentConfig.piTestnet.trim(),
-          piApiKey: (paymentConfig as any).piApiKey ? (paymentConfig as any).piApiKey.trim() : undefined,
           piCustomerPaymentEnabled,
           piSandboxMode: paymentConfig.piSandboxMode,
           piSandbox: paymentConfig.piSandboxMode,
@@ -1670,24 +1671,14 @@ export default function AdminDashboard({
                     </div>
                   </div>
 
-                  {/* Advanced Configuration Fields */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                    {/* Pi Platform Developer API Key */}
-                    <div className="bg-black/60 border border-zinc-800 rounded-xl p-4 space-y-2">
-                      <label className="text-xs text-purple-300 font-bold block flex justify-between items-center">
-                        <span>🔑 Pi Platform API Key (PI_API_KEY)</span>
-                        <span className="text-[10px] text-amber-400 font-mono">minepi.com Developer Portal</span>
-                      </label>
-                      <input
-                        type="password"
-                        className="w-full bg-[#111] border border-purple-900/60 focus:border-purple-400 rounded-xl p-3 text-white text-xs font-mono outline-none transition"
-                        value={(paymentConfig as any).piApiKey || ''}
-                        onChange={e => setPaymentConfig({ ...paymentConfig, piApiKey: e.target.value } as any)}
-                        placeholder="Paste Pi Developer Platform API Key..."
-                      />
-                      <p className="text-[10px] text-gray-400">Used by server to automatically approve and complete payments with MinePi Platform API.</p>
-                    </div>
-
+                  {/* Server Environment Notice */}
+                  <div className="bg-black/60 border border-zinc-800 rounded-xl p-4 space-y-1.5">
+                    <p className="text-xs text-purple-300 font-bold">
+                      Server-Side Pi Platform API Key
+                    </p>
+                    <p className="text-[11px] text-gray-400">
+                      PI_API_KEY is read strictly from server-side Vercel Environment Variables and is never stored in client state or browser storage.
+                    </p>
                   </div>
 
                   {/* Diagnostic & Audit Actions Bar */}

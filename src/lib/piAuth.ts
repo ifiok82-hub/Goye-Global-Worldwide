@@ -64,7 +64,12 @@ export function isPiEnvironment(): boolean {
 }
 
 export async function ensurePiInit(): Promise<boolean> {
-  if (typeof window === 'undefined' || !window.Pi) return false;
+  if (typeof window === 'undefined') return false;
+  try {
+    localStorage.removeItem('PI_API_KEY');
+    localStorage.removeItem('pi_api_key');
+  } catch {}
+  if (!window.Pi) return false;
   if (!piInitPromise) {
     const sandboxFlag = isSandboxHost();
     piInitPromise = Promise.resolve()
