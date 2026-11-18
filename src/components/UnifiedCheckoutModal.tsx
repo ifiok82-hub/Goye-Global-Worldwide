@@ -35,13 +35,20 @@ export const UnifiedCheckoutModal: React.FC<UnifiedCheckoutModalProps> = ({
         () => {
           if (product?.id) {
             localStorage.setItem(`paid_${product.id}`, 'true');
-            if (product.slug) localStorage.setItem(`paid_${product.slug}`, 'true');
+            localStorage.setItem(`unlocked_${product.id}`, 'true');
+            if (product.slug) {
+              localStorage.setItem(`paid_${product.slug}`, 'true');
+              localStorage.setItem(`unlocked_${product.slug}`, 'true');
+            }
           }
           localStorage.setItem('sirwise_paid', 'true');
           localStorage.setItem('payment_verified', 'true');
           if (onToast) onToast('✅ Pi Payment Verified! Access Granted.', 'success');
-          alert('🎉 Pi Payment Verified! Access Granted.');
           window.location.reload();
+        },
+        {
+          onCancel: () => setLoading(false),
+          onError: () => setLoading(false)
         }
       );
     } finally {
@@ -101,7 +108,13 @@ export const UnifiedCheckoutModal: React.FC<UnifiedCheckoutModalProps> = ({
 
         {/* Action Button */}
         <button
-          onClick={handlePiPayment}
+          type="button"
+          style={{ position: 'relative', zIndex: 10, pointerEvents: 'auto', cursor: 'pointer' }}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handlePiPayment();
+          }}
           disabled={loading}
           className="w-full py-4 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg bg-[#FFD700] hover:bg-yellow-400 text-black shadow-yellow-500/20 active:scale-95 transition cursor-pointer"
         >

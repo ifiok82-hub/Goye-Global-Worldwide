@@ -62,7 +62,8 @@ export const SpecializationsSection: React.FC<SpecializationsSectionProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredSpecializations.map((spec) => {
           const hasPaidAccess = typeof window !== 'undefined' && (
-            localStorage.getItem(`paid_${spec.id}`) === 'true'
+            localStorage.getItem(`paid_${spec.id}`) === 'true' ||
+            localStorage.getItem(`unlocked_${spec.id}`) === 'true'
           );
 
           return (

@@ -24,11 +24,15 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ onClos
         () => {
           if (product?.id) {
             localStorage.setItem(`paid_${product.id}`, 'true');
+            localStorage.setItem(`unlocked_${product.id}`, 'true');
           }
           localStorage.setItem('sirwise_paid', 'true');
           localStorage.setItem('payment_verified', 'true');
-          alert('🎉 Payment Verified! Access Granted.');
           window.location.reload();
+        },
+        {
+          onCancel: () => setLoading(false),
+          onError: () => setLoading(false)
         }
       );
     } finally {
@@ -71,7 +75,12 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ onClos
         </p>
 
         <button
-          onClick={handlePiPay}
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            handlePiPay();
+          }}
           disabled={loading}
           style={{
             width: '100%',
@@ -83,7 +92,10 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ onClos
             borderRadius: '12px',
             border: 'none',
             cursor: 'pointer',
-            marginBottom: '12px'
+            marginBottom: '12px',
+            position: 'relative',
+            zIndex: 10,
+            pointerEvents: 'auto'
           }}
         >
           {loading ? 'Processing...' : `🔒 LOCK - ${piPrice} Pi`}

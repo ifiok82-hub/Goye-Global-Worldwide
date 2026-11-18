@@ -93,7 +93,13 @@ export function toPi(naira?: number, usd?: number, piPrice?: number): number {
 function getPiApiUrl(path: '/api/pi/me' | '/api/pi/incomplete'): string {
   if (typeof window !== 'undefined') {
     const { hostname, origin } = window.location;
-    if (hostname === 'localhost' || hostname === '127.0.0.1' || origin === API_BASE) {
+    if (
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname === 'gasv.store' ||
+      hostname === 'www.gasv.store' ||
+      origin === API_BASE
+    ) {
       return path;
     }
   }

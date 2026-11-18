@@ -16,7 +16,11 @@ export const GoyeServiceDetailPage: React.FC<GoyeServiceDetailPageProps> = ({
   onOpenConsultation: _onOpenConsultation
 }) => {
   const service: GoyeService = GOYE_SERVICES.find(s => s.slug === serviceSlug) || GOYE_SERVICES[0];
-  const hasPaidAccess = typeof window !== 'undefined' && localStorage.getItem(`paid_service_${service.id}`) === 'true';
+  const hasPaidAccess = typeof window !== 'undefined' && (
+    localStorage.getItem(`paid_service_${service.id}`) === 'true' ||
+    localStorage.getItem(`paid_${service.id}`) === 'true' ||
+    localStorage.getItem(`unlocked_${service.id}`) === 'true'
+  );
 
   const handleAction = async () => {
     if (hasPaidAccess) {

@@ -51,7 +51,11 @@ export const GoyeServicesSection: React.FC<GoyeServicesSectionProps> = ({
         {/* Detailed Service Cards Grid - SHOW ONLY Image/Icon + Title + Button */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {GOYE_SERVICES.map((serv: GoyeService) => {
-            const hasPaidAccess = typeof window !== 'undefined' && localStorage.getItem(`paid_service_${serv.id}`) === 'true';
+            const hasPaidAccess = typeof window !== 'undefined' && (
+              localStorage.getItem(`paid_service_${serv.id}`) === 'true' ||
+              localStorage.getItem(`paid_${serv.id}`) === 'true' ||
+              localStorage.getItem(`unlocked_${serv.id}`) === 'true'
+            );
 
             return (
               <div

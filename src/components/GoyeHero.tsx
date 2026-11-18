@@ -12,7 +12,9 @@ export const GoyeHero: React.FC<GoyeHeroProps> = () => {
   const isAcademyPaid = typeof window !== 'undefined' && (
     localStorage.getItem('sirwise_paid') === 'true' ||
     localStorage.getItem('payment_verified') === 'true' ||
-    localStorage.getItem('paid_academy_bundle') === 'true'
+    localStorage.getItem('paid_academy_bundle') === 'true' ||
+    localStorage.getItem('unlocked_academy_bundle') === 'true' ||
+    localStorage.getItem('unlocked_sirwise-academy-full') === 'true'
   );
 
   const handleScrollToAcademy = () => {

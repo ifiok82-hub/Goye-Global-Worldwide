@@ -44,6 +44,10 @@ export const ServiceBookingModal: React.FC<ServiceBookingModalProps> = ({
       },
       (txid?: string) => {
         saveBooking(txid || 'PI-' + Date.now());
+      },
+      {
+        onCancel: () => setIsProcessing(false),
+        onError: () => setIsProcessing(false)
       }
     );
     if (!ok) {
@@ -237,7 +241,12 @@ Please commence digital specialization.`;
             <button
               type="button"
               disabled={isProcessing}
-              onClick={handlePiPay}
+              style={{ position: 'relative', zIndex: 10, pointerEvents: 'auto', cursor: 'pointer' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handlePiPay();
+              }}
               className="w-full bg-[#FFD700] hover:bg-yellow-400 text-black font-black uppercase text-sm tracking-wider py-4 rounded-xl transition flex items-center justify-center gap-2 shadow-lg cursor-pointer disabled:opacity-50"
             >
               <span>{isProcessing ? 'Processing in Pi Wallet...' : `🔒 LOCK - ${finalPiPrice} Pi`}</span>

@@ -8,6 +8,13 @@ export interface PiPaymentProduct {
   piPrice: number;
 }
 
+export interface PiPaymentLifecycleOptions {
+  onCancel?: (paymentId: string) => void;
+  onError?: (error: any) => void;
+}
+
+let isStartingPayment = false;
+
 export function clearStoredPaymentIds() {
   if (typeof window === 'undefined') return;
   try {
@@ -16,17 +23,75 @@ export function clearStoredPaymentIds() {
     localStorage.removeItem('last_payment_id');
     sessionStorage.removeItem('paymentId');
     sessionStorage.removeItem('pi_payment_id');
+    sessionStorage.removeItem('last_payment_id');
   } catch {}
 }
 
 // Clear any stale paymentId immediately when module loads
 clearStoredPaymentIds();
 
+function getApiUrl(path: '/api/pi/approve' | '/api/pi/complete'): string {
+  if (typeof window !== 'undefined') {
+    const { hostname, origin } = window.location;
+    if (
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname === 'gasv.store' ||
+      hostname === 'www.gasv.store' ||
+      origin === API_BASE
+    ) {
+      return path;
+    }
+  }
+  return `${API_BASE}${path}`;
+}
+
+async function fetchJsonWithTimeout(
+  url: string,
+  init: RequestInit,
+  timeoutMs = 20000
+): Promise<{ ok: boolean; status: number; data: any; rawText: string }> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { ...init, signal: controller.signal });
+    const rawText = await res.text().catch(() => '');
+    let data: any = {};
+    if (rawText) {
+      try {
+        data = JSON.parse(rawText);
+      } catch {
+        data = {};
+      }
+    }
+    return { ok: res.ok, status: res.status, data, rawText };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function rStatusIs404OrMismatch(msg: string): boolean {
+  const lower = String(msg || '').toLowerCase();
+  return (
+    lower.includes('404') ||
+    lower.includes('payment_not_found') ||
+    lower.includes('no payment found') ||
+    lower.includes('payment expired') ||
+    lower.includes('key mismatch or expired')
+  );
+}
+
 export async function startPiPayment(
   product: PiPaymentProduct,
-  onCompleted?: (txid?: string) => void
+  onCompleted?: (txid?: string) => void,
+  options?: PiPaymentLifecycleOptions
 ): Promise<boolean> {
   if (typeof window === 'undefined') return false;
+  if (isStartingPayment) {
+    console.warn('Pi payment already starting - ignoring duplicate tap');
+    return false;
+  }
+
   clearStoredPaymentIds();
 
   console.log('STEP 1 Pi.init');
@@ -39,8 +104,13 @@ export async function startPiPayment(
     return false;
   }
 
+  isStartingPayment = true;
+  let errorAlertShown = false;
+  const approvedPaymentIds = new Set<string>();
+
   try {
     await (window as any).Pi.init({ version: '2.0', sandbox: true }); // Testnet - DO NOT CHANGE to false
+    console.log('STEP 1 Pi.init - DONE');
 
     console.log('STEP 2 Pi.authenticate - START');
     const auth = await (window as any).Pi.authenticate(
@@ -66,7 +136,12 @@ export async function startPiPayment(
 
     const amount = Number(product.piPrice) > 0 ? Number(product.piPrice) : 1;
 
-    console.log('STEP 3 Pi.createPayment - START');
+    console.log('STEP 3 Pi.createPayment - START', {
+      productId: product.id,
+      amount,
+      appId: PI_APP_ID,
+    });
+
     await (window as any).Pi.createPayment(
       {
         amount,
@@ -80,80 +155,153 @@ export async function startPiPayment(
       },
       {
         onReadyForServerApproval: async (paymentId: string) => {
-          console.log('STEP 4 APPROVE - START', paymentId);
-          const controller = new AbortController();
-          const timer = setTimeout(() => controller.abort(), 8000);
+          if (!paymentId) {
+            throw new Error('Missing paymentId from Pi SDK');
+          }
+          if (approvedPaymentIds.has(paymentId)) {
+            console.warn('STEP 4 APPROVE - SKIPPED duplicate callback for', paymentId);
+            return;
+          }
+          approvedPaymentIds.add(paymentId);
+
+          const approveUrl = getApiUrl('/api/pi/approve');
+          const startedAt = Date.now();
+          console.log('STEP 4 APPROVE - START', { paymentId, approveUrl });
+
           try {
-            const r = await fetch(`${API_BASE}/api/pi/approve`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${auth.accessToken}`,
+            const { ok, status, data, rawText } = await fetchJsonWithTimeout(
+              approveUrl,
+              {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${auth.accessToken}`,
+                },
+                body: JSON.stringify({ paymentId }),
               },
-              body: JSON.stringify({ paymentId }),
-              signal: controller.signal,
+              20000
+            );
+
+            console.log('STEP 4 APPROVE - DONE', {
+              status,
+              ms: Date.now() - startedAt,
+              data,
             });
-            const data = await r.json().catch(() => ({}));
-            console.log('STEP 4 APPROVE - DONE', r.status, data);
-            if (!r.ok) {
-              throw new Error(data?.error || 'Approve failed');
+
+            if (!ok) {
+              const serverMsg =
+                data?.error ||
+                data?.message ||
+                (rawText ? rawText.slice(0, 140) : '') ||
+                `HTTP ${status}`;
+              const err: any = new Error(serverMsg);
+              err.status = status;
+              throw err;
             }
           } catch (e: any) {
-            console.error('APPROVE FAILED', e);
+            console.error('STEP 4 APPROVE - FAILED', {
+              paymentId,
+              ms: Date.now() - startedAt,
+              name: e?.name,
+              status: e?.status,
+              message: e?.message || String(e),
+            });
+
             const msg = String(e?.message || e || '');
-            if (rStatusIs404OrMismatch(msg)) {
-              alert('Key mismatch or expired - close Pi Browser and tap LOCK once for fresh payment');
-            } else if (msg.includes('KEY MISMATCH')) {
-              alert(msg);
-            } else {
-              alert('Approve failed - backend did not respond in time. Tap LOCK again.');
+            const status = e?.status;
+
+            if (!errorAlertShown) {
+              errorAlertShown = true;
+              if (e?.name === 'AbortError') {
+                alert('Approve timed out after 20s waiting for server. Please tap LOCK again.');
+              } else if (status === 404 || rStatusIs404OrMismatch(msg)) {
+                alert('Key mismatch or expired (404) - close Pi Browser and tap LOCK once for fresh payment');
+              } else if (msg.includes('KEY MISMATCH')) {
+                alert(msg);
+              } else {
+                alert(`Approve failed (${status || 'network'}): ${msg || 'Tap LOCK again.'}`);
+              }
             }
             throw e;
-          } finally {
-            clearTimeout(timer);
           }
         },
         onReadyForServerCompletion: async (paymentId: string, txid: string) => {
-          console.log('STEP 5 COMPLETE', paymentId, txid);
-          const controller = new AbortController();
-          const timer = setTimeout(() => controller.abort(), 8000);
+          const completeUrl = getApiUrl('/api/pi/complete');
+          const startedAt = Date.now();
+          console.log('STEP 5 COMPLETE - START', { paymentId, txid, completeUrl });
+
           try {
-            const r = await fetch(`${API_BASE}/api/pi/complete`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ paymentId, txid }),
-              signal: controller.signal,
+            const { ok, status, data, rawText } = await fetchJsonWithTimeout(
+              completeUrl,
+              {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${auth.accessToken}`,
+                },
+                body: JSON.stringify({ paymentId, txid }),
+              },
+              20000
+            );
+
+            console.log('STEP 5 COMPLETE - DONE', {
+              status,
+              ms: Date.now() - startedAt,
+              data,
             });
-            const data = await r.json().catch(() => ({}));
-            if (!r.ok) {
-              throw new Error(data?.error || 'Complete failed');
+
+            if (!ok) {
+              const serverMsg =
+                data?.error ||
+                data?.message ||
+                (rawText ? rawText.slice(0, 140) : '') ||
+                `HTTP ${status}`;
+              throw new Error(serverMsg);
             }
+
             try {
               localStorage.setItem(`unlocked_${product.id}`, 'true');
               localStorage.setItem(`paid_${product.id}`, 'true');
+              localStorage.setItem(`paid_service_${product.id}`, 'true');
               if (product.id === 'sirwise-academy-full' || product.id === 'academy_bundle') {
                 localStorage.setItem('sirwise_paid', 'true');
+                localStorage.setItem('payment_verified', 'true');
                 localStorage.setItem('paid_academy_bundle', 'true');
                 window.dispatchEvent(new Event('academyPaidAccess'));
               }
             } catch {}
+
             alert('✅ Payment Successful! Access unlocked.');
             if (onCompleted) {
               onCompleted(txid);
             } else {
               window.location.reload();
             }
+          } catch (e: any) {
+            console.error('STEP 5 COMPLETE - FAILED', e);
+            if (!errorAlertShown) {
+              errorAlertShown = true;
+              alert(`Payment completion failed: ${e?.message || 'Please contact support with your TxID.'}`);
+            }
+            throw e;
           } finally {
-            clearTimeout(timer);
+            clearStoredPaymentIds();
+            isStartingPayment = false;
           }
         },
         onCancel: (paymentId: string) => {
           clearStoredPaymentIds();
+          isStartingPayment = false;
           console.log('Payment cancelled', paymentId);
+          if (options?.onCancel) options.onCancel(paymentId);
         },
         onError: (error: any, payment: any) => {
           clearStoredPaymentIds();
+          isStartingPayment = false;
           console.error('Pi payment error', error, payment);
+          if (options?.onError) options.onError(error);
+          if (errorAlertShown) return;
+          errorAlertShown = true;
           const msg = String(error?.message || '');
           if (rStatusIs404OrMismatch(msg)) {
             alert('Key mismatch or expired - close Pi Browser and tap LOCK once for fresh payment');
@@ -163,29 +311,27 @@ export async function startPiPayment(
         },
       }
     );
+
+    console.log('STEP 3 Pi.createPayment - HANDOFF OPEN');
     return true;
   } catch (err: any) {
     clearStoredPaymentIds();
     console.error('Pi payment error:', err);
-    const msg = String(err?.message || err || '');
-    if (rStatusIs404OrMismatch(msg)) {
-      alert('Key mismatch or expired - close Pi Browser and tap LOCK once for fresh payment');
-    } else if (msg && !msg.includes('Approve failed')) {
-      alert('Payment error: ' + msg);
+    if (!errorAlertShown) {
+      errorAlertShown = true;
+      const msg = String(err?.message || err || '');
+      if (rStatusIs404OrMismatch(msg)) {
+        alert('Key mismatch or expired - close Pi Browser and tap LOCK once for fresh payment');
+      } else if (msg) {
+        alert('Payment error: ' + msg);
+      }
     }
+    if (options?.onError) options.onError(err);
     return false;
+  } finally {
+    // Allow retries once SDK handoff finishes or fails
+    isStartingPayment = false;
   }
-}
-
-function rStatusIs404OrMismatch(msg: string): boolean {
-  const lower = String(msg || '').toLowerCase();
-  return (
-    lower.includes('404') ||
-    lower.includes('payment_not_found') ||
-    lower.includes('no payment found') ||
-    lower.includes('payment expired') ||
-    lower.includes('key mismatch or expired')
-  );
 }
 
 export async function payWithPi(piPrice: number, productName: string, productId: string): Promise<boolean> {

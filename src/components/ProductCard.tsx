@@ -31,7 +31,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) =
     if (typeof window === 'undefined') return true;
     return (
       localStorage.getItem(`paid_${product.id}`) !== 'true' &&
-      localStorage.getItem(`paid_${product.slug}`) !== 'true'
+      localStorage.getItem(`unlocked_${product.id}`) !== 'true' &&
+      localStorage.getItem(`paid_${product.slug}`) !== 'true' &&
+      localStorage.getItem(`unlocked_${product.slug}`) !== 'true'
     );
   });
 

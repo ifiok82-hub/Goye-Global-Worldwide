@@ -213,7 +213,10 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase:
     try {
       const isPaid = localStorage.getItem('sirwise_paid') === 'true';
       const isVerified = localStorage.getItem('payment_verified') === 'true';
-      const hasPaidBundle = localStorage.getItem('paid_academy_bundle') === 'true';
+      const hasPaidBundle =
+        localStorage.getItem('paid_academy_bundle') === 'true' ||
+        localStorage.getItem('unlocked_academy_bundle') === 'true' ||
+        localStorage.getItem('unlocked_sirwise-academy-full') === 'true';
       const hasAccess = (isPaid || isVerified || hasPaidBundle);
 
       if (hasAccess) {
