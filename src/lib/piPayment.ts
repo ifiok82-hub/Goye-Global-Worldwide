@@ -1,4 +1,4 @@
-import { PI_APP_ID, handleIncompletePiPayment, isPiEnvironment } from './piAuth';
+import { PI_APP_ID, handleIncompletePiPayment } from './piAuth';
 
 export const API_BASE = 'https://gasv.store';
 
@@ -13,7 +13,8 @@ export interface PiPaymentLifecycleOptions {
   onError?: (error: any) => void;
 }
 
-let isStartingPayment = false;
+export const isPayingRef = { current: false };
+isPayingRef.current = false;
 
 export function clearStoredPaymentIds() {
   if (typeof window === 'undefined') return;
@@ -86,29 +87,29 @@ export async function startPiPayment(
   onCompleted?: (txid?: string) => void,
   options?: PiPaymentLifecycleOptions
 ): Promise<boolean> {
-  if (typeof window === 'undefined') return false;
-  if (isStartingPayment) {
-    console.warn('Pi payment already starting - ignoring duplicate tap');
+  if (typeof window === 'undefined' || !(window as any).Pi) {
+    alert('Pi SDK not loaded - please open https://gasv.store inside Pi Browser, not Chrome');
     return false;
   }
+
+  if (isPayingRef.current) {
+    alert('Payment already in progress - close Pi Browser and reopen');
+    isPayingRef.current = false;
+    return false;
+  }
+
+  isPayingRef.current = true;
+  const safetyResetTimer = setTimeout(() => {
+    isPayingRef.current = false;
+  }, 30000);
 
   clearStoredPaymentIds();
 
-  console.log('STEP 1 Pi.init');
-  if (!(window as any).Pi) {
-    alert('Please open inside Pi Browser');
-    return false;
-  }
-  if (!isPiEnvironment()) {
-    alert('Please open goyestoreuwg6251.pinet.com inside Pi Browser > Pi Apps > GOYE Store');
-    return false;
-  }
-
-  isStartingPayment = true;
   let errorAlertShown = false;
   const approvedPaymentIds = new Set<string>();
 
   try {
+    console.log('STEP 1 Pi.init');
     await (window as any).Pi.init({ version: '2.0', sandbox: true }); // Testnet - DO NOT CHANGE to false
     console.log('STEP 1 Pi.init - DONE');
 
@@ -121,6 +122,8 @@ export async function startPiPayment(
     console.log('STEP 2 Pi.authenticate - DONE', username);
 
     if (!auth || !auth.accessToken || !username) {
+      clearTimeout(safetyResetTimer);
+      isPayingRef.current = false;
       alert('Pi login failed - please tap LOCK again');
       return false;
     }
@@ -285,19 +288,22 @@ export async function startPiPayment(
             }
             throw e;
           } finally {
+            clearTimeout(safetyResetTimer);
             clearStoredPaymentIds();
-            isStartingPayment = false;
+            isPayingRef.current = false;
           }
         },
         onCancel: (paymentId: string) => {
+          clearTimeout(safetyResetTimer);
           clearStoredPaymentIds();
-          isStartingPayment = false;
+          isPayingRef.current = false;
           console.log('Payment cancelled', paymentId);
           if (options?.onCancel) options.onCancel(paymentId);
         },
         onError: (error: any, payment: any) => {
+          clearTimeout(safetyResetTimer);
           clearStoredPaymentIds();
-          isStartingPayment = false;
+          isPayingRef.current = false;
           console.error('Pi payment error', error, payment);
           if (options?.onError) options.onError(error);
           if (errorAlertShown) return;
@@ -315,7 +321,9 @@ export async function startPiPayment(
     console.log('STEP 3 Pi.createPayment - HANDOFF OPEN');
     return true;
   } catch (err: any) {
+    clearTimeout(safetyResetTimer);
     clearStoredPaymentIds();
+    isPayingRef.current = false;
     console.error('Pi payment error:', err);
     if (!errorAlertShown) {
       errorAlertShown = true;
@@ -324,13 +332,12 @@ export async function startPiPayment(
         alert('Key mismatch or expired - close Pi Browser and tap LOCK once for fresh payment');
       } else if (msg) {
         alert('Payment error: ' + msg);
+      } else {
+        alert('Payment failed to start - please tap LOCK again');
       }
     }
     if (options?.onError) options.onError(err);
     return false;
-  } finally {
-    // Allow retries once SDK handoff finishes or fails
-    isStartingPayment = false;
   }
 }
 

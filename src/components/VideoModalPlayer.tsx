@@ -79,12 +79,9 @@ export default function VideoModalPlayer({
 
   return (
     <div 
-      className="fixed inset-0 bg-black/95 z-[9999999] flex items-center justify-center p-3 sm:p-6 backdrop-blur-md pointer-events-auto"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
+      className="fixed inset-0 bg-black/95 z-[9999999] flex items-center justify-center p-3 sm:p-6 backdrop-blur-md pointer-events-none"
     >
-      <div className="w-full max-w-4xl bg-[#111] border-2 border-[#FFD700] rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(255,215,0,0.3)] relative flex flex-col max-h-[92vh]">
+      <div className="w-full max-w-4xl bg-[#111] border-2 border-[#FFD700] rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(255,215,0,0.3)] relative flex flex-col max-h-[92vh] pointer-events-auto">
         {/* Modal Header */}
         <div className="bg-[#FFD700] text-black px-5 py-3.5 flex items-center justify-between font-black text-sm md:text-base border-b border-yellow-600">
           <div className="flex items-center gap-2 truncate pr-2">

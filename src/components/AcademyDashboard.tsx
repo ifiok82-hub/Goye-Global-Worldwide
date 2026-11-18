@@ -395,9 +395,11 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase:
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
+                  console.log('LOCK CLICKED', 'academy_bundle');
+                  alert('LOCK clicked - starting Pi payment');
                   handlePiPayment({ id: 'academy_bundle', title: 'Sirwise AI WEB3 Academy', piPrice: 2 });
                 }}
-                style={{ width: '100%', height: '56px', background: '#FFD700', color: 'black', borderRadius: '12px', fontWeight: '900', fontSize: '17px', cursor: 'pointer', border: 'none', position: 'relative', zIndex: 10, pointerEvents: 'auto' }}
+                style={{ width: '100%', height: '56px', background: '#FFD700', color: 'black', borderRadius: '12px', fontWeight: '900', fontSize: '17px', cursor: 'pointer', border: 'none', position: 'relative', zIndex: 9999, pointerEvents: 'auto' }}
               >
                 🔒 LOCK - 2 Pi
               </button>
@@ -424,9 +426,11 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase:
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
+              console.log('LOCK CLICKED', 'academy_bundle');
+              alert('LOCK clicked - starting Pi payment');
               handlePiPayment({ id: 'academy_bundle', title: 'Sirwise AI WEB3 Academy', piPrice: 2 });
             }}
-            style={{ width: '100%', maxWidth: '360px', height: '54px', background: '#FFD700', color: 'black', borderRadius: '14px', fontWeight: '900', fontSize: '16px', cursor: 'pointer', border: 'none', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 10, pointerEvents: 'auto' }}
+            style={{ width: '100%', maxWidth: '360px', height: '54px', background: '#FFD700', color: 'black', borderRadius: '14px', fontWeight: '900', fontSize: '16px', cursor: 'pointer', border: 'none', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 9999, pointerEvents: 'auto' }}
           >
             🔒 LOCK - 2 Pi
           </button>
@@ -477,10 +481,12 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase:
                 {!hasCourseAccess ? (
                   <button 
                     type="button"
-                    style={{ position: 'relative', zIndex: 10, pointerEvents: 'auto', cursor: 'pointer' }}
+                    style={{ position: 'relative', zIndex: 9999, pointerEvents: 'auto', cursor: 'pointer' }}
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
+                      console.log('LOCK CLICKED', `academy_module_${mod.id}`);
+                      alert('LOCK clicked - starting Pi payment');
                       handlePiPayment({ id: 'academy_bundle', title: mod.title, piPrice: 2 });
                     }}
                     className="w-full py-3.5 bg-[#FFD700] hover:bg-yellow-400 text-black font-black text-xs uppercase tracking-wider rounded-xl transition cursor-pointer flex items-center justify-center gap-2"
@@ -565,8 +571,8 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase:
 
       {/* Interactive Active Module Viewer Modal */}
       {activeModule && (
-        <div className="fixed inset-0 bg-black/90 z-[99999] flex items-center justify-center p-4 pointer-events-auto">
-          <div className="bg-[#111] border-2 border-[#FFD700] text-white w-full max-w-[650px] rounded-3xl p-6 max-h-[92vh] overflow-y-auto relative shadow-2xl space-y-6">
+        <div className="fixed inset-0 bg-black/90 z-[99999] flex items-center justify-center p-4 pointer-events-none">
+          <div className="bg-[#111] border-2 border-[#FFD700] text-white w-full max-w-[650px] rounded-3xl p-6 max-h-[92vh] overflow-y-auto relative shadow-2xl space-y-6 pointer-events-auto">
             <button 
               type="button"
               onClick={() => setActiveModule(null)} 
@@ -597,10 +603,12 @@ export default function AcademyDashboard({ currentUser, userProfile, onPurchase:
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
+                    console.log('LOCK CLICKED', `academy_modal_${activeModule.id}`);
+                    alert('LOCK clicked - starting Pi payment');
                     setActiveModule(null);
                     handlePiPayment({ id: 'academy_bundle', title: 'Sirwise AI WEB3 Academy', piPrice: 2 });
                   }}
-                  style={{ background: '#FFD700', color: '#000', padding: '16px 24px', fontWeight: '900', borderRadius: '14px', width: '100%', cursor: 'pointer', fontSize: '13px', border: 'none', position: 'relative', zIndex: 10, pointerEvents: 'auto' }}
+                  style={{ background: '#FFD700', color: '#000', padding: '16px 24px', fontWeight: '900', borderRadius: '14px', width: '100%', cursor: 'pointer', fontSize: '13px', border: 'none', position: 'relative', zIndex: 9999, pointerEvents: 'auto' }}
                 >
                   🔒 LOCK - 2 Pi
                 </button>

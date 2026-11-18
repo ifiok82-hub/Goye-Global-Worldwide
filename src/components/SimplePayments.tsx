@@ -48,8 +48,12 @@ export default function SimplePayments({
       <button
         type="button"
         disabled={processing}
-        style={{ position: 'relative', zIndex: 10, pointerEvents: 'auto', cursor: 'pointer' }}
-        onClick={handlePay}
+        style={{ pointerEvents: 'auto', position: 'relative', zIndex: 9999, cursor: 'pointer' }}
+        onClick={(e) => {
+          console.log('LOCK CLICKED', productId);
+          alert('LOCK clicked - starting Pi payment');
+          handlePay(e);
+        }}
         className="w-full py-4 bg-[#FFD700] text-black font-black rounded-xl hover:bg-yellow-400 uppercase tracking-wide flex items-center justify-center gap-2 cursor-pointer shadow-lg disabled:opacity-60"
       >
         <span>🔒</span> {processing ? 'Connecting to Pi...' : `LOCK - ${finalPi} Pi`}

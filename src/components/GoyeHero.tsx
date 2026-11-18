@@ -44,10 +44,12 @@ export const GoyeHero: React.FC<GoyeHeroProps> = () => {
           <div className="flex flex-col gap-3 mb-8">
             <button 
               type="button"
-              style={{ position: 'relative', zIndex: 10, pointerEvents: 'auto', cursor: 'pointer' }}
+              style={{ pointerEvents: 'auto', position: 'relative', zIndex: 9999, cursor: 'pointer' }}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                console.log('LOCK CLICKED', 'ai-starter-tripwire');
+                alert('LOCK clicked - starting Pi payment');
                 handlePiPayment({ id: 'ai-starter-tripwire', title: 'AI Starter & Global Travel Pass', piPrice: 1 });
               }}
               className="bg-[#FFD700] hover:bg-yellow-400 text-black font-black text-xs sm:text-sm py-4 px-6 sm:px-8 rounded-2xl mx-auto flex items-center justify-center shadow-[0_0_30px_rgba(255,215,0,0.35)] transition active:scale-95 cursor-pointer border-2 border-yellow-200 max-w-full"
@@ -94,13 +96,15 @@ export const GoyeHero: React.FC<GoyeHeroProps> = () => {
               <div className="p-4 pt-0">
                 <button 
                   type="button"
-                  style={{ position: 'relative', zIndex: 10, pointerEvents: 'auto', cursor: 'pointer' }}
+                  style={{ pointerEvents: 'auto', position: 'relative', zIndex: 9999, cursor: 'pointer' }}
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     if (isAcademyPaid) {
                       handleScrollToAcademy();
                     } else {
+                      console.log('LOCK CLICKED', 'academy_bundle_track1');
+                      alert('LOCK clicked - starting Pi payment');
                       handlePiPayment({ id: 'academy_bundle', title: 'AI Training & Solutions (Academy)', piPrice: 2 });
                     }
                   }}
@@ -139,13 +143,15 @@ export const GoyeHero: React.FC<GoyeHeroProps> = () => {
               <div className="p-4 pt-0">
                 <button 
                   type="button"
-                  style={{ position: 'relative', zIndex: 10, pointerEvents: 'auto', cursor: 'pointer' }}
+                  style={{ pointerEvents: 'auto', position: 'relative', zIndex: 9999, cursor: 'pointer' }}
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     if (isAcademyPaid) {
                       handleScrollToAcademy();
                     } else {
+                      console.log('LOCK CLICKED', 'academy_bundle_track2');
+                      alert('LOCK clicked - starting Pi payment');
                       handlePiPayment({ id: 'academy_bundle', title: 'DeFi Yield Farming (Academy)', piPrice: 2 });
                     }
                   }}
@@ -184,13 +190,15 @@ export const GoyeHero: React.FC<GoyeHeroProps> = () => {
               <div className="p-4 pt-0">
                 <button 
                   type="button"
-                  style={{ position: 'relative', zIndex: 10, pointerEvents: 'auto', cursor: 'pointer' }}
+                  style={{ pointerEvents: 'auto', position: 'relative', zIndex: 9999, cursor: 'pointer' }}
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     if (isAcademyPaid) {
                       handleScrollToAcademy();
                     } else {
+                      console.log('LOCK CLICKED', 'academy_bundle_track3');
+                      alert('LOCK clicked - starting Pi payment');
                       handlePiPayment({ id: 'academy_bundle', title: 'Smart Contract Development (Academy)', piPrice: 2 });
                     }
                   }}

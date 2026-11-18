@@ -24,11 +24,14 @@ import { safeParse } from './utils/safeParse';
 import { getPaymentEnvironment } from './utils/paymentAdapter';
 import { autoLoginWithPi, loginWithPi, isPiEnvironment } from './lib/piAuth';
 import PiLoginButton from './components/PiLoginButton';
-import AutoPiConverter from './components/AutoPiConverter';
 export default function App() {
   const env = getPaymentEnvironment();
-  // Clear any stale payment IDs on page load
+  // Clear any stale payment IDs on page load and catch global JS errors
   useEffect(() => {
+    const onError = (e: ErrorEvent) => {
+      console.error('APP ERROR', e.message);
+    };
+    window.addEventListener('error', onError);
     try {
       localStorage.removeItem('pi_payment_id');
       localStorage.removeItem('paymentId');
@@ -36,6 +39,9 @@ export default function App() {
       sessionStorage.removeItem('pi_payment_id');
       sessionStorage.removeItem('paymentId');
     } catch {}
+    return () => {
+      window.removeEventListener('error', onError);
+    };
   }, []);
   const isPiBrowserMode = env === 'PI_BROWSER';
 
@@ -168,7 +174,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#000000] text-white font-sans antialiased selection:bg-[#FFD700] selection:text-black">
-      <AutoPiConverter />
       <PiLoginButton />
       
       {/* Header */}

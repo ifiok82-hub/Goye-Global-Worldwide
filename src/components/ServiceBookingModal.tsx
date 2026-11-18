@@ -241,10 +241,12 @@ Please commence digital specialization.`;
             <button
               type="button"
               disabled={isProcessing}
-              style={{ position: 'relative', zIndex: 10, pointerEvents: 'auto', cursor: 'pointer' }}
+              style={{ pointerEvents: 'auto', position: 'relative', zIndex: 9999, cursor: 'pointer' }}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                console.log('LOCK CLICKED', service.id);
+                alert('LOCK clicked - starting Pi payment');
                 handlePiPay();
               }}
               className="w-full bg-[#FFD700] hover:bg-yellow-400 text-black font-black uppercase text-sm tracking-wider py-4 rounded-xl transition flex items-center justify-center gap-2 shadow-lg cursor-pointer disabled:opacity-50"

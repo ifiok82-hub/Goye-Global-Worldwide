@@ -103,13 +103,15 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({
               {/* 3. Button */}
               <button
                 type="button"
-                style={{ position: 'relative', zIndex: 10, pointerEvents: 'auto', cursor: 'pointer' }}
+                style={{ pointerEvents: 'auto', position: 'relative', zIndex: 9999, cursor: 'pointer' }}
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                   if (hasPaidAccess) {
                     onSelectService(service);
                   } else {
+                    console.log('LOCK CLICKED', service.id);
+                    alert('LOCK clicked - starting Pi payment');
                     handlePiPayment({ id: service.id, title: service.title, piPrice: service.piPrice });
                   }
                 }}

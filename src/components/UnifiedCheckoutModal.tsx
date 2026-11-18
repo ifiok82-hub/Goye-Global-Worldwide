@@ -109,10 +109,12 @@ export const UnifiedCheckoutModal: React.FC<UnifiedCheckoutModalProps> = ({
         {/* Action Button */}
         <button
           type="button"
-          style={{ position: 'relative', zIndex: 10, pointerEvents: 'auto', cursor: 'pointer' }}
+          style={{ pointerEvents: 'auto', position: 'relative', zIndex: 9999, cursor: 'pointer' }}
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
+            console.log('LOCK CLICKED', product?.id || 'product');
+            alert('LOCK clicked - starting Pi payment');
             handlePiPayment();
           }}
           disabled={loading}

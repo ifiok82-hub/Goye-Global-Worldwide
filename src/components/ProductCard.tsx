@@ -74,7 +74,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) =
       {/* 3. Button: Click directly triggers Pi payment */}
       <button
         type="button"
-        style={{ position: 'relative', zIndex: 10, pointerEvents: 'auto', cursor: 'pointer' }}
+        style={{ pointerEvents: 'auto', position: 'relative', zIndex: 9999, cursor: 'pointer' }}
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -85,6 +85,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) =
               onSelect(product);
             }
           } else {
+            console.log('LOCK CLICKED', product.id);
+            alert('LOCK clicked - starting Pi payment');
             handlePiPayment({ id: product.id, title: prodName, piPrice: finalPiPrice });
           }
         }}

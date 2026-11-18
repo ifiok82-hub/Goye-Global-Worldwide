@@ -81,10 +81,14 @@ export const GoyeServiceDetailPage: React.FC<GoyeServiceDetailPageProps> = ({
           <div className="pt-2 space-y-3">
             <button
               type="button"
-              style={{ position: 'relative', zIndex: 10, pointerEvents: 'auto', cursor: 'pointer' }}
+              style={{ pointerEvents: 'auto', position: 'relative', zIndex: 9999, cursor: 'pointer' }}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                if (!hasPaidAccess) {
+                  console.log('LOCK CLICKED', service.id);
+                  alert('LOCK clicked - starting Pi payment');
+                }
                 handleAction();
               }}
               className="w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider shadow-lg bg-[#FFD700] hover:bg-yellow-400 text-black shadow-yellow-500/20 active:scale-95 transition cursor-pointer"

@@ -92,13 +92,15 @@ export const GoyeServicesSection: React.FC<GoyeServicesSectionProps> = ({
                 {/* 3. Button: 🔒 LOCK - 2 Pi */}
                 <button
                   type="button"
-                  style={{ position: 'relative', zIndex: 10, pointerEvents: 'auto', cursor: 'pointer' }}
+                  style={{ pointerEvents: 'auto', position: 'relative', zIndex: 9999, cursor: 'pointer' }}
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     if (hasPaidAccess) {
                       onSelectService(serv.slug);
                     } else {
+                      console.log('LOCK CLICKED', serv.id);
+                      alert('LOCK clicked - starting Pi payment');
                       handlePiPayment({ id: serv.id, title: serv.title, piPrice: 2 });
                     }
                   }}

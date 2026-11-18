@@ -79,6 +79,8 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ onClos
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
+            console.log('LOCK CLICKED', product?.id || 'product');
+            alert('LOCK clicked - starting Pi payment');
             handlePiPay();
           }}
           disabled={loading}
@@ -94,7 +96,7 @@ export const PaymentOptionsModal: React.FC<PaymentOptionsModalProps> = ({ onClos
             cursor: 'pointer',
             marginBottom: '12px',
             position: 'relative',
-            zIndex: 10,
+            zIndex: 9999,
             pointerEvents: 'auto'
           }}
         >

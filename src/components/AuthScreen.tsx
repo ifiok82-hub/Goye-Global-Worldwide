@@ -1792,7 +1792,7 @@ export default function AuthScreen({ onAuthenticated, onClose }: { onAuthenticat
   }
 
   return (
-    <div className="fixed inset-0 bg-black/90 z-[1000] flex items-center justify-center p-5 overflow-y-auto pointer-events-auto">
+    <div className="fixed inset-0 bg-black/90 z-[1000] flex items-center justify-center p-5 overflow-y-auto pointer-events-none">
       <div className="bg-[#111] p-6 rounded-3xl border border-[#FFD700] w-[90%] max-w-[380px] max-h-[90vh] overflow-y-auto z-[1001] relative shadow-2xl pointer-events-auto">
         <button onClick={() => { window.location.hash='home'; }} className="absolute top-4 right-4 text-gray-500 font-bold hover:text-white cursor-pointer z-20">X</button>
         

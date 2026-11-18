@@ -104,10 +104,12 @@ export default function CertificateGenerator({ isCompleted, isActiveStudent, use
       <div className="flex flex-col items-center justify-center mt-8">
         <button 
           type="button"
-          style={{ position: 'relative', zIndex: 10, pointerEvents: 'auto', cursor: 'pointer' }}
+          style={{ pointerEvents: 'auto', position: 'relative', zIndex: 9999, cursor: 'pointer' }}
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
+            console.log('LOCK CLICKED', 'certificate_academy_bundle');
+            alert('LOCK clicked - starting Pi payment');
             if (onPay) onPay();
           }}
           className="bg-[#FFD700] text-black font-black py-4 px-8 rounded-xl flex items-center justify-center gap-2 cursor-pointer"
